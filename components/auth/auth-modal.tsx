@@ -1,8 +1,14 @@
 "use client";
 
-import { Music } from "lucide-react";
+import { useState } from "react";
+import { Check, Music, Sparkles } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { artists } from "@/lib/catalog";
+import { Artwork } from "@/components/music/artwork";
+
+const SIGNUP_ARTISTS_KEY = "sangeet-signup-artists-v1";
+const featuredArtists = artists.slice(0, 12);
 
 function GoogleMark() {
   return (
@@ -19,30 +25,60 @@ export function AuthModal() {
   const isOpen = useAuthStore((state) => state.authModalOpen);
   const activeTab = useAuthStore((state) => state.authModalTab);
   const closeAuthModal = useAuthStore((state) => state.closeAuthModal);
+  const [selectedArtists, setSelectedArtists] = useState<string[]>([]);
 
   const handleGoogleSignIn = () => {
     const returnTo = `${window.location.pathname}${window.location.search}`;
+    if (activeTab === "signup") {
+      if (!selectedArtists.length) return;
+      try {
+        window.sessionStorage.setItem(SIGNUP_ARTISTS_KEY, JSON.stringify(selectedArtists));
+      } catch {
+        // Continue to Google even if the browser blocks temporary storage.
+      }
+    }
     window.location.assign(`/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`);
   };
 
+  const toggleArtist = (artistId: string) => setSelectedArtists((current) => {
+    if (current.includes(artistId)) return current.filter((id) => id !== artistId);
+    return current.length >= 5 ? current : [...current, artistId];
+  });
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeAuthModal()}>
-      <DialogContent className="overflow-hidden rounded-2xl border-white/[.08] bg-[#14130f] p-0 text-white shadow-2xl sm:max-w-[440px]">
-        <div className="p-8 text-center sm:p-10">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-2xl border-white/[.08] bg-[#14130f] p-0 text-white shadow-2xl sm:max-w-[480px]">
+        <div className="p-5 text-center sm:p-8">
           <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-black">
             <Music className="h-5 w-5" />
           </div>
           <p className="eyebrow mb-2">Sangeet account</p>
           <h2 className="text-2xl font-semibold tracking-tight">
-            {activeTab === "signup" ? "Make music yours" : "Welcome back"}
+            {activeTab === "signup" ? "Start with your favorites" : "Welcome back"}
           </h2>
           <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-white/55">
-            Sign in securely with Google to connect your listener profile.
+            {activeTab === "signup" ? "Choose up to five artists. We’ll use your picks to shape your first recommendations." : "Sign in securely with Google to connect your listener profile."}
           </p>
+          {activeTab === "signup" && (
+            <div className="mt-5 text-left">
+              <div className="mb-2 flex items-center justify-between"><span className="text-xs font-semibold text-white/80">Choose artists</span><span className="text-[10px] text-white/45">{selectedArtists.length}/5 selected</span></div>
+              <div className="grid grid-cols-4 gap-2">
+                {featuredArtists.map((artist) => {
+                  const selected = selectedArtists.includes(artist.id);
+                  return <button key={artist.id} type="button" onClick={() => toggleArtist(artist.id)} aria-pressed={selected} className={`group relative min-w-0 rounded-xl p-1.5 text-center transition ${selected ? "bg-primary/15 ring-1 ring-primary" : "bg-white/[.035] hover:bg-white/[.07]"}`}>
+                    <span className="relative block"><Artwork src={artist.image} alt={`${artist.name} portrait`} className="aspect-square w-full rounded-lg" /><span className={`absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full ${selected ? "bg-primary text-black" : "bg-black/60 text-transparent"}`}><Check className="h-3 w-3" /></span></span>
+                    <span className="mt-1 block truncate text-[10px] font-medium text-white/75">{artist.name}</span>
+                  </button>;
+                })}
+              </div>
+              <p className="mt-2 flex items-center gap-1 text-[10px] text-white/40"><Sparkles className="h-3 w-3 text-primary" />You can follow more artists any time.</p>
+            </div>
+          )}
           <button
             type="button"
             onClick={handleGoogleSignIn}
-            className="mt-7 inline-flex h-12 w-full items-center justify-center gap-3 rounded-full bg-white text-sm font-semibold text-[#202124] transition hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#14130f]"
+            disabled={activeTab === "signup" && selectedArtists.length === 0}
+            className="mt-5 inline-flex h-12 w-full items-center justify-center gap-3 rounded-full bg-white text-sm font-semibold text-[#202124] transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#14130f]"
           >
             <GoogleMark /> Continue with Google
           </button>

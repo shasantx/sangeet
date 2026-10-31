@@ -152,9 +152,10 @@ export function initYouTubePlayer(containerId: string, nextHandlers: YouTubeHand
         height: "100%",
         playerVars: {
           autoplay: 0,
-          controls: 1,
-          disablekb: 0,
-          fs: 1,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          iv_load_policy: 3,
           playsinline: 1,
           rel: 0,
           origin: window.location.origin,

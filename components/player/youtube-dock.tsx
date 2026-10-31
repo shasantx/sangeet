@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { getTrack } from "@/lib/catalog";
 import { usePlayerStore } from "@/store/player-store";
 
-/** The embedded source player lives in the full player page, never in a floating window. */
+/** Keeps the source player available for audio playback without showing video UI. */
 export function YouTubeDock() {
   const pathname = usePathname();
   const currentTrackId = usePlayerStore((state) => state.currentTrackId);
@@ -13,12 +13,11 @@ export function YouTubeDock() {
   if (pathname !== "/now-playing" || !current?.youtubeId) return null;
 
   return (
-    <section className="mx-auto w-full max-w-[920px] px-5 pb-10 sm:px-8" aria-label="Music player">
-      <div className="overflow-hidden rounded-2xl border border-white/[.08] bg-black shadow-2xl">
-        <div className="aspect-video w-full">
-          <div id="aura-youtube-frame" className="h-full w-full" />
-        </div>
-      </div>
-    </section>
+    <div
+      className="fixed -left-[10000px] top-0 h-[200px] w-[200px] overflow-hidden opacity-0 pointer-events-none"
+      aria-hidden="true"
+    >
+      <div id="aura-youtube-frame" className="h-full w-full" />
+    </div>
   );
 }

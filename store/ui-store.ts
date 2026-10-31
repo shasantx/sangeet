@@ -13,6 +13,10 @@ export interface Toast {
 }
 
 interface UIState {
+  mobileSidebarOpen: boolean;
+  setMobileSidebarOpen: (open: boolean) => void;
+  toggleMobileSidebar: () => void;
+
   queuePanelOpen: boolean;
   setQueuePanelOpen: (open: boolean) => void;
   toggleQueuePanel: () => void;
@@ -32,6 +36,10 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
+  mobileSidebarOpen: false,
+  setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
+  toggleMobileSidebar: () => set((state) => ({ mobileSidebarOpen: !state.mobileSidebarOpen })),
+
   queuePanelOpen: false,
   setQueuePanelOpen: (open) => set({ queuePanelOpen: open }),
   toggleQueuePanel: () => set((state) => ({ queuePanelOpen: !state.queuePanelOpen })),

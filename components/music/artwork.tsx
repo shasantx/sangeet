@@ -14,11 +14,11 @@ interface ArtworkProps {
 }
 
 const fallbackPalettes = [
-  ["#302438", "#191521", "#A883EF"],
-  ["#1D2C31", "#10181B", "#7BA9A4"],
-  ["#35241E", "#1A1310", "#CB9471"],
-  ["#1A2438", "#101520", "#8398D6"],
-  ["#322832", "#181318", "#C99ABD"],
+  ["#633F77", "#20182C", "#D59AFF"],
+  ["#17615C", "#102A2C", "#7FE6CC"],
+  ["#865036", "#301C22", "#FFC28F"],
+  ["#31528C", "#172440", "#A3C3FF"],
+  ["#803D6E", "#311D3C", "#FFABD8"],
 ];
 
 export function Artwork({
@@ -60,7 +60,9 @@ export function Artwork({
           role="img"
           aria-label={`${alt} — artwork fallback`}
         >
-          <AudioLines className="h-1/4 w-1/4 opacity-30" strokeWidth={1.2} />
+          <span className="absolute h-[72%] aspect-square rounded-full border border-white/15" />
+          <span className="absolute h-[52%] aspect-square rounded-full border border-white/20" />
+          <AudioLines className="relative h-[28%] w-[28%] text-white/75" strokeWidth={1.4} />
         </div>
       )}
       {children}
