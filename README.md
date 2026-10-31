@@ -1,6 +1,6 @@
 # Sangeet
 
-Sangeet is an independent music discovery interface built with Next.js 15, React 19, TypeScript, Tailwind CSS, and Zustand. It includes a bundled sample catalog, browser-local playlists and likes, an embedded YouTube player, and a server-side Google sign-in foundation.
+Sangeet is an independent music discovery interface built with Next.js 15, React 19, TypeScript, Tailwind CSS, and Zustand. It includes a bundled sample catalog, browser-local playlists and likes, an embedded YouTube player, server-side Google sign-in, account controls, manual Premium review, and a separate open-source donation display.
 
 ## Local development
 
@@ -18,8 +18,10 @@ Google OAuth client setup and callback registration are documented in [AUTH_SETU
 - Local playlists, likes, saved albums, followed artists, and playback queue stored in browser storage (not yet synced between devices).
 - YouTube Music metadata search through the separate local `ytmusicapi` service, plus the official YouTube IFrame Player for playback.
 - Google OAuth code flow with state, PKCE, ID-token verification, and signed HTTP-only session cookie.
-- Server-checked admin email allowlist and a protected read-only admin readiness page.
-- Plan comparison page that clearly reports billing as unavailable until checkout and subscription persistence exist.
+- Server-checked admin email allowlist and a Supabase-backed admin console for users, site settings, audit history, and payment review.
+- Manual $3 Premium payment submissions with private receipt storage and explicit administrator approval.
+- Free and Premium playlist/history limits enforced in the app; Premium is a manually granted entitlement, not a recurring subscription.
+- Public open-source project support section with donation QR and instructions managed from the admin console.
 
 ## YouTube integration and rights
 
@@ -27,16 +29,14 @@ Google OAuth client setup and callback registration are documented in [AUTH_SETU
 
 Playback uses YouTube's embedded IFrame player with its controls and branding. The player remains visible while a YouTube video is playing and pauses when the app tab becomes hidden. Sangeet does not download, extract, proxy, or re-host YouTube audio/video. Video availability depends on the owner, embed permissions, and region. Review current [YouTube player requirements](https://developers.google.com/youtube/iframe_api_reference), [player parameters](https://developers.google.com/youtube/player_parameters), and [Developer Policies](https://developers.google.com/youtube/terms/developer-policies-guide) before deployment.
 
-Bundled Sangeet recordings are sample assets, separate from YouTube-powered results. They are not a licensed commercial streaming catalog. No paid plan may promise YouTube ad removal, background playback, offline playback, audio-only playback, or other restricted benefits.
+Bundled Sangeet recordings are sample assets, separate from YouTube-powered results. They are not a licensed commercial streaming catalog. The YouTube embedded player may stop when the browser or mobile OS backgrounds the page, and it cannot be converted into an audio-only or offline stream. Background and offline playback are available only for audio files the browser can directly play and store, subject to browser and device policies.
 
-## Production dependencies still required
-
-This codebase is not a complete multi-user production service yet:
+## Production deployment notes
 
 - Google OAuth credentials and a secure deployed HTTPS origin are required for sign-in.
-- Listener library data remains in localStorage; there is no application database, migrations, cross-device sync, or account recovery database.
-- `/admin` currently has a secure Google-email allowlist but is read-only. User management, editable catalog operations, moderation, and audit history need persistent records and audited server mutations.
-- Premium is intentionally unavailable. Stripe variables are placeholders only; checkout, webhook verification, durable subscription state, and server-side entitlements are not implemented.
+- Listener library data remains browser-local; account state and admin-managed settings are in Supabase, but library data is not synced between devices.
+- Premium is a manually reviewed entitlement. There is no billing provider, automatic payment verification, recurring billing, or webhook processing.
+- Android background playback depends on the media source and browser lock-screen support. The native HTML audio element uses Media Session where supported; embedded YouTube playback cannot reliably continue in the background.
 - The YouTube Music metadata source is unofficial. For a durable production catalog, connect a licensed music provider or an approved API and verify its rights, quota, and deployment requirements.
 - The search rate limit is per Node.js process. Multi-instance deployments need a trusted proxy and shared rate-limit storage.
 - On Vercel, import the repo as a multi-service project so the private Python search service is deployed with the Next.js app; see [its deployment steps](./ytmusic-service/README.md). Vercel Services is currently a Beta feature.

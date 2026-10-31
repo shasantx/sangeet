@@ -10,7 +10,7 @@ const items = [
   { href: "/search", label: "Search", icon: Search, match: (path: string) => path.startsWith("/search") },
   { href: "/explore", label: "Explore", icon: Compass, match: (path: string) => path.startsWith("/explore") || path.startsWith("/genre") || path.startsWith("/artist") || path.startsWith("/album") },
   { href: "/library", label: "Library", icon: Library, match: (path: string) => ["/library", "/liked", "/recently-played", "/playlist"].some((route) => path.startsWith(route)) },
-  { href: "/profile", label: "Profile", icon: UserRound, match: (path: string) => path.startsWith("/profile") || path.startsWith("/settings") || path.startsWith("/plans") },
+  { href: "/profile", label: "Profile", icon: UserRound, match: (path: string) => path.startsWith("/profile") || path.startsWith("/settings") || path.startsWith("/plans") || path.startsWith("/premium") },
 ];
 
 export function MobileNavigation() {

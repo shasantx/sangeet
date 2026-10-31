@@ -166,8 +166,8 @@ function OfflineDownloadItem({ track }: { track: Track }) {
 
   const toggleDownload = async () => {
     if (session?.plan !== "premium") {
-      router.push("/plans");
-      toast.info("Premium access required", "Offline saving is available to Premium-enabled accounts; this build does not yet sell upgrades.");
+      router.push("/premium");
+      toast.info("Premium access required", "Premium includes offline saves for eligible Sangeet-hosted tracks.");
       return;
     }
     setBusy(true);

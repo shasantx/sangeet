@@ -28,7 +28,7 @@ const primaryNav = [
   { href: "/home", label: "Home", icon: Home },
   { href: "/search", label: "Search", icon: Search },
   { href: "/explore", label: "Explore", icon: Compass },
-  { href: "/plans", label: "Plans", icon: CreditCard },
+  { href: "/premium", label: "Premium", icon: CreditCard },
 ];
 
 const libraryNav = [
