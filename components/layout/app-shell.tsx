@@ -24,7 +24,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const immersive = pathname === "/" || pathname === "/welcome" || pathname === "/now-playing";
 
   useEffect(() => {
-    if (!hasOnboarded && pathname !== "/welcome") {
+    if (!hasOnboarded && pathname !== "/welcome" && pathname !== "/admin") {
       router.replace("/welcome");
     }
   }, [hasOnboarded, pathname, router]);
@@ -32,6 +32,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [pathname]);
+
+  if (pathname === "/admin") {
+    return <main className="min-h-dvh bg-[#090c0a] text-white">{children}</main>;
+  }
 
   if (immersive) {
     return (

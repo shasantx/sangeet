@@ -14,7 +14,6 @@ import {
   Plus,
   Search,
   Settings2,
-  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -115,7 +114,6 @@ export function Sidebar() {
               </Link>
             );
           })}
-          {session?.isAdmin && <Link href="/admin" aria-current={pathname === "/admin" ? "page" : undefined} title={collapsed ? "Admin dashboard" : undefined} className={cn("group relative flex h-10 items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary", collapsed && "justify-center px-0", pathname === "/admin" ? "bg-white/[.06] text-foreground" : "text-muted-foreground hover:bg-white/[.035] hover:text-foreground")}><ShieldCheck className={cn("h-[18px] w-[18px] shrink-0", pathname === "/admin" ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />{!collapsed && <span>Admin dashboard</span>}</Link>}
         </nav>
 
         <div className="mx-3 my-5 h-px bg-white/[.055]" />

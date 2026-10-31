@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clock3, Compass, CreditCard, Heart, Home, Library, Plus, Search, Settings2, ShieldCheck, X } from "lucide-react";
+import { Clock3, Compass, CreditCard, Heart, Home, Library, Plus, Search, Settings2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -60,7 +60,6 @@ export function MobileSidebar() {
               <Icon className={cn("h-[18px] w-[18px]", active ? "text-primary" : "text-white/45")} />{label}
             </Link>;
           })}
-          {session?.isAdmin && <Link href="/admin" aria-current={pathname === "/admin" ? "page" : undefined} className={cn("flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition", pathname === "/admin" ? "bg-white/[.09] text-white" : "text-white/60 hover:bg-white/[.05] hover:text-white")}><ShieldCheck className={cn("h-[18px] w-[18px]", pathname === "/admin" ? "text-primary" : "text-white/45")} />Admin dashboard</Link>}
           <div className="mb-2 mt-6 flex items-center justify-between px-3"><span className="eyebrow">Playlists</span><button type="button" aria-label="Create playlist" onClick={() => { setOpen(false); openCreate(); }} className="flex h-7 w-7 items-center justify-center rounded-full text-white/60 transition hover:bg-white/[.07] hover:text-white"><Plus className="h-4 w-4" /></button></div>
           {playlists.slice(0, 10).map((playlist) => <Link key={playlist.id} href={`/playlist/${playlist.id}`} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/65 hover:bg-white/[.05] hover:text-white">
             <Artwork src={playlist.artwork} alt="" className="h-9 w-9 shrink-0 rounded-md" /><span className="truncate">{playlist.title}</span>
