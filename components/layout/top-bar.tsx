@@ -65,7 +65,7 @@ export function TopBar() {
   const avatarColor = session?.avatarColor || profile.avatarColor;
 
   return (
-    <header className="sticky top-0 z-30 flex h-[70px] items-center gap-3 border-b border-white/[.04] bg-background/85 px-4 backdrop-blur-2xl sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-[62px] items-center gap-3 border-b border-white/[.04] bg-background/90 px-4 backdrop-blur-2xl sm:h-[70px] sm:px-6 lg:px-8">
       {/* Mobile Logo */}
       <Link href="/home" className="flex items-center gap-2 md:hidden" aria-label="Sangeet home">
         <div className="h-7 w-7 rounded-full bg-[#1ED760] flex items-center justify-center text-black shadow-md">

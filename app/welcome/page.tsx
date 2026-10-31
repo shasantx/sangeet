@@ -54,7 +54,7 @@ export default function WelcomePage() {
   return (
     <main className="min-h-screen bg-[#0b0c0b] text-white">
       <header className="sticky top-0 z-30 border-b border-white/[.06] bg-[#0b0c0b]/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-8">
+        <div className="mx-auto flex h-[64px] max-w-7xl items-center justify-between gap-3 px-4 sm:h-[72px] sm:px-8">
           <Link href="/" className="flex items-center gap-3" aria-label="Sangeet home">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-[#17130c]"><AudioLines className="h-5 w-5" /></span>
             <span className="font-display text-xl font-semibold tracking-tight">Sangeet</span>
@@ -64,16 +64,19 @@ export default function WelcomePage() {
             <a href="#features" className="transition hover:text-white">Features</a>
             <Link href="/plans" className="transition hover:text-white">Plans</Link>
           </nav>
-          <button type="button" onClick={() => openAuthModal("signin")} className="rounded-full border border-white/15 px-4 py-2 text-xs font-semibold transition hover:border-white/30 hover:bg-white/[.04]">Sign in</button>
+          <div className="flex shrink-0 items-center gap-2">
+            <button type="button" onClick={() => openAuthModal("signin")} className="rounded-full px-3 py-2 text-xs font-semibold text-white/75 transition hover:text-white sm:px-4">Sign in</button>
+            <button type="button" onClick={() => openAuthModal("signup")} className="rounded-full bg-white px-4 py-2.5 text-xs font-bold text-[#111] transition hover:scale-[1.02] sm:px-5">Sign up</button>
+          </div>
         </div>
       </header>
 
-      <section className="relative isolate min-h-[680px] overflow-hidden border-b border-white/[.05]">
+      <section className="relative isolate min-h-[600px] overflow-hidden border-b border-white/[.05] sm:min-h-[680px]">
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_78%_25%,rgba(30,215,96,.2),transparent_38%),radial-gradient(ellipse_at_10%_90%,rgba(97,124,107,.12),transparent_32%)]" />
-        <div className="mx-auto grid min-h-[680px] max-w-7xl items-center gap-12 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[1.05fr_.95fr] lg:py-24">
+        <div className="mx-auto grid min-h-[600px] max-w-7xl items-center gap-10 px-4 py-12 sm:min-h-[680px] sm:px-8 sm:py-20 lg:grid-cols-[1.05fr_.95fr] lg:gap-12 lg:py-24">
           <div>
             <p className="eyebrow mb-5 flex items-center gap-2 text-primary"><Sparkles className="h-4 w-4" /> A more personal way to listen</p>
-            <h1 className="max-w-2xl font-display text-5xl font-semibold leading-[1.02] tracking-[-.055em] sm:text-6xl lg:text-[76px]">Let the next song <span className="text-primary">find you.</span></h1>
+            <h1 className="max-w-2xl font-display text-[2.65rem] font-semibold leading-[1.02] tracking-[-.055em] sm:text-6xl lg:text-[76px]">Let the next song <span className="text-primary">find you.</span></h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-white/55 sm:text-lg">A calmer place for discovery, albums, and the tracks you keep coming back to. Follow your mood, build a library that feels like yours, and press play.</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <button type="button" onClick={listenOnline} className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-[#17130c] transition hover:brightness-110"><Play className="h-4 w-4 fill-current" /> Listen online <ArrowRight className="h-4 w-4" /></button>
