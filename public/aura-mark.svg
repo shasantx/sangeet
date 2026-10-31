@@ -1,9 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
-  <rect width="48" height="48" rx="14" fill="#8B5CF6"/>
-  <g fill="#F5F3FA">
-    <rect x="12" y="20" width="3.4" height="8" rx="1.7"/>
-    <rect x="18.2" y="15" width="3.4" height="18" rx="1.7"/>
-    <rect x="24.4" y="11" width="3.4" height="26" rx="1.7"/>
-    <rect x="30.6" y="18" width="3.4" height="12" rx="1.7"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <defs><linearGradient id="sangeet-green" x1="246" y1="182" x2="773" y2="848" gradientUnits="userSpaceOnUse"><stop stop-color="#32A66C"/><stop offset="1" stop-color="#138653"/></linearGradient></defs>
+  <circle cx="512" cy="512" r="312" fill="url(#sangeet-green)"/>
+  <g stroke="#F7FFF9" stroke-linecap="round" stroke-linejoin="round"><path d="M282 588C324 452 410 368 512 368s188 84 230 220" stroke-width="42"/><path d="M347 560c31-105 90-158 165-158s134 53 165 158" stroke-width="36"/><path d="m266 583 93-78c12-10 29-10 41 0l48 39 76-79c12-13 33-13 45 0l91 96 42-36c13-11 31-11 44 0l65 57" stroke-width="40"/></g>
+  <path d="M420 582V288c0-13 9-24 22-27l119-29c17-4 33 9 33 27v192c0 15-12 27-27 27s-27-12-27-27V296l-66 16v270H420Z" fill="#F7FFF9"/><circle cx="348" cy="590" r="62" fill="#F7FFF9"/>
 </svg>
