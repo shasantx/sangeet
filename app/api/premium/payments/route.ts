@@ -28,7 +28,7 @@ async function signProof(path: string) {
 
 export async function GET(request: NextRequest) {
   try {
-    const settingsResponse = await rest("premium_payment_settings?select=amount_usd,qr_image_url,payment_instructions&id=eq.1");
+    const settingsResponse = await rest("premium_payment_settings?select=amount_usd,qr_image_url,payment_instructions,donation_enabled,donation_qr_image_url,donation_instructions&id=eq.1");
     if (!settingsResponse.ok) return json({ error: "Apply the manual Premium payments migration first." }, 503);
     const settings = (await settingsResponse.json() as { amount_usd: number; qr_image_url: string; payment_instructions: string }[])[0];
     const session = verifySession(request.cookies.get("aura_session")?.value);
@@ -41,7 +41,10 @@ export async function GET(request: NextRequest) {
       return json({ settings, requests: await Promise.all(rows.map(async (row) => ({ ...row, proof_url: await signProof(row.proof_path) }))) });
     }
     const response = await rest(`premium_payment_requests?select=id,status,review_note,created_at,reviewed_at&user_id=eq.${encodeURIComponent(id)}&order=created_at.desc&limit=10`);
-    return response.ok ? json({ settings, requests: await response.json() }) : json({ error: "Could not load your payment status." }, 503);
+    if (!response.ok) return json({ error: "Could not load your payment status." }, 503);
+    const profileResponse = await rest(`user_profiles?select=plan&id=eq.${encodeURIComponent(id)}&limit=1`);
+    const profile = profileResponse.ok ? (await profileResponse.json() as { plan: string }[])[0] : undefined;
+    return json({ settings, requests: await response.json(), user_plan: profile?.plan ?? "free" });
   } catch { return json({ error: "Payment services are not configured yet." }, 503); }
 }
 
@@ -78,8 +81,11 @@ export async function PATCH(request: NextRequest) {
     if (body.action === "settings") {
       const qr = typeof body.qr_image_url === "string" ? body.qr_image_url.trim() : "";
       const instructions = typeof body.payment_instructions === "string" ? body.payment_instructions.trim() : "";
-      if (qr && (!/^https:\/\//i.test(qr) || qr.length > 1000) || instructions.length > 1000) return json({ error: "Use an HTTPS QR image URL and instructions under 1,000 characters." }, 400);
-      const result = await rest("rpc/admin_update_payment_settings", { method: "POST", body: JSON.stringify({ p_qr_image_url: qr, p_payment_instructions: instructions, p_actor_email: session.email }) });
+      const donationQr = typeof body.donation_qr_image_url === "string" ? body.donation_qr_image_url.trim() : "";
+      const donationInstructions = typeof body.donation_instructions === "string" ? body.donation_instructions.trim() : "";
+      const donationEnabled = body.donation_enabled === true;
+      if (qr && (!/^https:\/\//i.test(qr) || qr.length > 1000) || donationQr && (!/^https:\/\//i.test(donationQr) || donationQr.length > 1000) || instructions.length > 1000 || donationInstructions.length > 1000) return json({ error: "Use HTTPS QR image URLs and instructions under 1,000 characters." }, 400);
+      const result = await rest("rpc/admin_update_payment_settings", { method: "POST", body: JSON.stringify({ p_qr_image_url: qr, p_payment_instructions: instructions, p_donation_enabled: donationEnabled, p_donation_qr_image_url: donationQr, p_donation_instructions: donationInstructions, p_actor_email: session.email }) });
       return result.ok ? json({ settings: (await result.json()) }) : json({ error: "Could not save payment settings. Apply the payment migration." }, 503);
     }
     const id = typeof body.id === "string" ? body.id : "";

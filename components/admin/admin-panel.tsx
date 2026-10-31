@@ -91,7 +91,8 @@ export function AdminPanel({ email }: { email: string }) {
   const setupRequired = error.includes("not configured") || error.toLowerCase().includes("migration");
   const statCards = payload ? [
     { icon: Users, label: "Total accounts", value: payload.stats.total, detail: "Registered listeners" },
-    { icon: Crown, label: "Premium access", value: payload.stats.premium, detail: "Manual entitlement" },
+    { icon: Crown, label: "Premium access", value: payload.stats.premium, detail: "Manually verified access" },
+    { icon: ShieldCheck, label: "Active accounts", value: Math.max(0, payload.stats.total - payload.stats.suspended), detail: "Eligible to listen" },
     { icon: ShieldAlert, label: "Suspended", value: payload.stats.suspended, detail: "Restricted accounts" },
   ] : [];
 
@@ -100,19 +101,19 @@ export function AdminPanel({ email }: { email: string }) {
     const active = tab === item.id;
     return <button key={item.id} type="button" aria-current={active ? "page" : undefined} aria-pressed={active} onClick={() => setTab(item.id)} className={mobile
       ? `flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-xs font-medium transition ${active ? "bg-primary text-primary-foreground" : "border border-white/[.08] text-white/55 hover:bg-white/[.04] hover:text-white"}`
-      : `group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${active ? "bg-primary/[.1] text-white ring-1 ring-inset ring-primary/20" : "text-white/55 hover:bg-white/[.04] hover:text-white"}`}>
+      : `group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${active ? "bg-white/[.07] text-white ring-1 ring-inset ring-white/[.09]" : "text-white/55 hover:bg-white/[.035] hover:text-white"}`}>
       <Icon className={`h-4 w-4 shrink-0 ${active ? "text-primary" : "text-white/40 group-hover:text-white/70"}`} />
       {mobile ? item.label : <span className="min-w-0"><span className="block text-[13px] font-medium">{item.label}</span><span className="mt-0.5 block text-[10px] text-white/35">{item.hint}</span></span>}
     </button>;
   };
 
-  return <div className="min-h-dvh bg-[#090c0a] text-white selection:bg-primary/25">
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[268px] flex-col border-r border-white/[.07] bg-[#0c100d] px-4 py-5 lg:flex">
+  return <div className="min-h-dvh bg-[#0b0e0c] text-white selection:bg-primary/25">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[252px] flex-col border-r border-white/[.07] bg-[#0e120f] px-4 py-5 lg:flex">
       <Link href="/home" aria-label="Back to Sangeet" className="flex items-center gap-3 rounded-xl px-2 py-1.5">
         <SangeetMark size={42} />
         <span className="min-w-0"><span className="block font-display text-[15px] font-semibold tracking-tight">Sangeet</span><span className="mt-0.5 block text-[10px] text-white/40">Control room</span></span>
       </Link>
-      <div className="mt-9 px-3"><p className="text-[9px] font-semibold uppercase tracking-[.2em] text-primary/75">Administration</p><p className="mt-1 text-xs text-white/35">Manage your platform</p></div>
+      <div className="mt-8 border-t border-white/[.06] px-3 pt-6"><p className="text-[9px] font-semibold uppercase tracking-[.2em] text-white/35">Workspace</p><p className="mt-1 text-xs text-white/55">Platform administration</p></div>
       <nav aria-label="Admin navigation" className="mt-4 space-y-1">{navigation.map((item) => navButton(item))}</nav>
       <div className="mt-auto space-y-3">
         <div className="rounded-2xl border border-white/[.07] bg-white/[.025] p-3.5"><div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><ShieldCheck className="h-3.5 w-3.5" /></span><span className="text-[11px] font-medium">Restricted access</span></div><p className="mt-2 truncate text-[10px] text-white/40" title={email}>{email}</p></div>
@@ -120,8 +121,8 @@ export function AdminPanel({ email }: { email: string }) {
       </div>
     </aside>
 
-    <div className="min-h-dvh lg:pl-[268px]">
-      <header className="sticky top-0 z-30 border-b border-white/[.07] bg-[#090c0a]/90 backdrop-blur-xl">
+    <div className="min-h-dvh lg:pl-[252px]">
+      <header className="sticky top-0 z-30 border-b border-white/[.07] bg-[#0b0e0c]/90 backdrop-blur-xl">
         <div className="flex min-h-[68px] items-center justify-between gap-3 px-4 sm:px-7 lg:px-10">
           <div className="flex items-center gap-3 lg:hidden"><SangeetMark size={36} /><span><span className="block text-sm font-semibold">Sangeet Admin</span><span className="block text-[10px] text-white/35">Restricted workspace</span></span></div>
           <div className="hidden lg:block"><p className="text-[9px] font-semibold uppercase tracking-[.2em] text-primary/75">Sangeet · Admin</p><p className="mt-0.5 text-xs text-white/35">{currentTitle}</p></div>
@@ -145,8 +146,8 @@ export function AdminPanel({ email }: { email: string }) {
 
         {setupRequired ? <section className="rounded-3xl border border-white/[.07] bg-[#101411] p-6 sm:p-8"><h2 className="text-lg font-semibold">Connect platform storage</h2><p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">User access, settings and audit events are stored in Supabase. Apply the admin migrations listed in <code className="text-white/75">ADMIN_SETUP.md</code> to enable the control room.</p></section> : <>
           {tab === "overview" && <div className="space-y-6">
-            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="User account metrics">
-              {statCards.map(({ icon: Icon, label, value, detail }) => <article key={label} className="rounded-2xl border border-white/[.07] bg-[#101411] p-5 sm:p-6"><div className="flex items-center justify-between"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/[.09] text-primary"><Icon className="h-4 w-4" /></span><span className="text-[9px] font-semibold uppercase tracking-[.15em] text-white/30">Live data</span></div><p className="mt-5 font-display text-3xl font-semibold tabular-nums">{value.toLocaleString()}</p><p className="mt-1 text-sm font-medium text-white/75">{label}</p><p className="mt-1 text-[11px] text-white/35">{detail}</p></article>)}
+            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="User account metrics">
+              {statCards.map(({ icon: Icon, label, value, detail }) => <article key={label} className="rounded-2xl border border-white/[.07] bg-[#111512] p-4 transition-colors hover:border-white/[.12] sm:p-5"><div className="flex items-center justify-between"><span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[.07] bg-white/[.025] text-primary"><Icon className="h-4 w-4" /></span><span className="text-[9px] font-semibold uppercase tracking-[.15em] text-white/30">Live data</span></div><p className="mt-5 font-display text-3xl font-semibold tabular-nums">{value.toLocaleString()}</p><p className="mt-1 text-sm font-medium text-white/75">{label}</p><p className="mt-1 text-[11px] text-white/35">{detail}</p></article>)}
               {!payload && <div className="col-span-full flex items-center gap-2 rounded-2xl border border-white/[.07] bg-[#101411] p-6 text-sm text-white/45"><LoaderCircle className="h-4 w-4 animate-spin text-primary" />Loading platform overview</div>}
             </section>
             <section className="grid gap-3 xl:grid-cols-[1.15fr_.85fr]">

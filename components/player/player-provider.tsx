@@ -288,15 +288,23 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
             },
           ],
         });
-        navigator.mediaSession.setActionHandler("play", () => usePlayerStore.getState().togglePlay());
-        navigator.mediaSession.setActionHandler("pause", () => usePlayerStore.getState().togglePlay());
-        navigator.mediaSession.setActionHandler("nexttrack", () => usePlayerStore.getState().next());
-        navigator.mediaSession.setActionHandler("previoustrack", () =>
-          usePlayerStore.getState().previous(),
-        );
-        navigator.mediaSession.setActionHandler("seekto", (details) => {
+        const bindAction = (action: MediaSessionAction, handler: (details: MediaSessionActionDetails) => void) => {
+          try { navigator.mediaSession.setActionHandler(action, handler); } catch { /* Unsupported device action. */ }
+        };
+        bindAction("play", () => { if (!usePlayerStore.getState().isPlaying) usePlayerStore.getState().togglePlay(); });
+        bindAction("pause", () => { if (usePlayerStore.getState().isPlaying) usePlayerStore.getState().togglePlay(); });
+        bindAction("stop", () => {
+          const audio = getAudioElement();
+          if (audio) { audio.pause(); audio.currentTime = 0; }
+          usePlayerStore.getState().syncFromAudio({ currentTime: 0, isPlaying: false, isLoading: false });
+        });
+        bindAction("nexttrack", () => usePlayerStore.getState().next());
+        bindAction("previoustrack", () => usePlayerStore.getState().previous());
+        bindAction("seekto", (details) => {
           if (typeof details.seekTime === "number") usePlayerStore.getState().seek(details.seekTime);
         });
+        bindAction("seekbackward", (details) => usePlayerStore.getState().seek(usePlayerStore.getState().currentTime - (details.seekOffset ?? 10)));
+        bindAction("seekforward", (details) => usePlayerStore.getState().seek(usePlayerStore.getState().currentTime + (details.seekOffset ?? 10)));
       } catch {
         // Media Session support is a progressive enhancement.
       }
@@ -359,7 +367,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      <audio ref={audioRef} preload="metadata" playsInline className="hidden" aria-hidden="true" />
+      <audio ref={audioRef} preload="auto" className="pointer-events-none fixed bottom-0 left-0 z-[-1] h-px w-px opacity-0" aria-label="Sangeet audio playback" />
       <YouTubeDock />
     </>
   );

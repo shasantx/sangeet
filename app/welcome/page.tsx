@@ -12,6 +12,7 @@ import type { Track } from "@/lib/types";
 import { useAuthStore } from "@/store/auth-store";
 import { Artwork } from "@/components/music/artwork";
 import { MusicDiscovery } from "@/components/landing/music-discovery";
+import { DonationSection } from "@/components/support/donation-section";
 import { toast } from "@/store/ui-store";
 
 interface InstallPromptEvent extends Event {
@@ -103,7 +104,7 @@ export default function WelcomePage() {
             <a href="#discover" className="transition hover:text-white">Discover</a>
             <a href="#features" className="transition hover:text-white">Your music</a>
             <a href="#install" className="transition hover:text-white">Get the app</a>
-            <Link href="/plans" className="transition hover:text-white">Premium</Link>
+            <Link href="/premium" className="transition hover:text-white">Premium</Link>
           </nav>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <button type="button" onClick={() => openAuthModal("signin")} className="rounded-full px-3 py-2.5 text-xs font-semibold text-white/70 transition hover:text-white sm:px-4">Log in</button>
@@ -210,10 +211,12 @@ export default function WelcomePage() {
         </Reveal>
       </section>
 
+      <DonationSection />
+
       <footer className="border-t border-white/[.07] bg-[#080908]">
         <div className="mx-auto grid max-w-7xl gap-9 px-5 py-10 sm:grid-cols-[1.4fr_1fr_1fr_1fr] sm:px-8 sm:py-14">
           <div><Link href="/" className="flex w-fit items-center gap-2.5" aria-label="Sangeet home"><SangeetMark size={36} /><span className="font-display text-lg font-semibold">Sangeet</span></Link><p className="mt-3 max-w-[220px] text-xs leading-relaxed text-white/38">A calmer home for the music you come back to.</p></div>
-          {[{ title: "Discover", items: [["Explore", "/explore"], ["Search", "/search"], ["New releases", "/new-releases"]] }, { title: "Your music", items: [["Your library", "/library"], ["Liked songs", "/liked"], ["Made for you", "/made-for-you"]] }, { title: "Sangeet", items: [["Plans", "/plans"], ["Sign in", "#signin"], ["Create account", "#signup"]] }].map((group) => <nav key={group.title} aria-label={group.title}><p className="mb-3 text-[10px] font-semibold uppercase tracking-[.16em] text-white/35">{group.title}</p><ul className="space-y-2.5">{group.items.map(([label, href]) => <li key={label}>{href.startsWith("#") ? <button type="button" onClick={() => openAuthModal(href === "#signup" ? "signup" : "signin")} className="text-left text-xs text-white/55 transition hover:text-primary">{label}</button> : <Link href={href} className="text-xs text-white/55 transition hover:text-primary">{label}</Link>}</li>)}</ul></nav>)}
+          {[{ title: "Discover", items: [["Explore", "/explore"], ["Search", "/search"], ["New releases", "/new-releases"]] }, { title: "Your music", items: [["Your library", "/library"], ["Liked songs", "/liked"], ["Made for you", "/made-for-you"]] }, { title: "Sangeet", items: [["Premium", "/premium"], ["Sign in", "#signin"], ["Create account", "#signup"]] }].map((group) => <nav key={group.title} aria-label={group.title}><p className="mb-3 text-[10px] font-semibold uppercase tracking-[.16em] text-white/35">{group.title}</p><ul className="space-y-2.5">{group.items.map(([label, href]) => <li key={label}>{href.startsWith("#") ? <button type="button" onClick={() => openAuthModal(href === "#signup" ? "signup" : "signin")} className="text-left text-xs text-white/55 transition hover:text-primary">{label}</button> : <Link href={href} className="text-xs text-white/55 transition hover:text-primary">{label}</Link>}</li>)}</ul></nav>)}
         </div>
         <div className="mx-auto flex max-w-7xl flex-col gap-2 border-t border-white/[.06] px-5 py-4 text-[10px] text-white/30 sm:flex-row sm:items-center sm:justify-between sm:px-8"><span>© {new Date().getFullYear()} Sangeet. Made for listening.</span><span>Independent music discovery experience</span><span>Made by <a href="https://shasant.xyz" target="_blank" rel="noopener noreferrer" className="font-medium text-white/55 transition hover:text-primary">Shasant ↗</a></span></div>
       </footer>

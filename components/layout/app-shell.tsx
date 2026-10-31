@@ -21,10 +21,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed);
   const rightPanelOpen = useAppStore((state) => state.rightPanelOpen);
   const reduceMotion = useReducedMotion();
-  const immersive = pathname === "/" || pathname === "/welcome" || pathname === "/now-playing";
+  const immersive = pathname === "/" || pathname === "/welcome" || pathname === "/now-playing" || pathname === "/premium";
 
   useEffect(() => {
-    if (!hasOnboarded && pathname !== "/welcome" && pathname !== "/admin") {
+    if (!hasOnboarded && pathname !== "/welcome" && pathname !== "/admin" && pathname !== "/premium") {
       router.replace("/welcome");
     }
   }, [hasOnboarded, pathname, router]);
@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           {children}
         </motion.div>
-        <MobileSidebar />
+        {pathname !== "/premium" && <MobileSidebar />}
       </main>
     );
   }

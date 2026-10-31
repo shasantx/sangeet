@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ListMusic, Plus } from "lucide-react";
 import { getTrack } from "@/lib/catalog";
+import { canCreatePlaylist, FREE_PLAYLIST_LIMIT } from "@/lib/plan-limits";
 import { useLibraryStore } from "@/store/library-store";
+import { useAuthStore } from "@/store/auth-store";
 import { useUIStore, toast } from "@/store/ui-store";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +24,8 @@ export function CreatePlaylistDialog() {
   const seedTrackId = useUIStore((state) => state.createPlaylistSeedTrackId);
   const close = useUIStore((state) => state.closeCreatePlaylist);
   const createPlaylist = useLibraryStore((state) => state.createPlaylist);
+  const playlists = useLibraryStore((state) => state.playlists);
+  const plan = useAuthStore((state) => state.session?.plan);
   const addTrackToPlaylist = useLibraryStore((state) => state.addTrackToPlaylist);
 
   const [title, setTitle] = useState("");
@@ -29,6 +33,7 @@ export function CreatePlaylistDialog() {
   const [error, setError] = useState("");
   const router = useRouter();
   const seedTrack = seedTrackId ? getTrack(seedTrackId) : undefined;
+  const canCreate = canCreatePlaylist(plan, playlists.length);
 
   useEffect(() => {
     if (open) {
@@ -44,7 +49,15 @@ export function CreatePlaylistDialog() {
       setError("Give your playlist a name.");
       return;
     }
+    if (!canCreate) {
+      setError(`Free includes ${FREE_PLAYLIST_LIMIT} playlists. Upgrade to Premium for unlimited playlists.`);
+      return;
+    }
     const id = createPlaylist(title, description);
+    if (!id) {
+      setError(`Free includes ${FREE_PLAYLIST_LIMIT} playlists. Upgrade to Premium for unlimited playlists.`);
+      return;
+    }
     if (seedTrackId) {
       addTrackToPlaylist(id, seedTrackId);
     }
@@ -71,6 +84,10 @@ export function CreatePlaylistDialog() {
           </DialogHeader>
 
           <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-xl border border-border bg-surface/60 px-3.5 py-3 text-[11px] text-muted-foreground">
+              <span>{plan === "premium" ? "Premium · unlimited playlists" : `Free · ${Math.max(0, FREE_PLAYLIST_LIMIT - playlists.length)} of ${FREE_PLAYLIST_LIMIT} playlist slots left`}</span>
+              {plan !== "premium" && <button type="button" onClick={() => router.push("/premium")} className="font-semibold text-primary hover:underline">View Premium</button>}
+            </div>
             <label className="block">
               <span className="mb-2 block text-xs font-medium text-foreground">Playlist name</span>
               <Input
