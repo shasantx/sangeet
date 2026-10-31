@@ -13,6 +13,22 @@ function isConfiguredError(error: unknown) {
   return error instanceof Error && error.message.includes("not configured");
 }
 
+function databaseError(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  const status = message.match(/\((\d{3})\)/)?.[1];
+  if (status === "401" || status === "403") {
+    return "Supabase rejected the credentials. Check that SUPABASE_SERVICE_ROLE_KEY is the service_role/secret key from the same project as SUPABASE_URL, then redeploy Production.";
+  }
+  if (status === "404") {
+    return "Supabase returned 404. Apply the admin migration to the project whose URL is in Vercel, then redeploy.";
+  }
+  if (status === "400") {
+    return "Supabase rejected the database request. Confirm the admin migration ran successfully in the project whose URL is in Vercel.";
+  }
+  if (status) return `Supabase returned HTTP ${status}. Check the Project URL and migration, then inspect the Vercel Function logs if it continues.`;
+  return "Could not reach Supabase. Check that SUPABASE_URL is the Project URL and that the Production variables were saved, then redeploy.";
+}
+
 export async function GET(request: NextRequest) {
   const session = adminSession(request.cookies.get("aura_session")?.value);
   if (!session) return json({ error: "Admin access required." }, 403);
@@ -27,7 +43,7 @@ export async function GET(request: NextRequest) {
     return json({ ...users, users: users.users.map((user) => ({ ...user, is_admin: isAdminEmail(user.email) })), stats, actions, page });
   } catch (error) {
     if (isConfiguredError(error)) return json({ error: "Admin database is not configured. Add the Supabase server secrets and apply the admin migration." }, 503);
-    return json({ error: "Could not load admin data. Confirm the Supabase migration is applied." }, 503);
+    return json({ error: databaseError(error) }, 503);
   }
 }
 
@@ -56,6 +72,6 @@ export async function PATCH(request: NextRequest) {
     return user ? json({ user }) : json({ error: "User not found." }, 404);
   } catch (error) {
     if (isConfiguredError(error)) return json({ error: "Admin database is not configured." }, 503);
-    return json({ error: "Could not save the user change. Confirm the admin migration is applied." }, 503);
+    return json({ error: databaseError(error) }, 503);
   }
 }
