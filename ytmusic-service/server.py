@@ -13,6 +13,7 @@ Port: 8765 (override with YTMUSIC_PORT)
 from __future__ import annotations
 
 import json
+import hmac
 import os
 import re
 import threading
@@ -137,8 +138,16 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/health":
             self._send(200, {"ok": True})
             return
-        if parsed.path != "/search":
+        if parsed.path not in ("/search", "/api/search"):
             self._send(404, {"error": "not found"})
+            return
+
+        expected_token = os.environ.get("YTMUSIC_SERVICE_TOKEN")
+        if expected_token and not hmac.compare_digest(
+            self.headers.get("Authorization", "").removeprefix("Bearer "),
+            expected_token,
+        ):
+            self._send(401, {"error": "unauthorized"})
             return
 
         params = parse_qs(parsed.query)

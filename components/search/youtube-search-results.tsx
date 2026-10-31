@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink, Loader2, Pause, Play, Youtube } from "lucide-react";
+import { Loader2, Pause, Play } from "lucide-react";
 import {
   registerYouTubeSearchResults,
   type YouTubeSearchResult,
@@ -175,7 +175,7 @@ export function YouTubeSearchResults({
                   type="button"
                   onClick={() => play(result.videoId)}
                   className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  aria-label={`Play ${result.title} on YouTube`}
+                  aria-label={`Play ${result.title}`}
                 >
                   <Artwork
                     src={result.thumbnail}
@@ -220,15 +220,6 @@ export function YouTubeSearchResults({
                   {formatDuration(result.durationSeconds ?? 0)}
                 </span>
 
-                <a
-                  href={`https://www.youtube.com/watch?v=${result.videoId}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={`Watch ${result.title} on YouTube`}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground/60 transition hover:bg-white/[.07] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                </a>
               </div>
             );
           })}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Clock3, SearchX, Sparkles, X } from "lucide-react";
 import { artists, genres, getArtist, getArtistTracks } from "@/lib/catalog";
@@ -16,6 +16,7 @@ import { PlaylistCard } from "@/components/music/playlist-card";
 import { TrackList } from "@/components/music/track-list";
 import { SearchInput } from "@/components/search/search-input";
 import { SearchResultsSkeleton } from "@/components/search/search-results-skeleton";
+import { YouTubeSearchResults, type YouTubeSearchStatus } from "@/components/search/youtube-search-results";
 import { cn } from "@/lib/utils";
 
 interface TopResult {
@@ -43,6 +44,11 @@ const searchSuggestionsPool = [
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [catalogStatus, setCatalogStatus] = useState<YouTubeSearchStatus>({
+    count: 0,
+    loading: false,
+    unavailable: false,
+  });
   const recentSearches = useAppStore((state) => state.recentSearches);
   const addRecentSearch = useAppStore((state) => state.addRecentSearch);
   const clearRecentSearches = useAppStore((state) => state.clearRecentSearches);
@@ -50,6 +56,9 @@ export default function SearchPage() {
   const results = useMemo(() => searchCatalog(query), [query]);
   const suggestions = useMemo(() => getSearchSuggestions(query), [query]);
   const hasQuery = query.trim().length > 0;
+  const onCatalogStatusChange = useCallback((status: YouTubeSearchStatus) => {
+    setCatalogStatus(status);
+  }, []);
 
   useEffect(() => {
     if (!hasQuery) {
@@ -239,7 +248,7 @@ export default function SearchPage() {
         </div>
       ) : loading ? (
         <SearchResultsSkeleton />
-      ) : results.total === 0 ? (
+      ) : results.total === 0 && !catalogStatus.loading && catalogStatus.count === 0 ? (
         <div className="mt-12 max-w-xl">
           <EmptyState
             icon={<SearchX className="h-5 w-5" />}
@@ -265,8 +274,8 @@ export default function SearchPage() {
         <div className="mt-9">
           <div className="mb-5 flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
-              {results.total}{" "}
-              {results.total === 1 ? "result" : "results"} for{" "}
+              {results.total + catalogStatus.count}{" "}
+              {results.total + catalogStatus.count === 1 ? "result" : "results"} for{" "}
               <span className="font-medium text-foreground">“{query}”</span>
             </p>
             <button
@@ -386,6 +395,10 @@ export default function SearchPage() {
           )}
 
         </div>
+      )}
+
+      {hasQuery && (
+        <YouTubeSearchResults query={query} onStatusChange={onCatalogStatusChange} />
       )}
 
     </div>
