@@ -23,6 +23,6 @@
       <g fill="#E7DCF2" opacity=".5"><circle cx="250" cy="240" r="2"/><circle cx="760" cy="330" r="1.5"/><circle cx="620" cy="760" r="1.8"/></g>
       <text x="500" y="848" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" letter-spacing="10" fill="#EDE6F3" opacity=".55">YOUR PLAYLIST</text>
       
-<rect width="1000" height="1000" filter="url(#grain-userone)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

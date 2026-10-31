@@ -18,6 +18,6 @@
     <path d="M110 720 C 260 420 380 180 620 280 S 890 620 780 880" fill="none" stroke="#E27766" stroke-width="150" opacity=".19" filter="url(#blur-alternative)"/>
     <path d="M210 760 C 330 520 410 320 590 380 S 770 610 690 840" fill="none" stroke="#F2C1B5" stroke-width="2" opacity=".3"/>
     <path d="M160 820 C 380 760 610 900 900 760" fill="none" stroke="#E27766" stroke-width="34" opacity=".12"/>
-<rect width="1000" height="1000" filter="url(#grain-genrealternative)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

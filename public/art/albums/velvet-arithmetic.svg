@@ -31,6 +31,6 @@
       <text x="74" y="930" font-family="Arial, sans-serif" font-size="24" letter-spacing="10" fill="#F0D9C4" opacity=".65">JULIEN ARLO</text>
       <text x="928" y="930" text-anchor="end" font-family="Arial, sans-serif" font-size="16" letter-spacing="3" fill="#F0D9C4" opacity=".35">VELVET ARITHMETIC</text>
       
-<rect width="1000" height="1000" filter="url(#grain-velvet)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

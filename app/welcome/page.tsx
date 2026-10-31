@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowDown, ArrowRight, AudioLines, Compass, Headphones, Heart, Library, MonitorDown, Music2, Play, Search, Smartphone, Sparkles, Waves } from "lucide-react";
-import { albums, getArtist, selectedAlbums } from "@/lib/catalog";
+import { albums, getArtist, tracks } from "@/lib/catalog";
 import { useAuthStore } from "@/store/auth-store";
 import { Artwork } from "@/components/music/artwork";
-import { AlbumCard } from "@/components/music/album-card";
+import { MusicDiscovery } from "@/components/landing/music-discovery";
 import { toast } from "@/store/ui-store";
 
 interface InstallPromptEvent extends Event {
@@ -50,8 +50,9 @@ export default function WelcomePage() {
   const router = useRouter();
   const openAuthModal = useAuthStore((state) => state.openAuthModal);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const featured = selectedAlbums[0] ?? albums[0];
+  const featured = albums.find((album) => album.id.startsWith("al-")) ?? albums[0];
   const artist = featured ? getArtist(featured.artistId) : undefined;
+  const apiTracks = tracks.filter((track) => track.source === "youtube" && track.youtubeId).slice(0, 4);
   const heroRef = useRef<HTMLElement>(null);
   const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
@@ -136,7 +137,7 @@ export default function WelcomePage() {
               <div className="overflow-hidden rounded-[29px] bg-[#0c0e0c] p-3.5">
                 <div className="mx-auto mb-5 h-1 w-12 rounded-full bg-white/20" />
                 <div className="flex items-center justify-between text-[10px] text-white/45"><span>YOUR LIBRARY</span><span className="text-primary">EDIT</span></div>
-                <div className="mt-3 space-y-2.5">{selectedAlbums.slice(0, 4).map((album) => <Link key={album.id} href={`/album/${album.id}`} className="flex items-center gap-3 rounded-xl bg-white/[.035] p-2 transition hover:bg-white/[.08]"><Artwork src={album.artwork} alt="" className="h-12 w-12 shrink-0 rounded-lg" /><span className="min-w-0"><span className="block truncate text-xs font-medium">{album.title}</span><span className="mt-1 block truncate text-[10px] text-white/40">Album · {getArtist(album.artistId)?.name}</span></span></Link>)}</div>
+                <div className="mt-3 space-y-2.5">{apiTracks.map((track) => <Link key={track.id} href={`/artist/${track.artistId}`} className="flex items-center gap-3 rounded-xl bg-white/[.035] p-2 transition hover:bg-white/[.08]"><Artwork src={track.artwork} alt={`${track.title} cover`} className="h-12 w-12 shrink-0 rounded-lg" /><span className="min-w-0"><span className="block truncate text-xs font-medium">{track.title}</span><span className="mt-1 block truncate text-[10px] text-white/40">Track · {getArtist(track.artistId)?.name}</span></span></Link>)}</div>
                 <div className="mt-4 rounded-xl border border-white/[.07] bg-[#171a17] p-3"><div className="flex items-center gap-2"><Heart className="h-3.5 w-3.5 fill-primary text-primary" /><span className="text-[10px] font-medium">Liked Songs</span></div><div className="mt-3 flex gap-1"><span className="h-1 flex-1 rounded-full bg-primary" /><span className="h-1 flex-1 rounded-full bg-primary/55" /><span className="h-1 flex-1 rounded-full bg-white/10" /><span className="h-1 flex-1 rounded-full bg-white/10" /></div></div>
               </div>
             </div>
@@ -152,13 +153,7 @@ export default function WelcomePage() {
       </section>
 
       <section id="discover" className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
-        <Reveal className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
-          <div><p className="eyebrow mb-3 text-primary">A good place to start</p><h2 className="font-display text-3xl font-semibold tracking-[-.05em] sm:text-5xl">Find something that feels like you.</h2><p className="mt-3 max-w-xl text-sm text-white/45 sm:text-base">A few albums to press play on. There’s always more around the corner.</p></div>
-          <Link href="/explore" className="group inline-flex items-center gap-2 text-sm font-semibold text-white/65 transition hover:text-primary">Browse all <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
-        </Reveal>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-5">
-          {selectedAlbums.slice(0, 5).map((album, index) => <Reveal key={album.id} delay={index * .055}><AlbumCard album={album} priority={index < 2} /></Reveal>)}
-        </div>
+        <Reveal><MusicDiscovery /></Reveal>
       </section>
 
       <section className="relative isolate overflow-hidden border-y border-primary/10 bg-[#111811]">

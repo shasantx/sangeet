@@ -23,6 +23,6 @@
       <path d="M90 710 C 280 650 400 760 510 650 S 760 620 910 700" fill="none" stroke="#E0B88B" stroke-width="1.2" opacity=".25"/>
       <text x="500" y="848" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" letter-spacing="10" fill="#F1DCC7" opacity=".55">YOUR PLAYLIST</text>
       
-<rect width="1000" height="1000" filter="url(#grain-userthree)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

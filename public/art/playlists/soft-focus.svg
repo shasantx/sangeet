@@ -24,6 +24,6 @@
       <text x="84" y="920" font-family="Arial, sans-serif" font-size="21" letter-spacing="8" fill="#FBFAF6" opacity=".75">AURA EDITORIAL</text>
       <text x="916" y="920" text-anchor="end" font-family="Arial, sans-serif" font-size="16" letter-spacing="3" fill="#FBFAF6" opacity=".44">SOFT FOCUS</text>
       
-<rect width="1000" height="1000" filter="url(#grain-softfocus)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

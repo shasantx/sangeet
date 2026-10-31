@@ -18,6 +18,6 @@
     <path d="M160 800 C 300 660 480 590 540 760 C 580 870 700 700 850 580" fill="none" stroke="#B6D1CD" stroke-width="1" opacity=".2"/>
     <circle cx="690" cy="350" r="145" fill="#3A5D59" opacity=".3" filter="url(#blur-jazz)"/>
     <circle cx="690" cy="350" r="38" fill="#B2CBC6" opacity=".16"/>
-<rect width="1000" height="1000" filter="url(#grain-genrejazz)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

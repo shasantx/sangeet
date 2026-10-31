@@ -24,6 +24,6 @@
       <text x="74" y="920" font-family="Arial, sans-serif" font-size="24" letter-spacing="10" fill="#30393D" opacity=".72">ELIO NORTH</text>
       <text x="928" y="920" text-anchor="end" font-family="Arial, sans-serif" font-size="17" letter-spacing="5" fill="#30393D" opacity=".42">DRIFT STUDIES</text>
       
-<rect width="1000" height="1000" filter="url(#grain-drift)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

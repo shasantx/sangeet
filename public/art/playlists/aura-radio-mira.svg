@@ -24,6 +24,6 @@
       <text x="500" y="810" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" letter-spacing="10" fill="#F3DDD4" opacity=".53">AURA RADIO</text>
       <text x="500" y="850" text-anchor="middle" font-family="Georgia, serif" font-size="31" font-style="italic" fill="#F3DDD4" opacity=".78">Mira Vale</text>
       
-<rect width="1000" height="1000" filter="url(#grain-auramira)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

@@ -21,6 +21,6 @@
     <circle cx="500" cy="500" r="210" fill="none" stroke="#C8A6FF" opacity=".4"/>
     <circle cx="500" cy="500" r="120" fill="#A855F7" opacity=".24" filter="url(#blur-electronic)"/>
     <circle cx="500" cy="500" r="18" fill="#D8C3FF" opacity=".7"/>
-<rect width="1000" height="1000" filter="url(#grain-genreelectronic)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

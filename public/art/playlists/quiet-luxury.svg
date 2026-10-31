@@ -25,6 +25,6 @@
       <text x="130" y="394" font-family="Georgia, serif" font-size="54" font-style="italic" fill="#403628" opacity=".6">Luxury</text>
       <text x="132" y="866" font-family="Arial, sans-serif" font-size="18" letter-spacing="7" fill="#4B3F2F" opacity=".55">AURA EDITORIAL</text>
       
-<rect width="1000" height="1000" filter="url(#grain-quietluxury)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

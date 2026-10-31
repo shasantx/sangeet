@@ -27,6 +27,6 @@
     <circle cx="820" cy="200" r="28" fill="#E4E2D7" opacity=".1" filter="url(#blur-artist5)"/>
     <rect x="0" y="0" width="1000" height="1000" fill="url(#glow-aster-house)"/><rect x="0" y="0" width="1000" height="1000" fill="url(#bg-artist5)" opacity=".16"/>
     
-<rect width="1000" height="1000" filter="url(#grain-artist5)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

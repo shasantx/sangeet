@@ -28,6 +28,6 @@
       <text x="74" y="930" font-family="Arial, sans-serif" font-size="24" letter-spacing="10" fill="#DDE8EF" opacity=".6">NOA ITŌ</text>
       <text x="928" y="930" text-anchor="end" font-family="Arial, sans-serif" font-size="17" letter-spacing="4" fill="#DDE8EF" opacity=".32">NOCTURNE NO. 4</text>
       
-<rect width="1000" height="1000" filter="url(#grain-nocturne)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

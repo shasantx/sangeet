@@ -26,6 +26,6 @@
       <text x="82" y="920" font-family="Arial, sans-serif" font-size="21" letter-spacing="8" fill="#EBEBF4" opacity=".68">AURA EDITORIAL</text>
       <text x="918" y="920" text-anchor="end" font-family="Arial, sans-serif" font-size="16" letter-spacing="3" fill="#EBEBF4" opacity=".35">NOCTURNE DRIVE</text>
       
-<rect width="1000" height="1000" filter="url(#grain-nocturnedrive)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>
