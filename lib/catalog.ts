@@ -15,6 +15,7 @@ import {
 } from "./dynamic-tracks";
 import { youtubeAlbums, youtubeArtists, youtubeTracks } from "./youtube";
 import ytCatalog from "@/data/ytmusic-catalog.json";
+import { regionalArtists } from "./regional-artists";
 
 const audio = (id: string) => ({
   duration: audioManifest[id]?.duration ?? 0,
@@ -145,6 +146,7 @@ const auraArtists: Artist[] = [
 ];
 
 export const artists: Artist[] = [
+  ...regionalArtists,
   ...(ytCatalog.artists as unknown as Artist[]),
   ...auraArtists,
   ...youtubeArtists,

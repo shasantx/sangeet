@@ -28,6 +28,10 @@ export interface Artist {
   location: string;
   genreIds: GenreId[];
   relatedArtistIds: string[];
+  /** Languages the artist is commonly associated with; used for discovery filters. */
+  languages?: string[];
+  /** Alternate spellings and transliterations for regional search. */
+  aliases?: string[];
 }
 
 export interface Album {

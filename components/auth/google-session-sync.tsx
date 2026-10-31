@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useAuthStore } from "@/store/auth-store";
 import { toast } from "@/store/ui-store";
-import { artists } from "@/lib/catalog";
+import { artists, getArtist } from "@/lib/catalog";
 import { useAppStore } from "@/store/app-store";
 import { useLibraryStore } from "@/store/library-store";
 
@@ -72,7 +72,7 @@ export function GoogleSessionSync() {
             const parsed: unknown = saved ? JSON.parse(saved) : [];
             if (Array.isArray(parsed)) {
               const validIds = new Set(artists.map((artist) => artist.id));
-              selectedArtistIds = Array.from(new Set(parsed.filter((id): id is string => typeof id === "string" && validIds.has(id)))).slice(0, 5);
+              selectedArtistIds = Array.from(new Set(parsed.filter((id): id is string => typeof id === "string" && (validIds.has(id) || Boolean(getArtist(id)))))).slice(0, 5);
             }
           } catch {
             selectedArtistIds = [];
