@@ -69,7 +69,7 @@ export default function WelcomePage() {
       </header>
 
       <section className="relative isolate min-h-[680px] overflow-hidden border-b border-white/[.05]">
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_78%_25%,rgba(231,168,75,.2),transparent_38%),radial-gradient(ellipse_at_10%_90%,rgba(97,124,107,.12),transparent_32%)]" />
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_78%_25%,rgba(30,215,96,.2),transparent_38%),radial-gradient(ellipse_at_10%_90%,rgba(97,124,107,.12),transparent_32%)]" />
         <div className="mx-auto grid min-h-[680px] max-w-7xl items-center gap-12 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[1.05fr_.95fr] lg:py-24">
           <div>
             <p className="eyebrow mb-5 flex items-center gap-2 text-primary"><Sparkles className="h-4 w-4" /> A more personal way to listen</p>

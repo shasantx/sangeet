@@ -998,7 +998,7 @@ export const demoProfile: DemoProfile = {
   initials: "L",
   joined: "this device",
   plan: "Free",
-  avatarColor: "#E7A84B",
+  avatarColor: "#1ED760",
 };
 
 export const featuredHero = ytCatalog.featuredHero || {

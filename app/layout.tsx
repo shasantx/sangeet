@@ -30,6 +30,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" data-theme="dark" className="dark" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://i.ytimg.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://yt3.googleusercontent.com" crossOrigin="anonymous" />
+      </head>
       <body>
         <AppProviders>{children}</AppProviders>
       </body>

@@ -66,10 +66,10 @@ export function Sidebar() {
       <div className={cn("flex h-[78px] shrink-0 items-center px-5", collapsed && "justify-center px-0")}>
         <Link
           href="/home"
-          className="flex min-w-0 items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[#E7A84B]"
+          className="flex min-w-0 items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[#1ED760]"
           aria-label="Sangeet Music home"
         >
-          <div className="h-8 w-8 rounded-full bg-[#E7A84B] flex items-center justify-center text-black shrink-0 shadow-md">
+          <div className="h-8 w-8 rounded-full bg-[#1ED760] flex items-center justify-center text-black shrink-0 shadow-md">
             <Music className="h-4 w-4 fill-current" />
           </div>
           {!collapsed && (
@@ -103,12 +103,12 @@ export function Sidebar() {
                 )}
               >
                 {active && (
-                  <span className="absolute left-0 h-4 w-[2px] rounded-full bg-[#E7A84B]" aria-hidden="true" />
+                  <span className="absolute left-0 h-4 w-[2px] rounded-full bg-[#1ED760]" aria-hidden="true" />
                 )}
                 <Icon
                   className={cn(
                     "h-[18px] w-[18px] shrink-0 transition-colors",
-                    active ? "text-[#E7A84B]" : "text-muted-foreground group-hover:text-foreground",
+                    active ? "text-[#1ED760]" : "text-muted-foreground group-hover:text-foreground",
                   )}
                   strokeWidth={active ? 2.2 : 1.7}
                 />
@@ -140,12 +140,12 @@ export function Sidebar() {
                 )}
               >
                 {active && (
-                  <span className="absolute left-0 h-4 w-[2px] rounded-full bg-[#E7A84B]" aria-hidden="true" />
+                  <span className="absolute left-0 h-4 w-[2px] rounded-full bg-[#1ED760]" aria-hidden="true" />
                 )}
                 <Icon
                   className={cn(
                     "h-[18px] w-[18px] shrink-0",
-                    active ? "text-[#E7A84B]" : "text-muted-foreground group-hover:text-foreground",
+                    active ? "text-[#1ED760]" : "text-muted-foreground group-hover:text-foreground",
                   )}
                   strokeWidth={active ? 2.2 : 1.7}
                 />

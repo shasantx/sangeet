@@ -51,7 +51,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         userId: `google:${id}`,
         email,
         displayName,
-        avatarColor: "#E7A84B",
+        avatarColor: "#1ED760",
         initials: initialsFor(displayName),
         provider: "google",
         picture,

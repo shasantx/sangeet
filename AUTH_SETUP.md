@@ -13,7 +13,7 @@ For deployment, use the canonical HTTPS origin in `APP_URL` and register `https:
 
 ## Admin access
 
-Set `ADMIN_EMAILS` to a comma-separated list of verified Google email addresses in server-side environment settings. `/admin` verifies the signed server session and checks this allowlist. There is no client-side admin flag and public users cannot assign themselves this role. The current admin page is read-only because Sangeet has no persistent user/catalog database yet.
+`private.shasant@gmail.com` is the initial server-side administrator. Add any additional verified Google accounts to the comma-separated `ADMIN_EMAILS` server environment variable. `/admin` checks the signed server session against this allowlist; users cannot grant themselves admin access. The current admin page is read-only because Sangeet has no persistent user/catalog database yet.
 
 ## Account and library scope
 

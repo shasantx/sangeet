@@ -200,7 +200,7 @@ export function YouTubeSearchResults({
                   <span
                     className={cn(
                       "block truncate text-[13px] font-medium leading-5",
-                      active ? "text-[#E7A84B] font-bold" : "text-foreground",
+                      active ? "text-[#1ED760] font-bold" : "text-foreground",
                     )}
                   >
                     {result.title}

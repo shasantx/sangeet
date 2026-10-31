@@ -43,12 +43,12 @@ export function PlaybackControls({
       className={cn(
         "relative flex items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
         sideSize,
-        shuffle ? "text-[#E7A84B]" : "text-muted-foreground hover:text-foreground",
+        shuffle ? "text-[#1ED760]" : "text-muted-foreground hover:text-foreground",
       )}
     >
       <Shuffle className={sideIcon} strokeWidth={1.8} />
       {shuffle && (
-        <span className="absolute bottom-0.5 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#E7A84B]" />
+        <span className="absolute bottom-0.5 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#1ED760]" />
       )}
     </button>
   );
@@ -62,7 +62,7 @@ export function PlaybackControls({
       className={cn(
         "relative flex items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
         sideSize,
-        repeat !== "off" ? "text-[#E7A84B]" : "text-muted-foreground hover:text-foreground",
+        repeat !== "off" ? "text-[#1ED760]" : "text-muted-foreground hover:text-foreground",
       )}
     >
       {repeat === "one" ? (
@@ -71,7 +71,7 @@ export function PlaybackControls({
         <Repeat className={sideIcon} strokeWidth={1.8} />
       )}
       {repeat !== "off" && (
-        <span className="absolute bottom-0.5 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#E7A84B]" />
+        <span className="absolute bottom-0.5 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#1ED760]" />
       )}
     </button>
   );

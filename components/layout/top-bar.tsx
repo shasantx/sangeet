@@ -68,7 +68,7 @@ export function TopBar() {
     <header className="sticky top-0 z-30 flex h-[70px] items-center gap-3 border-b border-white/[.04] bg-background/85 px-4 backdrop-blur-2xl sm:px-6 lg:px-8">
       {/* Mobile Logo */}
       <Link href="/home" className="flex items-center gap-2 md:hidden" aria-label="Sangeet home">
-        <div className="h-7 w-7 rounded-full bg-[#E7A84B] flex items-center justify-center text-black shadow-md">
+        <div className="h-7 w-7 rounded-full bg-[#1ED760] flex items-center justify-center text-black shadow-md">
           <Music className="h-3.5 w-3.5 fill-current" />
         </div>
         <span className="font-display text-[17px] font-bold tracking-tight text-white">Sangeet</span>

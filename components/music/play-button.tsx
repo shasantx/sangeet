@@ -39,7 +39,7 @@ export function PlayButton({
   };
   const variants = {
     primary:
-      "bg-[#E7A84B] text-black font-bold shadow-[0_12px_30px_-10px_rgba(29,185,84,.75)] hover:scale-105 hover:bg-[#F2BD69]",
+      "bg-[#1ED760] text-black font-bold shadow-[0_12px_30px_-10px_rgba(29,185,84,.75)] hover:scale-105 hover:bg-[#46E982]",
     ghost: "bg-white/[.08] text-foreground backdrop-blur hover:bg-white/[.14]",
     glass: "bg-black/35 text-white backdrop-blur-md border border-white/10 hover:bg-black/55",
   };
