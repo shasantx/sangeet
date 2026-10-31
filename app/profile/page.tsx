@@ -213,7 +213,7 @@ export default function ProfilePage() {
                 {isAuthenticated ? "Google sign-in" : "This device"}
               </span>
               <span className="text-muted-foreground/35">·</span>
-              <span>{profile.plan}</span>
+              <span>Free to listen</span>
               <span className="text-muted-foreground/35">·</span>
               <span>{pluralize(likedTrackIds.length, "liked song")}</span>
             </div>

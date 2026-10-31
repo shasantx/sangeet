@@ -10,7 +10,6 @@ export interface AuthSession {
   initials: string;
   provider: "google";
   picture?: string;
-  plan?: "free" | "premium";
   isAdmin?: boolean;
 }
 
@@ -22,7 +21,7 @@ interface AuthState {
   openAuthModal: (tab?: "signin" | "signup") => void;
   closeAuthModal: () => void;
   signOut: () => void;
-  setGoogleSession: (user: { id: string; email: string; name: string; picture?: string; plan?: "free" | "premium"; isAdmin?: boolean }) => void;
+  setGoogleSession: (user: { id: string; email: string; name: string; picture?: string; isAdmin?: boolean }) => void;
   updateProfile: (displayName: string) => void;
 }
 
@@ -46,7 +45,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   closeAuthModal: () => set({ authModalOpen: false }),
   signOut: () => set({ session: null, isAuthenticated: false }),
 
-  setGoogleSession: ({ id, email, name, picture, plan = "free", isAdmin = false }) => {
+  setGoogleSession: ({ id, email, name, picture, isAdmin = false }) => {
     const displayName = name.trim() || email.split("@")[0] || "Listener";
     set({
       session: {
@@ -57,7 +56,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         initials: initialsFor(displayName),
         provider: "google",
         picture,
-        plan,
         isAdmin,
       },
       isAuthenticated: true,

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CloudOff,
-  Crown,
   Disc3,
   Download,
   Heart,
@@ -152,9 +151,7 @@ export function TrackContextMenu({
 }
 
 function OfflineDownloadItem({ track }: { track: Track }) {
-  const router = useRouter();
   const artist = getArtist(track.artistId);
-  const session = useAuthStore((state) => state.session);
   const [downloaded, setDownloaded] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -165,11 +162,6 @@ function OfflineDownloadItem({ track }: { track: Track }) {
   }, [track]);
 
   const toggleDownload = async () => {
-    if (session?.plan !== "premium") {
-      router.push("/premium");
-      toast.info("Premium access required", "Premium includes offline saves for eligible Sangeet-hosted tracks.");
-      return;
-    }
     setBusy(true);
     try {
       if (downloaded) {
@@ -189,7 +181,7 @@ function OfflineDownloadItem({ track }: { track: Track }) {
   };
 
   return <DropdownMenuItem disabled={busy} onSelect={() => void toggleDownload()}>
-    {busy ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : downloaded ? <Trash2 className="h-3.5 w-3.5" /> : session?.plan === "premium" ? <Download className="h-3.5 w-3.5" /> : <Crown className="h-3.5 w-3.5" />}
-    {busy ? "Saving offline…" : downloaded ? "Remove offline copy" : session?.plan === "premium" ? "Download for offline" : "Premium offline listening"}
+    {busy ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : downloaded ? <Trash2 className="h-3.5 w-3.5" /> : <Download className="h-3.5 w-3.5" />}
+    {busy ? "Saving offline…" : downloaded ? "Remove offline copy" : "Download for offline"}
   </DropdownMenuItem>;
 }

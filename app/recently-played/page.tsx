@@ -6,8 +6,7 @@ import { Clock3, History, Play, Search, Sparkles, Trash2 } from "lucide-react";
 import { getArtist, getTracks } from "@/lib/catalog";
 import { formatTotalDuration } from "@/lib/utils";
 import { useLibraryStore } from "@/store/library-store";
-import { useAuthStore } from "@/store/auth-store";
-import { FREE_HISTORY_LIMIT, PREMIUM_HISTORY_LIMIT } from "@/lib/plan-limits";
+import { HISTORY_RETENTION_LIMIT } from "@/lib/plan-limits";
 import { toast } from "@/store/ui-store";
 import { Artwork } from "@/components/music/artwork";
 import { CollectionPlayButton, CollectionShuffleButton } from "@/components/music/collection-actions";
@@ -26,7 +25,6 @@ import {
 
 export default function RecentlyPlayedPage() {
   const recentlyPlayed = useLibraryStore((state) => state.recentlyPlayed);
-  const isPremium = useAuthStore((state) => state.session?.plan === "premium");
   const clearHistory = useLibraryStore((state) => state.clearHistory);
   const [clearOpen, setClearOpen] = useState(false);
   const tracks = getTracks(recentlyPlayed);
@@ -60,9 +58,8 @@ export default function RecentlyPlayedPage() {
               Recently played
             </h1>
             <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-muted-foreground">
-              {isPremium ? `Your latest ${PREMIUM_HISTORY_LIMIT.toLocaleString()} tracks, kept on this device.` : `Your latest ${FREE_HISTORY_LIMIT} tracks, kept on this device. Premium keeps up to ${PREMIUM_HISTORY_LIMIT.toLocaleString()}.`}
+              `Your latest ${HISTORY_RETENTION_LIMIT.toLocaleString()} tracks, kept on this device.`
             </p>
-            {!isPremium && <Link href="/premium" className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-full border border-primary/25 px-4 text-xs font-semibold text-primary transition hover:bg-primary/[.07]">Explore Premium</Link>}
             <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground">
               <span className="font-medium text-foreground">Your history</span>
               <span className="text-muted-foreground/35">·</span>

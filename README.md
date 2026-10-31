@@ -1,6 +1,6 @@
 # Sangeet
 
-Sangeet is an independent music discovery interface built with Next.js 15, React 19, TypeScript, Tailwind CSS, and Zustand. It includes a bundled sample catalog, browser-local playlists and likes, an embedded YouTube player, server-side Google sign-in, account controls, manual Premium review, and a separate open-source donation display.
+Sangeet is a free, open-source music discovery app built with Next.js 15, React 19, TypeScript, Tailwind CSS, and Zustand. It includes browser-local playlists and likes, music discovery, an embedded player, Google sign-in, a server-side admin console, and an optional project donation QR.
 
 ## Local development
 
@@ -18,9 +18,8 @@ Google OAuth client setup and callback registration are documented in [AUTH_SETU
 - Local playlists, likes, saved albums, followed artists, and playback queue stored in browser storage (not yet synced between devices).
 - YouTube Music metadata search through the separate local `ytmusicapi` service, plus the official YouTube IFrame Player for playback.
 - Google OAuth code flow with state, PKCE, ID-token verification, and signed HTTP-only session cookie.
-- Server-checked admin email allowlist and a Supabase-backed admin console for users, site settings, audit history, and payment review.
-- Manual $3 Premium payment submissions with private receipt storage and explicit administrator approval.
-- Free and Premium playlist/history limits enforced in the app; Premium is a manually granted entitlement, not a recurring subscription.
+- Server-checked admin email allowlist and a Supabase-backed admin console for members, site settings, audit history, and donation display.
+- Playlists, recently played history, and eligible offline audio are not restricted by a paid plan.
 - Public open-source project support section with donation QR and instructions managed from the admin console.
 
 ## YouTube integration and rights
@@ -34,8 +33,9 @@ Bundled Sangeet recordings are sample assets, separate from YouTube-powered resu
 ## Production deployment notes
 
 - Google OAuth credentials and a secure deployed HTTPS origin are required for sign-in.
+- Run the admin and site-control migrations plus `20261031150000_open_access_project_donations.sql`; see [ADMIN_SETUP.md](./ADMIN_SETUP.md).
 - Listener library data remains browser-local; account state and admin-managed settings are in Supabase, but library data is not synced between devices.
-- Premium is a manually reviewed entitlement. There is no billing provider, automatic payment verification, recurring billing, or webhook processing.
+- There are no paid plans, checkout, or payment collection. Donation QR display is optional and does not unlock features.
 - Android background playback depends on the media source and browser lock-screen support. The native HTML audio element uses Media Session where supported; embedded YouTube playback cannot reliably continue in the background.
 - The YouTube Music metadata source is unofficial. For a durable production catalog, connect a licensed music provider or an approved API and verify its rights, quota, and deployment requirements.
 - The search rate limit is per Node.js process. Multi-instance deployments need a trusted proxy and shared rate-limit storage.

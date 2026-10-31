@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   Clock3,
   Compass,
-  CreditCard,
   Heart,
   Home,
   Library,
@@ -28,7 +27,6 @@ const primaryNav = [
   { href: "/home", label: "Home", icon: Home },
   { href: "/search", label: "Search", icon: Search },
   { href: "/explore", label: "Explore", icon: Compass },
-  { href: "/premium", label: "Premium", icon: CreditCard },
 ];
 
 const libraryNav = [
@@ -237,7 +235,7 @@ export function Sidebar() {
               {!collapsed && (
                 <span className="min-w-0">
                   <span className="block truncate text-[12px] font-medium text-foreground">{displayName}</span>
-                  <span className="mt-0.5 block text-[9.5px] text-muted-foreground">{profile.plan}</span>
+                  <span className="mt-0.5 block text-[9.5px] text-muted-foreground">Free to listen</span>
                 </span>
               )}
             </Link>

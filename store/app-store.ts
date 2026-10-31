@@ -45,7 +45,6 @@ interface AppState extends PreferenceState {
   addRecentSearch: (query: string) => void;
   clearRecentSearches: () => void;
   setPreferredArtists: (artistIds: string[]) => void;
-  setPlan: (plan: "Free" | "Premium") => void;
 }
 
 const seedSearches: string[] = [];
@@ -117,7 +116,6 @@ export const useAppStore = create<AppState>()(
       },
       clearRecentSearches: () => set({ recentSearches: [] }),
       setPreferredArtists: (artistIds) => set({ preferredArtistIds: Array.from(new Set(artistIds)).slice(0, 5) }),
-      setPlan: (plan) => set((state) => ({ profile: { ...state.profile, plan } })),
     }),
     {
       name: "aura-app-v1",
