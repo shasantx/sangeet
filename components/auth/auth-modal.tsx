@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Music, Sparkles } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { artists } from "@/lib/catalog";
 import { Artwork } from "@/components/music/artwork";
+import { useSiteConfigStore } from "@/store/site-config-store";
+import { SangeetMark } from "@/components/brand/sangeet-mark";
 
 const SIGNUP_ARTISTS_KEY = "sangeet-signup-artists-v1";
 const featuredArtists = artists.slice(0, 12);
@@ -26,6 +28,7 @@ export function AuthModal() {
   const activeTab = useAuthStore((state) => state.authModalTab);
   const closeAuthModal = useAuthStore((state) => state.closeAuthModal);
   const [selectedArtists, setSelectedArtists] = useState<string[]>([]);
+  const signupEnabled = useSiteConfigStore((state) => state.config.signup_enabled);
 
   const handleGoogleSignIn = () => {
     const returnTo = `${window.location.pathname}${window.location.search}`;
@@ -49,17 +52,15 @@ export function AuthModal() {
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeAuthModal()}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-2xl border-white/[.08] bg-[#14130f] p-0 text-white shadow-2xl sm:max-w-[480px]">
         <div className="p-5 text-center sm:p-8">
-          <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-black">
-            <Music className="h-5 w-5" />
-          </div>
+          <SangeetMark size={48} className="mx-auto mb-4" />
           <p className="eyebrow mb-2">Sangeet account</p>
           <h2 className="text-2xl font-semibold tracking-tight">
             {activeTab === "signup" ? "Start with your favorites" : "Welcome back"}
           </h2>
           <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-white/55">
-            {activeTab === "signup" ? "Choose up to five artists. We’ll use your picks to shape your first recommendations." : "Sign in securely with Google to connect your listener profile."}
+            {activeTab === "signup" ? signupEnabled ? "Choose up to five artists. We’ll use your picks to shape your first recommendations." : "New account registration is paused by the Sangeet team. Existing listeners can still sign in." : "Sign in securely with Google to connect your listener profile."}
           </p>
-          {activeTab === "signup" && (
+          {activeTab === "signup" && signupEnabled && (
             <div className="mt-5 text-left">
               <div className="mb-2 flex items-center justify-between"><span className="text-xs font-semibold text-white/80">Choose artists</span><span className="text-[10px] text-white/45">{selectedArtists.length}/5 selected</span></div>
               <div className="grid grid-cols-4 gap-2">
@@ -77,10 +78,10 @@ export function AuthModal() {
           <button
             type="button"
             onClick={handleGoogleSignIn}
-            disabled={activeTab === "signup" && selectedArtists.length === 0}
+            disabled={activeTab === "signup" && (!signupEnabled || selectedArtists.length === 0)}
             className="mt-5 inline-flex h-12 w-full items-center justify-center gap-3 rounded-full bg-white text-sm font-semibold text-[#202124] transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#14130f]"
           >
-            <GoogleMark /> Continue with Google
+            <GoogleMark /> {activeTab === "signup" && !signupEnabled ? "Sign up is paused" : "Continue with Google"}
           </button>
           <div className="my-6 border-t border-white/[.08]" />
           <p className="text-xs leading-relaxed text-white/45">

@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Activity, Crown, LoaderCircle, Search, ShieldAlert, Users } from "lucide-react";
+import { Activity, Crown, LayoutDashboard, LoaderCircle, Search, Settings2, ShieldAlert, Users } from "lucide-react";
 import type { AdminAuditEntry, ManagedUser, UserPlan, UserStatus } from "@/lib/admin-users";
+import { SiteControls } from "@/components/admin/site-controls";
 
 interface AdminPayload {
   users: (ManagedUser & { is_admin?: boolean })[];
@@ -20,6 +21,7 @@ export function AdminPanel() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
+  const [tab, setTab] = useState<"overview" | "users" | "site">("overview");
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -81,11 +83,22 @@ export function AdminPanel() {
   }
 
   return <div className="mt-7 space-y-6">
+    <nav aria-label="Admin sections" className="flex gap-2 overflow-x-auto border-b border-white/[.08] pb-3">
+      {([{ id: "overview", label: "Overview", icon: LayoutDashboard }, { id: "users", label: "Users", icon: Users }, { id: "site", label: "Site controls", icon: Settings2 }] as const).map(({ id, label, icon: Icon }) => <button key={id} type="button" aria-pressed={tab === id} onClick={() => setTab(id)} className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm transition ${tab === id ? "bg-primary text-primary-foreground" : "border border-white/[.08] text-white/65 hover:bg-white/[.05] hover:text-white"}`}><Icon className="h-4 w-4" />{label}</button>)}
+    </nav>
     {error && <div role="alert" className="rounded-xl border border-red-300/20 bg-red-300/[.05] p-3 text-sm text-red-100">{error}</div>}
+    {tab === "overview" && <>
     {payload && <section className="grid gap-3 sm:grid-cols-3" aria-label="User account statistics">
       {statCards.map(({ icon: Icon, label, value }) => <div key={label} className="rounded-2xl border border-white/[.06] bg-white/[.025] p-5"><div className="flex items-center gap-2 text-muted-foreground"><Icon className="h-4 w-4 text-primary" /><span className="text-xs">{label}</span></div><p className="mt-3 font-display text-3xl font-semibold">{value}</p></div>)}
     </section>}
+    <section className="grid gap-3 lg:grid-cols-2">
+      <button type="button" onClick={() => setTab("users")} className="rounded-2xl border border-white/[.07] bg-white/[.02] p-5 text-left transition hover:bg-white/[.045]"><div className="flex items-center gap-2 text-primary"><Users className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">People</span></div><h2 className="mt-3 font-semibold">Account access</h2><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Search accounts, manage manual Premium access, and suspend or restore users.</p></button>
+      <button type="button" onClick={() => setTab("site")} className="rounded-2xl border border-white/[.07] bg-white/[.02] p-5 text-left transition hover:bg-white/[.045]"><div className="flex items-center gap-2 text-primary"><Settings2 className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Platform</span></div><h2 className="mt-3 font-semibold">Site and content controls</h2><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Publish announcements, pause registrations or live search, and curate home page content.</p></button>
+    </section>
+    <section className="rounded-2xl border border-white/[.06] bg-white/[.02] p-5 sm:p-6"><div className="flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /><h2 className="font-semibold">Recent admin activity</h2></div><div className="mt-4 divide-y divide-white/[.05]">{payload?.actions.map((action) => <div key={action.id} className="flex flex-col justify-between gap-1 py-3 text-xs sm:flex-row sm:items-center"><span className="text-white/75"><strong>{action.actor_email}</strong> changed {action.target_user_id === "site" ? "site settings" : action.target_user_id.replace(/^google:/, "")}: {Object.entries(action.details).map(([key, value]) => `${key} → ${Array.isArray(value) ? value.length + " selected" : value}`).join(", ")}</span><time className="shrink-0 text-white/35">{new Date(action.created_at).toLocaleString()}</time></div>)}{payload && !payload.actions.length && <p className="py-4 text-xs text-muted-foreground">No admin changes yet.</p>}</div></section>
+    </>}
 
+    {tab === "users" && <>
     <section className="overflow-hidden rounded-2xl border border-white/[.07] bg-white/[.02]">
       <div className="flex flex-col gap-3 border-b border-white/[.07] p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div><h2 className="font-semibold">Users</h2><p className="mt-1 text-xs text-muted-foreground">Grant manual premium access or suspend an account.</p></div>
@@ -106,8 +119,8 @@ export function AdminPanel() {
       </div>
       {payload && <div className="flex items-center justify-between border-t border-white/[.06] px-4 py-3 text-xs text-muted-foreground"><span>{payload.total} accounts</span><div className="flex gap-2"><button type="button" disabled={!page || loading} onClick={() => setPage((value) => value - 1)} className="rounded-lg border border-white/10 px-3 py-1.5 disabled:opacity-35">Previous</button><button type="button" disabled={(page + 1) * 25 >= payload.total || loading} onClick={() => setPage((value) => value + 1)} className="rounded-lg border border-white/10 px-3 py-1.5 disabled:opacity-35">Next</button></div></div>}
     </section>
-
-    <section className="rounded-2xl border border-white/[.06] bg-white/[.02] p-5 sm:p-6"><div className="flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /><h2 className="font-semibold">Recent admin activity</h2></div><div className="mt-4 divide-y divide-white/[.05]">{payload?.actions.map((action) => <div key={action.id} className="flex flex-col justify-between gap-1 py-3 text-xs sm:flex-row sm:items-center"><span className="text-white/75"><strong>{action.actor_email}</strong> changed {action.target_user_id.replace(/^google:/, "")}: {Object.entries(action.details).map(([key, value]) => `${key} → ${value}`).join(", ")}</span><time className="shrink-0 text-white/35">{new Date(action.created_at).toLocaleString()}</time></div>)}{payload && !payload.actions.length && <p className="py-4 text-xs text-muted-foreground">No admin changes yet.</p>}</div></section>
+    </>}
+    {tab === "site" && <SiteControls />}
     <p className="text-[11px] text-muted-foreground/65">Account records are protected by Supabase RLS and server-only service credentials. Suspended accounts are signed out at their next session check.</p>
   </div>;
 }

@@ -2,12 +2,12 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { SangeetMark } from "@/components/brand/sangeet-mark";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ListMusic,
   Menu,
   LogOut,
-  Music,
   PanelRightClose,
   Search,
   Settings,
@@ -74,9 +74,7 @@ export function TopBar() {
       </button>
       {/* Mobile Logo */}
       <Link href="/home" className="flex items-center gap-2 md:hidden" aria-label="Sangeet home">
-        <div className="h-7 w-7 rounded-full bg-[#1ED760] flex items-center justify-center text-black shadow-md">
-          <Music className="h-3.5 w-3.5 fill-current" />
-        </div>
+        <SangeetMark size={30} />
         <span className="font-display text-[17px] font-bold tracking-tight text-white">Sangeet</span>
       </Link>
 

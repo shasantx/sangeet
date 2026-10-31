@@ -72,6 +72,17 @@ export function YouTubeSearchResults({
           signal: controller.signal,
         });
         if (!response.ok) {
+          if (response.status === 503) {
+            const payload = await response.json().catch(() => ({})) as { disabled?: boolean };
+            if (payload.disabled) {
+              if (!active) return;
+              setResults([]);
+              setFailureMessage("Live song search is paused by Sangeet. You can still search the Sangeet catalog.");
+              setUnavailable(true);
+              onStatusChange?.({ count: 0, loading: false, unavailable: true });
+              return;
+            }
+          }
           if (response.status === 429) throw new Error("Search limit reached. Wait a minute before trying again.");
           throw new Error("Search could not connect. Check your connection and try again.");
         }

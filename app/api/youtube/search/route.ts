@@ -3,6 +3,7 @@ import { execFile } from "child_process";
 import { promisify } from "util";
 import path from "path";
 import { getArtist, tracks } from "@/lib/catalog";
+import { defaultSiteSettings, getSiteSettings } from "@/lib/admin-settings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -82,6 +83,10 @@ function sanitizeResults(input: unknown): ServiceResult[] {
 }
 
 export async function GET(request: Request) {
+  const siteSettings = await getSiteSettings().catch(() => defaultSiteSettings);
+  if (!siteSettings.live_search_enabled) {
+    return NextResponse.json({ results: [], unavailable: true, disabled: true }, { status: 503, headers: { "Cache-Control": "no-store" } });
+  }
   if (!allowSearch(request)) {
     return NextResponse.json({ results: [], error: "rate_limited" }, { status: 429, headers: { "Retry-After": "60", "Cache-Control": "no-store" } });
   }

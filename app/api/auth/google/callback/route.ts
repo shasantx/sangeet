@@ -7,6 +7,9 @@ import {
   secureCookies,
   signSession,
 } from "@/lib/google-auth";
+import { getManagedUser, isAdminStorageConfigured } from "@/lib/admin-users";
+import { getSiteSettings } from "@/lib/admin-settings";
+import { isAdminEmail } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 
@@ -48,6 +51,24 @@ export async function GET(request: NextRequest) {
 
   try {
     const identity = await exchangeGoogleCode(code, oauthRedirectUri(base), verifier, nonce);
+    if (isAdminStorageConfigured()) {
+      let signupEnabled = true;
+      try {
+        const settings = await getSiteSettings();
+        signupEnabled = settings.signup_enabled;
+      } catch (error) {
+        const missingSettingsMigration = error instanceof Error && (error.message.includes("404") || error.message.includes("migration"));
+        if (!missingSettingsMigration) return failureRedirect(base, returnTo, "provider_unavailable", secure);
+      }
+      if (!signupEnabled) {
+        try {
+          const existing = await getManagedUser(`google:${identity.sub}`);
+          if (!existing && !isAdminEmail(identity.email)) return failureRedirect(base, returnTo, "signups_closed", secure);
+        } catch {
+          return failureRedirect(base, returnTo, "provider_unavailable", secure);
+        }
+      }
+    }
     const sessionCookie = signSession({ ...identity, exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60 });
     const target = new URL(returnTo, base);
     target.searchParams.set("google", "success");

@@ -9,12 +9,12 @@ import {
   Heart,
   Home,
   Library,
-  Music,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
   Search,
   Settings2,
+  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useLibraryStore } from "@/store/library-store";
 import { useUIStore } from "@/store/ui-store";
 import { Artwork } from "@/components/music/artwork";
+import { SangeetMark } from "@/components/brand/sangeet-mark";
 
 const primaryNav = [
   { href: "/home", label: "Home", icon: Home },
@@ -69,9 +70,7 @@ export function Sidebar() {
           className="flex min-w-0 items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[#1ED760]"
           aria-label="Sangeet Music home"
         >
-          <div className="h-8 w-8 rounded-full bg-[#1ED760] flex items-center justify-center text-black shrink-0 shadow-md">
-            <Music className="h-4 w-4 fill-current" />
-          </div>
+          <SangeetMark size={34} />
           {!collapsed && (
             <span className="min-w-0">
               <span className="block font-display text-[18px] font-bold leading-none tracking-tight text-white flex items-center gap-1.5">
@@ -116,6 +115,7 @@ export function Sidebar() {
               </Link>
             );
           })}
+          {session?.isAdmin && <Link href="/admin" aria-current={pathname === "/admin" ? "page" : undefined} title={collapsed ? "Admin dashboard" : undefined} className={cn("group relative flex h-10 items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary", collapsed && "justify-center px-0", pathname === "/admin" ? "bg-white/[.06] text-foreground" : "text-muted-foreground hover:bg-white/[.035] hover:text-foreground")}><ShieldCheck className={cn("h-[18px] w-[18px] shrink-0", pathname === "/admin" ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />{!collapsed && <span>Admin dashboard</span>}</Link>}
         </nav>
 
         <div className="mx-3 my-5 h-px bg-white/[.055]" />

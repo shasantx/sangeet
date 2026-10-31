@@ -7,6 +7,7 @@ import { AddToPlaylistDialog } from "@/components/playlists/add-to-playlist-dial
 import { CreatePlaylistDialog } from "@/components/playlists/create-playlist-dialog";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { GoogleSessionSync } from "@/components/auth/google-session-sync";
+import { SiteConfigSync } from "@/components/site/site-config-sync";
 import { AppShell } from "@/components/layout/app-shell";
 import { Toaster } from "./toaster";
 
@@ -20,6 +21,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <CreatePlaylistDialog />
         <AuthModal />
         <GoogleSessionSync />
+        <SiteConfigSync />
         <Toaster />
       </PlayerProvider>
     </TooltipProvider>

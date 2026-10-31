@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/google-auth";
 import { getManagedUser, isAdminStorageConfigured, registerGoogleUser } from "@/lib/admin-users";
+import { isAdminEmail } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
     }
   }
   return NextResponse.json(
-    { session: { id: session.sub, email: session.email, name: session.name, picture: session.picture, plan } },
+    { session: { id: session.sub, email: session.email, name: session.name, picture: session.picture, plan, isAdmin: isAdminEmail(session.email) } },
     { headers: { "cache-control": "no-store" } },
   );
 }
