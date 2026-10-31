@@ -49,10 +49,12 @@ export function GoogleSessionSync() {
 
     void fetch("/api/auth/session", { cache: "no-store" })
       .then(async (response) => {
-        if (!response.ok) return null;
+        if (response.status === 403) return { session: null };
+        if (!response.ok) return undefined;
         return (await response.json()) as { session: SessionPayload | null };
       })
       .then((payload) => {
+        if (!payload) return;
         if (!payload?.session) {
           const current = useAuthStore.getState().session;
           if (current?.provider === "google") useAuthStore.getState().signOut();
