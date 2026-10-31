@@ -23,6 +23,6 @@
       <circle cx="330" cy="380" r="7" fill="#D5E2DD" opacity=".5"/>
       <text x="500" y="848" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" letter-spacing="10" fill="#DFE8E4" opacity=".55">WINTER WALK</text>
       
-<rect width="1000" height="1000" filter="url(#grain-usertwo)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

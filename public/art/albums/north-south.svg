@@ -25,6 +25,6 @@
       <text x="74" y="928" font-family="Arial, sans-serif" font-size="24" letter-spacing="12" fill="#E8EEEC" opacity=".75">NORTHBOUND</text>
       <text x="928" y="928" text-anchor="end" font-family="Arial, sans-serif" font-size="18" letter-spacing="5" fill="#E8EEEC" opacity=".38">NORTH / SOUTH</text>
       
-<rect width="1000" height="1000" filter="url(#grain-northsouth)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

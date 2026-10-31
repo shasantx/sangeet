@@ -25,6 +25,6 @@
       <text x="78" y="876" font-family="Arial, sans-serif" font-size="25" letter-spacing="9" fill="#242625" opacity=".72">ELIO NORTH</text>
       <text x="78" y="914" font-family="Arial, sans-serif" font-size="18" letter-spacing="4" fill="#242625" opacity=".44">SOFT STATIC</text>
       
-<rect width="1000" height="1000" filter="url(#grain-softstatic)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

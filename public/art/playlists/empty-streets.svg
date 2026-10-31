@@ -25,6 +25,6 @@
       <text x="84" y="920" font-family="Arial, sans-serif" font-size="21" letter-spacing="8" fill="#E2E3DD" opacity=".61">AURA EDITORIAL</text>
       <text x="916" y="920" text-anchor="end" font-family="Arial, sans-serif" font-size="16" letter-spacing="3" fill="#E2E3DD" opacity=".32">EMPTY STREETS</text>
       
-<rect width="1000" height="1000" filter="url(#grain-emptystreets)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

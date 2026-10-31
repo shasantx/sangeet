@@ -18,6 +18,6 @@
     <circle cx="500" cy="500" r="215" fill="none" stroke="#D3A26B" opacity=".26"/>
     <path d="M500 200 C 660 280 720 440 660 620 C 600 800 400 800 340 620 C 280 440 340 280 500 200Z" fill="#C08B52" opacity=".23" filter="url(#blur-soul)"/>
     <path d="M500 310 C 590 360 620 460 590 570 C 560 680 440 680 410 570 C 380 460 410 360 500 310Z" fill="#D3A26B" opacity=".2"/>
-<rect width="1000" height="1000" filter="url(#grain-genresoul)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

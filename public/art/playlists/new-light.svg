@@ -24,6 +24,6 @@
       <text x="138" y="890" font-family="Arial, sans-serif" font-size="21" letter-spacing="8" fill="#F5E9DE" opacity=".8">AURA EDITORIAL</text>
       <text x="868" y="890" text-anchor="end" font-family="Arial, sans-serif" font-size="16" letter-spacing="3" fill="#F5E9DE" opacity=".52">NEW LIGHT</text>
       
-<rect width="1000" height="1000" filter="url(#grain-newlight)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

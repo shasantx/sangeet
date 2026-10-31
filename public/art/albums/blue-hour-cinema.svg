@@ -34,6 +34,6 @@
       <text x="74" y="930" font-family="Arial, sans-serif" font-size="25" letter-spacing="12" fill="#E4EBFF" opacity=".7">KAIROS</text>
       <text x="926" y="930" text-anchor="end" font-family="Arial, sans-serif" font-size="18" letter-spacing="4" fill="#E4EBFF" opacity=".38">BLUE HOUR CINEMA</text>
       
-<rect width="1000" height="1000" filter="url(#grain-bluehour)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

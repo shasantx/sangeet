@@ -21,6 +21,6 @@
     <path d="M120 620 C 260 460 360 720 500 560 S 760 460 880 600" fill="none" stroke="#B9A1CE" stroke-width="1.5" opacity=".3"/>
     <path d="M120 680 C 260 520 360 780 500 620 S 760 520 880 660" fill="none" stroke="#B9A1CE" stroke-width="1" opacity=".18"/>
     <circle cx="500" cy="500" r="7" fill="#D8C7E5" opacity=".5"/>
-<rect width="1000" height="1000" filter="url(#grain-genredowntempo)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

@@ -19,6 +19,6 @@
     <path d="M0 690 Q 280 640 500 675 T 1000 660 V1000 H0Z" fill="#090A12"/>
     <path d="M0 760 Q 300 730 500 770 T 1000 740 V1000 H0Z" fill="#05060A"/>
     <g stroke="#B8C2F5" opacity=".15"><path d="M80 220 H920"/><path d="M80 260 H920"/></g>
-<rect width="1000" height="1000" filter="url(#grain-genrecinematic)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

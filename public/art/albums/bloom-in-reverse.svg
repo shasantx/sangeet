@@ -27,6 +27,6 @@
       <text x="100" y="945" font-family="Arial, sans-serif" font-size="22" letter-spacing="9" fill="#F3D6C8" opacity=".6">IRIS EMBER</text>
       <text x="900" y="945" text-anchor="end" font-family="Arial, sans-serif" font-size="17" letter-spacing="3" fill="#F3D6C8" opacity=".34">BLOOM IN REVERSE</text>
       
-<rect width="1000" height="1000" filter="url(#grain-bloom)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

@@ -28,6 +28,6 @@
       <text x="74" y="922" font-family="Arial, sans-serif" font-size="24" letter-spacing="10" fill="#E4EEEA" opacity=".72">SABLE COAST</text>
       <text x="926" y="922" text-anchor="end" font-family="Arial, sans-serif" font-size="19" letter-spacing="6" fill="#E4EEEA" opacity=".38">VELA</text>
       
-<rect width="1000" height="1000" filter="url(#grain-vela)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

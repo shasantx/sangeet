@@ -27,6 +27,6 @@
       <text x="84" y="920" font-family="Arial, sans-serif" font-size="21" letter-spacing="8" fill="#E1E4F6" opacity=".68">AURA EDITORIAL</text>
       <text x="916" y="920" text-anchor="end" font-family="Arial, sans-serif" font-size="16" letter-spacing="3" fill="#E1E4F6" opacity=".35">THE DEEP END</text>
       
-<rect width="1000" height="1000" filter="url(#grain-deep)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

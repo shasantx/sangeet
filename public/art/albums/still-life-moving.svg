@@ -27,6 +27,6 @@
       <text x="74" y="930" font-family="Arial, sans-serif" font-size="24" letter-spacing="9" fill="#EFE2CC" opacity=".7">VERA SOL</text>
       <text x="928" y="930" text-anchor="end" font-family="Arial, sans-serif" font-size="16" letter-spacing="3" fill="#EFE2CC" opacity=".37">STILL LIFE, MOVING</text>
       
-<rect width="1000" height="1000" filter="url(#grain-stilllife)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>

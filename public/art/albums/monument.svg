@@ -29,6 +29,6 @@
       <text x="74" y="942" font-family="Arial, sans-serif" font-size="25" letter-spacing="11" fill="#EEEDE4" opacity=".8">ASTER HOUSE</text>
       <text x="928" y="942" text-anchor="end" font-family="Arial, sans-serif" font-size="18" letter-spacing="5" fill="#EEEDE4" opacity=".5">MONUMENT</text>
       
-<rect width="1000" height="1000" filter="url(#grain-monument)" opacity="1"/>
+
 <rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
 </svg>
