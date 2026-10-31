@@ -12,7 +12,8 @@
       ]
     },
     "ytmusic-service": {
-      "root": "ytmusic-service"
+      "root": "ytmusic-service",
+      "entrypoint": "app:app"
     }
   },
   "rewrites": [
