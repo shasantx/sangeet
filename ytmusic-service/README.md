@@ -23,7 +23,7 @@ the search page simply notes that YouTube search is offline.
 ## Deploy with the Sangeet app on Vercel
 
 The repository root `vercel.json` configures two Vercel Services: the Next.js
-app and this Python search service. The Python service is reached through a
+app and this Python ASGI search service (`app:app`). The Python service is reached through a
 private service binding and is not exposed as a public route. Services are a
 Vercel Beta feature; the project must be imported as a multi-service project.
 The binding supplies `YTMUSIC_SERVICE_URL` automatically, so no URL or shared
