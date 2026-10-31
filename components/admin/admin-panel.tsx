@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Activity, ArrowUpRight, ChartNoAxesCombined, Crown, LayoutDashboard, LoaderCircle, RefreshCw, Search, Settings2, ShieldAlert, ShieldCheck, Users } from "lucide-react";
+import { Activity, ArrowUpRight, ChartNoAxesCombined, CreditCard, Crown, LayoutDashboard, LoaderCircle, RefreshCw, Search, Settings2, ShieldAlert, ShieldCheck, Users } from "lucide-react";
 import type { AdminAuditEntry, ManagedUser, UserPlan, UserStatus } from "@/lib/admin-users";
 import { SiteControls } from "@/components/admin/site-controls";
 import { SangeetMark } from "@/components/brand/sangeet-mark";
+import { PaymentControls } from "@/components/admin/payment-controls";
 
-type AdminTab = "overview" | "users" | "site" | "activity";
+type AdminTab = "overview" | "users" | "payments" | "site" | "activity";
 
 interface AdminPayload {
   users: (ManagedUser & { is_admin?: boolean })[];
@@ -20,6 +21,7 @@ interface AdminPayload {
 const navigation: { id: AdminTab; label: string; hint: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "Overview", hint: "Health and activity", icon: LayoutDashboard },
   { id: "users", label: "Users", hint: "Accounts and access", icon: Users },
+  { id: "payments", label: "Payments", hint: "Review Premium requests", icon: CreditCard },
   { id: "site", label: "Site controls", hint: "Content and switches", icon: Settings2 },
   { id: "activity", label: "Audit trail", hint: "Admin changes", icon: Activity },
 ];
@@ -130,7 +132,7 @@ export function AdminPanel({ email }: { email: string }) {
 
       <main className="mx-auto max-w-[1440px] px-4 pb-12 pt-7 sm:px-7 sm:pt-9 lg:px-10 lg:pt-10">
         <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-          <div><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-primary/75">{tab === "overview" ? "Platform overview" : "Platform management"}</p><h1 className="mt-2 font-display text-3xl font-semibold tracking-[-.045em] sm:text-[38px]">{currentTitle}</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-white/45">{tab === "overview" ? "A clear view of account access, site controls, and recent admin actions." : tab === "users" ? "Review listener accounts and manage access from one place." : tab === "site" ? "Publish site updates, control entry points, and curate the listening home." : "A traceable record of changes made in the admin workspace."}</p></div>
+          <div><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-primary/75">{tab === "overview" ? "Platform overview" : "Platform management"}</p><h1 className="mt-2 font-display text-3xl font-semibold tracking-[-.045em] sm:text-[38px]">{currentTitle}</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-white/45">{tab === "overview" ? "A clear view of account access, site controls, and recent admin actions." : tab === "users" ? "Review listener accounts and manage access from one place." : tab === "payments" ? "Verify receipts, configure payment instructions, and grant Premium access." : tab === "site" ? "Publish site updates, control entry points, and curate the listening home." : "A traceable record of changes made in the admin workspace."}</p></div>
           <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/[.08] bg-white/[.025] px-3 py-2 text-[10px] text-white/45"><span className={`h-1.5 w-1.5 rounded-full ${error ? "bg-red-300" : payload ? "bg-primary" : "bg-white/25"}`} />{error ? "Needs attention" : payload ? "Platform connected" : "Connecting"}</span>
             <button type="button" onClick={() => setRevision((value) => value + 1)} disabled={loading} className="inline-flex h-9 items-center gap-2 rounded-full border border-white/[.08] px-3 text-[10px] font-medium text-white/65 transition hover:border-primary/30 hover:text-white disabled:opacity-45" aria-label="Refresh admin data"><RefreshCw className={`h-3.5 w-3.5 text-primary ${loading ? "animate-spin" : ""}`} />{lastRefreshed ? new Date(lastRefreshed).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Refresh"}</button>
@@ -152,7 +154,7 @@ export function AdminPanel({ email }: { email: string }) {
                 <div className="flex items-start justify-between gap-4"><div><p className="text-[9px] font-semibold uppercase tracking-[.16em] text-primary/75">Account mix</p><h2 className="mt-2 text-base font-semibold">Free and Premium access</h2></div><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/[.09] text-primary"><ChartNoAxesCombined className="h-4 w-4" /></span></div>
                 {payload ? <><div className="mt-5 flex items-end justify-between gap-4"><div><p className="font-display text-3xl font-semibold tabular-nums">{payload.stats.total ? Math.round((payload.stats.premium / payload.stats.total) * 100) : 0}%</p><p className="mt-1 text-[11px] text-white/40">of listeners have Premium access</p></div><p className="text-right text-xs text-white/50"><span className="font-semibold text-amber-100">{payload.stats.premium.toLocaleString()}</span> Premium<br /><span className="font-semibold text-white/70">{Math.max(0, payload.stats.total - payload.stats.premium).toLocaleString()}</span> Free</p></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-white/[.07]" role="img" aria-label={`${payload.stats.premium} Premium out of ${payload.stats.total} total accounts`}><div className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-300 transition-[width] duration-500" style={{ width: `${payload.stats.total ? Math.min(100, (payload.stats.premium / payload.stats.total) * 100) : 0}%` }} /></div></> : <div className="mt-5 h-14 animate-pulse rounded-xl bg-white/[.04]" />}
               </article>
-              <article className="rounded-2xl border border-white/[.07] bg-[#101411] p-5 sm:p-6"><p className="text-[9px] font-semibold uppercase tracking-[.16em] text-primary/75">Admin shortcuts</p><h2 className="mt-2 text-base font-semibold">Make a platform change</h2><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setTab("users")} className="rounded-xl border border-white/[.07] bg-white/[.02] p-3 text-left transition hover:border-primary/25 hover:bg-primary/[.04]"><Users className="h-4 w-4 text-primary" /><span className="mt-2 block text-xs font-medium">Manage listeners</span><span className="mt-1 block text-[10px] text-white/35">Plans and account access</span></button><button type="button" onClick={() => setTab("site")} className="rounded-xl border border-white/[.07] bg-white/[.02] p-3 text-left transition hover:border-primary/25 hover:bg-primary/[.04]"><Settings2 className="h-4 w-4 text-primary" /><span className="mt-2 block text-xs font-medium">Update the site</span><span className="mt-1 block text-[10px] text-white/35">Curation and site switches</span></button></div></article>
+              <article className="rounded-2xl border border-white/[.07] bg-[#101411] p-5 sm:p-6"><p className="text-[9px] font-semibold uppercase tracking-[.16em] text-primary/75">Admin shortcuts</p><h2 className="mt-2 text-base font-semibold">Manage the platform</h2><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setTab("users")} className="rounded-xl border border-white/[.07] bg-white/[.02] p-3 text-left transition hover:border-primary/25 hover:bg-primary/[.04]"><Users className="h-4 w-4 text-primary" /><span className="mt-2 block text-xs font-medium">Listener accounts</span><span className="mt-1 block text-[10px] text-white/35">Plans and account access</span></button><button type="button" onClick={() => setTab("payments")} className="rounded-xl border border-white/[.07] bg-white/[.02] p-3 text-left transition hover:border-primary/25 hover:bg-primary/[.04]"><CreditCard className="h-4 w-4 text-primary" /><span className="mt-2 block text-xs font-medium">Payment reviews</span><span className="mt-1 block text-[10px] text-white/35">Verify Premium requests</span></button><button type="button" onClick={() => setTab("site")} className="rounded-xl border border-white/[.07] bg-white/[.02] p-3 text-left transition hover:border-primary/25 hover:bg-primary/[.04]"><Settings2 className="h-4 w-4 text-primary" /><span className="mt-2 block text-xs font-medium">Site controls</span><span className="mt-1 block text-[10px] text-white/35">Curation and switches</span></button><button type="button" onClick={() => setTab("activity")} className="rounded-xl border border-white/[.07] bg-white/[.02] p-3 text-left transition hover:border-primary/25 hover:bg-primary/[.04]"><Activity className="h-4 w-4 text-primary" /><span className="mt-2 block text-xs font-medium">Audit trail</span><span className="mt-1 block text-[10px] text-white/35">Review admin changes</span></button></div></article>
             </section>
             <ActivityFeed actions={payload?.actions ?? []} loading={loading} compact />
           </div>}
@@ -166,6 +168,7 @@ export function AdminPanel({ email }: { email: string }) {
           </section>}
 
           {tab === "site" && <SiteControls />}
+          {tab === "payments" && <PaymentControls />}
           {tab === "activity" && <ActivityFeed actions={payload?.actions ?? []} loading={loading} />}
         </>}
         <p className="mt-8 border-t border-white/[.06] pt-4 text-[10px] text-white/30">Changes are server-authorized and recorded in the admin audit log. User data is accessed through the server-only Supabase key.</p>

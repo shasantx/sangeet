@@ -26,11 +26,12 @@ import {
   Users,
 } from "lucide-react";
 import { cn, formatCount } from "@/lib/utils";
-import type { ThemePreference } from "@/store/app-store";
+import type { AccentPreference, ThemePreference } from "@/store/app-store";
 import { useAppStore } from "@/store/app-store";
 import { albums, tracks } from "@/lib/catalog";
 import { useLibraryStore } from "@/store/library-store";
 import { usePlayerStore } from "@/store/player-store";
+import { LocalAudioLibrary } from "@/components/settings/local-audio-library";
 import { toast } from "@/store/ui-store";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -119,6 +120,8 @@ export default function SettingsPage() {
   const router = useRouter();
   const theme = useAppStore((state) => state.theme);
   const setTheme = useAppStore((state) => state.setTheme);
+  const accent = useAppStore((state) => state.accent);
+  const setAccent = useAppStore((state) => state.setAccent);
   const autoplay = useAppStore((state) => state.autoplay);
   const setAutoplay = useAppStore((state) => state.setAutoplay);
   const shortcuts = useAppStore((state) => state.shortcuts);
@@ -305,6 +308,7 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+          <LocalAudioLibrary />
         </TabsContent>
 
         <TabsContent value="appearance">
@@ -380,6 +384,14 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            <div className="rounded-2xl border border-white/[.055] bg-white/[.015] p-4 sm:p-5">
+              <p className="eyebrow">Accent color</p>
+              <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">Personalize buttons, active states and highlights across Sangeet.</p>
+              <div className="mt-4 flex flex-wrap gap-2">{([
+                ["green", "Sangeet green", "bg-emerald-500"], ["red", "Red", "bg-red-500"], ["yellow", "Yellow", "bg-amber-400"], ["blue", "Blue", "bg-blue-500"], ["violet", "Violet", "bg-violet-500"],
+              ] as [AccentPreference, string, string][]).map(([id, label, color]) => <button key={id} type="button" onClick={() => { setAccent(id); toast.success("Accent updated", label); }} aria-pressed={accent === id} className={cn("inline-flex h-10 items-center gap-2 rounded-full border px-3 text-xs transition", accent === id ? "border-primary/40 bg-primary/[.08]" : "border-white/10 hover:bg-white/[.04]")}><span className={`h-3 w-3 rounded-full ${color}`} />{label}{accent === id && <Check className="h-3.5 w-3.5 text-primary"/>}</button>)}</div>
+            </div>
+
             <div className="divide-y divide-white/[.055] overflow-hidden rounded-2xl border border-white/[.055] bg-white/[.015]">
               <div className="p-4 pb-3 sm:px-5">
                 <p className="eyebrow">Interface</p>
@@ -425,8 +437,7 @@ export default function SettingsPage() {
             <div className="flex items-start gap-2.5 rounded-xl border border-white/[.05] bg-white/[.015] px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">
               <Moon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
               <p>
-                Sangeet is designed dark by default. The theme affects the canvas, surfaces and borders
-                while keeping the violet accent consistent.
+                    Choose a dark canvas and pair it with a green, red, yellow, blue or violet accent. Your choices are saved on this device.
               </p>
             </div>
           </div>
