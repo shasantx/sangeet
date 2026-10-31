@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/google-auth";
-import { getManagedUser, registerGoogleUser } from "@/lib/admin-users";
+import { getManagedUser, isAdminStorageConfigured, registerGoogleUser } from "@/lib/admin-users";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,7 +22,14 @@ export async function GET(request: NextRequest) {
     }
     if (profile?.plan === "premium") plan = "premium";
   } catch {
-    // Keep authentication available if admin storage has not been provisioned yet.
+    // Without the user store the app can still run in local/demo mode. In
+    // production, don't treat a storage outage as proof an account is active.
+    if (isAdminStorageConfigured()) {
+      return NextResponse.json(
+        { error: "Account status is temporarily unavailable." },
+        { status: 503, headers: { "cache-control": "no-store" } },
+      );
+    }
   }
   return NextResponse.json(
     { session: { id: session.sub, email: session.email, name: session.name, picture: session.picture, plan } },

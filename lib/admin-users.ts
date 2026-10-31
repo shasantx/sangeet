@@ -28,6 +28,10 @@ function config() {
   return { base, key };
 }
 
+export function isAdminStorageConfigured() {
+  return Boolean(process.env.SUPABASE_URL?.trim() && process.env.SUPABASE_SERVICE_ROLE_KEY?.trim());
+}
+
 async function db(path: string, init: RequestInit = {}) {
   const { base, key } = config();
   return fetch(`${base}/rest/v1/${path}`, {
