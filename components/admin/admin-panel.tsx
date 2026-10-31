@@ -72,7 +72,7 @@ export function AdminPanel() {
 
   if (error.includes("not configured") || error.includes("migration")) {
     return <section className="mt-8 rounded-2xl border border-amber-300/20 bg-amber-200/[.04] p-5 sm:p-7">
-      <div className="flex items-start gap-3"><ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" /><div><h2 className="font-semibold text-white">Connect the admin database</h2><p className="mt-2 text-sm leading-relaxed text-white/65">User accounts and premium status need persistent storage. This project has no database connection configured yet, so management stays locked until setup is complete.</p>
+      <div className="flex items-start gap-3"><ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" /><div><h2 className="font-semibold text-white">Admin database setup</h2><p className="mt-2 text-sm leading-relaxed text-white/65">User accounts and premium status need Supabase storage. Follow these checks to connect the database and unlock management.</p>
         <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-white/65"><li>Run <code className="text-white">supabase/migrations/20261031000000_admin_user_management.sql</code> in your Supabase SQL Editor.</li><li>Add <code className="text-white">SUPABASE_URL</code> and <code className="text-white">SUPABASE_SERVICE_ROLE_KEY</code> to Vercel Environment Variables. Keep the service key server-only.</li><li>Redeploy. Users will appear as they sign in; refreshing your account registers the first admin row.</li></ol>
         <p className="mt-4 text-xs text-white/40">Premium here is a manual access flag. No billing provider or paid subscription is connected.</p>
       </div></div>
