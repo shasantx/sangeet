@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { SangeetMark } from "@/components/brand/sangeet-mark";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowDown, ArrowRight, AudioLines, Compass, Headphones, Heart, Library, MonitorDown, Music2, Play, Search, Smartphone, Sparkles, Waves } from "lucide-react";
@@ -70,7 +71,7 @@ export default function WelcomePage() {
       <header className="sticky top-0 z-40 border-b border-white/[.07] bg-[#0b0c0b]/90 backdrop-blur-xl">
         <div className="mx-auto flex h-[66px] max-w-7xl items-center justify-between gap-3 px-4 sm:h-[76px] sm:px-8">
           <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="Sangeet home">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-black shadow-[0_0_28px_rgba(30,215,96,.22)]"><AudioLines className="h-[18px] w-[18px]" /></span>
+            <SangeetMark size={38} />
             <span className="font-display text-xl font-semibold tracking-[-.04em]">Sangeet</span>
           </Link>
           <nav className="hidden items-center gap-8 text-sm text-white/60 md:flex" aria-label="Landing page">
@@ -189,7 +190,7 @@ export default function WelcomePage() {
 
       <footer className="border-t border-white/[.07] bg-[#080908]">
         <div className="mx-auto grid max-w-7xl gap-9 px-5 py-10 sm:grid-cols-[1.4fr_1fr_1fr_1fr] sm:px-8 sm:py-14">
-          <div><Link href="/" className="flex w-fit items-center gap-2.5" aria-label="Sangeet home"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-black"><AudioLines className="h-4 w-4" /></span><span className="font-display text-lg font-semibold">Sangeet</span></Link><p className="mt-3 max-w-[220px] text-xs leading-relaxed text-white/38">A calmer home for the music you come back to.</p></div>
+          <div><Link href="/" className="flex w-fit items-center gap-2.5" aria-label="Sangeet home"><SangeetMark size={36} /><span className="font-display text-lg font-semibold">Sangeet</span></Link><p className="mt-3 max-w-[220px] text-xs leading-relaxed text-white/38">A calmer home for the music you come back to.</p></div>
           {[{ title: "Discover", items: [["Explore", "/explore"], ["Search", "/search"], ["New releases", "/new-releases"]] }, { title: "Your music", items: [["Your library", "/library"], ["Liked songs", "/liked"], ["Made for you", "/made-for-you"]] }, { title: "Sangeet", items: [["Plans", "/plans"], ["Sign in", "#signin"], ["Create account", "#signup"]] }].map((group) => <nav key={group.title} aria-label={group.title}><p className="mb-3 text-[10px] font-semibold uppercase tracking-[.16em] text-white/35">{group.title}</p><ul className="space-y-2.5">{group.items.map(([label, href]) => <li key={label}>{href.startsWith("#") ? <button type="button" onClick={() => openAuthModal(href === "#signup" ? "signup" : "signin")} className="text-left text-xs text-white/55 transition hover:text-primary">{label}</button> : <Link href={href} className="text-xs text-white/55 transition hover:text-primary">{label}</Link>}</li>)}</ul></nav>)}
         </div>
         <div className="mx-auto flex max-w-7xl flex-col gap-2 border-t border-white/[.06] px-5 py-4 text-[10px] text-white/30 sm:flex-row sm:items-center sm:justify-between sm:px-8"><span>© {new Date().getFullYear()} Sangeet. Made for listening.</span><span>Independent music discovery experience</span><span>Made by <a href="https://shasant.xyz" target="_blank" rel="noopener noreferrer" className="font-medium text-white/55 transition hover:text-primary">Shasant ↗</a></span></div>

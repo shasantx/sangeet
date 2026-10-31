@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Headphones, Search, Sparkles } from "lucide-react";
-import { albums, getAlbum, getArtist, getTracks, selectedAlbums, playlists, tracks } from "@/lib/catalog";
+import { albums, getAlbum, getArtist, getPlaylist, getTracks, selectedAlbums, tracks } from "@/lib/catalog";
 import { dailyMixes } from "@/lib/mixes";
 import { getFirstName, getGreeting } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
@@ -17,6 +17,7 @@ import { SectionHeader } from "@/components/music/section-header";
 import { TrackList } from "@/components/music/track-list";
 import { Artwork } from "@/components/music/artwork";
 import { registerYouTubeSearchResult, type YouTubeSearchResult } from "@/lib/dynamic-tracks";
+import { useSiteConfigStore } from "@/store/site-config-store";
 
 const selectionTrackIds = ["t07", "t16", "t04", "t28", "t22", "t01", "t25", "t10"];
 
@@ -25,6 +26,7 @@ export default function HomePage() {
   const preferredArtistIds = useAppStore((state) => state.preferredArtistIds);
   const recentlyPlayed = useLibraryStore((state) => state.recentlyPlayed);
   const likedTrackIds = useLibraryStore((state) => state.likedTrackIds);
+  const siteConfig = useSiteConfigStore((state) => state.config);
   const [greeting, setGreeting] = useState("Good evening");
   const [artistTrackIds, setArtistTrackIds] = useState<string[]>([]);
   const [loadingArtistTracks, setLoadingArtistTracks] = useState(false);
@@ -37,8 +39,9 @@ export default function HomePage() {
     return ids.length ? ids.slice(0, 6) : tracks.slice(0, 6).map((track) => track.id);
   }, [recentlyPlayed, likedTrackIds]);
   const recentTracks = getTracks(recentIds);
-  const heroAlbum = selectedAlbums[0] ?? albums[0];
+  const heroAlbum = (siteConfig.featured_album_id ? getAlbum(siteConfig.featured_album_id) : undefined) ?? selectedAlbums[0] ?? albums[0];
   const heroArtist = heroAlbum ? getArtist(heroAlbum.artistId) : undefined;
+  const homePlaylists = siteConfig.featured_playlist_ids.map((id) => getPlaylist(id)).filter((playlist): playlist is NonNullable<typeof playlist> => Boolean(playlist));
 
   useEffect(() => {
     let active = true;
@@ -138,10 +141,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="section-space pb-3">
+      {homePlaylists.length > 0 && <section className="section-space pb-3">
         <SectionHeader title="Curated playlists" eyebrow="Playlists" href="/explore" />
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-          {playlists.filter((playlist) => playlist.featured).slice(0, 6).map((playlist) => {
+          {homePlaylists.map((playlist) => {
             const firstTrack = getTracks(playlist.trackIds.slice(0, 1))[0];
             return (
               <Link key={playlist.id} href={`/playlist/${playlist.id}`} className="group flex min-w-0 items-center gap-3 rounded-lg border border-white/[.04] bg-white/[.025] p-2 transition hover:bg-white/[.06]">
@@ -152,7 +155,7 @@ export default function HomePage() {
             );
           })}
         </div>
-      </section>
+      </section>}
       <p className="mt-12 border-t border-white/[.06] pt-5 text-xs text-muted-foreground">Sangeet is an independent music discovery experience.</p>
     </div>
   );

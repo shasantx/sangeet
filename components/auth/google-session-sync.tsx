@@ -13,6 +13,7 @@ interface SessionPayload {
   name: string;
   picture?: string;
   plan?: "free" | "premium";
+  isAdmin?: boolean;
 }
 
 const errorMessages: Record<string, string> = {
@@ -22,6 +23,7 @@ const errorMessages: Record<string, string> = {
   state: "Google sign in could not be verified. Please try again.",
   response: "Google returned an incomplete sign in response.",
   verification: "Google could not verify this account. Please try again.",
+  signups_closed: "New accounts are temporarily paused. Please try again later.",
   configuration: "Google sign in is not configured for this deployment.",
 };
 

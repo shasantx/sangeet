@@ -12,6 +12,7 @@ import { MobileNavigation } from "./mobile-navigation";
 import { MobileSidebar } from "./mobile-sidebar";
 import { BottomPlayer } from "@/components/player/bottom-player";
 import { MobileMiniPlayer } from "@/components/player/mobile-mini-player";
+import { SiteAnnouncement } from "@/components/site/site-announcement";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -59,6 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <TopBar />
+        <SiteAnnouncement />
         <main className="min-h-[calc(100dvh-70px)] pb-[calc(146px+env(safe-area-inset-bottom))] md:pb-[108px]">
           <motion.div
             key={pathname}

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Music } from "lucide-react";
+import { SangeetMark } from "@/components/brand/sangeet-mark";
+import { ArrowLeft } from "lucide-react";
 
 function GoogleMark() {
   return (
@@ -29,7 +30,7 @@ export default function AuthPage() {
           <ArrowLeft className="h-3.5 w-3.5" /> Back to listening
         </Link>
         <div className="mb-7 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-black"><Music className="h-5 w-5" /></span>
+          <SangeetMark size={44} />
           <span className="font-display text-xl font-semibold tracking-tight">Sangeet</span>
         </div>
         <p className="eyebrow mb-2">Listener account</p>
