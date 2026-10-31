@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { usePathname, useRouter } from "next/navigation";
 import { getAudioElement, registerAudioElement } from "@/lib/audio-engine";
 import { getAlbum, getArtist, getTrack } from "@/lib/catalog";
 import {
@@ -9,7 +8,6 @@ import {
   getYouTubeTime,
   initYouTubePlayer,
   muteYouTube,
-  pauseYouTube,
   setYouTubeVolume,
 } from "@/lib/youtube-engine";
 import { isTypingTarget } from "@/lib/utils";
@@ -20,27 +18,11 @@ import { toast } from "@/store/ui-store";
 import { YouTubeDock } from "./youtube-dock";
 
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const router = useRouter();
   const currentTrackId = usePlayerStore((state) => state.currentTrackId);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const isLoading = usePlayerStore((state) => state.isLoading);
   const audioRef = useRef<HTMLAudioElement>(null);
   const errorReportedFor = useRef<string | null>(null);
-  const previousPlayback = useRef({ pathname, currentTrackId, isPlaying });
-
-  useEffect(() => {
-    const pauseWhenHidden = () => {
-      if (document.visibilityState !== "hidden") return;
-      const state = usePlayerStore.getState();
-      const current = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
-      if (!current?.youtubeId || !state.isPlaying) return;
-      pauseYouTube();
-      state.syncFromAudio({ isPlaying: false, isLoading: false });
-    };
-    document.addEventListener("visibilitychange", pauseWhenHidden);
-    return () => document.removeEventListener("visibilitychange", pauseWhenHidden);
-  }, []);
 
   useEffect(() => {
     const track = currentTrackId ? getTrack(currentTrackId) : undefined;
@@ -179,26 +161,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const previous = previousPlayback.current;
-    const changedTrack = previous.currentTrackId !== currentTrackId;
-    const resumedTrack = !previous.isPlaying && isPlaying;
-    const navigatingAwayFromPlayer = previous.pathname === "/now-playing" && pathname !== "/now-playing";
-    previousPlayback.current = { pathname, currentTrackId, isPlaying };
-
-    const state = usePlayerStore.getState();
     const current = currentTrackId ? getTrack(currentTrackId) : undefined;
-    if (pathname !== "/now-playing") {
-      if (current?.youtubeId && isPlaying && (changedTrack || resumedTrack) && !navigatingAwayFromPlayer) {
-        router.replace("/now-playing");
-        return;
-      }
-      if (current?.youtubeId && state.isPlaying) {
-        pauseYouTube();
-        state.syncFromAudio({ isPlaying: false, isLoading: false });
-      }
-      return;
-    }
-
     if (!current?.youtubeId) return;
     const activeYouTube = () => {
       const id = usePlayerStore.getState().currentTrackId;
@@ -237,7 +200,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         toast.error("YouTube playback stopped", message);
       },
     });
-  }, [pathname, currentTrackId, isPlaying, router]);
+  }, [currentTrackId, isPlaying]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
