@@ -22,7 +22,7 @@ export function MobileMiniPlayer() {
 
   return (
     <div
-      className="fixed inset-x-0 z-40 border-t border-white/[.08] bg-[#17171e]/97 backdrop-blur-2xl md:hidden"
+      className="fixed inset-x-0 z-40 border-t border-white/[.08] bg-[#17171e] md:hidden"
       style={{ bottom: "calc(76px + env(safe-area-inset-bottom))" }}
     >
       <div className="absolute inset-x-0 top-0 h-[2px] bg-white/[.08]">

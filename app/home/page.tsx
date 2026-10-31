@@ -7,6 +7,7 @@ import { albums, getAlbum, getArtist, getTracks, selectedAlbums, playlists, trac
 import { dailyMixes } from "@/lib/mixes";
 import { getFirstName, getGreeting } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
+import { useAppStore } from "@/store/app-store";
 import { useLibraryStore } from "@/store/library-store";
 import { AlbumCard } from "@/components/music/album-card";
 import { MixCard } from "@/components/music/mix-card";
@@ -15,14 +16,18 @@ import { QuickTrackTile } from "@/components/music/quick-track-tile";
 import { SectionHeader } from "@/components/music/section-header";
 import { TrackList } from "@/components/music/track-list";
 import { Artwork } from "@/components/music/artwork";
+import { registerYouTubeSearchResult, type YouTubeSearchResult } from "@/lib/dynamic-tracks";
 
 const selectionTrackIds = ["t07", "t16", "t04", "t28", "t22", "t01", "t25", "t10"];
 
 export default function HomePage() {
   const session = useAuthStore((state) => state.session);
+  const preferredArtistIds = useAppStore((state) => state.preferredArtistIds);
   const recentlyPlayed = useLibraryStore((state) => state.recentlyPlayed);
   const likedTrackIds = useLibraryStore((state) => state.likedTrackIds);
   const [greeting, setGreeting] = useState("Good evening");
+  const [artistTrackIds, setArtistTrackIds] = useState<string[]>([]);
+  const [loadingArtistTracks, setLoadingArtistTracks] = useState(false);
   const displayName = session?.displayName;
 
   useEffect(() => setGreeting(getGreeting()), []);
@@ -34,6 +39,37 @@ export default function HomePage() {
   const recentTracks = getTracks(recentIds);
   const heroAlbum = selectedAlbums[0] ?? albums[0];
   const heroArtist = heroAlbum ? getArtist(heroAlbum.artistId) : undefined;
+
+  useEffect(() => {
+    let active = true;
+    const preferred = new Set(preferredArtistIds);
+    const localTracks = tracks.filter((track) => preferred.has(track.artistId)).slice(0, 12);
+    setArtistTrackIds(localTracks.map((track) => track.id));
+    const artistsToFind = preferredArtistIds
+      .map((id) => getArtist(id))
+      .filter((artist): artist is NonNullable<typeof artist> => artist !== undefined && !localTracks.some((track) => track.artistId === artist.id))
+      .slice(0, 3);
+    if (!artistsToFind.length) {
+      setLoadingArtistTracks(false);
+      return () => { active = false; };
+    }
+    setLoadingArtistTracks(true);
+    void Promise.all(artistsToFind.map(async (artist) => {
+      try {
+        const response = await fetch(`/api/youtube/search?q=${encodeURIComponent(artist.name)}`, { signal: AbortSignal.timeout(7000) });
+        if (!response.ok) return [];
+        const payload = await response.json() as { results?: YouTubeSearchResult[] };
+        return (payload.results ?? []).slice(0, 4).map((result) => registerYouTubeSearchResult(result).id);
+      } catch {
+        return [];
+      }
+    })).then((groups) => {
+      if (!active) return;
+      setArtistTrackIds((current) => Array.from(new Set([...current, ...groups.flat()])).slice(0, 12));
+      setLoadingArtistTracks(false);
+    });
+    return () => { active = false; };
+  }, [preferredArtistIds]);
 
   return (
     <div className="page-container max-w-[1480px] pt-8 sm:pt-10">
@@ -51,6 +87,15 @@ export default function HomePage() {
       <section aria-label="Quick access" className="grid grid-cols-2 gap-2 sm:grid-cols-2 xl:grid-cols-3">
         {recentTracks.map((track) => <QuickTrackTile key={track.id} track={track} contextIds={recentIds} contextLabel="Your listening" />)}
       </section>
+
+      {preferredArtistIds.length > 0 && (
+        <section className="section-space" aria-label="Recommended from your artist picks">
+          <SectionHeader title="Picked for you" eyebrow="Your artist picks" description="Songs from the artists you chose." href="/library" />
+          {artistTrackIds.length ? <div className="rounded-xl border border-white/[.06] bg-white/[.015] px-2 py-2 sm:px-4"><TrackList trackIds={artistTrackIds} label="Songs from your chosen artists" showAlbum /></div> : (
+            <p className="rounded-xl border border-white/[.06] bg-white/[.025] p-4 text-sm text-muted-foreground">{loadingArtistTracks ? "Finding songs from your artists…" : "We couldn’t load artist recommendations right now. Try Search or Explore."}</p>
+          )}
+        </section>
+      )}
 
       {heroAlbum && (
         <section className="relative mt-10 grid overflow-hidden rounded-2xl border border-white/[.07] bg-[#151b17] md:min-h-[300px] md:grid-cols-[1fr_300px]">

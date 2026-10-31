@@ -25,6 +25,7 @@ interface AppState extends PreferenceState {
   sidebarCollapsed: boolean;
   rightPanelOpen: boolean;
   recentSearches: string[];
+  preferredArtistIds: string[];
 
   setProfile: (name: string, handle?: string) => void;
   enterDemo: (name?: string) => void;
@@ -40,6 +41,7 @@ interface AppState extends PreferenceState {
   setShortcuts: (value: boolean) => void;
   addRecentSearch: (query: string) => void;
   clearRecentSearches: () => void;
+  setPreferredArtists: (artistIds: string[]) => void;
 }
 
 const seedSearches: string[] = [];
@@ -53,6 +55,7 @@ export const useAppStore = create<AppState>()(
       sidebarCollapsed: false,
       rightPanelOpen: true,
       recentSearches: seedSearches,
+      preferredArtistIds: [],
       autoplay: true,
       crossfade: false,
       crossfadeDuration: 4,
@@ -107,6 +110,7 @@ export const useAppStore = create<AppState>()(
         }));
       },
       clearRecentSearches: () => set({ recentSearches: [] }),
+      setPreferredArtists: (artistIds) => set({ preferredArtistIds: Array.from(new Set(artistIds)).slice(0, 5) }),
     }),
     {
       name: "aura-app-v1",
@@ -121,6 +125,7 @@ export const useAppStore = create<AppState>()(
         sidebarCollapsed: state.sidebarCollapsed,
         rightPanelOpen: state.rightPanelOpen,
         recentSearches: state.recentSearches,
+        preferredArtistIds: state.preferredArtistIds,
         autoplay: state.autoplay,
         crossfade: state.crossfade,
         crossfadeDuration: state.crossfadeDuration,
@@ -145,6 +150,9 @@ export const useAppStore = create<AppState>()(
           recentSearches: Array.isArray(source.recentSearches)
             ? source.recentSearches.filter((item): item is string => typeof item === "string").slice(0, 8)
             : current.recentSearches,
+          preferredArtistIds: Array.isArray(source.preferredArtistIds)
+            ? Array.from(new Set(source.preferredArtistIds.filter((id): id is string => typeof id === "string"))).slice(0, 5)
+            : current.preferredArtistIds,
           theme: ["dark", "midnight", "dusk"].includes(source.theme as string)
             ? (source.theme as ThemePreference)
             : "dark",

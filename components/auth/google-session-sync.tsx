@@ -3,6 +3,9 @@
 import { useEffect, useRef } from "react";
 import { useAuthStore } from "@/store/auth-store";
 import { toast } from "@/store/ui-store";
+import { artists } from "@/lib/catalog";
+import { useAppStore } from "@/store/app-store";
+import { useLibraryStore } from "@/store/library-store";
 
 interface SessionPayload {
   id: string;
@@ -56,7 +59,28 @@ export function GoogleSessionSync() {
         }
         setGoogleSession(payload.session);
         if (outcome === "success") {
-          toast.success(`Welcome, ${payload.session.name}!`, "Signed in with Google.");
+          let selectedArtistIds: string[] = [];
+          try {
+            const saved = window.sessionStorage.getItem("sangeet-signup-artists-v1");
+            window.sessionStorage.removeItem("sangeet-signup-artists-v1");
+            const parsed: unknown = saved ? JSON.parse(saved) : [];
+            if (Array.isArray(parsed)) {
+              const validIds = new Set(artists.map((artist) => artist.id));
+              selectedArtistIds = Array.from(new Set(parsed.filter((id): id is string => typeof id === "string" && validIds.has(id)))).slice(0, 5);
+            }
+          } catch {
+            selectedArtistIds = [];
+          }
+          if (selectedArtistIds.length) {
+            useAppStore.getState().setPreferredArtists(selectedArtistIds);
+            const library = useLibraryStore.getState();
+            selectedArtistIds.forEach((id) => {
+              if (!library.followedArtistIds.includes(id)) library.toggleFollowArtist(id);
+            });
+            toast.success(`Welcome, ${payload.session.name}!`, "Your artist picks are shaping your new releases.");
+          } else {
+            toast.success(`Welcome, ${payload.session.name}!`, "Signed in with Google.");
+          }
           if (window.location.pathname === "/auth" || window.location.pathname === "/") window.location.replace("/home");
         }
       })

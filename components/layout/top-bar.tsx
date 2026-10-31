@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ListMusic,
+  Menu,
   LogOut,
   Music,
   PanelRightClose,
@@ -35,7 +36,9 @@ export function TopBar() {
   const rightPanelOpen = useAppStore((state) => state.rightPanelOpen);
   const toggleRightPanel = useAppStore((state) => state.toggleRightPanel);
   const queueOpen = useUIStore((state) => state.queuePanelOpen);
+  const mobileSidebarOpen = useUIStore((state) => state.mobileSidebarOpen);
   const toggleQueue = useUIStore((state) => state.toggleQueuePanel);
+  const toggleMobileSidebar = useUIStore((state) => state.toggleMobileSidebar);
   const currentTrackId = usePlayerStore((state) => state.currentTrackId);
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -65,7 +68,10 @@ export function TopBar() {
   const avatarColor = session?.avatarColor || profile.avatarColor;
 
   return (
-    <header className="sticky top-0 z-30 flex h-[62px] items-center gap-3 border-b border-white/[.04] bg-background/90 px-4 backdrop-blur-2xl sm:h-[70px] sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-[62px] items-center gap-3 border-b border-white/[.04] bg-[#101014] px-4 sm:h-[70px] sm:px-6 sm:backdrop-blur-2xl lg:px-8">
+      <button type="button" onClick={toggleMobileSidebar} aria-label={mobileSidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={mobileSidebarOpen} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.055] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:hidden">
+        <Menu className="h-5 w-5" />
+      </button>
       {/* Mobile Logo */}
       <Link href="/home" className="flex items-center gap-2 md:hidden" aria-label="Sangeet home">
         <div className="h-7 w-7 rounded-full bg-[#1ED760] flex items-center justify-center text-black shadow-md">

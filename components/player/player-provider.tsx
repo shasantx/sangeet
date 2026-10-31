@@ -266,7 +266,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           // Position state is a progressive enhancement.
         }
       }
-    }, 500);
+    }, 1000);
 
     return () => window.clearInterval(timer);
   }, []);

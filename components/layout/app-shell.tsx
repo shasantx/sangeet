@@ -9,6 +9,7 @@ import { Sidebar } from "./sidebar";
 import { TopBar } from "./top-bar";
 import { RightPanel } from "./right-panel";
 import { MobileNavigation } from "./mobile-navigation";
+import { MobileSidebar } from "./mobile-sidebar";
 import { BottomPlayer } from "@/components/player/bottom-player";
 import { MobileMiniPlayer } from "@/components/player/mobile-mini-player";
 
@@ -42,6 +43,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           {children}
         </motion.div>
+        <MobileSidebar />
       </main>
     );
   }
@@ -72,6 +74,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <BottomPlayer />
       <MobileMiniPlayer />
       <MobileNavigation />
+      <MobileSidebar />
     </div>
   );
 }

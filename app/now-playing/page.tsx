@@ -6,6 +6,7 @@ import {
   ChevronDown,
   Disc3,
   ListMusic,
+  Menu,
   MoreHorizontal,
   Plus,
   Radio,
@@ -48,6 +49,8 @@ export default function NowPlayingPage() {
   const artistHref = artist && artistMap.has(artist.id) ? `/artist/${artist.id}` : "/explore";
   const openAddToPlaylist = useUIStore((state) => state.openAddToPlaylist);
   const toggleQueue = useUIStore((state) => state.toggleQueuePanel);
+  const toggleMobileSidebar = useUIStore((state) => state.toggleMobileSidebar);
+  const mobileSidebarOpen = useUIStore((state) => state.mobileSidebarOpen);
   const toggleFollow = useLibraryStore((state) => state.toggleFollowArtist);
   const followed = artist ? useLibraryStore.getState().followedArtistIds.includes(artist.id) : false;
   const upcoming = queue
@@ -103,15 +106,7 @@ export default function NowPlayingPage() {
 
   return (
     <div className="relative flex min-h-dvh flex-col overflow-hidden bg-background">
-      <div className="pointer-events-none fixed inset-0 -z-20">
-        <Artwork
-          src={current.artwork}
-          alt=""
-          className="h-full w-full scale-125 rounded-none opacity-[.23] blur-[90px]"
-        />
-        <div className="absolute inset-0 bg-[#0B0B0F]/70" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,transparent_0%,rgba(11,11,15,.6)_62%,#0B0B0F_100%)]" />
-      </div>
+      <div className="pointer-events-none fixed inset-0 -z-20 bg-[radial-gradient(ellipse_at_50%_0%,rgba(76,96,76,.18),transparent_48%),linear-gradient(180deg,#10110f_0%,#0b0b0f_60%)]" />
 
       <header className="relative z-10 flex h-[76px] shrink-0 items-center gap-3 px-4 sm:px-7 lg:px-10">
         <button
@@ -121,6 +116,9 @@ export default function NowPlayingPage() {
           aria-label="Close now playing"
         >
           <ChevronDown className="h-5 w-5" />
+        </button>
+        <button type="button" onClick={toggleMobileSidebar} aria-label={mobileSidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={mobileSidebarOpen} className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.07] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:hidden">
+          <Menu className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1 flex flex-col items-center justify-center">
           {current.youtubeId ? (
