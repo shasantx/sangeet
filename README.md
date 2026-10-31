@@ -39,6 +39,7 @@ This codebase is not a complete multi-user production service yet:
 - Premium is intentionally unavailable. Stripe variables are placeholders only; checkout, webhook verification, durable subscription state, and server-side entitlements are not implemented.
 - The YouTube Music metadata source is unofficial. For a durable production catalog, connect a licensed music provider or an approved API and verify its rights, quota, and deployment requirements.
 - The search rate limit is per Node.js process. Multi-instance deployments need a trusted proxy and shared rate-limit storage.
+- On Vercel, the Python search endpoint is a separate project rooted at `ytmusic-service`; follow [its deployment steps](./ytmusic-service/README.md) and configure `YTMUSIC_SERVICE_URL` plus the shared `YTMUSIC_SERVICE_TOKEN` in both Vercel projects.
 - Add a privacy notice and applicable consent/configuration for third-party YouTube embeds before public deployment.
 
 Do not deploy as a paid music service or represent the app as a licensed catalog until those dependencies are addressed.

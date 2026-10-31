@@ -99,7 +99,9 @@ export async function GET(request: Request) {
   let upstreamAvailable = false;
   let serviceReached = false;
   try {
-    const response = await fetch(`${SERVICE_URL}/search?q=${encodeURIComponent(query)}&limit=12`, {
+    const serviceToken = process.env.YTMUSIC_SERVICE_TOKEN;
+    const response = await fetch(`${SERVICE_URL.replace(/\/$/, "")}/api/search?q=${encodeURIComponent(query)}&limit=12`, {
+      headers: serviceToken ? { Authorization: `Bearer ${serviceToken}` } : undefined,
       cache: "no-store",
       signal: AbortSignal.timeout(2000),
     });
