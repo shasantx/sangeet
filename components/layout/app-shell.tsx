@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
@@ -16,18 +16,10 @@ import { SiteAnnouncement } from "@/components/site/site-announcement";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const hasOnboarded = useAppStore((state) => state.hasOnboarded);
   const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed);
   const rightPanelOpen = useAppStore((state) => state.rightPanelOpen);
   const reduceMotion = useReducedMotion();
-  const immersive = pathname === "/" || pathname === "/welcome" || pathname === "/now-playing" || pathname === "/premium";
-
-  useEffect(() => {
-    if (!hasOnboarded && pathname !== "/welcome" && pathname !== "/admin" && pathname !== "/premium") {
-      router.replace("/welcome");
-    }
-  }, [hasOnboarded, pathname, router]);
+  const immersive = pathname === "/now-playing" || pathname === "/premium";
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
