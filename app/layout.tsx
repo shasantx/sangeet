@@ -14,7 +14,8 @@ export const metadata: Metadata = {
   applicationName: "Sangeet",
   keywords: ["music", "streaming", "discovery"],
   icons: {
-    icon: "/sangeet-mark.svg",
+    icon: "/brand/sangeet-icon-192.png",
+    apple: "/brand/sangeet-icon-180.png",
   },
   manifest: "/manifest.webmanifest",
 };

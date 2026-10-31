@@ -798,10 +798,6 @@ for (const [name, palette] of Object.entries(artistImages)) {
   ));
 }
 
-// Brand mark.
-const brand = fs.readFileSync(path.join(root, "..", "sangeet-mark.svg"), "utf8");
-fs.writeFileSync(path.join(root, "..", "aura-mark.svg"), brand);
-
 // Generated artwork provenance / license note.
 fs.writeFileSync(
   path.join(root, "README.md"),
