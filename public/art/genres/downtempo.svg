@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-genredowntempo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#120D18" stop-opacity="1"/><stop offset=".55" stop-color="#342044" stop-opacity="1"/><stop offset="1" stop-color="#120D18" stop-opacity="1"/></linearGradient>
+  <filter id="grain-genredowntempo" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-genredowntempo" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-genredowntempo" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-genredowntempo)"/>
+
+    <g filter="url(#blur-downtempo)">
+      <circle cx="360" cy="440" r="230" fill="#7E5898" opacity=".3"/>
+      <circle cx="680" cy="580" r="260" fill="#48395A" opacity=".4"/>
+    </g>
+    <path d="M120 620 C 260 460 360 720 500 560 S 760 460 880 600" fill="none" stroke="#B9A1CE" stroke-width="1.5" opacity=".3"/>
+    <path d="M120 680 C 260 520 360 780 500 620 S 760 520 880 660" fill="none" stroke="#B9A1CE" stroke-width="1" opacity=".18"/>
+    <circle cx="500" cy="500" r="7" fill="#D8C7E5" opacity=".5"/>
+<rect width="1000" height="1000" filter="url(#grain-genredowntempo)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

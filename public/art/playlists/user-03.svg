@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-userthree" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1B110C" stop-opacity="1"/><stop offset=".55" stop-color="#3C2419" stop-opacity="1"/><stop offset="1" stop-color="#0C0806" stop-opacity="1"/></linearGradient>
+  <filter id="grain-userthree" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-userthree" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-userthree" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-userthree)"/>
+
+      <rect width="1000" height="1000" fill="#1A100B"/>
+      <circle cx="500" cy="500" r="380" fill="#8C4B2E" opacity=".2" filter="url(#blur-wide-userthree)"/>
+      <circle cx="500" cy="470" r="210" fill="#D5A06E" opacity=".14" filter="url(#blur-userthree)"/>
+      <g transform="translate(500 470)" stroke="#E0B88B" opacity=".22">
+        <circle r="80"/><circle r="114"/><circle r="148"/><circle r="182"/><circle r="216"/><circle r="250"/>
+      </g>
+      <path d="M90 710 C 280 650 400 760 510 650 S 760 620 910 700" fill="none" stroke="#E0B88B" stroke-width="1.2" opacity=".25"/>
+      <text x="500" y="848" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" letter-spacing="10" fill="#F1DCC7" opacity=".55">YOUR PLAYLIST</text>
+      
+<rect width="1000" height="1000" filter="url(#grain-userthree)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

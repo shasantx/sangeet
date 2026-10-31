@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-golden" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0D1522" stop-opacity="1"/><stop offset=".55" stop-color="#121B2C" stop-opacity="1"/><stop offset="1" stop-color="#070B12" stop-opacity="1"/></linearGradient>
+  <filter id="grain-golden" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-golden" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-golden" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-golden)"/>
+
+      <rect width="1000" height="1000" fill="#0B111B"/>
+      <circle cx="680" cy="280" r="240" fill="#3A435B" opacity=".2" filter="url(#blur-wide-golden)"/>
+      <path d="M-30 760 C 220 560 280 290 560 380 S 780 720 1040 260" fill="none" stroke="#D5B374" stroke-width="2" opacity=".88"/>
+      <path d="M-30 760 C 220 560 280 290 560 380 S 780 720 1040 260" fill="none" stroke="#EAD6AA" stroke-width="10" opacity=".12" filter="url(#blur-golden)"/>
+      <circle cx="560" cy="380" r="8" fill="#F0DEB5"/>
+      <circle cx="560" cy="380" r="42" fill="#E6C88A" opacity=".14" filter="url(#blur-golden)"/>
+      <g fill="#EAD6AA" opacity=".4">
+        <circle cx="160" cy="230" r="1.4"/><circle cx="812" cy="640" r="1.2"/><circle cx="340" cy="750" r="1.8"/>
+      </g>
+      <text x="74" y="922" font-family="Arial, sans-serif" font-size="24" letter-spacing="9" fill="#F2E9D8" opacity=".65">MIRA VALE</text>
+      <text x="928" y="922" text-anchor="end" font-family="Arial, sans-serif" font-size="16" letter-spacing="4" fill="#F2E9D8" opacity=".35">GOLDEN THREAD</text>
+      
+<rect width="1000" height="1000" filter="url(#grain-golden)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

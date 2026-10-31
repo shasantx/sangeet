@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-halcyon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1D1119" stop-opacity="1"/><stop offset=".55" stop-color="#4A2630" stop-opacity="1"/><stop offset="1" stop-color="#120C10" stop-opacity="1"/></linearGradient>
+  <filter id="grain-halcyon" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-halcyon" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-halcyon" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-halcyon)"/>
+
+      <rect x="120" y="90" width="760" height="820" rx="380" fill="#DCA5A0" opacity=".12"/>
+      <circle cx="500" cy="430" r="230" fill="#E9B6A0" opacity=".88" filter="url(#blur-halcyon)"/>
+      <circle cx="500" cy="430" r="132" fill="#F4D5C6" opacity=".85"/>
+      <path d="M0 680 Q 260 615 500 675 T 1000 655 V1000 H0Z" fill="#1B1217" opacity=".9"/>
+      <path d="M0 735 Q 260 680 500 730 T 1000 710 V1000 H0Z" fill="#130D11"/>
+      <g stroke="#E6B7AB" stroke-opacity=".22" stroke-width="1">
+        <path d="M120 160 H880"/><path d="M120 240 H880"/><path d="M120 320 H880"/>
+      </g>
+      <text x="108" y="930" font-family="Arial, sans-serif" font-size="26" letter-spacing="8" fill="#F7E9E2" opacity=".68">MIRA VALE</text>
+      <text x="892" y="930" text-anchor="end" font-family="Arial, sans-serif" font-size="22" letter-spacing="3" fill="#F7E9E2" opacity=".42">HALCYON HOURS</text>
+      
+<rect width="1000" height="1000" filter="url(#grain-halcyon)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

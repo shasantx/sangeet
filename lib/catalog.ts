@@ -1,0 +1,1077 @@
+import { audioManifest } from "./audio-manifest";
+import type {
+  Album,
+  Artist,
+  DemoProfile,
+  Genre,
+  GenreId,
+  Playlist,
+  Track,
+} from "./types";
+import {
+  getDynamicAlbum,
+  getDynamicArtist,
+  getDynamicTrack,
+} from "./dynamic-tracks";
+import { youtubeAlbums, youtubeArtists, youtubeTracks } from "./youtube";
+import ytCatalog from "@/data/ytmusic-catalog.json";
+
+const audio = (id: string) => ({
+  duration: audioManifest[id]?.duration ?? 0,
+  audioUrl: audioManifest[id]?.file ?? `/audio/${id}.mp3`,
+});
+
+const auraArtists: Artist[] = [
+  {
+    id: "elio-north",
+    name: "Elio North",
+    bio: "Elio North makes music for the space between waking and sleep. Raised between Reykjavík and a small coastal town, the producer builds patient, tactile ambient music from tape loops, bowed guitar and modular synthesis. His records are less songs than weather systems — slowly shifting, deeply physical, and best heard from beginning to end.",
+    shortBio: "Glacial ambient and fractured electronics from Reykjavík.",
+    image: "/art/artists/elio-north.svg",
+    location: "Reykjavík, IS",
+    genreIds: ["ambient", "electronic", "downtempo"],
+    relatedArtistIds: ["noa-ito", "sable-coast", "lumen-kite"],
+  },
+  {
+    id: "mira-vale",
+    name: "Mira Vale",
+    bio: "A singular voice in modern alternative soul, Mira Vale writes small, exact songs about big, unmanageable feelings. Her 2025 album Halcyon Hours turned late-night London into a cathedral of warm keys and close-mic'd confessions. She is equally at home in a stripped-back trio and a widescreen arrangement, always holding the room with that voice.",
+    shortBio: "Intimate alternative soul with a cinematic pulse.",
+    image: "/art/artists/mira-vale.svg",
+    location: "London, UK",
+    genreIds: ["soul", "alternative", "downtempo"],
+    relatedArtistIds: ["julien-arlo", "vera-sol", "iris-ember"],
+  },
+  {
+    id: "sable-coast",
+    name: "Sable Coast",
+    bio: "Sable Coast is the Lisbon-based duo of Inês Duarte and Tomás Reis. They make humid, widescreen electronic music that borrows from dub, trip-hop and Portuguese guitar, then pushes it through a haze of tape and modular processing. Their live shows are improvised around a fixed spine of bass and light.",
+    shortBio: "Humid, cinematic electronics from Lisbon.",
+    image: "/art/artists/sable-coast.svg",
+    location: "Lisbon, PT",
+    genreIds: ["electronic", "downtempo", "ambient"],
+    relatedArtistIds: ["elio-north", "kairos", "lumen-kite"],
+  },
+  {
+    id: "noa-ito",
+    name: "Noa Itō",
+    bio: "Tokyo pianist and composer Noa Itō works at the intersection of jazz, minimalism and field recording. Her music is deceptively quiet: close piano figures, the sound of a room, a train passing once. Across three albums she has developed a private language of restraint that has earned her a devoted global audience.",
+    shortBio: "Piano, field recordings and quiet modern jazz.",
+    image: "/art/artists/noa-ito.svg",
+    location: "Tokyo, JP",
+    genreIds: ["jazz", "ambient", "cinematic"],
+    relatedArtistIds: ["vera-sol", "elio-north", "lumen-kite"],
+  },
+  {
+    id: "aster-house",
+    name: "Aster House",
+    bio: "Manchester four-piece Aster House have spent the last decade making architectural indie rock — songs with load-bearing choruses and corridors of feedback. Their latest record Monument was recorded live to tape in a disused mill, and you can hear the room breathing through every take.",
+    shortBio: "Architectural indie rock from Manchester.",
+    image: "/art/artists/aster-house.svg",
+    location: "Manchester, UK",
+    genreIds: ["alternative", "indie"],
+    relatedArtistIds: ["northbound", "paper-moons", "iris-ember"],
+  },
+  {
+    id: "julien-arlo",
+    name: "Julien Arlo",
+    bio: "Julien Arlo is a Parisian singer, guitarist and producer who treats soul music as a form of architecture. His arrangements are precise and sensuous, full of negative space, muted horns and the warmth of a room at midnight. Velvet Arithmetic, his 2024 album, is a modern standard in slow motion.",
+    shortBio: "Precise, sensuous modern soul from Paris.",
+    image: "/art/artists/julien-arlo.svg",
+    location: "Paris, FR",
+    genreIds: ["soul", "jazz", "downtempo"],
+    relatedArtistIds: ["mira-vale", "vera-sol", "sable-coast"],
+  },
+  {
+    id: "lumen-kite",
+    name: "Lumen & Kite",
+    bio: "Lumen & Kite is a Berlin-based collaboration between composer Lena Vogel and sound designer Milo Kite. Their cinematic electronic music moves between neoclassical intimacy and slow-motion club textures, often performed with a string quartet and a table of half-broken machines.",
+    shortBio: "Cinematic electronics and neoclassical light.",
+    image: "/art/artists/lumen-kite.svg",
+    location: "Berlin, DE",
+    genreIds: ["cinematic", "electronic", "ambient"],
+    relatedArtistIds: ["elio-north", "noa-ito", "kairos"],
+  },
+  {
+    id: "vera-sol",
+    name: "Vera Sol",
+    bio: "Vera Sol blends the storytelling of Mexican folk music with the harmonic freedom of jazz and the low-lit sensuality of soul. A self-taught guitarist and fearless arranger, she writes songs that feel both ancient and immediate. Still Life, Moving is her most personal statement yet.",
+    shortBio: "Neo-soul and jazz with a folk storyteller's heart.",
+    image: "/art/artists/vera-sol.svg",
+    location: "Mexico City, MX",
+    genreIds: ["soul", "jazz"],
+    relatedArtistIds: ["julien-arlo", "mira-vale", "noa-ito"],
+  },
+  {
+    id: "paper-moons",
+    name: "The Paper Moons",
+    bio: "Portland's The Paper Moons make delicate, homespun indie folk with a cosmic streak. Formed around the songwriting partnership of June and Cal Mercer, the band records in a converted garage with an ever-rotating cast of friends. Paper Planets is their warmest and strangest record.",
+    shortBio: "Cosmic indie folk from a Portland garage.",
+    image: "/art/artists/paper-moons.svg",
+    location: "Portland, US",
+    genreIds: ["indie", "alternative"],
+    relatedArtistIds: ["northbound", "aster-house", "iris-ember"],
+  },
+  {
+    id: "kairos",
+    name: "KAIROS",
+    bio: "Seoul producer KAIROS makes electronic music that feels architectural — tall, precise structures with deep foundations and sudden open views. His debut Blue Hour Cinema became a word-of-mouth phenomenon, bridging ambient, techno and the melodic language of city pop.",
+    shortBio: "Towering, melodic electronics from Seoul.",
+    image: "/art/artists/kairos.svg",
+    location: "Seoul, KR",
+    genreIds: ["electronic", "ambient", "downtempo"],
+    relatedArtistIds: ["sable-coast", "lumen-kite", "elio-north"],
+  },
+  {
+    id: "iris-ember",
+    name: "Iris Ember",
+    bio: "Iris Ember writes alternative pop songs that arrive like memories — familiar, slightly wrong, impossible to shake. The Toronto artist and producer makes maximalist arrangements out of minimal parts: a breath, a bassline, a chandelier of synthesized strings. Bloom in Reverse is an album about growing backwards.",
+    shortBio: "Cinematic alternative pop from Toronto.",
+    image: "/art/artists/iris-ember.svg",
+    location: "Toronto, CA",
+    genreIds: ["alternative", "electronic"],
+    relatedArtistIds: ["mira-vale", "aster-house", "kairos"],
+  },
+  {
+    id: "northbound",
+    name: "Northbound",
+    bio: "Northbound is an Oslo-based trio making wide-screen indie for narrow rooms. Their songs move at the speed of a late ferry: patient verses, expansive choruses, and a persistent sense of leaving. North / South, recorded across two winters, is their definitive statement.",
+    shortBio: "Wide-screen indie from Oslo.",
+    image: "/art/artists/northbound.svg",
+    location: "Oslo, NO",
+    genreIds: ["indie", "alternative"],
+    relatedArtistIds: ["aster-house", "paper-moons", "iris-ember"],
+  },
+];
+
+export const artists: Artist[] = [
+  ...(ytCatalog.artists as unknown as Artist[]),
+  ...auraArtists,
+  ...youtubeArtists,
+];
+
+const auraTracks: Track[] = [
+  {
+    id: "t01",
+    title: "Ember in the Hallway",
+    artistId: "mira-vale",
+    albumId: "halcyon-hours",
+    ...audio("t01"),
+    artwork: "/art/albums/halcyon-hours.svg",
+    genreIds: ["alternative", "soul"],
+    mood: "Late-night soul",
+    trackNumber: 1,
+  },
+  {
+    id: "t02",
+    title: "Sundial",
+    artistId: "mira-vale",
+    albumId: "halcyon-hours",
+    ...audio("t02"),
+    artwork: "/art/albums/halcyon-hours.svg",
+    genreIds: ["soul", "downtempo"],
+    mood: "Warm and slow",
+    trackNumber: 2,
+  },
+  {
+    id: "t03",
+    title: "Half-Light",
+    artistId: "mira-vale",
+    albumId: "halcyon-hours",
+    ...audio("t03"),
+    artwork: "/art/albums/halcyon-hours.svg",
+    genreIds: ["alternative"],
+    mood: "Cinematic",
+    trackNumber: 3,
+  },
+  {
+    id: "t04",
+    title: "Soft Static",
+    artistId: "elio-north",
+    albumId: "soft-static",
+    ...audio("t04"),
+    artwork: "/art/albums/soft-static.svg",
+    genreIds: ["ambient", "electronic"],
+    mood: "Deep focus",
+    trackNumber: 1,
+  },
+  {
+    id: "t05",
+    title: "Snowline",
+    artistId: "elio-north",
+    albumId: "soft-static",
+    ...audio("t05"),
+    artwork: "/art/albums/soft-static.svg",
+    genreIds: ["ambient"],
+    mood: "Frozen calm",
+    trackNumber: 2,
+  },
+  {
+    id: "t06",
+    title: "Aperture",
+    artistId: "elio-north",
+    albumId: "soft-static",
+    ...audio("t06"),
+    artwork: "/art/albums/soft-static.svg",
+    genreIds: ["ambient", "cinematic"],
+    mood: "Slow bloom",
+    trackNumber: 3,
+  },
+  {
+    id: "t07",
+    title: "Blue Hour Cinema",
+    artistId: "kairos",
+    albumId: "blue-hour-cinema",
+    ...audio("t07"),
+    artwork: "/art/albums/blue-hour-cinema.svg",
+    genreIds: ["electronic", "downtempo"],
+    mood: "Night drive",
+    trackNumber: 1,
+  },
+  {
+    id: "t08",
+    title: "Neon District",
+    artistId: "kairos",
+    albumId: "blue-hour-cinema",
+    ...audio("t08"),
+    artwork: "/art/albums/blue-hour-cinema.svg",
+    genreIds: ["electronic"],
+    mood: "Electric",
+    trackNumber: 2,
+  },
+  {
+    id: "t09",
+    title: "Parallax",
+    artistId: "kairos",
+    albumId: "blue-hour-cinema",
+    ...audio("t09"),
+    artwork: "/art/albums/blue-hour-cinema.svg",
+    genreIds: ["electronic", "ambient"],
+    mood: "After hours",
+    trackNumber: 3,
+  },
+  {
+    id: "t10",
+    title: "Vela",
+    artistId: "sable-coast",
+    albumId: "vela",
+    ...audio("t10"),
+    artwork: "/art/albums/vela.svg",
+    genreIds: ["electronic", "downtempo"],
+    mood: "Weightless",
+    trackNumber: 1,
+  },
+  {
+    id: "t11",
+    title: "Saltwater",
+    artistId: "sable-coast",
+    albumId: "vela",
+    ...audio("t11"),
+    artwork: "/art/albums/vela.svg",
+    genreIds: ["downtempo", "ambient"],
+    mood: "Ocean air",
+    trackNumber: 2,
+  },
+  {
+    id: "t12",
+    title: "Cobalt",
+    artistId: "sable-coast",
+    albumId: "vela",
+    ...audio("t12"),
+    artwork: "/art/albums/vela.svg",
+    genreIds: ["electronic"],
+    mood: "Restless",
+    trackNumber: 3,
+  },
+  {
+    id: "t13",
+    title: "Paper Planets",
+    artistId: "paper-moons",
+    albumId: "paper-planets",
+    ...audio("t13"),
+    artwork: "/art/albums/paper-planets.svg",
+    genreIds: ["indie"],
+    mood: "Sunlit",
+    trackNumber: 1,
+  },
+  {
+    id: "t14",
+    title: "Orbiting",
+    artistId: "paper-moons",
+    albumId: "paper-planets",
+    ...audio("t14"),
+    artwork: "/art/albums/paper-planets.svg",
+    genreIds: ["indie", "alternative"],
+    mood: "Gentle motion",
+    trackNumber: 2,
+  },
+  {
+    id: "t15",
+    title: "Small Hours",
+    artistId: "paper-moons",
+    albumId: "paper-planets",
+    ...audio("t15"),
+    artwork: "/art/albums/paper-planets.svg",
+    genreIds: ["indie"],
+    mood: "Homespun",
+    trackNumber: 3,
+  },
+  {
+    id: "t16",
+    title: "Bloom in Reverse",
+    artistId: "iris-ember",
+    albumId: "bloom-in-reverse",
+    ...audio("t16"),
+    artwork: "/art/albums/bloom-in-reverse.svg",
+    genreIds: ["alternative"],
+    mood: "Surreal pop",
+    trackNumber: 1,
+  },
+  {
+    id: "t17",
+    title: "Glass Garden",
+    artistId: "iris-ember",
+    albumId: "bloom-in-reverse",
+    ...audio("t17"),
+    artwork: "/art/albums/bloom-in-reverse.svg",
+    genreIds: ["alternative", "electronic"],
+    mood: "Bittersweet",
+    trackNumber: 2,
+  },
+  {
+    id: "t18",
+    title: "Ultraviolet",
+    artistId: "iris-ember",
+    albumId: "bloom-in-reverse",
+    ...audio("t18"),
+    artwork: "/art/albums/bloom-in-reverse.svg",
+    genreIds: ["alternative"],
+    mood: "Afterglow",
+    trackNumber: 3,
+  },
+  {
+    id: "t19",
+    title: "Low Tide",
+    artistId: "noa-ito",
+    albumId: "low-tide",
+    ...audio("t19"),
+    artwork: "/art/albums/low-tide.svg",
+    genreIds: ["jazz", "ambient"],
+    mood: "Still water",
+    trackNumber: 1,
+  },
+  {
+    id: "t20",
+    title: "Rain on Ginza",
+    artistId: "noa-ito",
+    albumId: "low-tide",
+    ...audio("t20"),
+    artwork: "/art/albums/low-tide.svg",
+    genreIds: ["jazz"],
+    mood: "Rainy window",
+    trackNumber: 2,
+  },
+  {
+    id: "t21",
+    title: "Paper Lanterns",
+    artistId: "noa-ito",
+    albumId: "low-tide",
+    ...audio("t21"),
+    artwork: "/art/albums/low-tide.svg",
+    genreIds: ["jazz", "cinematic"],
+    mood: "Quiet wonder",
+    trackNumber: 3,
+  },
+  {
+    id: "t22",
+    title: "Monument",
+    artistId: "aster-house",
+    albumId: "monument",
+    ...audio("t22"),
+    artwork: "/art/albums/monument.svg",
+    genreIds: ["alternative", "indie"],
+    mood: "Monumental",
+    trackNumber: 1,
+  },
+  {
+    id: "t23",
+    title: "Concrete Choir",
+    artistId: "aster-house",
+    albumId: "monument",
+    ...audio("t23"),
+    artwork: "/art/albums/monument.svg",
+    genreIds: ["alternative"],
+    mood: "Rising",
+    trackNumber: 2,
+  },
+  {
+    id: "t24",
+    title: "After the Rain",
+    artistId: "aster-house",
+    albumId: "monument",
+    ...audio("t24"),
+    artwork: "/art/albums/monument.svg",
+    genreIds: ["indie"],
+    mood: "Clear-eyed",
+    trackNumber: 3,
+  },
+  {
+    id: "t25",
+    title: "Afterglow",
+    artistId: "lumen-kite",
+    albumId: "afterglow",
+    ...audio("t25"),
+    artwork: "/art/albums/afterglow.svg",
+    genreIds: ["cinematic", "electronic"],
+    mood: "Golden hour",
+    trackNumber: 1,
+  },
+  {
+    id: "t26",
+    title: "Aerial",
+    artistId: "lumen-kite",
+    albumId: "afterglow",
+    ...audio("t26"),
+    artwork: "/art/albums/afterglow.svg",
+    genreIds: ["cinematic", "ambient"],
+    mood: "Vast",
+    trackNumber: 2,
+  },
+  {
+    id: "t27",
+    title: "Last Light",
+    artistId: "lumen-kite",
+    albumId: "afterglow",
+    ...audio("t27"),
+    artwork: "/art/albums/afterglow.svg",
+    genreIds: ["cinematic"],
+    mood: "Fading warm",
+    trackNumber: 3,
+  },
+  {
+    id: "t28",
+    title: "Velvet Arithmetic",
+    artistId: "julien-arlo",
+    albumId: "velvet-arithmetic",
+    ...audio("t28"),
+    artwork: "/art/albums/velvet-arithmetic.svg",
+    genreIds: ["soul", "jazz"],
+    mood: "Velvet",
+    trackNumber: 1,
+  },
+  {
+    id: "t29",
+    title: "Slow Motion",
+    artistId: "julien-arlo",
+    albumId: "velvet-arithmetic",
+    ...audio("t29"),
+    artwork: "/art/albums/velvet-arithmetic.svg",
+    genreIds: ["soul", "downtempo"],
+    mood: "Sultry",
+    trackNumber: 2,
+  },
+  {
+    id: "t30",
+    title: "Sunday in Paris",
+    artistId: "julien-arlo",
+    albumId: "velvet-arithmetic",
+    ...audio("t30"),
+    artwork: "/art/albums/velvet-arithmetic.svg",
+    genreIds: ["jazz", "soul"],
+    mood: "Leisurely",
+    trackNumber: 3,
+  },
+  {
+    id: "t31",
+    title: "North / South",
+    artistId: "northbound",
+    albumId: "north-south",
+    ...audio("t31"),
+    artwork: "/art/albums/north-south.svg",
+    genreIds: ["indie", "alternative"],
+    mood: "Departure",
+    trackNumber: 1,
+  },
+  {
+    id: "t32",
+    title: "Midnight Ferry",
+    artistId: "northbound",
+    albumId: "north-south",
+    ...audio("t32"),
+    artwork: "/art/albums/north-south.svg",
+    genreIds: ["indie"],
+    mood: "At sea",
+    trackNumber: 2,
+  },
+  {
+    id: "t33",
+    title: "Fjord",
+    artistId: "northbound",
+    albumId: "north-south",
+    ...audio("t33"),
+    artwork: "/art/albums/north-south.svg",
+    genreIds: ["indie", "ambient"],
+    mood: "Expansive",
+    trackNumber: 3,
+  },
+  {
+    id: "t34",
+    title: "Still Life, Moving",
+    artistId: "vera-sol",
+    albumId: "still-life-moving",
+    ...audio("t34"),
+    artwork: "/art/albums/still-life-moving.svg",
+    genreIds: ["soul", "jazz"],
+    mood: "Reflective",
+    trackNumber: 1,
+  },
+  {
+    id: "t35",
+    title: "Amber Room",
+    artistId: "vera-sol",
+    albumId: "still-life-moving",
+    ...audio("t35"),
+    artwork: "/art/albums/still-life-moving.svg",
+    genreIds: ["soul", "downtempo"],
+    mood: "Warm and low",
+    trackNumber: 2,
+  },
+  {
+    id: "t36",
+    title: "Softly, Then",
+    artistId: "vera-sol",
+    albumId: "still-life-moving",
+    ...audio("t36"),
+    artwork: "/art/albums/still-life-moving.svg",
+    genreIds: ["soul", "alternative"],
+    mood: "Tender",
+    trackNumber: 3,
+  },
+  {
+    id: "t37",
+    title: "Drift Study I",
+    artistId: "elio-north",
+    albumId: "drift-studies",
+    ...audio("t37"),
+    artwork: "/art/albums/drift-studies.svg",
+    genreIds: ["ambient", "downtempo"],
+    mood: "Suspended",
+    trackNumber: 1,
+  },
+  {
+    id: "t38",
+    title: "Drift Study II",
+    artistId: "elio-north",
+    albumId: "drift-studies",
+    ...audio("t38"),
+    artwork: "/art/albums/drift-studies.svg",
+    genreIds: ["ambient"],
+    mood: "Slow current",
+    trackNumber: 2,
+  },
+  {
+    id: "t39",
+    title: "Golden Thread",
+    artistId: "mira-vale",
+    albumId: "golden-thread",
+    ...audio("t39"),
+    artwork: "/art/albums/golden-thread.svg",
+    genreIds: ["alternative", "soul"],
+    mood: "Hopeful",
+    trackNumber: 1,
+  },
+  {
+    id: "t40",
+    title: "Nocturne No. 4",
+    artistId: "noa-ito",
+    albumId: "nocturne-four",
+    ...audio("t40"),
+    artwork: "/art/albums/nocturne-four.svg",
+    genreIds: ["jazz", "cinematic"],
+    mood: "Nocturnal",
+    trackNumber: 1,
+  },
+];
+
+export const tracks: Track[] = [
+  ...(ytCatalog.tracks as unknown as Track[]),
+  ...auraTracks,
+  ...youtubeTracks,
+];
+
+const auraAlbums: Album[] = [
+  {
+    id: "halcyon-hours",
+    title: "Halcyon Hours",
+    artistId: "mira-vale",
+    year: 2025,
+    releaseDate: "2025-09-19",
+    type: "Album",
+    artwork: "/art/albums/halcyon-hours.svg",
+    genreIds: ["alternative", "soul"],
+    description:
+      "A late-night record about the distance between memory and the room you are standing in. Warm keys, close voices, and arrangements that open like doors.",
+    trackIds: ["t01", "t02", "t03"],
+    featured: true,
+  },
+  {
+    id: "soft-static",
+    title: "Soft Static",
+    artistId: "elio-north",
+    year: 2026,
+    releaseDate: "2026-02-06",
+    type: "Album",
+    artwork: "/art/albums/soft-static.svg",
+    genreIds: ["ambient", "electronic"],
+    description:
+      "Tape loops, bowed guitar and slow-moving modular weather. An album designed to sit inside a room rather than fill it.",
+    trackIds: ["t04", "t05", "t06"],
+    featured: true,
+  },
+  {
+    id: "blue-hour-cinema",
+    title: "Blue Hour Cinema",
+    artistId: "kairos",
+    year: 2025,
+    releaseDate: "2025-06-13",
+    type: "Album",
+    artwork: "/art/albums/blue-hour-cinema.svg",
+    genreIds: ["electronic", "downtempo"],
+    description:
+      "Neon-lit electronic music with the patience of ambient and the pulse of a city at 2am. KAIROS at his most cinematic.",
+    trackIds: ["t07", "t08", "t09"],
+    featured: true,
+  },
+  {
+    id: "vela",
+    title: "Vela",
+    artistId: "sable-coast",
+    year: 2024,
+    releaseDate: "2024-10-25",
+    type: "Album",
+    artwork: "/art/albums/vela.svg",
+    genreIds: ["electronic", "downtempo"],
+    description:
+      "Recorded between Lisbon and the Atlantic coast, Vela is a humid, weightless record of salt air and late departures.",
+    trackIds: ["t10", "t11", "t12"],
+  },
+  {
+    id: "paper-planets",
+    title: "Paper Planets",
+    artistId: "paper-moons",
+    year: 2023,
+    releaseDate: "2023-04-21",
+    type: "Album",
+    artwork: "/art/albums/paper-planets.svg",
+    genreIds: ["indie"],
+    description:
+      "Homespun cosmic folk from a garage in Portland. Small songs about big skies, recorded with friends and imperfect rooms.",
+    trackIds: ["t13", "t14", "t15"],
+  },
+  {
+    id: "bloom-in-reverse",
+    title: "Bloom in Reverse",
+    artistId: "iris-ember",
+    year: 2026,
+    releaseDate: "2026-03-20",
+    type: "Album",
+    artwork: "/art/albums/bloom-in-reverse.svg",
+    genreIds: ["alternative"],
+    description:
+      "An album about growing backwards: maximalist pop arrangements built from a breath, a bassline and a strange, luminous hope.",
+    trackIds: ["t16", "t17", "t18"],
+    featured: true,
+  },
+  {
+    id: "low-tide",
+    title: "Low Tide",
+    artistId: "noa-ito",
+    year: 2024,
+    releaseDate: "2024-11-08",
+    type: "Album",
+    artwork: "/art/albums/low-tide.svg",
+    genreIds: ["jazz", "ambient"],
+    description:
+      "A quiet record of piano, field recordings and rooms. Noa Itō finds a whole ocean in the space between two notes.",
+    trackIds: ["t19", "t20", "t21"],
+  },
+  {
+    id: "monument",
+    title: "Monument",
+    artistId: "aster-house",
+    year: 2025,
+    releaseDate: "2025-08-29",
+    type: "Album",
+    artwork: "/art/albums/monument.svg",
+    genreIds: ["alternative", "indie"],
+    description:
+      "Recorded live to tape in a disused Manchester mill, Monument is a set of load-bearing songs built to outlast the building.",
+    trackIds: ["t22", "t23", "t24"],
+  },
+  {
+    id: "afterglow",
+    title: "Afterglow",
+    artistId: "lumen-kite",
+    year: 2026,
+    releaseDate: "2026-01-16",
+    type: "Album",
+    artwork: "/art/albums/afterglow.svg",
+    genreIds: ["cinematic", "electronic"],
+    description:
+      "Cinematic electronics for the last light of day. Strings, glass, and machines drifting slowly out of focus.",
+    trackIds: ["t25", "t26", "t27"],
+    featured: true,
+  },
+  {
+    id: "velvet-arithmetic",
+    title: "Velvet Arithmetic",
+    artistId: "julien-arlo",
+    year: 2024,
+    releaseDate: "2024-09-06",
+    type: "Album",
+    artwork: "/art/albums/velvet-arithmetic.svg",
+    genreIds: ["soul", "jazz"],
+    description:
+      "Modern soul as architecture: precise, sensuous, full of negative space. An album that moves at the speed of a held breath.",
+    trackIds: ["t28", "t29", "t30"],
+  },
+  {
+    id: "north-south",
+    title: "North / South",
+    artistId: "northbound",
+    year: 2023,
+    releaseDate: "2023-11-03",
+    type: "Album",
+    artwork: "/art/albums/north-south.svg",
+    genreIds: ["indie", "alternative"],
+    description:
+      "Recorded across two Norwegian winters, North / South is a patient, wide-screen record about leaving and the geography of home.",
+    trackIds: ["t31", "t32", "t33"],
+  },
+  {
+    id: "still-life-moving",
+    title: "Still Life, Moving",
+    artistId: "vera-sol",
+    year: 2025,
+    releaseDate: "2025-05-16",
+    type: "Album",
+    artwork: "/art/albums/still-life-moving.svg",
+    genreIds: ["soul", "jazz"],
+    description:
+      "Vera Sol's most personal record: folk storytelling, jazz harmony and low-lit soul arranged with painterly patience.",
+    trackIds: ["t34", "t35", "t36"],
+  },
+  {
+    id: "drift-studies",
+    title: "Drift Studies",
+    artistId: "elio-north",
+    year: 2024,
+    releaseDate: "2024-03-15",
+    type: "EP",
+    artwork: "/art/albums/drift-studies.svg",
+    genreIds: ["ambient", "downtempo"],
+    description:
+      "Two long-form studies in suspended motion, recorded on a four-track and a borrowed harmonium.",
+    trackIds: ["t37", "t38"],
+  },
+  {
+    id: "golden-thread",
+    title: "Golden Thread",
+    artistId: "mira-vale",
+    year: 2026,
+    releaseDate: "2026-06-05",
+    type: "Single",
+    artwork: "/art/albums/golden-thread.svg",
+    genreIds: ["alternative", "soul"],
+    description:
+      "A single, luminous thread connecting two people across a dark room.",
+    trackIds: ["t39"],
+  },
+  {
+    id: "nocturne-four",
+    title: "Nocturne No. 4",
+    artistId: "noa-ito",
+    year: 2025,
+    releaseDate: "2025-12-12",
+    type: "Single",
+    artwork: "/art/albums/nocturne-four.svg",
+    genreIds: ["jazz", "cinematic"],
+    description:
+      "A single piano nocturne, recorded at midnight in a room with one open window.",
+    trackIds: ["t40"],
+  },
+];
+
+export const albums: Album[] = [
+  ...(ytCatalog.albums as unknown as Album[]),
+  ...auraAlbums,
+  ...youtubeAlbums,
+];
+
+export const playlists: Playlist[] = [
+  {
+    id: "violet-hours",
+    title: "Violet Hours",
+    description:
+      "After-hours soul, ambient and slow-motion electronics for the long way home.",
+    curator: "Sangeet Editorial",
+    artwork: "/art/playlists/violet-hours.svg",
+    trackIds: ["t01", "t28", "t07", "t10", "t34", "t25", "t02", "t39", "t20", "t06"],
+    genreIds: ["soul", "electronic", "ambient"],
+    accent: "#8B5CF6",
+    featured: true,
+  },
+  {
+    id: "quiet-luxury",
+    title: "Quiet Luxury",
+    description:
+      "Neo-soul, modern jazz and velvet-lined arrangements. No hurry, no noise.",
+    curator: "Sangeet Editorial",
+    artwork: "/art/playlists/quiet-luxury.svg",
+    trackIds: ["t28", "t34", "t30", "t01", "t35", "t19", "t36", "t29"],
+    genreIds: ["soul", "jazz"],
+    accent: "#C7A76C",
+    featured: true,
+  },
+  {
+    id: "nocturne-drive",
+    title: "Nocturne Drive",
+    description:
+      "City lights, empty roads and a bassline that keeps you moving.",
+    curator: "Sangeet Editorial",
+    artwork: "/art/playlists/nocturne-drive.svg",
+    trackIds: ["t07", "t08", "t10", "t12", "t18", "t09", "t16", "t25", "t32"],
+    genreIds: ["electronic", "alternative"],
+    accent: "#5E7CE2",
+    featured: true,
+  },
+  {
+    id: "soft-focus",
+    title: "Soft Focus",
+    description:
+      "Wide-open ambient and gentle electronics for work, reading and thinking.",
+    curator: "Sangeet Editorial",
+    artwork: "/art/playlists/soft-focus.svg",
+    trackIds: ["t04", "t05", "t06", "t37", "t38", "t26", "t19", "t33"],
+    genreIds: ["ambient", "downtempo"],
+    accent: "#7B97A8",
+  },
+  {
+    id: "new-light",
+    title: "New Light",
+    description:
+      "The next wave of alternative, indie and left-field pop. Updated weekly.",
+    curator: "Sangeet Editorial",
+    artwork: "/art/playlists/new-light.svg",
+    trackIds: ["t39", "t16", "t13", "t22", "t31", "t17", "t24", "t14"],
+    genreIds: ["alternative", "indie"],
+    accent: "#DD816D",
+  },
+  {
+    id: "blue-room",
+    title: "The Blue Room",
+    description:
+      "Piano-led jazz, late-night standards and modern quiet music.",
+    curator: "Sangeet Editorial",
+    artwork: "/art/playlists/blue-room.svg",
+    trackIds: ["t19", "t20", "t21", "t40", "t30", "t34", "t27", "t05"],
+    genreIds: ["jazz", "cinematic"],
+    accent: "#557D7A",
+  },
+  {
+    id: "sunday-slow",
+    title: "Sunday Slow",
+    description:
+      "A softer start: folk, soul and ambient for a day with no plans.",
+    curator: "Sangeet Editorial",
+    artwork: "/art/playlists/sunday-slow.svg",
+    trackIds: ["t13", "t15", "t35", "t03", "t36", "t11", "t24", "t27"],
+    genreIds: ["indie", "soul", "ambient"],
+    accent: "#C78D58",
+  },
+  {
+    id: "the-deep-end",
+    title: "The Deep End",
+    description:
+      "Immersive ambient, deep electronic and cinematic slow burners.",
+    curator: "Sangeet Editorial",
+    artwork: "/art/playlists/the-deep-end.svg",
+    trackIds: ["t04", "t09", "t12", "t25", "t26", "t38", "t07", "t33", "t40"],
+    genreIds: ["ambient", "electronic", "cinematic"],
+    accent: "#6970C7",
+  },
+  {
+    id: "aura-radio-mira",
+    title: "Sangeet Radio: Mira Vale",
+    description:
+      "Mira Vale and the artists in her orbit — intimate soul, modern jazz and quiet fire.",
+    curator: "Sangeet Radio",
+    artwork: "/art/playlists/aura-radio-mira.svg",
+    trackIds: ["t01", "t02", "t28", "t34", "t39", "t36", "t29", "t35", "t03", "t30"],
+    genreIds: ["soul", "alternative"],
+    accent: "#AA6D8E",
+  },
+  {
+    id: "empty-streets",
+    title: "Songs for Empty Streets",
+    description:
+      "For walking home after midnight when the city belongs to you.",
+    curator: "Sangeet Editorial",
+    artwork: "/art/playlists/empty-streets.svg",
+    trackIds: ["t32", "t31", "t10", "t09", "t24", "t38", "t20", "t27", "t03"],
+    genreIds: ["indie", "electronic", "cinematic"],
+    accent: "#6D7F92",
+  },
+];
+
+export const genres: Genre[] = [
+  {
+    id: "ambient",
+    name: "Ambient",
+    description: "Wide-open soundscapes for deep focus and quiet rooms.",
+    image: "/art/genres/ambient.svg",
+    accent: "#7C83FD",
+    trackIds: ["t04", "t05", "t06", "t37", "t38", "t26", "t11", "t33", "t19"],
+  },
+  {
+    id: "electronic",
+    name: "Electronic",
+    description: "Future-facing rhythm, texture and nocturnal energy.",
+    image: "/art/genres/electronic.svg",
+    accent: "#A855F7",
+    trackIds: ["t07", "t08", "t09", "t10", "t12", "t04", "t25", "t17", "t05"],
+  },
+  {
+    id: "alternative",
+    name: "Alternative",
+    description: "Guitars, voices and pop songs from the outside looking in.",
+    image: "/art/genres/alternative.svg",
+    accent: "#E27766",
+    trackIds: ["t01", "t03", "t16", "t17", "t18", "t22", "t23", "t39", "t31"],
+  },
+  {
+    id: "soul",
+    name: "Soul & R&B",
+    description: "Warm voices, deep grooves and modern slow motion.",
+    image: "/art/genres/soul.svg",
+    accent: "#D3A26B",
+    trackIds: ["t01", "t02", "t28", "t29", "t30", "t34", "t35", "t36", "t39"],
+  },
+  {
+    id: "jazz",
+    name: "Jazz",
+    description: "Modern players, quiet rooms and old harmonies made new.",
+    image: "/art/genres/jazz.svg",
+    accent: "#71A39B",
+    trackIds: ["t19", "t20", "t21", "t40", "t30", "t28", "t34", "t36"],
+  },
+  {
+    id: "indie",
+    name: "Indie",
+    description: "Independent hearts, homespun records and wide skies.",
+    image: "/art/genres/indie.svg",
+    accent: "#BFA76B",
+    trackIds: ["t13", "t14", "t15", "t22", "t24", "t31", "t32", "t33", "t23"],
+  },
+  {
+    id: "cinematic",
+    name: "Cinematic",
+    description: "Music that turns the ordinary room into a widescreen frame.",
+    image: "/art/genres/cinematic.svg",
+    accent: "#8C9EFF",
+    trackIds: ["t25", "t26", "t27", "t40", "t06", "t21", "t03", "t31"],
+  },
+  {
+    id: "downtempo",
+    name: "Downtempo",
+    description: "Slow beats, deep bass and late-night warmth.",
+    image: "/art/genres/downtempo.svg",
+    accent: "#9B7BB8",
+    trackIds: ["t02", "t07", "t10", "t11", "t29", "t35", "t37", "t12"],
+  },
+];
+
+export const demoProfile: DemoProfile = {
+  id: "local-listener",
+  name: "Local listener",
+  handle: "@listener",
+  initials: "L",
+  joined: "this device",
+  plan: "Free",
+  avatarColor: "#E7A84B",
+};
+
+export const featuredHero = ytCatalog.featuredHero || {
+  eyebrow: "Sangeet PREMIERE",
+  title: "Bloom in Reverse",
+  artist: "Iris Ember",
+  description:
+    "A luminous new album about growing backwards. Synth-pop maximalism, whispered confessions and a sky full of borrowed stars.",
+  albumId: "bloom-in-reverse",
+  artwork: "/art/albums/bloom-in-reverse.svg",
+  trackIds: ["t16", "t17", "t18"],
+  accent: "#E27A68",
+};
+
+export const trackMap = new Map(tracks.map((track) => [track.id, track]));
+export const artistMap = new Map(artists.map((artist) => [artist.id, artist]));
+export const albumMap = new Map(albums.map((album) => [album.id, album]));
+export const playlistMap = new Map(playlists.map((playlist) => [playlist.id, playlist]));
+export const genreMap = new Map(genres.map((genre) => [genre.id, genre]));
+
+export function getTrack(id: string): Track | undefined {
+  return trackMap.get(id) ?? getDynamicTrack(id);
+}
+
+export function getTracks(ids: string[]): Track[] {
+  return ids
+    .map((id) => trackMap.get(id) ?? getDynamicTrack(id))
+    .filter((track): track is Track => Boolean(track));
+}
+
+export function getArtist(id: string): Artist | undefined {
+  return artistMap.get(id) ?? getDynamicArtist(id);
+}
+
+export function getAlbum(id: string): Album | undefined {
+  return albumMap.get(id) ?? getDynamicAlbum(id);
+}
+
+export function getPlaylist(id: string): Playlist | undefined {
+  return playlistMap.get(id);
+}
+
+export function getGenre(id: string): Genre | undefined {
+  return genreMap.get(id as GenreId);
+}
+
+export function getArtistTracks(artistId: string): Track[] {
+  return tracks.filter((track) => track.artistId === artistId);
+}
+
+export function getArtistAlbums(artistId: string): Album[] {
+  return albums.filter((album) => album.artistId === artistId);
+}
+
+export function getGenreTracks(genreId: string): Track[] {
+  return tracks.filter((track) => track.genreIds.includes(genreId as GenreId));
+}
+
+export function getRelatedArtists(artist: Artist): Artist[] {
+  return artist.relatedArtistIds
+    .map((id) => artistMap.get(id))
+    .filter((artist): artist is Artist => Boolean(artist));
+}
+
+export const selectedTracks = getTracks(["t07", "t16", "t04", "t28", "t22", "t01", "t25", "t10"]);
+
+export const newReleaseAlbums = [...albums]
+  .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate))
+  .slice(0, 8);
+
+export const selectedAlbums = getTracks(["t07", "t04", "t01", "t16", "t25", "t28"])
+  .map((track) => albumMap.get(track.albumId))
+  .filter((album): album is Album => Boolean(album))
+  .filter((album, index, list) => list.findIndex((item) => item.id === album.id) === index);
+
+export const featuredPlaylists = playlists.filter((playlist) => playlist.featured);

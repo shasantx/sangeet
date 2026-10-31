@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-bloom" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#08060A" stop-opacity="1"/><stop offset=".55" stop-color="#2C1018" stop-opacity="1"/><stop offset="1" stop-color="#08060A" stop-opacity="1"/></linearGradient>
+  <filter id="grain-bloom" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-bloom" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-bloom" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-bloom)"/>
+
+      <rect width="1000" height="1000" fill="#09070D"/>
+      <g transform="translate(500 490)">
+        <ellipse cx="0" cy="-240" rx="42" ry="240" fill="#D65E52" opacity="0.12" transform="rotate(0)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="57" ry="285" fill="#8C3A4B" opacity="0.155" transform="rotate(16.363636363636363)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="72" ry="330" fill="#E9927B" opacity="0.19" transform="rotate(32.72727272727273)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="87" ry="375" fill="#D65E52" opacity="0.225" transform="rotate(49.090909090909086)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="102" ry="240" fill="#8C3A4B" opacity="0.12" transform="rotate(65.45454545454545)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="42" ry="285" fill="#E9927B" opacity="0.155" transform="rotate(81.81818181818181)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="57" ry="330" fill="#D65E52" opacity="0.19" transform="rotate(98.18181818181817)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="72" ry="375" fill="#8C3A4B" opacity="0.225" transform="rotate(114.54545454545455)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="87" ry="240" fill="#E9927B" opacity="0.12" transform="rotate(130.9090909090909)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="102" ry="285" fill="#D65E52" opacity="0.155" transform="rotate(147.27272727272728)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="42" ry="330" fill="#8C3A4B" opacity="0.19" transform="rotate(163.63636363636363)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="57" ry="375" fill="#E9927B" opacity="0.225" transform="rotate(180)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="72" ry="240" fill="#D65E52" opacity="0.12" transform="rotate(196.36363636363635)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="87" ry="285" fill="#8C3A4B" opacity="0.155" transform="rotate(212.72727272727275)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="102" ry="330" fill="#E9927B" opacity="0.19" transform="rotate(229.0909090909091)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="42" ry="375" fill="#D65E52" opacity="0.225" transform="rotate(245.45454545454544)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="57" ry="240" fill="#8C3A4B" opacity="0.12" transform="rotate(261.8181818181818)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="72" ry="285" fill="#E9927B" opacity="0.155" transform="rotate(278.1818181818182)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="87" ry="330" fill="#D65E52" opacity="0.19" transform="rotate(294.54545454545456)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="102" ry="375" fill="#8C3A4B" opacity="0.225" transform="rotate(310.90909090909093)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="42" ry="240" fill="#E9927B" opacity="0.12" transform="rotate(327.27272727272725)" filter="url(#blur-bloom)"/><ellipse cx="0" cy="-240" rx="57" ry="285" fill="#D65E52" opacity="0.155" transform="rotate(343.6363636363636)" filter="url(#blur-bloom)"/>
+        <circle cx="0" cy="0" r="116" fill="#F1C8AE" opacity=".9"/>
+        <circle cx="0" cy="0" r="72" fill="#2A1117" opacity=".88"/>
+        <circle cx="0" cy="0" r="26" fill="#F5DAC5" opacity=".85"/>
+      </g>
+      <g stroke="#EFAF98" stroke-opacity=".15">
+        <path d="M100 120 H900"/><path d="M100 880 H900"/>
+      </g>
+      <text x="100" y="945" font-family="Arial, sans-serif" font-size="22" letter-spacing="9" fill="#F3D6C8" opacity=".6">IRIS EMBER</text>
+      <text x="900" y="945" text-anchor="end" font-family="Arial, sans-serif" font-size="17" letter-spacing="3" fill="#F3D6C8" opacity=".34">BLOOM IN REVERSE</text>
+      
+<rect width="1000" height="1000" filter="url(#grain-bloom)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

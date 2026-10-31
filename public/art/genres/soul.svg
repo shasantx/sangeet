@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-genresoul" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1A120C" stop-opacity="1"/><stop offset=".55" stop-color="#48311E" stop-opacity="1"/><stop offset="1" stop-color="#1A120C" stop-opacity="1"/></linearGradient>
+  <filter id="grain-genresoul" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-genresoul" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-genresoul" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-genresoul)"/>
+
+    <circle cx="500" cy="500" r="300" fill="none" stroke="#D3A26B" opacity=".38"/>
+    <circle cx="500" cy="500" r="215" fill="none" stroke="#D3A26B" opacity=".26"/>
+    <path d="M500 200 C 660 280 720 440 660 620 C 600 800 400 800 340 620 C 280 440 340 280 500 200Z" fill="#C08B52" opacity=".23" filter="url(#blur-soul)"/>
+    <path d="M500 310 C 590 360 620 460 590 570 C 560 680 440 680 410 570 C 380 460 410 360 500 310Z" fill="#D3A26B" opacity=".2"/>
+<rect width="1000" height="1000" filter="url(#grain-genresoul)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

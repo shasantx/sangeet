@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-vela" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#091416" stop-opacity="1"/><stop offset="1" stop-color="#050809" stop-opacity="1"/></linearGradient>
+  <filter id="grain-vela" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-vela" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-vela" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-vela)"/>
+
+      <rect width="1000" height="1000" fill="#071012"/>
+      <g filter="url(#blur-vela)" opacity=".95">
+        <path d="M-100 250 C 180 40 360 500 640 290 S 1000 50 1120 250" fill="none" stroke="#2F7570" stroke-width="170" stroke-linecap="round" opacity=".7"/>
+        <path d="M-100 420 C 220 200 370 650 680 410 S 1010 190 1120 380" fill="none" stroke="#8EB7B0" stroke-width="92" stroke-linecap="round" opacity=".47"/>
+        <path d="M-100 580 C 180 440 380 820 760 560 S 1020 380 1120 530" fill="none" stroke="#5B4E92" stroke-width="130" stroke-linecap="round" opacity=".64"/>
+        <path d="M-100 700 C 200 560 420 900 760 680 S 1040 570 1120 650" fill="none" stroke="#D2B18A" stroke-width="46" stroke-linecap="round" opacity=".34"/>
+      </g>
+      <g fill="#E5EDE9" opacity=".5">
+        <circle cx="270" cy="280" r="2"/><circle cx="710" cy="180" r="1.6"/><circle cx="830" cy="390" r="2.2"/><circle cx="430" cy="690" r="1.4"/>
+      </g>
+      <rect x="74" y="858" width="852" height="1" fill="#DCE7E2" opacity=".2"/>
+      <text x="74" y="922" font-family="Arial, sans-serif" font-size="24" letter-spacing="10" fill="#E4EEEA" opacity=".72">SABLE COAST</text>
+      <text x="926" y="922" text-anchor="end" font-family="Arial, sans-serif" font-size="19" letter-spacing="6" fill="#E4EEEA" opacity=".38">VELA</text>
+      
+<rect width="1000" height="1000" filter="url(#grain-vela)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>
