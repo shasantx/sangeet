@@ -201,7 +201,7 @@ export function RightPanel() {
               Play something and artist details, credits and what is next will appear here.
             </p>
             <Link
-              href="/"
+              href="/home"
               className="mt-5 rounded-full bg-primary px-5 py-2.5 text-xs font-medium text-primary-foreground transition hover:bg-secondary"
             >
               Find something to play

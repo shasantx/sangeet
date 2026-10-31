@@ -20,19 +20,22 @@ Keep it running alongside `npm run dev` or `npm run start`. If the service is
 offline, Sangeet still shows its own catalogue and the curated YouTube sessions;
 the search page simply notes that YouTube search is offline.
 
-## Deploy the search service to Vercel
+## Deploy with the Sangeet app on Vercel
 
-Deploy this folder as a second Vercel project from the same GitHub repository:
+The repository root `vercel.json` configures two Vercel Services: the Next.js
+app and this Python search service. The Python service is reached through a
+private service binding and is not exposed as a public route. Services are a
+Vercel Beta feature; the project must be imported as a multi-service project.
+The binding supplies `YTMUSIC_SERVICE_URL` automatically, so no URL or shared
+token needs to be entered in the app's browser-facing environment.
 
-1. Import the repository again and set **Root Directory** to `ytmusic-service`.
-2. Use the **Python** framework preset. Vercel will deploy `api/search.py` as
-   `GET /api/search`.
-3. Add `YTMUSIC_SERVICE_TOKEN` to this project. Generate a random value locally
-   with `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`
-   and keep it private.
-4. In the main Sangeet Vercel project, set `YTMUSIC_SERVICE_URL` to this
-   project's base HTTPS URL and set the same `YTMUSIC_SERVICE_TOKEN` value.
-5. Redeploy both projects.
+1. Import the repository using Vercel's **multi-service project** flow.
+2. Keep the repository root (`.`) as the project root so Vercel reads
+   `vercel.json` and builds both services.
+3. Deploy. The Next.js route calls the Python service using the private binding.
+4. If you instead deploy this folder as a separate public project, configure a
+   strong `YTMUSIC_SERVICE_TOKEN` on both projects and set the main app's
+   `YTMUSIC_SERVICE_URL` to that service's base HTTPS URL.
 
 The function requires the token and returns metadata only. The app's Next.js
 route forwards authenticated requests to it. The existing `server.py` remains

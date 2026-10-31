@@ -1,16 +1,55 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, AudioLines, Headphones, Search, Sparkles, Play, Library, Heart } from "lucide-react";
+import { ArrowRight, AudioLines, Headphones, Search, Sparkles, Play, Library, Heart, MonitorDown, Smartphone } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { albums, getArtist, selectedAlbums } from "@/lib/catalog";
 import { useAuthStore } from "@/store/auth-store";
 import { Artwork } from "@/components/music/artwork";
 import { AlbumCard } from "@/components/music/album-card";
+import { toast } from "@/store/ui-store";
+
+interface InstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
+function InstallAppButton({ label }: { label: string }) {
+  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
+
+  useEffect(() => {
+    const capturePrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as InstallPromptEvent);
+    };
+    window.addEventListener("beforeinstallprompt", capturePrompt);
+    return () => window.removeEventListener("beforeinstallprompt", capturePrompt);
+  }, []);
+
+  const install = async () => {
+    if (!installPrompt) {
+      toast.info("Install Sangeet", "Open your browser menu and choose Install app or Add to Home screen.");
+      return;
+    }
+    await installPrompt.prompt();
+    await installPrompt.userChoice;
+    setInstallPrompt(null);
+  };
+
+  return <button type="button" onClick={() => void install()} className="mt-5 inline-flex h-10 items-center gap-2 rounded-full bg-white/[.08] px-4 text-xs font-semibold text-white transition hover:bg-white/[.13]"><Smartphone className="h-4 w-4" />{label}</button>;
+}
 
 export default function WelcomePage() {
+  const router = useRouter();
   const openAuthModal = useAuthStore((state) => state.openAuthModal);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const featured = selectedAlbums[0] ?? albums[0];
   const artist = featured ? getArtist(featured.artistId) : undefined;
+  const listenOnline = () => {
+    if (isAuthenticated) router.push("/home");
+    else openAuthModal("signin");
+  };
 
   return (
     <main className="min-h-screen bg-[#0b0c0b] text-white">
@@ -37,10 +76,10 @@ export default function WelcomePage() {
             <h1 className="max-w-2xl font-display text-5xl font-semibold leading-[1.02] tracking-[-.055em] sm:text-6xl lg:text-[76px]">Let the next song <span className="text-primary">find you.</span></h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-white/55 sm:text-lg">A calmer place for discovery, albums, and the tracks you keep coming back to. Follow your mood, build a library that feels like yours, and press play.</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/explore" className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-[#17130c] transition hover:brightness-110"><Play className="h-4 w-4 fill-current" /> Start listening <ArrowRight className="h-4 w-4" /></Link>
-              <Link href="/search" className="inline-flex h-12 items-center gap-2 rounded-full border border-white/15 px-5 text-sm font-medium text-white/80 transition hover:border-white/30 hover:bg-white/[.04]"><Search className="h-4 w-4" /> Search</Link>
+              <button type="button" onClick={listenOnline} className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-[#17130c] transition hover:brightness-110"><Play className="h-4 w-4 fill-current" /> Listen online <ArrowRight className="h-4 w-4" /></button>
+              <a href="#install" className="inline-flex h-12 items-center gap-2 rounded-full border border-white/15 px-5 text-sm font-medium text-white/80 transition hover:border-white/30 hover:bg-white/[.04]"><MonitorDown className="h-4 w-4" /> Get the app</a>
             </div>
-            <p className="mt-4 text-xs text-white/35">Start exploring right away. Sign in when you want to save your place.</p>
+            <p className="mt-4 text-xs text-white/35">Browse the catalog freely. Sign in with Google to start playback.</p>
           </div>
 
           {featured && (
@@ -75,6 +114,21 @@ export default function WelcomePage() {
             { icon: Heart, title: "A player that stays out of the way", text: "Settle into your music with a clean listening space, familiar controls, and your queue always nearby." },
           ].map(({ icon: Icon, title, text }) => <article key={title} className="rounded-2xl border border-white/[.06] bg-[#10110e] p-5 sm:p-6"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span><h3 className="mt-5 font-display text-lg font-medium">{title}</h3><p className="mt-2 text-sm leading-relaxed text-white/50">{text}</p></article>)}
         </div>
+      </section>
+
+      <section id="install" className="mx-auto grid max-w-7xl gap-5 px-5 py-14 sm:grid-cols-2 sm:px-8 sm:py-16">
+        <article className="rounded-2xl border border-white/[.07] bg-[#10110e] p-6 sm:p-8">
+          <MonitorDown className="h-6 w-6 text-primary" />
+          <h2 className="mt-4 font-display text-2xl font-semibold">Sangeet on desktop</h2>
+          <p className="mt-2 text-sm leading-relaxed text-white/50">Install Sangeet from your browser to keep it close, with its own window and app icon.</p>
+          <InstallAppButton label="Install for desktop" />
+        </article>
+        <article className="rounded-2xl border border-white/[.07] bg-[#10110e] p-6 sm:p-8">
+          <Smartphone className="h-6 w-6 text-primary" />
+          <h2 className="mt-4 font-display text-2xl font-semibold">Sangeet on Android</h2>
+          <p className="mt-2 text-sm leading-relaxed text-white/50">Install the web app from Chrome on Android. No separate APK download is provided.</p>
+          <InstallAppButton label="Install for Android" />
+        </article>
       </section>
 
       <footer className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-xs text-white/35 sm:flex-row sm:items-center sm:justify-between sm:px-8">

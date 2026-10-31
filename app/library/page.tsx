@@ -342,7 +342,7 @@ export default function LibraryPage() {
             description="Press play on anything and it will appear here."
             action={
               <Link
-                href="/"
+                href="/home"
                 className="rounded-full bg-primary px-5 py-2.5 text-xs font-medium text-primary-foreground transition hover:bg-secondary"
               >
                 Discover music

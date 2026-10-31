@@ -1,0 +1,21 @@
+{
+  "services": {
+    "sangeet": {
+      "root": ".",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "ytmusic-service",
+          "format": "url",
+          "env": "YTMUSIC_SERVICE_URL"
+        }
+      ]
+    },
+    "ytmusic-service": {
+      "root": "ytmusic-service"
+    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": { "service": "sangeet" } }
+  ]
+}

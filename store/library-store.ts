@@ -6,27 +6,6 @@ import { getTrack } from "@/lib/catalog";
 import { safeStorage } from "@/lib/storage";
 import type { UserPlaylist } from "@/lib/types";
 
-const seededPlaylists: UserPlaylist[] = [
-  {
-    id: "user-late-night",
-    title: "Late Night, Softly",
-    description: "A private collection for the hours when the city gets quiet.",
-    artwork: "/art/playlists/user-01.svg",
-    trackIds: ["t01", "t04", "t28", "t19", "t10", "t35"],
-    createdAt: 1767225600000,
-    updatedAt: 1767225600000,
-  },
-  {
-    id: "user-winter-walk",
-    title: "Winter Walk",
-    description: "Cold air, warm headphones.",
-    artwork: "/art/playlists/user-02.svg",
-    trackIds: ["t05", "t31", "t25", "t15", "t33", "t06"],
-    createdAt: 1764547200000,
-    updatedAt: 1764547200000,
-  },
-];
-
 interface LibraryState {
   likedTrackIds: string[];
   savedAlbumIds: string[];
@@ -52,11 +31,11 @@ interface LibraryState {
 }
 
 const seedState = {
-  likedTrackIds: ["t01", "t07", "t16", "t28", "t04", "t25", "t34", "t10"],
-  savedAlbumIds: ["soft-static", "bloom-in-reverse", "halcyon-hours", "vela"],
-  followedArtistIds: ["mira-vale", "kairos", "elio-north", "vera-sol"],
-  playlists: seededPlaylists,
-  recentlyPlayed: ["t01", "t07", "t28", "t04", "t16", "t25", "t34", "t10"],
+  likedTrackIds: [] as string[],
+  savedAlbumIds: [] as string[],
+  followedArtistIds: [] as string[],
+  playlists: [] as UserPlaylist[],
+  recentlyPlayed: [] as string[],
 };
 
 function uniqueValidTracks(ids: unknown): string[] {
@@ -198,7 +177,8 @@ export const useLibraryStore = create<LibraryState>()(
       name: "aura-library-v1",
       storage: createJSONStorage(() => safeStorage),
       skipHydration: true,
-      version: 1,
+      version: 2,
+      migrate: () => seedState,
       partialize: (state) => ({
         likedTrackIds: state.likedTrackIds,
         savedAlbumIds: state.savedAlbumIds,

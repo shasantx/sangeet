@@ -7,7 +7,7 @@ Sangeet is an independent music discovery interface built with Next.js 15, React
 1. Install Node.js 20 or later and Python 3.10 or later.
 2. Install JavaScript dependencies with `npm ci`.
 3. Copy `.env.example` to `.env.local`. Set `APP_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and a private random `AUTH_SECRET` to enable Google sign-in. The app remains browsable without OAuth credentials.
-4. In one terminal, start the local YouTube Music search service with `npm run ytmusic`.
+4. In one terminal, start the local music search service with `npm run ytmusic`.
 5. In another terminal, start Next.js with `npm run dev` and open `http://localhost:3000`.
 
 Google OAuth client setup and callback registration are documented in [AUTH_SETUP.md](./AUTH_SETUP.md).
@@ -15,7 +15,7 @@ Google OAuth client setup and callback registration are documented in [AUTH_SETU
 ## Current features
 
 - Responsive browse, search, artist, album, playlist, genre, library, and recently played pages.
-- Local playlists, likes, saved albums, followed artists, and playback queue stored in browser storage.
+- Local playlists, likes, saved albums, followed artists, and playback queue stored in browser storage (not yet synced between devices).
 - YouTube Music metadata search through the separate local `ytmusicapi` service, plus the official YouTube IFrame Player for playback.
 - Google OAuth code flow with state, PKCE, ID-token verification, and signed HTTP-only session cookie.
 - Server-checked admin email allowlist and a protected read-only admin readiness page.
@@ -39,7 +39,7 @@ This codebase is not a complete multi-user production service yet:
 - Premium is intentionally unavailable. Stripe variables are placeholders only; checkout, webhook verification, durable subscription state, and server-side entitlements are not implemented.
 - The YouTube Music metadata source is unofficial. For a durable production catalog, connect a licensed music provider or an approved API and verify its rights, quota, and deployment requirements.
 - The search rate limit is per Node.js process. Multi-instance deployments need a trusted proxy and shared rate-limit storage.
-- On Vercel, the Python search endpoint is a separate project rooted at `ytmusic-service`; follow [its deployment steps](./ytmusic-service/README.md) and configure `YTMUSIC_SERVICE_URL` plus the shared `YTMUSIC_SERVICE_TOKEN` in both Vercel projects.
+- On Vercel, import the repo as a multi-service project so the private Python search service is deployed with the Next.js app; see [its deployment steps](./ytmusic-service/README.md). Vercel Services is currently a Beta feature.
 - Add a privacy notice and applicable consent/configuration for third-party YouTube embeds before public deployment.
 
 Do not deploy as a paid music service or represent the app as a licensed catalog until those dependencies are addressed.

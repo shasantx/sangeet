@@ -23,11 +23,8 @@ class handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:  # noqa: N802 - Vercel Python handler API
         expected_token = os.environ.get("YTMUSIC_SERVICE_TOKEN")
-        if not expected_token:
-            self._send(503, {"error": "service not configured"})
-            return
         supplied_token = self.headers.get("Authorization", "").removeprefix("Bearer ")
-        if not hmac.compare_digest(supplied_token, expected_token):
+        if expected_token and not hmac.compare_digest(supplied_token, expected_token):
             self._send(401, {"error": "unauthorized"})
             return
 

@@ -71,7 +71,7 @@ export default function NowPlayingPage() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_-10%,rgba(139,92,246,.12),transparent_60%)]" />
         <header className="flex h-[72px] shrink-0 items-center justify-between px-5 sm:px-8">
           <Link
-            href="/"
+            href="/home"
             className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.06] hover:text-foreground"
             aria-label="Close now playing"
           >
@@ -89,7 +89,7 @@ export default function NowPlayingPage() {
             description="Start a record and the full player will open here with artwork, credits and what comes next."
             action={
               <Link
-                href="/"
+                href="/home"
                 className="rounded-full bg-primary px-5 py-2.5 text-xs font-medium text-primary-foreground transition hover:bg-secondary"
               >
                 Find something to play

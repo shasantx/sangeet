@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 
 const items = [
-  { href: "/", label: "Home", icon: Home, match: (path: string) => path === "/" },
+  { href: "/home", label: "Home", icon: Home, match: (path: string) => path === "/home" },
   { href: "/search", label: "Search", icon: Search, match: (path: string) => path.startsWith("/search") },
   { href: "/explore", label: "Explore", icon: Compass, match: (path: string) => path.startsWith("/explore") || path.startsWith("/genre") },
   { href: "/plans", label: "Plans", icon: WalletCards, match: (path: string) => path.startsWith("/plans") },

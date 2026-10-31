@@ -625,7 +625,7 @@ export default function SettingsPage() {
                   sources remain with their providers, and Sangeet does not collect listener analytics.
                 </p>
                 <Link
-                  href="/"
+                  href="/home"
                   className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary transition hover:text-secondary"
                 >
                   Return home

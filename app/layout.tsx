@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/sangeet-mark.svg",
   },
+  manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
