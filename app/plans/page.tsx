@@ -29,13 +29,13 @@ export default function PlansPage() {
         <section className="rounded-2xl border border-white/[.07] bg-white/[.02] p-6 sm:p-8">
           <p className="eyebrow">Planned</p>
           <h2 className="mt-3 font-display text-3xl font-semibold">Premium</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Not available for purchase.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Access is managed by the Sangeet team.</p>
           <div className="mt-7 flex items-start gap-3 rounded-xl border border-white/[.06] bg-black/10 p-4">
             <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <p className="text-sm leading-relaxed text-muted-foreground">{billingReady ? "Billing credentials are present, but subscription checkout and entitlement storage have not been activated." : "Billing is not configured. Sangeet will not collect payment or claim an upgrade succeeded."}</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{billingReady ? "Billing credentials are present, but subscription checkout and entitlement storage have not been activated." : "Payment checkout is not configured. Sangeet will not collect payment or claim an upgrade succeeded."} Eligible Sangeet audio can be saved for offline playback by Premium-enabled accounts.</p>
           </div>
-          <p className="mt-5 text-xs leading-relaxed text-muted-foreground">Premium listening will require licensed catalog access and a configured billing provider.</p>
-          <button type="button" disabled className="mt-8 h-11 cursor-not-allowed rounded-full border border-white/10 px-5 text-sm font-medium text-muted-foreground opacity-60">Premium unavailable</button>
+          <p className="mt-5 text-xs leading-relaxed text-muted-foreground">An administrator can grant Premium access. Audio from external providers can’t be downloaded; offline saving is limited to eligible Sangeet-hosted tracks.</p>
+          <button type="button" disabled className="mt-8 h-11 cursor-not-allowed rounded-full border border-white/10 px-5 text-sm font-medium text-muted-foreground opacity-60">Checkout not enabled</button>
         </section>
       </div>
     </main>

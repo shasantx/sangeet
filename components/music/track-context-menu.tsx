@@ -1,8 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  CloudOff,
+  Crown,
   Disc3,
+  Download,
   Heart,
   HeartOff,
   ListEnd,
@@ -10,6 +14,8 @@ import {
   MoreHorizontal,
   Play,
   PlusCircle,
+  LoaderCircle,
+  Trash2,
   UserRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,6 +24,8 @@ import { getAlbum, getArtist } from "@/lib/catalog";
 import { useLibraryStore } from "@/store/library-store";
 import { usePlayerStore } from "@/store/player-store";
 import { useUIStore, toast } from "@/store/ui-store";
+import { useAuthStore } from "@/store/auth-store";
+import { canDownloadOffline, isOfflineAvailable, removeOfflineTrack, saveTrackOffline } from "@/lib/offline-audio";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,6 +63,7 @@ export function TrackContextMenu({
   const album = getAlbum(track.albumId);
   const artist = getArtist(track.artistId);
   const isCurrent = currentTrackId === track.id;
+  const canSaveOffline = canDownloadOffline(track);
 
   return (
     <DropdownMenu>
@@ -110,6 +119,7 @@ export function TrackContextMenu({
           <PlusCircle className="h-3.5 w-3.5" />
           Add to playlist
         </DropdownMenuItem>
+        {canSaveOffline ? <OfflineDownloadItem track={track} /> : <DropdownMenuItem disabled><CloudOff className="h-3.5 w-3.5" />Offline copy unavailable for this source</DropdownMenuItem>}
         {includeNavigation && (
           <>
             <DropdownMenuSeparator />
@@ -139,4 +149,47 @@ export function TrackContextMenu({
       </DropdownMenuContent>
     </DropdownMenu>
   );
+}
+
+function OfflineDownloadItem({ track }: { track: Track }) {
+  const router = useRouter();
+  const artist = getArtist(track.artistId);
+  const session = useAuthStore((state) => state.session);
+  const [downloaded, setDownloaded] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void isOfflineAvailable(track).then((available) => { if (active) setDownloaded(available); }).catch(() => undefined);
+    return () => { active = false; };
+  }, [track]);
+
+  const toggleDownload = async () => {
+    if (session?.plan !== "premium") {
+      router.push("/plans");
+      toast.info("Premium access required", "Offline saving is available to Premium-enabled accounts; this build does not yet sell upgrades.");
+      return;
+    }
+    setBusy(true);
+    try {
+      if (downloaded) {
+        await removeOfflineTrack(track);
+        setDownloaded(false);
+        toast.success("Removed offline copy", track.title);
+      } else {
+        await saveTrackOffline(track, artist?.name ?? "Sangeet");
+        setDownloaded(true);
+        toast.success("Saved for offline listening", track.title);
+      }
+    } catch (error) {
+      toast.error("Offline save failed", error instanceof Error ? error.message : "Try again when you’re online.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return <DropdownMenuItem disabled={busy} onSelect={() => void toggleDownload()}>
+    {busy ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : downloaded ? <Trash2 className="h-3.5 w-3.5" /> : session?.plan === "premium" ? <Download className="h-3.5 w-3.5" /> : <Crown className="h-3.5 w-3.5" />}
+    {busy ? "Saving offline…" : downloaded ? "Remove offline copy" : session?.plan === "premium" ? "Download for offline" : "Premium offline listening"}
+  </DropdownMenuItem>;
 }

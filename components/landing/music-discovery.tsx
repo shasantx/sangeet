@@ -1,47 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight, LoaderCircle, Play } from "lucide-react";
-import { getArtist, getTrack, tracks } from "@/lib/catalog";
-import { registerYouTubeSearchResults, type YouTubeSearchResult } from "@/lib/dynamic-tracks";
+import { getArtist, tracks } from "@/lib/catalog";
 import { usePlayerStore } from "@/store/player-store";
 import { Artwork } from "@/components/music/artwork";
+import type { Track } from "@/lib/types";
 
-export function MusicDiscovery() {
+export function MusicDiscovery({ liveTracks, loading }: { liveTracks: Track[]; loading: boolean }) {
   const bundledApiTracks = useMemo(() => tracks.filter((track) => track.youtubeId && track.source === "youtube"), []);
-  const [trackIds, setTrackIds] = useState(() => bundledApiTracks.slice(0, 10).map((track) => track.id));
-  const [loading, setLoading] = useState(false);
   const playTrack = usePlayerStore((state) => state.playTrack);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const timer = window.setTimeout(async () => {
-      setLoading(true);
-      try {
-        const searches = ["Nepali songs", "Hindi songs", "popular songs"];
-        const groups = await Promise.all(searches.map(async (query) => {
-          const response = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`, { signal: controller.signal, cache: "no-store" });
-          if (!response.ok) return [];
-          const payload = await response.json() as { results?: YouTubeSearchResult[] };
-          return payload.results ?? [];
-        }));
-        const liveTracks = registerYouTubeSearchResults(groups.flat());
-        const deduped = Array.from(new Map(liveTracks.map((track) => [track.youtubeId, track])).values());
-        if (deduped.length) setTrackIds(deduped.slice(0, 15).map((track) => track.id));
-      } catch {
-        // The bundled API-sourced tracks remain available if the live search service is unavailable.
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    }, 80);
-    return () => { window.clearTimeout(timer); controller.abort(); };
-  }, []);
-
-  const visibleTracks = trackIds
-    .map((id) => getTrack(id))
-    .map((track, index) => track ?? (typeof window !== "undefined" ? undefined : bundledApiTracks[index]))
-    .filter((track): track is NonNullable<typeof track> => Boolean(track));
+  const visibleTracks = liveTracks.length ? liveTracks : bundledApiTracks.slice(0, 15);
+  const trackIds = visibleTracks.map((track) => track.id);
 
   return <section aria-labelledby="api-discovery-title">
     <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
