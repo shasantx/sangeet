@@ -367,7 +367,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      <audio ref={audioRef} preload="auto" className="pointer-events-none fixed bottom-0 left-0 z-[-1] h-px w-px opacity-0" aria-label="Sangeet audio playback" />
+      <audio
+        ref={audioRef}
+        preload="metadata"
+        playsInline
+        tabIndex={-1}
+        className="pointer-events-none fixed bottom-0 left-0 z-[1] h-px w-px opacity-[0.01]"
+        aria-label="Sangeet audio playback"
+      />
       <YouTubeDock />
     </>
   );
