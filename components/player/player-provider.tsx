@@ -238,8 +238,24 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const addRecentlyPlayed = useLibraryStore((state) => state.addRecentlyPlayed);
 
   useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
+      // Offline playback is an enhancement; online playback remains available without a worker.
+    });
+  }, []);
+
+  useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+    } catch {
+      // Mobile lock-screen playback controls are a progressive enhancement.
+    }
+  }, [isPlaying]);
 
   useEffect(() => {
     if (!currentTrackId) return;
@@ -335,7 +351,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      <audio ref={audioRef} preload="metadata" className="hidden" aria-hidden="true" />
+      <audio ref={audioRef} preload="metadata" playsInline className="hidden" aria-hidden="true" />
       <YouTubeDock />
     </>
   );

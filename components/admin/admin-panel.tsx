@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Activity, ArrowUpRight, Crown, LayoutDashboard, LoaderCircle, Search, Settings2, ShieldAlert, ShieldCheck, Users } from "lucide-react";
+import { Activity, ArrowUpRight, ChartNoAxesCombined, Crown, LayoutDashboard, LoaderCircle, RefreshCw, Search, Settings2, ShieldAlert, ShieldCheck, Users } from "lucide-react";
 import type { AdminAuditEntry, ManagedUser, UserPlan, UserStatus } from "@/lib/admin-users";
 import { SiteControls } from "@/components/admin/site-controls";
 import { SangeetMark } from "@/components/brand/sangeet-mark";
@@ -39,6 +39,7 @@ export function AdminPanel({ email }: { email: string }) {
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
   const [tab, setTab] = useState<AdminTab>("overview");
+  const [lastRefreshed, setLastRefreshed] = useState<number | null>(null);
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -48,6 +49,7 @@ export function AdminPanel({ email }: { email: string }) {
       const result = await response.json() as AdminPayload & { error?: string };
       if (!response.ok) throw new Error(result.error || "Could not load admin data.");
       setPayload(result);
+      setLastRefreshed(Date.now());
       setError("");
     } catch (cause) {
       if (cause instanceof DOMException && cause.name === "AbortError") return;
@@ -129,7 +131,10 @@ export function AdminPanel({ email }: { email: string }) {
       <main className="mx-auto max-w-[1440px] px-4 pb-12 pt-7 sm:px-7 sm:pt-9 lg:px-10 lg:pt-10">
         <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-primary/75">{tab === "overview" ? "Platform overview" : "Platform management"}</p><h1 className="mt-2 font-display text-3xl font-semibold tracking-[-.045em] sm:text-[38px]">{currentTitle}</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-white/45">{tab === "overview" ? "A clear view of account access, site controls, and recent admin actions." : tab === "users" ? "Review listener accounts and manage access from one place." : tab === "site" ? "Publish site updates, control entry points, and curate the listening home." : "A traceable record of changes made in the admin workspace."}</p></div>
-          <div className="flex items-center gap-2 self-start rounded-full border border-white/[.08] bg-white/[.025] px-3 py-2 text-[10px] text-white/45 sm:self-auto"><span className="h-1.5 w-1.5 rounded-full bg-primary" /> Server-verified administrator</div>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/[.08] bg-white/[.025] px-3 py-2 text-[10px] text-white/45"><span className={`h-1.5 w-1.5 rounded-full ${error ? "bg-red-300" : payload ? "bg-primary" : "bg-white/25"}`} />{error ? "Needs attention" : payload ? "Platform connected" : "Connecting"}</span>
+            <button type="button" onClick={() => setRevision((value) => value + 1)} disabled={loading} className="inline-flex h-9 items-center gap-2 rounded-full border border-white/[.08] px-3 text-[10px] font-medium text-white/65 transition hover:border-primary/30 hover:text-white disabled:opacity-45" aria-label="Refresh admin data"><RefreshCw className={`h-3.5 w-3.5 text-primary ${loading ? "animate-spin" : ""}`} />{lastRefreshed ? new Date(lastRefreshed).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Refresh"}</button>
+          </div>
         </div>
 
         {error && <div role="alert" className={`mb-5 rounded-2xl border p-4 text-sm ${setupRequired ? "border-amber-200/20 bg-amber-200/[.04] text-amber-100" : "border-red-300/20 bg-red-300/[.05] text-red-100"}`}>
@@ -142,9 +147,12 @@ export function AdminPanel({ email }: { email: string }) {
               {statCards.map(({ icon: Icon, label, value, detail }) => <article key={label} className="rounded-2xl border border-white/[.07] bg-[#101411] p-5 sm:p-6"><div className="flex items-center justify-between"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/[.09] text-primary"><Icon className="h-4 w-4" /></span><span className="text-[9px] font-semibold uppercase tracking-[.15em] text-white/30">Live data</span></div><p className="mt-5 font-display text-3xl font-semibold tabular-nums">{value.toLocaleString()}</p><p className="mt-1 text-sm font-medium text-white/75">{label}</p><p className="mt-1 text-[11px] text-white/35">{detail}</p></article>)}
               {!payload && <div className="col-span-full flex items-center gap-2 rounded-2xl border border-white/[.07] bg-[#101411] p-6 text-sm text-white/45"><LoaderCircle className="h-4 w-4 animate-spin text-primary" />Loading platform overview</div>}
             </section>
-            <section className="grid gap-3 xl:grid-cols-2">
-              <button type="button" onClick={() => setTab("users")} className="group rounded-2xl border border-white/[.07] bg-[#101411] p-5 text-left transition hover:border-primary/20 hover:bg-[#121813] sm:p-6"><div className="flex items-center justify-between"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/[.04] text-primary"><Users className="h-4 w-4" /></span><ArrowUpRight className="h-4 w-4 text-white/30 transition group-hover:text-primary" /></div><h2 className="mt-4 font-semibold">People and access</h2><p className="mt-1 text-xs leading-relaxed text-white/40">Search listeners, assign manual Premium access, and suspend or restore accounts.</p></button>
-              <button type="button" onClick={() => setTab("site")} className="group rounded-2xl border border-white/[.07] bg-[#101411] p-5 text-left transition hover:border-primary/20 hover:bg-[#121813] sm:p-6"><div className="flex items-center justify-between"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/[.04] text-primary"><Settings2 className="h-4 w-4" /></span><ArrowUpRight className="h-4 w-4 text-white/30 transition group-hover:text-primary" /></div><h2 className="mt-4 font-semibold">Site and content</h2><p className="mt-1 text-xs leading-relaxed text-white/40">Manage announcements, entry and search switches, and featured home content.</p></button>
+            <section className="grid gap-3 xl:grid-cols-[1.15fr_.85fr]">
+              <article className="rounded-2xl border border-white/[.07] bg-[#101411] p-5 sm:p-6">
+                <div className="flex items-start justify-between gap-4"><div><p className="text-[9px] font-semibold uppercase tracking-[.16em] text-primary/75">Account mix</p><h2 className="mt-2 text-base font-semibold">Free and Premium access</h2></div><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/[.09] text-primary"><ChartNoAxesCombined className="h-4 w-4" /></span></div>
+                {payload ? <><div className="mt-5 flex items-end justify-between gap-4"><div><p className="font-display text-3xl font-semibold tabular-nums">{payload.stats.total ? Math.round((payload.stats.premium / payload.stats.total) * 100) : 0}%</p><p className="mt-1 text-[11px] text-white/40">of listeners have Premium access</p></div><p className="text-right text-xs text-white/50"><span className="font-semibold text-amber-100">{payload.stats.premium.toLocaleString()}</span> Premium<br /><span className="font-semibold text-white/70">{Math.max(0, payload.stats.total - payload.stats.premium).toLocaleString()}</span> Free</p></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-white/[.07]" role="img" aria-label={`${payload.stats.premium} Premium out of ${payload.stats.total} total accounts`}><div className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-300 transition-[width] duration-500" style={{ width: `${payload.stats.total ? Math.min(100, (payload.stats.premium / payload.stats.total) * 100) : 0}%` }} /></div></> : <div className="mt-5 h-14 animate-pulse rounded-xl bg-white/[.04]" />}
+              </article>
+              <article className="rounded-2xl border border-white/[.07] bg-[#101411] p-5 sm:p-6"><p className="text-[9px] font-semibold uppercase tracking-[.16em] text-primary/75">Admin shortcuts</p><h2 className="mt-2 text-base font-semibold">Make a platform change</h2><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setTab("users")} className="rounded-xl border border-white/[.07] bg-white/[.02] p-3 text-left transition hover:border-primary/25 hover:bg-primary/[.04]"><Users className="h-4 w-4 text-primary" /><span className="mt-2 block text-xs font-medium">Manage listeners</span><span className="mt-1 block text-[10px] text-white/35">Plans and account access</span></button><button type="button" onClick={() => setTab("site")} className="rounded-xl border border-white/[.07] bg-white/[.02] p-3 text-left transition hover:border-primary/25 hover:bg-primary/[.04]"><Settings2 className="h-4 w-4 text-primary" /><span className="mt-2 block text-xs font-medium">Update the site</span><span className="mt-1 block text-[10px] text-white/35">Curation and site switches</span></button></div></article>
             </section>
             <ActivityFeed actions={payload?.actions ?? []} loading={loading} compact />
           </div>}
