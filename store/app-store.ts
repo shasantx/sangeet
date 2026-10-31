@@ -42,7 +42,7 @@ interface AppState extends PreferenceState {
   clearRecentSearches: () => void;
 }
 
-const seedSearches = ["Mira Vale", "ambient", "Blue Hour Cinema"];
+const seedSearches: string[] = [];
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -112,7 +112,8 @@ export const useAppStore = create<AppState>()(
       name: "aura-app-v1",
       storage: createJSONStorage(() => safeStorage),
       skipHydration: true,
-      version: 1,
+      version: 2,
+      migrate: () => ({ recentSearches: [] }),
       partialize: (state) => ({
         profile: state.profile,
         hasOnboarded: state.hasOnboarded,

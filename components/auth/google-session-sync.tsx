@@ -57,7 +57,7 @@ export function GoogleSessionSync() {
         setGoogleSession(payload.session);
         if (outcome === "success") {
           toast.success(`Welcome, ${payload.session.name}!`, "Signed in with Google.");
-          if (window.location.pathname === "/auth") window.location.replace("/");
+          if (window.location.pathname === "/auth" || window.location.pathname === "/") window.location.replace("/home");
         }
       })
       .catch(() => {

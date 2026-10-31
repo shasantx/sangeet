@@ -48,7 +48,7 @@ export function AuthModal() {
           </button>
           <div className="my-6 border-t border-white/[.08]" />
           <p className="text-xs leading-relaxed text-white/45">
-            Passwords and password resets are managed by Google. Browse and play the available catalog without signing in.
+            Passwords and password resets are managed by Google. Browse freely, then sign in to listen.
           </p>
         </div>
       </DialogContent>

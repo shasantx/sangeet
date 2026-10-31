@@ -25,7 +25,7 @@ import { useUIStore } from "@/store/ui-store";
 import { Artwork } from "@/components/music/artwork";
 
 const primaryNav = [
-  { href: "/", label: "Home", icon: Home },
+  { href: "/home", label: "Home", icon: Home },
   { href: "/search", label: "Search", icon: Search },
   { href: "/explore", label: "Explore", icon: Compass },
   { href: "/plans", label: "Plans", icon: CreditCard },
@@ -53,7 +53,7 @@ export function Sidebar() {
   const avatarColor = session?.avatarColor || profile.avatarColor;
 
   const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+    pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <aside
@@ -65,7 +65,7 @@ export function Sidebar() {
     >
       <div className={cn("flex h-[78px] shrink-0 items-center px-5", collapsed && "justify-center px-0")}>
         <Link
-          href="/"
+          href="/home"
           className="flex min-w-0 items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[#E7A84B]"
           aria-label="Sangeet Music home"
         >

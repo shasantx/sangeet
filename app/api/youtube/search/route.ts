@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const execFileAsync = promisify(execFile);
-const SERVICE_URL = process.env.YTMUSIC_SERVICE_URL ?? "http://127.0.0.1:8765";
+const SERVICE_URL = process.env.YTMUSIC_SERVICE_URL ?? (process.env.VERCEL ? "" : "http://127.0.0.1:8765");
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const RATE_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT = 30;
@@ -100,10 +100,11 @@ export async function GET(request: Request) {
   let serviceReached = false;
   try {
     const serviceToken = process.env.YTMUSIC_SERVICE_TOKEN;
+    if (!SERVICE_URL) throw new Error("Search service is not configured");
     const response = await fetch(`${SERVICE_URL.replace(/\/$/, "")}/api/search?q=${encodeURIComponent(query)}&limit=12`, {
       headers: serviceToken ? { Authorization: `Bearer ${serviceToken}` } : undefined,
       cache: "no-store",
-      signal: AbortSignal.timeout(2000),
+      signal: AbortSignal.timeout(8000),
     });
     serviceReached = true;
     if (response.ok) {
@@ -119,7 +120,7 @@ export async function GET(request: Request) {
     // Try the local Python fallback before using the bundled catalog.
   }
 
-  if (!serviceReached && !upstreamAvailable) try {
+  if (!process.env.VERCEL && !serviceReached && !upstreamAvailable) try {
     const pythonExe = path.join(process.cwd(), ".venv-ytm", "Scripts", "python.exe");
     const script = `
 import json, sys

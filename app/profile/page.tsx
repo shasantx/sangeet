@@ -311,7 +311,7 @@ export default function ProfilePage() {
                 <Clock3 className="mx-auto h-5 w-5 text-muted-foreground/50" />
                 <p className="mt-3 text-sm text-muted-foreground">Your listening history is empty.</p>
                 <Link
-                  href="/"
+                  href="/home"
                   className="mt-3 inline-flex text-xs font-medium text-primary transition hover:text-secondary"
                 >
                   Find something to play

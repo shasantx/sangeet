@@ -17,6 +17,7 @@ import { safeStorage } from "@/lib/storage";
 import { clamp } from "@/lib/utils";
 import type { Track } from "@/lib/types";
 import { useAppStore } from "./app-store";
+import { useAuthStore } from "./auth-store";
 import { toast } from "./ui-store";
 
 export type RepeatMode = "off" | "all" | "one";
@@ -96,6 +97,13 @@ function playableError() {
   return "This track could not start playing. Check your connection and try another track.";
 }
 
+function requireListenerAccount(): boolean {
+  if (useAuthStore.getState().isAuthenticated) return true;
+  useAuthStore.getState().openAuthModal("signin");
+  toast.info("Sign in to listen", "Continue with Google to start playing music.");
+  return false;
+}
+
 function resumeAudio(audio: HTMLAudioElement) {
   if (audio.currentTime >= audio.duration - 0.2 && Number.isFinite(audio.duration)) {
     audio.currentTime = 0;
@@ -127,6 +135,7 @@ export const usePlayerStore = create<PlayerState>()(
   persist(
     (set, get) => {
       const startTrack = (trackId: string, shouldPlay: boolean) => {
+        if (shouldPlay && !requireListenerAccount()) return;
         const track = getTrack(trackId);
         if (!track) {
           set({ error: "That track is no longer available." });
@@ -179,6 +188,7 @@ export const usePlayerStore = create<PlayerState>()(
         ...initialPlayer,
 
         playTrack: (trackId, contextIds, contextLabel) => {
+          if (!requireListenerAccount()) return;
           const track = getTrack(trackId);
           if (!track) {
             toast.error("Track unavailable", "This track is no longer in the AURA catalogue.");
@@ -226,6 +236,7 @@ export const usePlayerStore = create<PlayerState>()(
         },
 
         playShuffled: (trackIds, contextLabel) => {
+          if (!requireListenerAccount()) return;
           const valid = uniqueValid(trackIds);
           if (valid.length === 0) return;
           const shuffled = [...valid].sort(() => Math.random() - 0.5);
@@ -240,6 +251,7 @@ export const usePlayerStore = create<PlayerState>()(
 
         togglePlay: () => {
           const state = get();
+          if (!state.isPlaying && !requireListenerAccount()) return;
           const audio = getAudioElement();
           if (!state.currentTrackId) {
             const fallback = tracks[15] ?? tracks[0];

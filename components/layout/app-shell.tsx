@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed);
   const rightPanelOpen = useAppStore((state) => state.rightPanelOpen);
   const reduceMotion = useReducedMotion();
-  const immersive = pathname === "/welcome" || pathname === "/now-playing";
+  const immersive = pathname === "/" || pathname === "/welcome" || pathname === "/now-playing";
 
   useEffect(() => {
     if (!hasOnboarded && pathname !== "/welcome") {

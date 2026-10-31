@@ -123,7 +123,7 @@ export default function QueuePage() {
           description="Play a record or add a track from anywhere in Sangeet to start building a session."
           action={
             <Link
-              href="/"
+              href="/home"
               className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-medium text-primary-foreground transition hover:bg-secondary"
             >
               <Play className="h-4 w-4 fill-current" />
