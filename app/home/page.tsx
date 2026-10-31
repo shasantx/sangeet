@@ -14,6 +14,7 @@ import { PlayButton } from "@/components/music/play-button";
 import { QuickTrackTile } from "@/components/music/quick-track-tile";
 import { SectionHeader } from "@/components/music/section-header";
 import { TrackList } from "@/components/music/track-list";
+import { Artwork } from "@/components/music/artwork";
 
 const selectionTrackIds = ["t07", "t16", "t04", "t28", "t22", "t01", "t25", "t10"];
 
@@ -47,7 +48,7 @@ export default function HomePage() {
         </Link>
       </header>
 
-      <section aria-label="Quick access" className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+      <section aria-label="Quick access" className="grid grid-cols-2 gap-2 sm:grid-cols-2 xl:grid-cols-3">
         {recentTracks.map((track) => <QuickTrackTile key={track.id} track={track} contextIds={recentIds} contextLabel="Your listening" />)}
       </section>
 
@@ -65,8 +66,8 @@ export default function HomePage() {
               <Link href={`/album/${heroAlbum.id}`} className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-medium text-white/85 transition hover:bg-white/[.08]">View album</Link>
             </div>
           </div>
-          <Link href={`/album/${heroAlbum.id}`} className="relative order-first mx-auto w-full max-w-[240px] p-6 md:order-last md:mx-0 md:max-w-none md:p-8" aria-label={`Open ${heroAlbum.title}`}>
-            <img src={heroAlbum.artwork} alt={`${heroAlbum.title} cover`} className="aspect-square w-full rounded-xl object-cover shadow-2xl" />
+          <Link href={`/album/${heroAlbum.id}`} className="relative order-first mx-auto w-full max-w-[220px] p-5 sm:max-w-[260px] md:order-last md:mx-0 md:max-w-none md:p-8" aria-label={`Open ${heroAlbum.title}`}>
+            <Artwork src={heroAlbum.artwork} alt={`${heroAlbum.title} cover`} priority className="aspect-square w-full rounded-xl shadow-2xl" />
           </Link>
         </section>
       )}
@@ -99,7 +100,7 @@ export default function HomePage() {
             const firstTrack = getTracks(playlist.trackIds.slice(0, 1))[0];
             return (
               <Link key={playlist.id} href={`/playlist/${playlist.id}`} className="group flex min-w-0 items-center gap-3 rounded-lg border border-white/[.04] bg-white/[.025] p-2 transition hover:bg-white/[.06]">
-                <img src={firstTrack?.artwork ?? playlist.artwork} alt="" className="h-14 w-14 rounded-md object-cover" />
+                <Artwork src={firstTrack?.artwork ?? playlist.artwork} alt="" className="h-14 w-14 shrink-0 rounded-md" />
                 <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{playlist.title}</span><span className="mt-1 block truncate text-xs text-muted-foreground">{playlist.description}</span></span>
                 <Headphones className="mr-2 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-primary" />
               </Link>
