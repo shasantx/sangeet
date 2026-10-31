@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-afterglow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1B100E" stop-opacity="1"/><stop offset=".55" stop-color="#66351F" stop-opacity="1"/><stop offset="1" stop-color="#0A0908" stop-opacity="1"/></linearGradient>
+  <filter id="grain-afterglow" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-afterglow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-afterglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-afterglow)"/>
+
+      <rect width="1000" height="1000" fill="#2A1712"/>
+      <circle cx="500" cy="540" r="410" fill="#D9874F" opacity=".52" filter="url(#blur-wide-afterglow)"/>
+      <circle cx="500" cy="540" r="205" fill="#ECC38A" opacity=".76" filter="url(#blur-afterglow)"/>
+      <circle cx="500" cy="540" r="120" fill="#F7DCAD" opacity=".65"/>
+      <path d="M0 640 Q 250 600 500 635 T 1000 620 V1000 H0Z" fill="#11100F"/>
+      <path d="M0 700 Q 260 680 500 720 T 1000 690 V1000 H0Z" fill="#090909"/>
+      <g stroke="#F1C58E" stroke-opacity=".12">
+        <path d="M80 228 H920"/><path d="M80 276 H920"/>
+      </g>
+      <text x="74" y="930" font-family="Arial, sans-serif" font-size="23" letter-spacing="10" fill="#F8E3C5" opacity=".65">LUMEN &amp; KITE</text>
+      <text x="928" y="930" text-anchor="end" font-family="Arial, sans-serif" font-size="17" letter-spacing="4" fill="#F8E3C5" opacity=".36">AFTERGLOW</text>
+      
+<rect width="1000" height="1000" filter="url(#grain-afterglow)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

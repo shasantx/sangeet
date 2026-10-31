@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-artist12" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6D7C87" stop-opacity="1"/><stop offset=".55" stop-color="#0C1419" stop-opacity="1"/><stop offset="1" stop-color="#08090A" stop-opacity="1"/></linearGradient>
+  <filter id="grain-artist12" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-artist12" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-artist12" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient><radialGradient id="artistglow12" cx="50%" cy="35%" r="50%"><stop offset="0" stop-color="#DCE5E7" stop-opacity=".2"/><stop offset="1" stop-color="#0C1419" stop-opacity="0"/></radialGradient>
+<radialGradient id="glow-northbound" cx="50%" cy="40%" r="55%"><stop offset="0" stop-color="#DCE5E7" stop-opacity=".12"/><stop offset="1" stop-color="#0C1419" stop-opacity="0"/></radialGradient></defs>
+<rect width="1000" height="1000" fill="url(#bg-artist12)"/>
+
+    <circle cx="445" cy="445" r="310" fill="#DCE5E7" opacity=".08" filter="url(#blur-artist12)"/>
+    <rect x="0" y="0" width="1000" height="1000" fill="#0C1419" opacity=".18"/>
+    <path d="M150 1000 C 190 780 320 690 500 680 C 680 690 810 780 850 1000Z" fill="#0C1419" opacity=".93"/>
+    <ellipse cx="445" cy="445" rx="188" ry="244" fill="#0C1419" opacity=".96"/>
+    <ellipse cx="415" cy="390" rx="132" ry="208" fill="#DCE5E7" opacity=".09"/>
+    <path d="M292 340 C 255 250 355 155 475 165 C 625 180 665 320 595 430 C 540 340 475 295 375 320Z" fill="#0C1419"/>
+    <path d="M120 1000 C 180 760 330 690 500 685 C 280 760 255 860 240 1000Z" fill="#DCE5E7" opacity=".06"/>
+    <g stroke="#DCE5E7" opacity=".15">
+      <path d="M80 312 H920"/><path d="M80 347 H920"/>
+    </g>
+    <circle cx="820" cy="200" r="20" fill="#DCE5E7" opacity=".1" filter="url(#blur-artist12)"/>
+    <rect x="0" y="0" width="1000" height="1000" fill="url(#glow-northbound)"/><rect x="0" y="0" width="1000" height="1000" fill="url(#bg-artist12)" opacity=".16"/>
+    
+<rect width="1000" height="1000" filter="url(#grain-artist12)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

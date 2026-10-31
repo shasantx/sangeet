@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-genrecinematic" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0D0F1D" stop-opacity="1"/><stop offset=".55" stop-color="#303858" stop-opacity="1"/><stop offset="1" stop-color="#0D0F1D" stop-opacity="1"/></linearGradient>
+  <filter id="grain-genrecinematic" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-genrecinematic" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-genrecinematic" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-genrecinematic)"/>
+
+    <circle cx="500" cy="570" r="360" fill="#7987C9" opacity=".17" filter="url(#blur-wide-cinematic)"/>
+    <circle cx="500" cy="570" r="152" fill="#ABB7ED" opacity=".17" filter="url(#blur-cinematic)"/>
+    <path d="M0 690 Q 280 640 500 675 T 1000 660 V1000 H0Z" fill="#090A12"/>
+    <path d="M0 760 Q 300 730 500 770 T 1000 740 V1000 H0Z" fill="#05060A"/>
+    <g stroke="#B8C2F5" opacity=".15"><path d="M80 220 H920"/><path d="M80 260 H920"/></g>
+<rect width="1000" height="1000" filter="url(#grain-genrecinematic)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

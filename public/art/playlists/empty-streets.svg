@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-emptystreets" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12171C" stop-opacity="1"/><stop offset="1" stop-color="#090C0F" stop-opacity="1"/></linearGradient>
+  <filter id="grain-emptystreets" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-emptystreets" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-emptystreets" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-emptystreets)"/>
+
+      <rect width="1000" height="1000" fill="#11151A"/>
+      <rect y="580" width="1000" height="420" fill="#161B21"/>
+      <path d="M500 580 L170 1000 H830 Z" fill="#1E242B"/>
+      <path d="M500 580 V1000" stroke="#B3A477" stroke-width="2" opacity=".3" stroke-dasharray="16 30"/>
+      <circle cx="500" cy="410" r="240" fill="#798A98" opacity=".1" filter="url(#blur-wide-emptystreets)"/>
+      <circle cx="500" cy="410" r="46" fill="#C4C3AE" opacity=".35" filter="url(#blur-emptystreets)"/>
+      <path d="M500 0 V410" stroke="#C7C6B1" opacity=".14" stroke-width="2"/>
+      <rect x="70" y="70" width="860" height="860" fill="none" stroke="#D8D7C9" opacity=".1"/>
+      <text x="84" y="920" font-family="Arial, sans-serif" font-size="21" letter-spacing="8" fill="#E2E3DD" opacity=".61">AURA EDITORIAL</text>
+      <text x="916" y="920" text-anchor="end" font-family="Arial, sans-serif" font-size="16" letter-spacing="3" fill="#E2E3DD" opacity=".32">EMPTY STREETS</text>
+      
+<rect width="1000" height="1000" filter="url(#grain-emptystreets)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-softstatic" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D8D7D0" stop-opacity="1"/><stop offset="1" stop-color="#AFAFA9" stop-opacity="1"/></linearGradient>
+  <filter id="grain-softstatic" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-softstatic" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-softstatic" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient><filter id="paper-softstatic"><feTurbulence baseFrequency=".03" numOctaves="2"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-softstatic)"/>
+
+      <rect width="1000" height="1000" fill="#C8CAC7"/>
+      <rect x="70" y="80" width="860" height="640" fill="#E6E4DC" opacity=".74"/>
+      <g fill="none" stroke="#383B39" stroke-opacity=".46" stroke-width="1.4">
+        <path d="M0 265 Q 180 237 380 279 T 760 253 T 1000 273"/><path d="M0 279 Q 180 242 380 293 T 760 267 T 1000 287"/><path d="M0 293 Q 180 247 380 307 T 760 281 T 1000 301"/><path d="M0 307 Q 180 252 380 321 T 760 295 T 1000 315"/><path d="M0 321 Q 180 293 380 335 T 760 309 T 1000 329"/><path d="M0 335 Q 180 298 380 349 T 760 323 T 1000 343"/><path d="M0 349 Q 180 303 380 363 T 760 337 T 1000 357"/><path d="M0 363 Q 180 308 380 377 T 760 351 T 1000 371"/><path d="M0 377 Q 180 349 380 391 T 760 365 T 1000 385"/><path d="M0 391 Q 180 354 380 405 T 760 379 T 1000 399"/><path d="M0 405 Q 180 359 380 419 T 760 393 T 1000 413"/><path d="M0 419 Q 180 364 380 433 T 760 407 T 1000 427"/><path d="M0 433 Q 180 405 380 447 T 760 421 T 1000 441"/><path d="M0 447 Q 180 410 380 461 T 760 435 T 1000 455"/><path d="M0 461 Q 180 415 380 475 T 760 449 T 1000 469"/><path d="M0 475 Q 180 420 380 489 T 760 463 T 1000 483"/><path d="M0 489 Q 180 461 380 503 T 760 477 T 1000 497"/><path d="M0 503 Q 180 466 380 517 T 760 491 T 1000 511"/><path d="M0 517 Q 180 471 380 531 T 760 505 T 1000 525"/><path d="M0 531 Q 180 476 380 545 T 760 519 T 1000 539"/><path d="M0 545 Q 180 517 380 559 T 760 533 T 1000 553"/><path d="M0 559 Q 180 522 380 573 T 760 547 T 1000 567"/><path d="M0 573 Q 180 527 380 587 T 760 561 T 1000 581"/><path d="M0 587 Q 180 532 380 601 T 760 575 T 1000 595"/><path d="M0 601 Q 180 573 380 615 T 760 589 T 1000 609"/><path d="M0 615 Q 180 578 380 629 T 760 603 T 1000 623"/><path d="M0 629 Q 180 583 380 643 T 760 617 T 1000 637"/><path d="M0 643 Q 180 588 380 657 T 760 631 T 1000 651"/><path d="M0 657 Q 180 629 380 671 T 760 645 T 1000 665"/><path d="M0 671 Q 180 634 380 685 T 760 659 T 1000 679"/><path d="M0 685 Q 180 639 380 699 T 760 673 T 1000 693"/><path d="M0 699 Q 180 644 380 713 T 760 687 T 1000 707"/><path d="M0 713 Q 180 685 380 727 T 760 701 T 1000 721"/><path d="M0 727 Q 180 690 380 741 T 760 715 T 1000 735"/>
+      </g>
+      <rect x="548" y="82" width="380" height="638" fill="#1A1B1A" opacity=".92"/>
+      <circle cx="740" cy="340" r="94" fill="#10110F" opacity=".85"/>
+      <circle cx="740" cy="340" r="54" fill="#C8CAC7" opacity=".13"/>
+      <text x="78" y="876" font-family="Arial, sans-serif" font-size="25" letter-spacing="9" fill="#242625" opacity=".72">ELIO NORTH</text>
+      <text x="78" y="914" font-family="Arial, sans-serif" font-size="18" letter-spacing="4" fill="#242625" opacity=".44">SOFT STATIC</text>
+      
+<rect width="1000" height="1000" filter="url(#grain-softstatic)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

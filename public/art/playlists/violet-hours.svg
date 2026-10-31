@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-violethours" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0B0911" stop-opacity="1"/><stop offset=".55" stop-color="#1B122D" stop-opacity="1"/><stop offset="1" stop-color="#09080D" stop-opacity="1"/></linearGradient>
+  <filter id="grain-violethours" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-violethours" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-violethours" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-violethours)"/>
+
+      <rect x="0" y="0" width="1000" height="1000" fill="#0C0A12"/>
+      <rect x="352" y="0" width="296" height="1000" fill="#7A47DE" opacity=".16" filter="url(#blur-wide-violethours)"/>
+      <rect x="466" y="80" width="68" height="840" fill="#B69BF4" opacity=".2" filter="url(#blur-violethours)"/>
+      <circle cx="500" cy="500" r="245" fill="none" stroke="#AD8DF0" stroke-width="1" opacity=".35"/>
+      <circle cx="500" cy="500" r="165" fill="none" stroke="#AD8DF0" stroke-width="1" opacity=".25"/>
+      <g fill="#E8DBFF">
+        <rect x="452" y="430" width="4" height="110" rx="2" opacity=".85"/>
+        <rect x="470" y="450" width="4" height="70" rx="2" opacity=".65"/>
+        <rect x="488" y="405" width="4" height="170" rx="2" opacity=".95"/>
+        <rect x="506" y="466" width="4" height="60" rx="2" opacity=".5"/>
+        <rect x="524" y="424" width="4" height="122" rx="2" opacity=".8"/>
+        <rect x="542" y="456" width="4" height="72" rx="2" opacity=".58"/>
+      </g>
+      <text x="86" y="920" font-family="Arial, sans-serif" font-size="22" letter-spacing="9" fill="#E9DFFF" opacity=".7">AURA EDITORIAL</text>
+      <text x="914" y="920" text-anchor="end" font-family="Arial, sans-serif" font-size="16" letter-spacing="4" fill="#E9DFFF" opacity=".38">VIOLET HOURS</text>
+      
+<rect width="1000" height="1000" filter="url(#grain-violethours)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

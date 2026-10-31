@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-genreelectronic" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#100A1B" stop-opacity="1"/><stop offset=".55" stop-color="#3E1E61" stop-opacity="1"/><stop offset="1" stop-color="#100A1B" stop-opacity="1"/></linearGradient>
+  <filter id="grain-genreelectronic" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-genreelectronic" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-genreelectronic" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-genreelectronic)"/>
+
+    <g stroke="#A987E7" opacity=".25">
+      <path d="M100 100 V900"/><path d="M190 100 V900"/><path d="M280 100 V900"/><path d="M370 100 V900"/><path d="M460 100 V900"/><path d="M550 100 V900"/><path d="M640 100 V900"/><path d="M730 100 V900"/><path d="M820 100 V900"/><path d="M910 100 V900"/>
+      <path d="M100 100 H900"/><path d="M100 190 H900"/><path d="M100 280 H900"/><path d="M100 370 H900"/><path d="M100 460 H900"/><path d="M100 550 H900"/><path d="M100 640 H900"/><path d="M100 730 H900"/><path d="M100 820 H900"/><path d="M100 910 H900"/>
+    </g>
+    <circle cx="500" cy="500" r="210" fill="none" stroke="#C8A6FF" opacity=".4"/>
+    <circle cx="500" cy="500" r="120" fill="#A855F7" opacity=".24" filter="url(#blur-electronic)"/>
+    <circle cx="500" cy="500" r="18" fill="#D8C3FF" opacity=".7"/>
+<rect width="1000" height="1000" filter="url(#grain-genreelectronic)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

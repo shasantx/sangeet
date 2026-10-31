@@ -1,0 +1,1966 @@
+{
+  "generatedAt": "2026-10-31",
+  "source": "ytmusicapi",
+  "artists": [
+    {
+      "id": "the-weeknd",
+      "name": "The Weeknd",
+      "bio": "The Weeknd is one of the world's most streamed artists on YouTube Music and Spotify.",
+      "shortBio": "Top artist · Pop",
+      "image": "https://yt3.googleusercontent.com/vH5ThTjQEPeS7bBDTuoUhqTZ526yHE6DZqVRpfHuEy_CgIVG_41iG-g_JbBv-I-88_IX6Q09wImjSAw=w544-h544-l90-rj",
+      "location": "Global",
+      "monthlyListeners": 75000000,
+      "followers": 42000000,
+      "genreIds": [
+        "pop"
+      ],
+      "relatedArtistIds": [],
+      "verified": true
+    },
+    {
+      "id": "taylor-swift",
+      "name": "Taylor Swift",
+      "bio": "Taylor Swift is one of the world's most streamed artists on YouTube Music and Spotify.",
+      "shortBio": "Top artist · Pop",
+      "image": "https://yt3.googleusercontent.com/GcrDhHXqrPm4BjS-4L1c0OHC9iz0ZxmFeRur2A6Aqo9Vm7OfFCBOSVbRzp1M1D1s_3rsvKaC7w6kku0=w544-h544-l90-rj",
+      "location": "Global",
+      "monthlyListeners": 75000000,
+      "followers": 42000000,
+      "genreIds": [
+        "pop"
+      ],
+      "relatedArtistIds": [],
+      "verified": true
+    },
+    {
+      "id": "billie-eilish",
+      "name": "Billie Eilish",
+      "bio": "Billie Eilish is one of the world's most streamed artists on YouTube Music and Spotify.",
+      "shortBio": "Top artist · Alternative",
+      "image": "https://yt3.googleusercontent.com/mXJjWX4E6Gpr03CUYl18PdVXlczmoL2Tm-LEBGafIr_8smlHnl8AHniJu0_7Y80e-aeloJxcryQQx0ZJ=w544-h544-l90-rj",
+      "location": "Global",
+      "monthlyListeners": 75000000,
+      "followers": 42000000,
+      "genreIds": [
+        "alternative"
+      ],
+      "relatedArtistIds": [],
+      "verified": true
+    },
+    {
+      "id": "coldplay",
+      "name": "Coldplay",
+      "bio": "Coldplay is one of the world's most streamed artists on YouTube Music and Spotify.",
+      "shortBio": "Top artist · Alternative",
+      "image": "https://yt3.googleusercontent.com/xe9bE6n-eibnXPIlc-UEemlqsMMcz-S100IjrclFeaKrw1ATP9rbPrNy9jLA1zA02Zc-3YAFROuNEFKA=w544-h544-l90-rj",
+      "location": "Global",
+      "monthlyListeners": 75000000,
+      "followers": 42000000,
+      "genreIds": [
+        "alternative"
+      ],
+      "relatedArtistIds": [],
+      "verified": true
+    },
+    {
+      "id": "daft-punk",
+      "name": "Daft Punk",
+      "bio": "Daft Punk is one of the world's most streamed artists on YouTube Music and Spotify.",
+      "shortBio": "Top artist · Electronic",
+      "image": "https://yt3.googleusercontent.com/N55arCGj69gtw6thXK8JUPisxoVYiwuIEQ7I6SGlkEyNcSJ7xIWPe76Vuu1SiUqRyx5w9qvR_zV8fV3CWQ=w544-h544-l90-rj",
+      "location": "Global",
+      "monthlyListeners": 75000000,
+      "followers": 42000000,
+      "genreIds": [
+        "electronic"
+      ],
+      "relatedArtistIds": [],
+      "verified": true
+    },
+    {
+      "id": "dua-lipa",
+      "name": "Dua Lipa",
+      "bio": "Dua Lipa is one of the world's most streamed artists on YouTube Music and Spotify.",
+      "shortBio": "Top artist · Pop",
+      "image": "https://yt3.googleusercontent.com/5d51ZlGjNP_Gss3Z3RKP7B98ASQ7pxvp4XI3IAQ3kniFFjgLPDPnR6_K3tYZGoMVvfJYXBtu3awwsTI=w544-h544-l90-rj",
+      "location": "Global",
+      "monthlyListeners": 75000000,
+      "followers": 42000000,
+      "genreIds": [
+        "pop"
+      ],
+      "relatedArtistIds": [],
+      "verified": true
+    },
+    {
+      "id": "drake",
+      "name": "Drake",
+      "bio": "Drake is one of the world's most streamed artists on YouTube Music and Spotify.",
+      "shortBio": "Top artist · Hiphop",
+      "image": "https://yt3.googleusercontent.com/9Oe4acEXgmAlCKgcgI6JlSXi2Tj30u6anzvfGBrunGO-fLhBTgzy-ei1ugPJpZDD5ArKFod9H4RTA5g0=w544-h544-l90-rj",
+      "location": "Global",
+      "monthlyListeners": 75000000,
+      "followers": 42000000,
+      "genreIds": [
+        "hiphop"
+      ],
+      "relatedArtistIds": [],
+      "verified": true
+    },
+    {
+      "id": "ed-sheeran",
+      "name": "Ed Sheeran",
+      "bio": "Ed Sheeran is one of the world's most streamed artists on YouTube Music and Spotify.",
+      "shortBio": "Top artist · Pop",
+      "image": "https://yt3.googleusercontent.com/xpDEOr2TeqEn1QpXosXhqtj149FzNnTgAG3oqPnpTxTbQk-oceO90Sz4Axq0s4Jp_QLGQha_um6_EG3WGQ=w544-h544-l90-rj",
+      "location": "Global",
+      "monthlyListeners": 75000000,
+      "followers": 42000000,
+      "genreIds": [
+        "pop"
+      ],
+      "relatedArtistIds": [],
+      "verified": true
+    },
+    {
+      "id": "bruno-mars",
+      "name": "Bruno Mars",
+      "bio": "Bruno Mars is one of the world's most streamed artists on YouTube Music and Spotify.",
+      "shortBio": "Top artist · Soul",
+      "image": "https://yt3.googleusercontent.com/Jrcws67rGflH1eJNV3dpOsBP8JosmTswvHNUQ2jD_a8-_EBYNXkUAwzHRPIgsuxY0G9Xf5MQde-mJQKP=w544-h544-l90-rj",
+      "location": "Global",
+      "monthlyListeners": 75000000,
+      "followers": 42000000,
+      "genreIds": [
+        "soul"
+      ],
+      "relatedArtistIds": [],
+      "verified": true
+    },
+    {
+      "id": "kendrick-lamar",
+      "name": "Kendrick Lamar",
+      "bio": "Kendrick Lamar is one of the world's most streamed artists on YouTube Music and Spotify.",
+      "shortBio": "Top artist · Hiphop",
+      "image": "https://yt3.googleusercontent.com/nUcE0cU6y5BsIa_fpzqSMSc4qCpHoLxeWb6Co2xfMQOLO3ZTctzNopp8d35VyCPSWb0Z1I_1bxTTyyo=w544-h544-l90-rj",
+      "location": "Global",
+      "monthlyListeners": 75000000,
+      "followers": 42000000,
+      "genreIds": [
+        "hiphop"
+      ],
+      "relatedArtistIds": [],
+      "verified": true
+    },
+    {
+      "id": "hans-zimmer",
+      "name": "Hans Zimmer",
+      "bio": "Hans Zimmer is one of the world's most streamed artists on YouTube Music and Spotify.",
+      "shortBio": "Top artist · Cinematic",
+      "image": "https://yt3.googleusercontent.com/i0kEy1Dof7J0-1e0T64uoiXjpg8dEFeDgkbO6Jr8w4lCAMPb2ICcYhZlbmd3HNdIAsiPDAw1-p2tgAU=w544-h544-l90-rj",
+      "location": "Global",
+      "monthlyListeners": 75000000,
+      "followers": 42000000,
+      "genreIds": [
+        "cinematic"
+      ],
+      "relatedArtistIds": [],
+      "verified": true
+    },
+    {
+      "id": "nils-frahm",
+      "name": "Nils Frahm",
+      "bio": "Nils Frahm is one of the world's most streamed artists on YouTube Music and Spotify.",
+      "shortBio": "Top artist · Ambient",
+      "image": "https://yt3.googleusercontent.com/BAvsFr9lnyGKiL2UA3KaFfFPkLdrz-2nDtJBVSCQ_4WXR75KT_uOUsoPg4l9iIDykWuDkHmN0PbgYYhGNA=w544-h544-l90-rj",
+      "location": "Global",
+      "monthlyListeners": 75000000,
+      "followers": 42000000,
+      "genreIds": [
+        "ambient"
+      ],
+      "relatedArtistIds": [],
+      "verified": true
+    }
+  ],
+  "albums": [
+    {
+      "id": "al-the-weeknd",
+      "title": "The Weeknd Essentials",
+      "artistId": "the-weeknd",
+      "year": 2024,
+      "releaseDate": "2024-01-01",
+      "type": "Album",
+      "artwork": "https://yt3.googleusercontent.com/vH5ThTjQEPeS7bBDTuoUhqTZ526yHE6DZqVRpfHuEy_CgIVG_41iG-g_JbBv-I-88_IX6Q09wImjSAw=w544-h544-l90-rj",
+      "genreIds": [
+        "pop"
+      ],
+      "description": "The essential collection of hits and fan favourites by The Weeknd.",
+      "trackIds": [
+        "yt-KXzVOtWAOqs",
+        "yt-p8_ugAjWI5I",
+        "yt-peLRPSCeppI",
+        "yt-wnTz65qqxI0",
+        "yt-RmYCOm4ehKs",
+        "yt-QvXcLbVrNWs"
+      ]
+    },
+    {
+      "id": "al-taylor-swift",
+      "title": "Taylor Swift Essentials",
+      "artistId": "taylor-swift",
+      "year": 2024,
+      "releaseDate": "2024-01-01",
+      "type": "Album",
+      "artwork": "https://yt3.googleusercontent.com/GcrDhHXqrPm4BjS-4L1c0OHC9iz0ZxmFeRur2A6Aqo9Vm7OfFCBOSVbRzp1M1D1s_3rsvKaC7w6kku0=w544-h544-l90-rj",
+      "genreIds": [
+        "pop"
+      ],
+      "description": "The essential collection of hits and fan favourites by Taylor Swift.",
+      "trackIds": [
+        "yt-dC9QIUKviJU",
+        "yt-aPnqx56V8-0",
+        "yt-MSWhTUMH3pM",
+        "yt-FNEoPctNIUE",
+        "yt-7nVctvQVz0U",
+        "yt-M_lVZIpgnjU"
+      ]
+    },
+    {
+      "id": "al-billie-eilish",
+      "title": "Billie Eilish Essentials",
+      "artistId": "billie-eilish",
+      "year": 2024,
+      "releaseDate": "2024-01-01",
+      "type": "Album",
+      "artwork": "https://yt3.googleusercontent.com/mXJjWX4E6Gpr03CUYl18PdVXlczmoL2Tm-LEBGafIr_8smlHnl8AHniJu0_7Y80e-aeloJxcryQQx0ZJ=w544-h544-l90-rj",
+      "genreIds": [
+        "alternative"
+      ],
+      "description": "The essential collection of hits and fan favourites by Billie Eilish.",
+      "trackIds": [
+        "yt-WKZO-CWeOVA",
+        "yt-O1PkZaFy61Y",
+        "yt-sTLy_aD6OEo",
+        "yt-MMfpp0-lnw4",
+        "yt-P4z1O3miesI",
+        "yt-1UnJeFnWxGQ"
+      ]
+    },
+    {
+      "id": "al-coldplay",
+      "title": "Coldplay Essentials",
+      "artistId": "coldplay",
+      "year": 2024,
+      "releaseDate": "2024-01-01",
+      "type": "Album",
+      "artwork": "https://yt3.googleusercontent.com/xe9bE6n-eibnXPIlc-UEemlqsMMcz-S100IjrclFeaKrw1ATP9rbPrNy9jLA1zA02Zc-3YAFROuNEFKA=w544-h544-l90-rj",
+      "genreIds": [
+        "alternative"
+      ],
+      "description": "The essential collection of hits and fan favourites by Coldplay.",
+      "trackIds": [
+        "yt-H3Kzh6RrnMc",
+        "yt-KWuyx6yZ21U",
+        "yt-9qnqYL0eNNI",
+        "yt-Oncu0bgdcXU",
+        "yt-Q0TEUMPIhk8",
+        "yt-owTWCbq_nSk"
+      ]
+    },
+    {
+      "id": "al-daft-punk",
+      "title": "Daft Punk Essentials",
+      "artistId": "daft-punk",
+      "year": 2024,
+      "releaseDate": "2024-01-01",
+      "type": "Album",
+      "artwork": "https://yt3.googleusercontent.com/N55arCGj69gtw6thXK8JUPisxoVYiwuIEQ7I6SGlkEyNcSJ7xIWPe76Vuu1SiUqRyx5w9qvR_zV8fV3CWQ=w544-h544-l90-rj",
+      "genreIds": [
+        "electronic"
+      ],
+      "description": "The essential collection of hits and fan favourites by Daft Punk.",
+      "trackIds": [
+        "yt-khnokW3Mw24",
+        "yt-4D7u5KF7SP8",
+        "yt-3_g2un5M350",
+        "yt-4qlDWL1kMcQ",
+        "yt-JhulBGMA7G4",
+        "yt-iIWoYaJRryw"
+      ]
+    },
+    {
+      "id": "al-dua-lipa",
+      "title": "Dua Lipa Essentials",
+      "artistId": "dua-lipa",
+      "year": 2024,
+      "releaseDate": "2024-01-01",
+      "type": "Album",
+      "artwork": "https://yt3.googleusercontent.com/5d51ZlGjNP_Gss3Z3RKP7B98ASQ7pxvp4XI3IAQ3kniFFjgLPDPnR6_K3tYZGoMVvfJYXBtu3awwsTI=w544-h544-l90-rj",
+      "genreIds": [
+        "pop"
+      ],
+      "description": "The essential collection of hits and fan favourites by Dua Lipa.",
+      "trackIds": [
+        "yt-n0GXk_T2zs8",
+        "yt-2tw2QDSeBQQ",
+        "yt-xTz3ArZgpkc",
+        "yt-OsfAnsMY21M",
+        "yt-qpV1b_rJfbg",
+        "yt-hffNFtGCEpI"
+      ]
+    },
+    {
+      "id": "al-drake",
+      "title": "Drake Essentials",
+      "artistId": "drake",
+      "year": 2024,
+      "releaseDate": "2024-01-01",
+      "type": "Album",
+      "artwork": "https://yt3.googleusercontent.com/9Oe4acEXgmAlCKgcgI6JlSXi2Tj30u6anzvfGBrunGO-fLhBTgzy-ei1ugPJpZDD5ArKFod9H4RTA5g0=w544-h544-l90-rj",
+      "genreIds": [
+        "hiphop"
+      ],
+      "description": "The essential collection of hits and fan favourites by Drake.",
+      "trackIds": [
+        "yt-FrsOnNxIrg8",
+        "yt-JDb3ZZD4bA0",
+        "yt-oUzcV-ETiWI",
+        "yt-vtEL0uKO4tA",
+        "yt-Q8eOdXdSxJQ",
+        "yt-QKPxNQfrtzU"
+      ]
+    },
+    {
+      "id": "al-ed-sheeran",
+      "title": "Ed Sheeran Essentials",
+      "artistId": "ed-sheeran",
+      "year": 2024,
+      "releaseDate": "2024-01-01",
+      "type": "Album",
+      "artwork": "https://yt3.googleusercontent.com/xpDEOr2TeqEn1QpXosXhqtj149FzNnTgAG3oqPnpTxTbQk-oceO90Sz4Axq0s4Jp_QLGQha_um6_EG3WGQ=w544-h544-l90-rj",
+      "genreIds": [
+        "pop"
+      ],
+      "description": "The essential collection of hits and fan favourites by Ed Sheeran.",
+      "trackIds": [
+        "yt-ORrFJ63nlcA",
+        "yt-xTvyyoF_LZY",
+        "yt-4CskSETO0-w",
+        "yt-xblHqlj2JDM",
+        "yt-ugHePw5EaGY",
+        "yt-LZ2wov0Q5e0"
+      ]
+    },
+    {
+      "id": "al-bruno-mars",
+      "title": "Bruno Mars Essentials",
+      "artistId": "bruno-mars",
+      "year": 2024,
+      "releaseDate": "2024-01-01",
+      "type": "Album",
+      "artwork": "https://yt3.googleusercontent.com/Jrcws67rGflH1eJNV3dpOsBP8JosmTswvHNUQ2jD_a8-_EBYNXkUAwzHRPIgsuxY0G9Xf5MQde-mJQKP=w544-h544-l90-rj",
+      "genreIds": [
+        "soul"
+      ],
+      "description": "The essential collection of hits and fan favourites by Bruno Mars.",
+      "trackIds": [
+        "yt-GnUW4AF1LZo",
+        "yt-n_kbKfUHToY",
+        "yt-ioNYKflP4RY",
+        "yt-DlFXDl_ROAM",
+        "yt-BF2_ipR1OI0",
+        "yt-h8slzEkObi8"
+      ]
+    },
+    {
+      "id": "al-kendrick-lamar",
+      "title": "Kendrick Lamar Essentials",
+      "artistId": "kendrick-lamar",
+      "year": 2024,
+      "releaseDate": "2024-01-01",
+      "type": "Album",
+      "artwork": "https://yt3.googleusercontent.com/nUcE0cU6y5BsIa_fpzqSMSc4qCpHoLxeWb6Co2xfMQOLO3ZTctzNopp8d35VyCPSWb0Z1I_1bxTTyyo=w544-h544-l90-rj",
+      "genreIds": [
+        "hiphop"
+      ],
+      "description": "The essential collection of hits and fan favourites by Kendrick Lamar.",
+      "trackIds": [
+        "yt-oBcZSHdGmR8",
+        "yt-o4M4qssoaWU",
+        "yt-dzFEPJK45iQ",
+        "yt-kAbhILeXwGE",
+        "yt-NWUtG6UQeGQ",
+        "yt-UYo0Ykq6AGY"
+      ]
+    },
+    {
+      "id": "al-hans-zimmer",
+      "title": "Hans Zimmer Essentials",
+      "artistId": "hans-zimmer",
+      "year": 2024,
+      "releaseDate": "2024-01-01",
+      "type": "Album",
+      "artwork": "https://yt3.googleusercontent.com/i0kEy1Dof7J0-1e0T64uoiXjpg8dEFeDgkbO6Jr8w4lCAMPb2ICcYhZlbmd3HNdIAsiPDAw1-p2tgAU=w544-h544-l90-rj",
+      "genreIds": [
+        "cinematic"
+      ],
+      "description": "The essential collection of hits and fan favourites by Hans Zimmer.",
+      "trackIds": [
+        "yt-FNBAmsriyY8",
+        "yt-MU3EOO4fWQo",
+        "yt-NENJADSqyYg",
+        "yt-0TcolckMrDw",
+        "yt-zzhYb-gZlCg",
+        "yt-NX7yOVVr_d0"
+      ]
+    },
+    {
+      "id": "al-nils-frahm",
+      "title": "Nils Frahm Essentials",
+      "artistId": "nils-frahm",
+      "year": 2024,
+      "releaseDate": "2024-01-01",
+      "type": "Album",
+      "artwork": "https://yt3.googleusercontent.com/BAvsFr9lnyGKiL2UA3KaFfFPkLdrz-2nDtJBVSCQ_4WXR75KT_uOUsoPg4l9iIDykWuDkHmN0PbgYYhGNA=w544-h544-l90-rj",
+      "genreIds": [
+        "ambient"
+      ],
+      "description": "The essential collection of hits and fan favourites by Nils Frahm.",
+      "trackIds": [
+        "yt-1UJFkeTG01k",
+        "yt-ocp4zBfmsmU",
+        "yt-oJ0vDaEOEbQ",
+        "yt-LymdtOxKFFE",
+        "yt-upZJZomaaQk",
+        "yt-vrxPsll1BeM"
+      ]
+    }
+  ],
+  "tracks": [
+    {
+      "id": "yt-KXzVOtWAOqs",
+      "title": "One Of The Girls (Instrumental)",
+      "artistId": "the-weeknd",
+      "albumId": "al-the-weeknd",
+      "duration": 245,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/vH5ThTjQEPeS7bBDTuoUhqTZ526yHE6DZqVRpfHuEy_CgIVG_41iG-g_JbBv-I-88_IX6Q09wImjSAw=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "KXzVOtWAOqs",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 45000000,
+      "trackNumber": 1,
+      "explicit": false
+    },
+    {
+      "id": "yt-p8_ugAjWI5I",
+      "title": "São Paulo",
+      "artistId": "the-weeknd",
+      "albumId": "al-the-weeknd",
+      "duration": 302,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/9ds8ikP1c3pkqRFeztLdUu5w3wUZrhYD2U9pUM5eStacumTocYtHieEGcAKQo5CsBvSB_m4bVCUAs_eXJA=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "p8_ugAjWI5I",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 50000000,
+      "trackNumber": 2,
+      "explicit": true
+    },
+    {
+      "id": "yt-peLRPSCeppI",
+      "title": "Moth To A Flame",
+      "artistId": "the-weeknd",
+      "albumId": "al-the-weeknd",
+      "duration": 234,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/TvMIwtq5dEO_5ggORcyuvA7d4xU2Uu_AZMaxkNHmlPfUlTnwYb4rXLDsbFtbebrY2E1slCLt9XlhtSZDrQ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "peLRPSCeppI",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 55000000,
+      "trackNumber": 3,
+      "explicit": false
+    },
+    {
+      "id": "yt-wnTz65qqxI0",
+      "title": "Cry For Me",
+      "artistId": "the-weeknd",
+      "albumId": "al-the-weeknd",
+      "duration": 225,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/9ds8ikP1c3pkqRFeztLdUu5w3wUZrhYD2U9pUM5eStacumTocYtHieEGcAKQo5CsBvSB_m4bVCUAs_eXJA=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "wnTz65qqxI0",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 60000000,
+      "trackNumber": 4,
+      "explicit": true
+    },
+    {
+      "id": "yt-RmYCOm4ehKs",
+      "title": "Save Your Tears",
+      "artistId": "the-weeknd",
+      "albumId": "al-the-weeknd",
+      "duration": 216,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/JDKz3Anlyo49xBhFcFx13QD_Tk4-kqdiYTo15gtkL93nE8biWyZ7o0BPyW6RnXVxcXaJ5DgU5nJ_0NjJ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "RmYCOm4ehKs",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 65000000,
+      "trackNumber": 5,
+      "explicit": false
+    },
+    {
+      "id": "yt-QvXcLbVrNWs",
+      "title": "Niagara Falls",
+      "artistId": "the-weeknd",
+      "albumId": "al-the-weeknd",
+      "duration": 278,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/9ds8ikP1c3pkqRFeztLdUu5w3wUZrhYD2U9pUM5eStacumTocYtHieEGcAKQo5CsBvSB_m4bVCUAs_eXJA=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "QvXcLbVrNWs",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 70000000,
+      "trackNumber": 6,
+      "explicit": true
+    },
+    {
+      "id": "yt-dC9QIUKviJU",
+      "title": "Blank Space",
+      "artistId": "taylor-swift",
+      "albumId": "al-taylor-swift",
+      "duration": 232,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/GcrDhHXqrPm4BjS-4L1c0OHC9iz0ZxmFeRur2A6Aqo9Vm7OfFCBOSVbRzp1M1D1s_3rsvKaC7w6kku0=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "dC9QIUKviJU",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 45000000,
+      "trackNumber": 1,
+      "explicit": false
+    },
+    {
+      "id": "yt-aPnqx56V8-0",
+      "title": "All Too Well (10 Minute Version) [Taylor's Version] [From The Vault]",
+      "artistId": "taylor-swift",
+      "albumId": "al-taylor-swift",
+      "duration": 613,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/d_T3L3Ed5ynZLMVs0Ely4aqTfBZ-y9P9azzlLuKvT2re1QQuxqTxRPoSv082zBOBWmXZZRZKqIFbR7YI=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "aPnqx56V8-0",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 50000000,
+      "trackNumber": 2,
+      "explicit": false
+    },
+    {
+      "id": "yt-MSWhTUMH3pM",
+      "title": "Better Than Revenge (Taylor's Version)",
+      "artistId": "taylor-swift",
+      "albumId": "al-taylor-swift",
+      "duration": 221,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/PzdFvhZwBo2kxfifFF82vShEUh8xEQfvoUTRIUBvZjs3ibCmTqMQZ6ZL03tPz1iwjP4UH6xB0CAGPwqj=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "MSWhTUMH3pM",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 55000000,
+      "trackNumber": 3,
+      "explicit": false
+    },
+    {
+      "id": "yt-FNEoPctNIUE",
+      "title": "Dress",
+      "artistId": "taylor-swift",
+      "albumId": "al-taylor-swift",
+      "duration": 231,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/RuKPkn6LLmXNOUcyRqh0zQbMWTpZDhHnkxHEZHrv6J8AbxLwemm9F0xaPpHX51WB_Xlj00My9vpZ_zRh=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "FNEoPctNIUE",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 60000000,
+      "trackNumber": 4,
+      "explicit": false
+    },
+    {
+      "id": "yt-7nVctvQVz0U",
+      "title": "The Fate of Ophelia",
+      "artistId": "taylor-swift",
+      "albumId": "al-taylor-swift",
+      "duration": 227,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/ZpWD37EEQE_LVuQ_O03cRmz5mZA7jG0gKGLt-49uHNDX6DycysijGGSOX9woU-OfQR5jyahz3aEdmBmm3A=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "7nVctvQVz0U",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 65000000,
+      "trackNumber": 5,
+      "explicit": false
+    },
+    {
+      "id": "yt-M_lVZIpgnjU",
+      "title": "cardigan",
+      "artistId": "taylor-swift",
+      "albumId": "al-taylor-swift",
+      "duration": 240,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/q7JVahTldHxztLXfCJfgjf5DHr9mi18m2HKpS_IJqBqvvzfAJKPCh_rg-9v-aoGqp-Cc6PHW3ceFMlIQ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "M_lVZIpgnjU",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 70000000,
+      "trackNumber": 6,
+      "explicit": false
+    },
+    {
+      "id": "yt-WKZO-CWeOVA",
+      "title": "BIRDS OF A FEATHER",
+      "artistId": "billie-eilish",
+      "albumId": "al-billie-eilish",
+      "duration": 211,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/mXJjWX4E6Gpr03CUYl18PdVXlczmoL2Tm-LEBGafIr_8smlHnl8AHniJu0_7Y80e-aeloJxcryQQx0ZJ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "WKZO-CWeOVA",
+      "genreIds": [
+        "alternative"
+      ],
+      "mood": "Top Hits",
+      "plays": 45000000,
+      "trackNumber": 1,
+      "explicit": false
+    },
+    {
+      "id": "yt-O1PkZaFy61Y",
+      "title": "WILDFLOWER",
+      "artistId": "billie-eilish",
+      "albumId": "al-billie-eilish",
+      "duration": 262,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/mXJjWX4E6Gpr03CUYl18PdVXlczmoL2Tm-LEBGafIr_8smlHnl8AHniJu0_7Y80e-aeloJxcryQQx0ZJ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "O1PkZaFy61Y",
+      "genreIds": [
+        "alternative"
+      ],
+      "mood": "Top Hits",
+      "plays": 50000000,
+      "trackNumber": 2,
+      "explicit": false
+    },
+    {
+      "id": "yt-sTLy_aD6OEo",
+      "title": "BILLIE EILISH.",
+      "artistId": "billie-eilish",
+      "albumId": "al-billie-eilish",
+      "duration": 100,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/r2KSuMUFdAE96Q5ho9LCkg__GQJt2GIgD_zUyy8O9ttPPh1M7pT7CTUUSrx91Ysc_i0yACbGz0RCU9ME=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "sTLy_aD6OEo",
+      "genreIds": [
+        "alternative"
+      ],
+      "mood": "Top Hits",
+      "plays": 55000000,
+      "trackNumber": 3,
+      "explicit": true
+    },
+    {
+      "id": "yt-MMfpp0-lnw4",
+      "title": "lovely",
+      "artistId": "billie-eilish",
+      "albumId": "al-billie-eilish",
+      "duration": 201,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/nBQ2yRYxNzSE_I2IbybljvKJhTyHISC3TVew_uraAkvH7trJ7lXc7LlYc4WLqs1IHsHDyLm24W-7Pic=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "MMfpp0-lnw4",
+      "genreIds": [
+        "alternative"
+      ],
+      "mood": "Top Hits",
+      "plays": 60000000,
+      "trackNumber": 4,
+      "explicit": false
+    },
+    {
+      "id": "yt-P4z1O3miesI",
+      "title": "listen before i go",
+      "artistId": "billie-eilish",
+      "albumId": "al-billie-eilish",
+      "duration": 243,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/RG92soY11tCRckJuiLvwUF0YACEyBcC4m-GUre3ffB6afsGiRGJw1n-8CWtHkC7Q049HmyfU4aPGNtQ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "P4z1O3miesI",
+      "genreIds": [
+        "alternative"
+      ],
+      "mood": "Top Hits",
+      "plays": 65000000,
+      "trackNumber": 5,
+      "explicit": false
+    },
+    {
+      "id": "yt-1UnJeFnWxGQ",
+      "title": "Guess featuring billie eilish",
+      "artistId": "billie-eilish",
+      "albumId": "al-billie-eilish",
+      "duration": 144,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/GM2TJc22ZhCZkidIVqclqDzvMEIlsGs1DM9HIf_YaLUwF1Sf6rPa-GOR3EVJWfmaQrYylXgUeFpU76QNuA=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "1UnJeFnWxGQ",
+      "genreIds": [
+        "alternative"
+      ],
+      "mood": "Top Hits",
+      "plays": 70000000,
+      "trackNumber": 6,
+      "explicit": false
+    },
+    {
+      "id": "yt-H3Kzh6RrnMc",
+      "title": "Hymn for the Weekend",
+      "artistId": "coldplay",
+      "albumId": "al-coldplay",
+      "duration": 259,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/xe9bE6n-eibnXPIlc-UEemlqsMMcz-S100IjrclFeaKrw1ATP9rbPrNy9jLA1zA02Zc-3YAFROuNEFKA=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "H3Kzh6RrnMc",
+      "genreIds": [
+        "alternative"
+      ],
+      "mood": "Top Hits",
+      "plays": 45000000,
+      "trackNumber": 1,
+      "explicit": false
+    },
+    {
+      "id": "yt-KWuyx6yZ21U",
+      "title": "A Sky Full of Stars",
+      "artistId": "coldplay",
+      "albumId": "al-coldplay",
+      "duration": 268,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/FrPId047QbNpFZfEtUJQDTC2-MGkgo4JPzasmIkdvFLjbQGNppcmRdOFXo6c3swTP_iP-ozTXhu8OBRSOw=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "KWuyx6yZ21U",
+      "genreIds": [
+        "alternative"
+      ],
+      "mood": "Top Hits",
+      "plays": 50000000,
+      "trackNumber": 2,
+      "explicit": false
+    },
+    {
+      "id": "yt-9qnqYL0eNNI",
+      "title": "Yellow",
+      "artistId": "coldplay",
+      "albumId": "al-coldplay",
+      "duration": 267,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/7RK5kFu8RjjulsxsPCJ55wmJLchKaaIRAYih0ldj--RGbnOOdA0U2vmLWyVfjPW82nR-Dwm2r8PhEi61=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "9qnqYL0eNNI",
+      "genreIds": [
+        "alternative"
+      ],
+      "mood": "Top Hits",
+      "plays": 55000000,
+      "trackNumber": 3,
+      "explicit": false
+    },
+    {
+      "id": "yt-Oncu0bgdcXU",
+      "title": "Fix You",
+      "artistId": "coldplay",
+      "albumId": "al-coldplay",
+      "duration": 296,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/5A8HNW2FmsutZWsPRyXGvaGKt1bAPmNm4HUnwzlceEZ4Nv52oGSIpnxXn8TZlFXCASRzBwfoSBrkaKTV=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "Oncu0bgdcXU",
+      "genreIds": [
+        "alternative"
+      ],
+      "mood": "Top Hits",
+      "plays": 60000000,
+      "trackNumber": 4,
+      "explicit": false
+    },
+    {
+      "id": "yt-Q0TEUMPIhk8",
+      "title": "Paradise",
+      "artistId": "coldplay",
+      "albumId": "al-coldplay",
+      "duration": 279,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/wDdtE24i-mKhZhDATvHnQnKrCn9KoTaTCqD7RQZemc_K3J7bZUFL0fMZNlCUwxdkytgJfxCkV6yTKFye5g=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "Q0TEUMPIhk8",
+      "genreIds": [
+        "alternative"
+      ],
+      "mood": "Top Hits",
+      "plays": 65000000,
+      "trackNumber": 5,
+      "explicit": false
+    },
+    {
+      "id": "yt-owTWCbq_nSk",
+      "title": "Something Just Like This",
+      "artistId": "coldplay",
+      "albumId": "al-coldplay",
+      "duration": 248,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/4EoLt224zwxiPt7RIL9HgXF2VTEpUxiJxOf3X6MBChiyN24z1fUCRgX6cBGKtlN6yTYdu885qref3X02=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "owTWCbq_nSk",
+      "genreIds": [
+        "alternative"
+      ],
+      "mood": "Top Hits",
+      "plays": 70000000,
+      "trackNumber": 6,
+      "explicit": false
+    },
+    {
+      "id": "yt-khnokW3Mw24",
+      "title": "Instant Crush (feat. Julian Casablancas)",
+      "artistId": "daft-punk",
+      "albumId": "al-daft-punk",
+      "duration": 338,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/N55arCGj69gtw6thXK8JUPisxoVYiwuIEQ7I6SGlkEyNcSJ7xIWPe76Vuu1SiUqRyx5w9qvR_zV8fV3CWQ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "khnokW3Mw24",
+      "genreIds": [
+        "electronic"
+      ],
+      "mood": "Top Hits",
+      "plays": 45000000,
+      "trackNumber": 1,
+      "explicit": false
+    },
+    {
+      "id": "yt-4D7u5KF7SP8",
+      "title": "Get Lucky (feat. Pharrell Williams and Nile Rodgers)",
+      "artistId": "daft-punk",
+      "albumId": "al-daft-punk",
+      "duration": 370,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/N55arCGj69gtw6thXK8JUPisxoVYiwuIEQ7I6SGlkEyNcSJ7xIWPe76Vuu1SiUqRyx5w9qvR_zV8fV3CWQ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "4D7u5KF7SP8",
+      "genreIds": [
+        "electronic"
+      ],
+      "mood": "Top Hits",
+      "plays": 50000000,
+      "trackNumber": 2,
+      "explicit": false
+    },
+    {
+      "id": "yt-3_g2un5M350",
+      "title": "Starboy (feat. Daft Punk)",
+      "artistId": "daft-punk",
+      "albumId": "al-daft-punk",
+      "duration": 231,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/dcxXIIlest09vnvKznWM9VWQXu1EL7lKxBzXGzwgmVjmMNBm1dEWT_0qn1xrEZYyKF_qRE1TLq8P_JY_mQ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "3_g2un5M350",
+      "genreIds": [
+        "electronic"
+      ],
+      "mood": "Top Hits",
+      "plays": 55000000,
+      "trackNumber": 3,
+      "explicit": true
+    },
+    {
+      "id": "yt-4qlDWL1kMcQ",
+      "title": "Technologic",
+      "artistId": "daft-punk",
+      "albumId": "al-daft-punk",
+      "duration": 285,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/de_LGA6dRsGlm0NI9KgQ-wiqDVqBldUYx6ALEmETACSS0Da6Ae2UOIs1aIh-7HAAa-br8QskT9G1gP-i=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "4qlDWL1kMcQ",
+      "genreIds": [
+        "electronic"
+      ],
+      "mood": "Top Hits",
+      "plays": 60000000,
+      "trackNumber": 4,
+      "explicit": false
+    },
+    {
+      "id": "yt-JhulBGMA7G4",
+      "title": "Harder, Better, Faster, Stronger",
+      "artistId": "daft-punk",
+      "albumId": "al-daft-punk",
+      "duration": 227,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/qrY7xjdjqL0FEneZKHk845JeeFjdWOgexUa_BhsUxskJ2iflhzpbofqGJZBcPHDGU9JjoZflE4yn3P74=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "JhulBGMA7G4",
+      "genreIds": [
+        "electronic"
+      ],
+      "mood": "Top Hits",
+      "plays": 65000000,
+      "trackNumber": 5,
+      "explicit": false
+    },
+    {
+      "id": "yt-iIWoYaJRryw",
+      "title": "I Feel It Coming (feat. Daft Punk)",
+      "artistId": "daft-punk",
+      "albumId": "al-daft-punk",
+      "duration": 270,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/ZEDoDj27yRZJTSareSNJTwPNBJjdDMfBD8EAj3S0olbRscJlAbv7ThEA32uHvyyxeOl9d50785HSvIJ7=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "iIWoYaJRryw",
+      "genreIds": [
+        "electronic"
+      ],
+      "mood": "Top Hits",
+      "plays": 70000000,
+      "trackNumber": 6,
+      "explicit": false
+    },
+    {
+      "id": "yt-n0GXk_T2zs8",
+      "title": "Training Season",
+      "artistId": "dua-lipa",
+      "albumId": "al-dua-lipa",
+      "duration": 210,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/5d51ZlGjNP_Gss3Z3RKP7B98ASQ7pxvp4XI3IAQ3kniFFjgLPDPnR6_K3tYZGoMVvfJYXBtu3awwsTI=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "n0GXk_T2zs8",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 45000000,
+      "trackNumber": 1,
+      "explicit": false
+    },
+    {
+      "id": "yt-2tw2QDSeBQQ",
+      "title": "Training Season (Live from the Royal Albert Hall)",
+      "artistId": "dua-lipa",
+      "albumId": "al-dua-lipa",
+      "duration": 221,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/mRy_-GXuXaHpjkGh4pyMTDh9nw5Yzr-5EcvOgmfUA8xVCVQ0Ewdx_Xt1kzc1GvXNxHrUxmbHXh1xH1HC=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "2tw2QDSeBQQ",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 50000000,
+      "trackNumber": 2,
+      "explicit": false
+    },
+    {
+      "id": "yt-xTz3ArZgpkc",
+      "title": "Boys Will Be Boys",
+      "artistId": "dua-lipa",
+      "albumId": "al-dua-lipa",
+      "duration": 167,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/UpJ_IhBqyhQV9b2UGcDxxWDm14kRQ2eY1o9S96AGsbE7Ol8isbpbPA0Yefvg8S8ZGAX9L1g4xaj21zVJ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "xTz3ArZgpkc",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 55000000,
+      "trackNumber": 3,
+      "explicit": false
+    },
+    {
+      "id": "yt-OsfAnsMY21M",
+      "title": "Levitating",
+      "artistId": "dua-lipa",
+      "albumId": "al-dua-lipa",
+      "duration": 204,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/UpJ_IhBqyhQV9b2UGcDxxWDm14kRQ2eY1o9S96AGsbE7Ol8isbpbPA0Yefvg8S8ZGAX9L1g4xaj21zVJ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "OsfAnsMY21M",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 60000000,
+      "trackNumber": 4,
+      "explicit": false
+    },
+    {
+      "id": "yt-qpV1b_rJfbg",
+      "title": "Dua Lipa",
+      "artistId": "dua-lipa",
+      "albumId": "al-dua-lipa",
+      "duration": 136,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/a5kb_FPW0DYzfrTNiP3gl71BNmXX7sH5lLrleJcmubo5mQaM-5x6VDU1gICUwBZelscqXYUeVqhYo12K=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "qpV1b_rJfbg",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 65000000,
+      "trackNumber": 5,
+      "explicit": true
+    },
+    {
+      "id": "yt-hffNFtGCEpI",
+      "title": "Training Season (London Sessions)",
+      "artistId": "dua-lipa",
+      "albumId": "al-dua-lipa",
+      "duration": 248,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/dVQDQ3iYiVhMpZQ1slUZK_8zXy9u5BJ06eOhkoMmm_8QV24gAq-BnBV4QBj_c_cLNkaikFXydMyzEtk=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "hffNFtGCEpI",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 70000000,
+      "trackNumber": 6,
+      "explicit": false
+    },
+    {
+      "id": "yt-FrsOnNxIrg8",
+      "title": "God's Plan",
+      "artistId": "drake",
+      "albumId": "al-drake",
+      "duration": 199,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/9Oe4acEXgmAlCKgcgI6JlSXi2Tj30u6anzvfGBrunGO-fLhBTgzy-ei1ugPJpZDD5ArKFod9H4RTA5g0=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "FrsOnNxIrg8",
+      "genreIds": [
+        "hiphop"
+      ],
+      "mood": "Top Hits",
+      "plays": 45000000,
+      "trackNumber": 1,
+      "explicit": true
+    },
+    {
+      "id": "yt-JDb3ZZD4bA0",
+      "title": "Marvins Room",
+      "artistId": "drake",
+      "albumId": "al-drake",
+      "duration": 348,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/18E7TwAgz27m5j9IbDra9jxalSFXQazLXcrEF0VnqjgYAHP32tgbghTb-H_-nHbiDLC_8MvXThkbIBvP=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "JDb3ZZD4bA0",
+      "genreIds": [
+        "hiphop"
+      ],
+      "mood": "Top Hits",
+      "plays": 50000000,
+      "trackNumber": 2,
+      "explicit": true
+    },
+    {
+      "id": "yt-oUzcV-ETiWI",
+      "title": "Scholarships",
+      "artistId": "drake",
+      "albumId": "al-drake",
+      "duration": 210,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/wYDYI-C9N1BtRO_CwrZrL24V-hmzGoAOFFxUwlqU05htWIqWsKmmjxfFZZEbISpaOEfktmTFkDvToaRA=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "oUzcV-ETiWI",
+      "genreIds": [
+        "hiphop"
+      ],
+      "mood": "Top Hits",
+      "plays": 55000000,
+      "trackNumber": 3,
+      "explicit": true
+    },
+    {
+      "id": "yt-vtEL0uKO4tA",
+      "title": "Make Me Proud (feat. Nicki Minaj)",
+      "artistId": "drake",
+      "albumId": "al-drake",
+      "duration": 220,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/18E7TwAgz27m5j9IbDra9jxalSFXQazLXcrEF0VnqjgYAHP32tgbghTb-H_-nHbiDLC_8MvXThkbIBvP=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "vtEL0uKO4tA",
+      "genreIds": [
+        "hiphop"
+      ],
+      "mood": "Top Hits",
+      "plays": 60000000,
+      "trackNumber": 4,
+      "explicit": true
+    },
+    {
+      "id": "yt-Q8eOdXdSxJQ",
+      "title": "2 Hard 4 The Radio",
+      "artistId": "drake",
+      "albumId": "al-drake",
+      "duration": 184,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/HUyruy7aJyHrNv_ZwxLDgReoxZULjLLvbaU9qARvp9VvZ8LDRA4Qja-ZUFhhwN0wEg-EFKnhdZzGM04m=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "Q8eOdXdSxJQ",
+      "genreIds": [
+        "hiphop"
+      ],
+      "mood": "Top Hits",
+      "plays": 65000000,
+      "trackNumber": 5,
+      "explicit": true
+    },
+    {
+      "id": "yt-QKPxNQfrtzU",
+      "title": "Work (feat. Drake)",
+      "artistId": "drake",
+      "albumId": "al-drake",
+      "duration": 220,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/8QEyIbLAIDvPszzL7fuTM1UdhYfhJPaqfXKirqylIGLmO8JSKSwaDfZEkcu_FPQv7qF3FSS-htFZNG1YGQ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "QKPxNQfrtzU",
+      "genreIds": [
+        "hiphop"
+      ],
+      "mood": "Top Hits",
+      "plays": 70000000,
+      "trackNumber": 6,
+      "explicit": true
+    },
+    {
+      "id": "yt-ORrFJ63nlcA",
+      "title": "Perfect",
+      "artistId": "ed-sheeran",
+      "albumId": "al-ed-sheeran",
+      "duration": 264,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/xpDEOr2TeqEn1QpXosXhqtj149FzNnTgAG3oqPnpTxTbQk-oceO90Sz4Axq0s4Jp_QLGQha_um6_EG3WGQ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "ORrFJ63nlcA",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 45000000,
+      "trackNumber": 1,
+      "explicit": false
+    },
+    {
+      "id": "yt-xTvyyoF_LZY",
+      "title": "Shape of You",
+      "artistId": "ed-sheeran",
+      "albumId": "al-ed-sheeran",
+      "duration": 234,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/TMbA3LImAL96nFkm5cI1x6LiEMvMbRg4IRxEeABd9qpXsfmwKhZHRD1MucnjG5QIsVEp0Vpn7h7M51FH3Q=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "xTvyyoF_LZY",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 50000000,
+      "trackNumber": 2,
+      "explicit": false
+    },
+    {
+      "id": "yt-4CskSETO0-w",
+      "title": "Best Part of Me (feat. YEBBA)",
+      "artistId": "ed-sheeran",
+      "albumId": "al-ed-sheeran",
+      "duration": 244,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/2rSqxXTYIox46twhc2zC73tSPuzHz9XBx04tojSXQmXN4SK7NgYdwX5PgqcX7reoPG_3WrjnIu-hbm5G=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "4CskSETO0-w",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 55000000,
+      "trackNumber": 3,
+      "explicit": false
+    },
+    {
+      "id": "yt-xblHqlj2JDM",
+      "title": "Opening",
+      "artistId": "ed-sheeran",
+      "albumId": "al-ed-sheeran",
+      "duration": 241,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/Zakrz-ymir-p6LloQgMcJB1YKaVi-k-ysDjnokzfFfJD-gFf3lD77gTlb8kJXa2_MGq57lVQFdfDI4o=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "xblHqlj2JDM",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 60000000,
+      "trackNumber": 4,
+      "explicit": true
+    },
+    {
+      "id": "yt-ugHePw5EaGY",
+      "title": "Hearts Don't Break Around Here",
+      "artistId": "ed-sheeran",
+      "albumId": "al-ed-sheeran",
+      "duration": 249,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/xpDEOr2TeqEn1QpXosXhqtj149FzNnTgAG3oqPnpTxTbQk-oceO90Sz4Axq0s4Jp_QLGQha_um6_EG3WGQ=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "ugHePw5EaGY",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 65000000,
+      "trackNumber": 5,
+      "explicit": false
+    },
+    {
+      "id": "yt-LZ2wov0Q5e0",
+      "title": "Thinking out Loud",
+      "artistId": "ed-sheeran",
+      "albumId": "al-ed-sheeran",
+      "duration": 282,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/IzocZd3WLstWdQG5HZqrjhVSgX2ZpxxZxQPjfJXs6nnbtiouujXcjri-yn7Yyz-ny0rJW6aQT9FUD9o=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "LZ2wov0Q5e0",
+      "genreIds": [
+        "pop"
+      ],
+      "mood": "Top Hits",
+      "plays": 70000000,
+      "trackNumber": 6,
+      "explicit": false
+    },
+    {
+      "id": "yt-GnUW4AF1LZo",
+      "title": "Just the Way You Are",
+      "artistId": "bruno-mars",
+      "albumId": "al-bruno-mars",
+      "duration": 221,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/Jrcws67rGflH1eJNV3dpOsBP8JosmTswvHNUQ2jD_a8-_EBYNXkUAwzHRPIgsuxY0G9Xf5MQde-mJQKP=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "GnUW4AF1LZo",
+      "genreIds": [
+        "soul"
+      ],
+      "mood": "Top Hits",
+      "plays": 45000000,
+      "trackNumber": 1,
+      "explicit": false
+    },
+    {
+      "id": "yt-n_kbKfUHToY",
+      "title": "Show Me",
+      "artistId": "bruno-mars",
+      "albumId": "al-bruno-mars",
+      "duration": 208,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/m0WX28nJGAiRC8PgPrT7LrC5vRTWlSlQmnelZb2VR0HWDS-e8GPO0MvhEPM0C-KTjTtnvZsOS1R8y1cg=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "n_kbKfUHToY",
+      "genreIds": [
+        "soul"
+      ],
+      "mood": "Top Hits",
+      "plays": 50000000,
+      "trackNumber": 2,
+      "explicit": false
+    },
+    {
+      "id": "yt-ioNYKflP4RY",
+      "title": "Die With A Smile (Live in Las Vegas)",
+      "artistId": "bruno-mars",
+      "albumId": "al-bruno-mars",
+      "duration": 281,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/x5ST0wHIxD__IIxHF1UqUgXP4QW58ouj1EHROC9I5yHIb8cmoNr9rL54RfA-BnYay_eWmmOJfXNuFqmPEA=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "ioNYKflP4RY",
+      "genreIds": [
+        "soul"
+      ],
+      "mood": "Top Hits",
+      "plays": 55000000,
+      "trackNumber": 3,
+      "explicit": false
+    },
+    {
+      "id": "yt-DlFXDl_ROAM",
+      "title": "Die With A Smile",
+      "artistId": "bruno-mars",
+      "albumId": "al-bruno-mars",
+      "duration": 252,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/RFK4wHeGqwI3DndbARbRJB21IC0TcmqnrlyjxYK7T-nC8wlIVbfxNaCIFKNvSpchDKmYyVLe1RN36w=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "DlFXDl_ROAM",
+      "genreIds": [
+        "soul"
+      ],
+      "mood": "Top Hits",
+      "plays": 60000000,
+      "trackNumber": 4,
+      "explicit": false
+    },
+    {
+      "id": "yt-BF2_ipR1OI0",
+      "title": "Risk It All",
+      "artistId": "bruno-mars",
+      "albumId": "al-bruno-mars",
+      "duration": 205,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/_1ejRnxNSULMWdqN8F-gEGUVfw5kZKrwKy5xNPnSxU6Xen61q09zCR1aQn4s4L9rDOi-fGnTh3qI-LwE=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "BF2_ipR1OI0",
+      "genreIds": [
+        "soul"
+      ],
+      "mood": "Top Hits",
+      "plays": 65000000,
+      "trackNumber": 5,
+      "explicit": false
+    },
+    {
+      "id": "yt-h8slzEkObi8",
+      "title": "Grenade",
+      "artistId": "bruno-mars",
+      "albumId": "al-bruno-mars",
+      "duration": 223,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/Jrcws67rGflH1eJNV3dpOsBP8JosmTswvHNUQ2jD_a8-_EBYNXkUAwzHRPIgsuxY0G9Xf5MQde-mJQKP=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "h8slzEkObi8",
+      "genreIds": [
+        "soul"
+      ],
+      "mood": "Top Hits",
+      "plays": 70000000,
+      "trackNumber": 6,
+      "explicit": false
+    },
+    {
+      "id": "yt-oBcZSHdGmR8",
+      "title": "gloria",
+      "artistId": "kendrick-lamar",
+      "albumId": "al-kendrick-lamar",
+      "duration": 288,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/nUcE0cU6y5BsIa_fpzqSMSc4qCpHoLxeWb6Co2xfMQOLO3ZTctzNopp8d35VyCPSWb0Z1I_1bxTTyyo=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "oBcZSHdGmR8",
+      "genreIds": [
+        "hiphop"
+      ],
+      "mood": "Top Hits",
+      "plays": 45000000,
+      "trackNumber": 1,
+      "explicit": true
+    },
+    {
+      "id": "yt-o4M4qssoaWU",
+      "title": "untitled 03 | 05.28.2013.",
+      "artistId": "kendrick-lamar",
+      "albumId": "al-kendrick-lamar",
+      "duration": 155,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/WyQpPjYrmjGtwLIRdn-VBj19xwskKywTDil_TDd7vtvG47E4WbKfEl8uciJ7u6yjUdnbV4LizVoEF-kw=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "o4M4qssoaWU",
+      "genreIds": [
+        "hiphop"
+      ],
+      "mood": "Top Hits",
+      "plays": 50000000,
+      "trackNumber": 2,
+      "explicit": true
+    },
+    {
+      "id": "yt-dzFEPJK45iQ",
+      "title": "The Spiteful Chant",
+      "artistId": "kendrick-lamar",
+      "albumId": "al-kendrick-lamar",
+      "duration": 321,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/CBqUkV3__EATJXoliDbfNETxl5enIqXSxNQLwHjx3Lr_iURNDQDbwiFBrKlyLrIdXx56GCN1VpLF1nof7w=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "dzFEPJK45iQ",
+      "genreIds": [
+        "hiphop"
+      ],
+      "mood": "Top Hits",
+      "plays": 55000000,
+      "trackNumber": 3,
+      "explicit": true
+    },
+    {
+      "id": "yt-kAbhILeXwGE",
+      "title": "The Heart Part 5",
+      "artistId": "kendrick-lamar",
+      "albumId": "al-kendrick-lamar",
+      "duration": 333,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/ZSS6In_G6CBqzWhCtltNUxoirj2MUwOJ1MaVEauxTePsjBt6OwOtC6jN1YHd3OqnJbRq84rLk-Cy4dW3=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "kAbhILeXwGE",
+      "genreIds": [
+        "hiphop"
+      ],
+      "mood": "Top Hits",
+      "plays": 60000000,
+      "trackNumber": 4,
+      "explicit": true
+    },
+    {
+      "id": "yt-NWUtG6UQeGQ",
+      "title": "Real (feat. Anna Wise)",
+      "artistId": "kendrick-lamar",
+      "albumId": "al-kendrick-lamar",
+      "duration": 444,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/UiYMdxjZ55jjfexKMaW2mVtUN-FqV3WY2OhFcyo192HhvVb-GL4jEkjqGjuBeQMpYpz7qXYy0zsGnkn5=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "NWUtG6UQeGQ",
+      "genreIds": [
+        "hiphop"
+      ],
+      "mood": "Top Hits",
+      "plays": 65000000,
+      "trackNumber": 5,
+      "explicit": false
+    },
+    {
+      "id": "yt-UYo0Ykq6AGY",
+      "title": "Autumn Leaves (feat. Kendrick Lamar)",
+      "artistId": "kendrick-lamar",
+      "albumId": "al-kendrick-lamar",
+      "duration": 269,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/uTWSiQTS6mvKDVrxCZLSA4GZruhJXqqBY52yk7iQr92zb1EmaooUuAA-lDdcgLeZorKgYRow4_2WGUlVQw=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "UYo0Ykq6AGY",
+      "genreIds": [
+        "hiphop"
+      ],
+      "mood": "Top Hits",
+      "plays": 70000000,
+      "trackNumber": 6,
+      "explicit": true
+    },
+    {
+      "id": "yt-FNBAmsriyY8",
+      "title": "Remember Who You Are",
+      "artistId": "hans-zimmer",
+      "albumId": "al-hans-zimmer",
+      "duration": 469,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/i0kEy1Dof7J0-1e0T64uoiXjpg8dEFeDgkbO6Jr8w4lCAMPb2ICcYhZlbmd3HNdIAsiPDAw1-p2tgAU=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "FNBAmsriyY8",
+      "genreIds": [
+        "cinematic"
+      ],
+      "mood": "Top Hits",
+      "plays": 45000000,
+      "trackNumber": 1,
+      "explicit": false
+    },
+    {
+      "id": "yt-MU3EOO4fWQo",
+      "title": "S.T.A.Y.",
+      "artistId": "hans-zimmer",
+      "albumId": "al-hans-zimmer",
+      "duration": 384,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/vHg1BrOwidLFzCWeJ2mYDXtb3rUIvyhW4JPOrNai2K08-Va329yERoCTtt_SW0BT-9cY_roe-Mvd4vK1=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "MU3EOO4fWQo",
+      "genreIds": [
+        "cinematic"
+      ],
+      "mood": "Top Hits",
+      "plays": 50000000,
+      "trackNumber": 2,
+      "explicit": false
+    },
+    {
+      "id": "yt-NENJADSqyYg",
+      "title": "Worm Ride",
+      "artistId": "hans-zimmer",
+      "albumId": "al-hans-zimmer",
+      "duration": 140,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/Q0BZW6aOZbumBmATyOLG6oNBz_zD9cZsme512atw25D5P2brotYkYQAs9u5MxQvYhiwAOZfv5ToPczo=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "NENJADSqyYg",
+      "genreIds": [
+        "cinematic"
+      ],
+      "mood": "Top Hits",
+      "plays": 55000000,
+      "trackNumber": 3,
+      "explicit": false
+    },
+    {
+      "id": "yt-0TcolckMrDw",
+      "title": "Why Do We Fall?",
+      "artistId": "hans-zimmer",
+      "albumId": "al-hans-zimmer",
+      "duration": 123,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/A1ilEzXjE5NktS_ngzZoUwhJHaRDXB_JIuxYNieK97yeMUhSfVsJAc_uVJ3bIGxvXU3pmJzeiILdWz_y=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "0TcolckMrDw",
+      "genreIds": [
+        "cinematic"
+      ],
+      "mood": "Top Hits",
+      "plays": 60000000,
+      "trackNumber": 4,
+      "explicit": false
+    },
+    {
+      "id": "yt-zzhYb-gZlCg",
+      "title": "Click Clack Symphony. (feat. Hans Zimmer)",
+      "artistId": "hans-zimmer",
+      "albumId": "al-hans-zimmer",
+      "duration": 302,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/6QK6BrV6a5hUjS7VZ_MRTKqN-sYXofTm65KIi8VqFVYQ7x7OdklKmJ3OpM9KW4VXW5U6ejgQlQJWZ08LEA=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "zzhYb-gZlCg",
+      "genreIds": [
+        "cinematic"
+      ],
+      "mood": "Top Hits",
+      "plays": 65000000,
+      "trackNumber": 5,
+      "explicit": false
+    },
+    {
+      "id": "yt-NX7yOVVr_d0",
+      "title": "528491",
+      "artistId": "hans-zimmer",
+      "albumId": "al-hans-zimmer",
+      "duration": 144,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/FQLhWVH26fPCwhtlBNCpFMHCBJ5Vuq0TMJOtRWZb2aqEvRsRSZ45WW5lGSnTzXbAGxpMEgGdzzrGn7kb9Q=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "NX7yOVVr_d0",
+      "genreIds": [
+        "cinematic"
+      ],
+      "mood": "Top Hits",
+      "plays": 70000000,
+      "trackNumber": 6,
+      "explicit": false
+    },
+    {
+      "id": "yt-1UJFkeTG01k",
+      "title": "Sonar",
+      "artistId": "nils-frahm",
+      "albumId": "al-nils-frahm",
+      "duration": 230,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/BAvsFr9lnyGKiL2UA3KaFfFPkLdrz-2nDtJBVSCQ_4WXR75KT_uOUsoPg4l9iIDykWuDkHmN0PbgYYhGNA=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "1UJFkeTG01k",
+      "genreIds": [
+        "ambient"
+      ],
+      "mood": "Top Hits",
+      "plays": 45000000,
+      "trackNumber": 1,
+      "explicit": false
+    },
+    {
+      "id": "yt-ocp4zBfmsmU",
+      "title": "Weak Spot (Bonus Track)",
+      "artistId": "nils-frahm",
+      "albumId": "al-nils-frahm",
+      "duration": 227,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/fM-SZcwZZALrmCqPQnok4IK6Wwq3JXogr5hX_j0tGcnCudrDFC5s7YZno7gzL9F5-kVI5wQutr1Loqql=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "ocp4zBfmsmU",
+      "genreIds": [
+        "ambient"
+      ],
+      "mood": "Top Hits",
+      "plays": 50000000,
+      "trackNumber": 2,
+      "explicit": false
+    },
+    {
+      "id": "yt-oJ0vDaEOEbQ",
+      "title": "Momentum",
+      "artistId": "nils-frahm",
+      "albumId": "al-nils-frahm",
+      "duration": 321,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/taIpji1UlZjEuZEeXbzDe_i5VbfAwNTP09V6BmRGdlkAR27PZUhlMorFKoKc87kUUK-r2IL4F_f6f4r5=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "oJ0vDaEOEbQ",
+      "genreIds": [
+        "ambient"
+      ],
+      "mood": "Top Hits",
+      "plays": 55000000,
+      "trackNumber": 3,
+      "explicit": false
+    },
+    {
+      "id": "yt-LymdtOxKFFE",
+      "title": "My Friend the Forest",
+      "artistId": "nils-frahm",
+      "albumId": "al-nils-frahm",
+      "duration": 369,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/foxeB9kTp0_9OZC5H4tuC1v-XRxfvLd-YpvNrquMQ31rDaQYCX0wiMzJhQ_QHuQugyNzXc2j0coF3sHb=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "LymdtOxKFFE",
+      "genreIds": [
+        "ambient"
+      ],
+      "mood": "Top Hits",
+      "plays": 60000000,
+      "trackNumber": 4,
+      "explicit": false
+    },
+    {
+      "id": "yt-upZJZomaaQk",
+      "title": "The Big O",
+      "artistId": "nils-frahm",
+      "albumId": "al-nils-frahm",
+      "duration": 273,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/BAvsFr9lnyGKiL2UA3KaFfFPkLdrz-2nDtJBVSCQ_4WXR75KT_uOUsoPg4l9iIDykWuDkHmN0PbgYYhGNA=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "upZJZomaaQk",
+      "genreIds": [
+        "ambient"
+      ],
+      "mood": "Top Hits",
+      "plays": 65000000,
+      "trackNumber": 5,
+      "explicit": false
+    },
+    {
+      "id": "yt-vrxPsll1BeM",
+      "title": "But Nice",
+      "artistId": "nils-frahm",
+      "albumId": "al-nils-frahm",
+      "duration": 303,
+      "audioUrl": "",
+      "artwork": "https://yt3.googleusercontent.com/P6nWnACtc573j_XUUKmyFkUGiKWOi-VRcznaARfRhkpR2DJ5HpAaPSUoIZ6PUAeO0wELXpj-yPzWPHk8=w544-h544-l90-rj",
+      "source": "youtube",
+      "youtubeId": "vrxPsll1BeM",
+      "genreIds": [
+        "ambient"
+      ],
+      "mood": "Top Hits",
+      "plays": 70000000,
+      "trackNumber": 6,
+      "explicit": false
+    }
+  ],
+  "playlists": [
+    {
+      "id": "todays-top-hits",
+      "title": "Today's Top Hits",
+      "description": "The biggest hits right now from YouTube Music and Spotify.",
+      "curator": "Spotify & YouTube Music",
+      "artwork": "https://yt3.googleusercontent.com/vH5ThTjQEPeS7bBDTuoUhqTZ526yHE6DZqVRpfHuEy_CgIVG_41iG-g_JbBv-I-88_IX6Q09wImjSAw=w544-h544-l90-rj",
+      "trackIds": [
+        "yt-KXzVOtWAOqs",
+        "yt-p8_ugAjWI5I",
+        "yt-peLRPSCeppI",
+        "yt-wnTz65qqxI0",
+        "yt-RmYCOm4ehKs",
+        "yt-QvXcLbVrNWs",
+        "yt-dC9QIUKviJU",
+        "yt-aPnqx56V8-0",
+        "yt-MSWhTUMH3pM",
+        "yt-FNEoPctNIUE",
+        "yt-7nVctvQVz0U",
+        "yt-M_lVZIpgnjU",
+        "yt-WKZO-CWeOVA",
+        "yt-O1PkZaFy61Y",
+        "yt-sTLy_aD6OEo"
+      ],
+      "genreIds": [
+        "pop"
+      ],
+      "accent": "#1DB954",
+      "featured": true
+    },
+    {
+      "id": "global-top-50",
+      "title": "Global Top 50",
+      "description": "Your daily update of the most played tracks worldwide.",
+      "curator": "AURA Charts",
+      "artwork": "https://yt3.googleusercontent.com/GcrDhHXqrPm4BjS-4L1c0OHC9iz0ZxmFeRur2A6Aqo9Vm7OfFCBOSVbRzp1M1D1s_3rsvKaC7w6kku0=w544-h544-l90-rj",
+      "trackIds": [
+        "yt-QvXcLbVrNWs",
+        "yt-dC9QIUKviJU",
+        "yt-aPnqx56V8-0",
+        "yt-MSWhTUMH3pM",
+        "yt-FNEoPctNIUE",
+        "yt-7nVctvQVz0U",
+        "yt-M_lVZIpgnjU",
+        "yt-WKZO-CWeOVA",
+        "yt-O1PkZaFy61Y",
+        "yt-sTLy_aD6OEo",
+        "yt-MMfpp0-lnw4",
+        "yt-P4z1O3miesI",
+        "yt-1UnJeFnWxGQ",
+        "yt-H3Kzh6RrnMc",
+        "yt-KWuyx6yZ21U"
+      ],
+      "genreIds": [
+        "pop",
+        "hiphop"
+      ],
+      "accent": "#8B5CF6",
+      "featured": true
+    },
+    {
+      "id": "chill-hits",
+      "title": "Chill Hits",
+      "description": "Kick back to the best relaxed tracks and smooth vibes.",
+      "curator": "AURA Curation",
+      "artwork": "https://yt3.googleusercontent.com/mXJjWX4E6Gpr03CUYl18PdVXlczmoL2Tm-LEBGafIr_8smlHnl8AHniJu0_7Y80e-aeloJxcryQQx0ZJ=w544-h544-l90-rj",
+      "trackIds": [
+        "yt-7nVctvQVz0U",
+        "yt-M_lVZIpgnjU",
+        "yt-WKZO-CWeOVA",
+        "yt-O1PkZaFy61Y",
+        "yt-sTLy_aD6OEo",
+        "yt-MMfpp0-lnw4",
+        "yt-P4z1O3miesI",
+        "yt-1UnJeFnWxGQ",
+        "yt-H3Kzh6RrnMc",
+        "yt-KWuyx6yZ21U",
+        "yt-9qnqYL0eNNI",
+        "yt-Oncu0bgdcXU",
+        "yt-Q0TEUMPIhk8",
+        "yt-owTWCbq_nSk",
+        "yt-khnokW3Mw24"
+      ],
+      "genreIds": [
+        "alternative",
+        "ambient"
+      ],
+      "accent": "#3B82F6",
+      "featured": true
+    }
+  ],
+  "genres": [
+    {
+      "id": "pop",
+      "name": "Pop",
+      "description": "The biggest hooks and brightest productions.",
+      "image": "https://yt3.googleusercontent.com/vH5ThTjQEPeS7bBDTuoUhqTZ526yHE6DZqVRpfHuEy_CgIVG_41iG-g_JbBv-I-88_IX6Q09wImjSAw=w544-h544-l90-rj",
+      "accent": "#1DB954",
+      "trackIds": [
+        "yt-KXzVOtWAOqs",
+        "yt-p8_ugAjWI5I",
+        "yt-peLRPSCeppI",
+        "yt-wnTz65qqxI0",
+        "yt-RmYCOm4ehKs",
+        "yt-QvXcLbVrNWs",
+        "yt-dC9QIUKviJU",
+        "yt-aPnqx56V8-0",
+        "yt-MSWhTUMH3pM",
+        "yt-FNEoPctNIUE",
+        "yt-7nVctvQVz0U",
+        "yt-M_lVZIpgnjU",
+        "yt-n0GXk_T2zs8",
+        "yt-2tw2QDSeBQQ",
+        "yt-xTz3ArZgpkc",
+        "yt-OsfAnsMY21M",
+        "yt-qpV1b_rJfbg",
+        "yt-hffNFtGCEpI",
+        "yt-ORrFJ63nlcA",
+        "yt-xTvyyoF_LZY",
+        "yt-4CskSETO0-w",
+        "yt-xblHqlj2JDM",
+        "yt-ugHePw5EaGY",
+        "yt-LZ2wov0Q5e0"
+      ]
+    },
+    {
+      "id": "hiphop",
+      "name": "Hip-Hop",
+      "description": "Beats, bars, and the modern soundscape.",
+      "image": "https://yt3.googleusercontent.com/JDKz3Anlyo49xBhFcFx13QD_Tk4-kqdiYTo15gtkL93nE8biWyZ7o0BPyW6RnXVxcXaJ5DgU5nJ_0NjJ=w544-h544-l90-rj",
+      "accent": "#F59E0B",
+      "trackIds": [
+        "yt-FrsOnNxIrg8",
+        "yt-JDb3ZZD4bA0",
+        "yt-oUzcV-ETiWI",
+        "yt-vtEL0uKO4tA",
+        "yt-Q8eOdXdSxJQ",
+        "yt-QKPxNQfrtzU",
+        "yt-oBcZSHdGmR8",
+        "yt-o4M4qssoaWU",
+        "yt-dzFEPJK45iQ",
+        "yt-kAbhILeXwGE",
+        "yt-NWUtG6UQeGQ",
+        "yt-UYo0Ykq6AGY"
+      ]
+    },
+    {
+      "id": "alternative",
+      "name": "Alternative",
+      "description": "Bold voices charting their own path.",
+      "image": "https://yt3.googleusercontent.com/TvMIwtq5dEO_5ggORcyuvA7d4xU2Uu_AZMaxkNHmlPfUlTnwYb4rXLDsbFtbebrY2E1slCLt9XlhtSZDrQ=w544-h544-l90-rj",
+      "accent": "#EC4899",
+      "trackIds": [
+        "yt-WKZO-CWeOVA",
+        "yt-O1PkZaFy61Y",
+        "yt-sTLy_aD6OEo",
+        "yt-MMfpp0-lnw4",
+        "yt-P4z1O3miesI",
+        "yt-1UnJeFnWxGQ",
+        "yt-H3Kzh6RrnMc",
+        "yt-KWuyx6yZ21U",
+        "yt-9qnqYL0eNNI",
+        "yt-Oncu0bgdcXU",
+        "yt-Q0TEUMPIhk8",
+        "yt-owTWCbq_nSk"
+      ]
+    },
+    {
+      "id": "electronic",
+      "name": "Electronic",
+      "description": "Synthesizers, clubs and nocturnal energy.",
+      "image": "https://yt3.googleusercontent.com/PzdFvhZwBo2kxfifFF82vShEUh8xEQfvoUTRIUBvZjs3ibCmTqMQZ6ZL03tPz1iwjP4UH6xB0CAGPwqj=w544-h544-l90-rj",
+      "accent": "#8B5CF6",
+      "trackIds": [
+        "yt-khnokW3Mw24",
+        "yt-4D7u5KF7SP8",
+        "yt-3_g2un5M350",
+        "yt-4qlDWL1kMcQ",
+        "yt-JhulBGMA7G4",
+        "yt-iIWoYaJRryw"
+      ]
+    },
+    {
+      "id": "soul",
+      "name": "Soul & R&B",
+      "description": "Warm voices and deep grooves.",
+      "image": "https://yt3.googleusercontent.com/ZpWD37EEQE_LVuQ_O03cRmz5mZA7jG0gKGLt-49uHNDX6DycysijGGSOX9woU-OfQR5jyahz3aEdmBmm3A=w544-h544-l90-rj",
+      "accent": "#EF4444",
+      "trackIds": [
+        "yt-GnUW4AF1LZo",
+        "yt-n_kbKfUHToY",
+        "yt-ioNYKflP4RY",
+        "yt-DlFXDl_ROAM",
+        "yt-BF2_ipR1OI0",
+        "yt-h8slzEkObi8"
+      ]
+    },
+    {
+      "id": "ambient",
+      "name": "Ambient & Focus",
+      "description": "Atmospheric soundscapes for concentration.",
+      "image": "https://yt3.googleusercontent.com/P6nWnACtc573j_XUUKmyFkUGiKWOi-VRcznaARfRhkpR2DJ5HpAaPSUoIZ6PUAeO0wELXpj-yPzWPHk8=w544-h544-l90-rj",
+      "accent": "#10B981",
+      "trackIds": [
+        "yt-1UJFkeTG01k",
+        "yt-ocp4zBfmsmU",
+        "yt-oJ0vDaEOEbQ",
+        "yt-LymdtOxKFFE",
+        "yt-upZJZomaaQk",
+        "yt-vrxPsll1BeM"
+      ]
+    }
+  ],
+  "featuredHero": {
+    "eyebrow": "SPOTIFY & YOUTUBE MUSIC SELECTION",
+    "title": "The Weeknd Essentials",
+    "artist": "The Weeknd",
+    "description": "Experience the world's top records streamed directly from YouTube Music with pure audio and video mode.",
+    "albumId": "al-the-weeknd",
+    "artwork": "https://yt3.googleusercontent.com/vH5ThTjQEPeS7bBDTuoUhqTZ526yHE6DZqVRpfHuEy_CgIVG_41iG-g_JbBv-I-88_IX6Q09wImjSAw=w544-h544-l90-rj",
+    "trackIds": [
+      "yt-KXzVOtWAOqs",
+      "yt-p8_ugAjWI5I",
+      "yt-peLRPSCeppI",
+      "yt-wnTz65qqxI0"
+    ],
+    "accent": "#1DB954"
+  }
+}

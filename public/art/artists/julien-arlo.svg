@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-artist6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#784554" stop-opacity="1"/><stop offset=".55" stop-color="#1B0A11" stop-opacity="1"/><stop offset="1" stop-color="#08090A" stop-opacity="1"/></linearGradient>
+  <filter id="grain-artist6" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-artist6" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-artist6" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient><radialGradient id="artistglow6" cx="50%" cy="35%" r="50%"><stop offset="0" stop-color="#E5C6A8" stop-opacity=".2"/><stop offset="1" stop-color="#1B0A11" stop-opacity="0"/></radialGradient>
+<radialGradient id="glow-julien-arlo" cx="50%" cy="40%" r="55%"><stop offset="0" stop-color="#E5C6A8" stop-opacity=".12"/><stop offset="1" stop-color="#1B0A11" stop-opacity="0"/></radialGradient></defs>
+<rect width="1000" height="1000" fill="url(#bg-artist6)"/>
+
+    <circle cx="445" cy="445" r="310" fill="#E5C6A8" opacity=".08" filter="url(#blur-artist6)"/>
+    <rect x="0" y="0" width="1000" height="1000" fill="#1B0A11" opacity=".18"/>
+    <path d="M150 1000 C 190 780 320 690 500 680 C 680 690 810 780 850 1000Z" fill="#1B0A11" opacity=".93"/>
+    <ellipse cx="445" cy="445" rx="188" ry="244" fill="#1B0A11" opacity=".96"/>
+    <ellipse cx="415" cy="390" rx="132" ry="208" fill="#E5C6A8" opacity=".09"/>
+    <path d="M292 340 C 255 250 355 155 475 165 C 625 180 665 320 595 430 C 540 340 475 295 375 320Z" fill="#1B0A11"/>
+    <path d="M120 1000 C 180 760 330 690 500 685 C 280 760 255 860 240 1000Z" fill="#E5C6A8" opacity=".06"/>
+    <g stroke="#E5C6A8" opacity=".15">
+      <path d="M80 246 H920"/><path d="M80 281 H920"/>
+    </g>
+    <circle cx="820" cy="200" r="36" fill="#E5C6A8" opacity=".1" filter="url(#blur-artist6)"/>
+    <rect x="0" y="0" width="1000" height="1000" fill="url(#glow-julien-arlo)"/><rect x="0" y="0" width="1000" height="1000" fill="url(#bg-artist6)" opacity=".16"/>
+    
+<rect width="1000" height="1000" filter="url(#grain-artist6)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

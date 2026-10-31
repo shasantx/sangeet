@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+public/audio/*.wav
+scripts/tmp
+.env*
+!.env.example
+*.log
+.DS_Store
+next-env.d.ts
+*.tsbuildinfo
+.venv-ytm
+__pycache__
+*.pyc

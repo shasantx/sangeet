@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-drift" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D0D2D1" stop-opacity="1"/><stop offset="1" stop-color="#9EA4A6" stop-opacity="1"/></linearGradient>
+  <filter id="grain-drift" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-drift" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-drift" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-drift)"/>
+
+      <rect width="1000" height="1000" fill="#B7BCC0"/>
+      <rect x="0" y="0" width="1000" height="1000" fill="#D6D8D7" opacity=".45"/>
+      <g fill="none" stroke="#3E474C" stroke-width="1.1" opacity=".35">
+        <path d="M-50 160 C 220 80 340 370 610 230 S 970 90 1080 220"/><path d="M-50 188 C 220 108 340 398 610 258 S 970 118 1080 248"/><path d="M-50 216 C 220 136 340 426 610 286 S 970 146 1080 276"/><path d="M-50 244 C 220 164 340 454 610 314 S 970 174 1080 304"/><path d="M-50 272 C 220 192 340 482 610 342 S 970 202 1080 332"/><path d="M-50 300 C 220 220 340 510 610 370 S 970 230 1080 360"/><path d="M-50 328 C 220 248 340 538 610 398 S 970 258 1080 388"/><path d="M-50 356 C 220 276 340 566 610 426 S 970 286 1080 416"/><path d="M-50 384 C 220 304 340 594 610 454 S 970 314 1080 444"/><path d="M-50 412 C 220 332 340 622 610 482 S 970 342 1080 472"/><path d="M-50 440 C 220 360 340 650 610 510 S 970 370 1080 500"/><path d="M-50 468 C 220 388 340 678 610 538 S 970 398 1080 528"/><path d="M-50 496 C 220 416 340 706 610 566 S 970 426 1080 556"/><path d="M-50 524 C 220 444 340 734 610 594 S 970 454 1080 584"/><path d="M-50 552 C 220 472 340 762 610 622 S 970 482 1080 612"/><path d="M-50 580 C 220 500 340 790 610 650 S 970 510 1080 640"/><path d="M-50 608 C 220 528 340 818 610 678 S 970 538 1080 668"/><path d="M-50 636 C 220 556 340 846 610 706 S 970 566 1080 696"/><path d="M-50 664 C 220 584 340 874 610 734 S 970 594 1080 724"/><path d="M-50 692 C 220 612 340 902 610 762 S 970 622 1080 752"/><path d="M-50 720 C 220 640 340 930 610 790 S 970 650 1080 780"/><path d="M-50 748 C 220 668 340 958 610 818 S 970 678 1080 808"/><path d="M-50 776 C 220 696 340 986 610 846 S 970 706 1080 836"/><path d="M-50 804 C 220 724 340 1014 610 874 S 970 734 1080 864"/><path d="M-50 832 C 220 752 340 1042 610 902 S 970 762 1080 892"/><path d="M-50 860 C 220 780 340 1070 610 930 S 970 790 1080 920"/><path d="M-50 888 C 220 808 340 1098 610 958 S 970 818 1080 948"/><path d="M-50 916 C 220 836 340 1126 610 986 S 970 846 1080 976"/><path d="M-50 944 C 220 864 340 1154 610 1014 S 970 874 1080 1004"/><path d="M-50 972 C 220 892 340 1182 610 1042 S 970 902 1080 1032"/>
+      </g>
+      <circle cx="740" cy="250" r="112" fill="#5A6B70" opacity=".16" filter="url(#blur-drift)"/>
+      <rect x="70" y="858" width="860" height="1" fill="#30393D" opacity=".3"/>
+      <text x="74" y="920" font-family="Arial, sans-serif" font-size="24" letter-spacing="10" fill="#30393D" opacity=".72">ELIO NORTH</text>
+      <text x="928" y="920" text-anchor="end" font-family="Arial, sans-serif" font-size="17" letter-spacing="5" fill="#30393D" opacity=".42">DRIFT STUDIES</text>
+      
+<rect width="1000" height="1000" filter="url(#grain-drift)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

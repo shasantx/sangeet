@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouTube — Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 20'%3E%3Crect width='28' height='20' rx='5' fill='%23ff0033'/%3E%3Cpath d='M11 6l7 4-7 4z' fill='white'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-elev: #ffffff;
+    --text: #0f0f0f;
+    --text-2: #606060;
+    --border: #e5e5e5;
+    --chip: #f2f2f2;
+    --chip-hover: #e5e5e5;
+    --chip-active-bg: #0f0f0f;
+    --chip-active-text: #ffffff;
+    --hover: #f2f2f2;
+    --search-bg: #f8f8f8;
+    --header-bg: rgba(255, 255, 255, 0.97);
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+    --thumb: #e9e9e9;
+    --brand: #ff0033;
+    color-scheme: light;
+  }
+  html[data-theme="dark"] {
+    --bg: #0f0f0f;
+    --bg-elev: #212121;
+    --text: #f1f1f1;
+    --text-2: #aaaaaa;
+    --border: #303030;
+    --chip: #272727;
+    --chip-hover: #3f3f3f;
+    --chip-active-bg: #f1f1f1;
+    --chip-active-text: #0f0f0f;
+    --hover: #272727;
+    --search-bg: #121212;
+    --header-bg: rgba(15, 15, 15, 0.97);
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+    --thumb: #1f1f1f;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Roboto", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  button { font-family: inherit; color: inherit; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+  a { color: inherit; text-decoration: none; }
+  svg { display: block; }
+  ::selection { background: rgba(255, 0, 51, 0.25); }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 16px;
+    background: var(--header-bg);
+    backdrop-filter: blur(12px);
+  }
+  .topbar-left, .topbar-right, .topbar-center {
+    display: flex;
+    align-items: center;
+  }
+  .topbar-left { gap: 4px; flex: 0 0 auto; }
+  .topbar-center {
+    flex: 1 1 auto;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    max-width: 720px;
+  }
+  .topbar-right { gap: 6px; flex: 0 0 auto; }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text);
+    transition: background .15s ease;
+    flex: none;
+    position: relative;
+  }
+  .icon-btn:hover { background: var(--hover); }
+  .icon-btn:focus-visible, .pill-btn:focus-visible, .avatar-btn:focus-visible,
+  .chip:focus-visible, .nav-item:focus-visible, .search:focus-within {
+    outline: 2px solid #3ea6ff;
+    outline-offset: 1px;
+  }
+  .icon-btn svg { width: 24px; height: 24px; }
+
+  .brand { display: flex; align-items: center; gap: 2px; padding: 0 8px 0 4px; }
+  .brand-mark svg { width: 30px; height: 21px; }
+  .brand-name {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.7px;
+    margin-left: 3px;
+  }
+  .brand-country {
+    font-size: 10px;
+    color: var(--text-2);
+    align-self: flex-start;
+    margin: 12px 0 0 3px;
+    letter-spacing: .2px;
+  }
+
+  .search {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--search-bg);
+    overflow: hidden;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .search:focus-within {
+    border-color: #3ea6ff;
+    box-shadow: inset 0 0 0 1px #3ea6ff;
+    background: var(--bg);
+  }
+  .search input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: 16px;
+    padding: 0 16px;
+    font-family: inherit;
+  }
+  .search input::placeholder { color: var(--text-2); }
+  .search-btn {
+    flex: none;
+    width: 64px;
+    border: 0;
+    border-left: 1px solid var(--border);
+    background: var(--chip);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  .search-btn:hover { background: var(--chip-hover); }
+  .search-btn svg { width: 22px; height: 22px; }
+  .mic { background: var(--chip); }
+  .mic:hover { background: var(--chip-hover); }
+
+  .pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px 0 10px;
+    border: 0;
+    border-radius: 18px;
+    background: var(--chip);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s ease;
+    white-space: nowrap;
+  }
+  .pill-btn:hover { background: var(--chip-hover); }
+  .pill-btn svg { width: 22px; height: 22px; }
+
+  .bell .badge {
+    position: absolute;
+    top: 4px;
+    right: 3px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: #cc0000;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg);
+  }
+  .avatar-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 0;
+    margin-left: 4px;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    flex: none;
+    transition: transform .15s ease;
+  }
+  .avatar-btn:hover { transform: scale(1.06); }
+
+  /* ---------- Layout ---------- */
+  .layout { display: flex; align-items: flex-start; }
+
+  .sidebar {
+    position: sticky;
+    top: 56px;
+    width: 240px;
+    flex: 0 0 240px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 12px 12px 40px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    background: var(--bg);
+    z-index: 50;
+    transition: width .2s ease, flex-basis .2s ease, padding .2s ease;
+  }
+  .sidebar::-webkit-scrollbar { width: 8px; }
+  .sidebar::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; }
+  .sidebar:hover::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .nav-group { display: flex; flex-direction: column; gap: 2px; }
+  .nav-group + .nav-group { margin-top: 8px; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    height: 40px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text);
+    text-align: left;
+    width: 100%;
+    white-space: nowrap;
+    transition: background .15s ease;
+  }
+  .nav-item:hover { background: var(--hover); }
+  .nav-item.active { background: var(--hover); font-weight: 500; }
+  .nav-item .ic { flex: none; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+  .nav-item .ic svg { width: 24px; height: 24px; }
+  .nav-item .label { overflow: hidden; text-overflow: ellipsis; }
+  .nav-item .tag {
+    font-size: 10px;
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 4px;
+    margin-left: 2px;
+  }
+  .nav-sep { height: 1px; background: var(--border); margin: 12px 0; flex: none; }
+  .nav-title {
+    font-size: 15px;
+    font-weight: 500;
+    padding: 8px 12px 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-title svg { width: 14px; height: 14px; }
+
+  .chan-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .sidebar-footer {
+    margin: 20px 12px 0;
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.9;
+  }
+  .sidebar-footer .links { display: flex; flex-wrap: wrap; gap: 0 8px; font-weight: 500; color: var(--text-2); }
+  .sidebar-footer .links span { cursor: pointer; }
+  .sidebar-footer .links span:hover { color: var(--text); }
+  .sidebar-footer .copy { margin-top: 12px; font-size: 11px; opacity: .8; }
+
+  .backdrop {
+    display: none;
+    position: fixed;
+    inset: 56px 0 0 0;
+    background: rgba(0, 0, 0, .5);
+    z-index: 45;
+  }
+
+
+  .content {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0 24px 48px;
+  }
+
+  /* ---------- Chips ---------- */
+  .chips-wrap {
+    position: sticky;
+    top: 56px;
+    z-index: 40;
+    background: var(--bg);
+    padding: 12px 0;
+    margin: 0 -4px;
+  }
+  .chips {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 0 4px 2px;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none;
+    height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--chip);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+    white-space: nowrap;
+  }
+  .chip:hover { background: var(--chip-hover); }
+  .chip.active { background: var(--chip-active-bg); color: var(--chip-active-text); }
+
+  /* ---------- Video grid ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 26px 16px;
+    padding-top: 8px;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    cursor: pointer;
+    animation: rise .35s cubic-bezier(.2,.7,.3,1) both;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  .thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--thumb);
+    isolation: isolate;
+  }
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .35s cubic-bezier(.2,.7,.3,1), filter .2s ease;
+  }
+  .card:hover .thumb img { transform: scale(1.035); filter: brightness(1.03); }
+  .duration {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    background: rgba(0, 0, 0, .82);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 5px;
+    border-radius: 4px;
+    letter-spacing: .3px;
+    z-index: 2;
+  }
+  .hover-actions {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity .18s ease, transform .18s ease;
+    z-index: 2;
+  }
+  .card:hover .hover-actions { opacity: 1; transform: none; }
+  .mini-btn {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, .78);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .mini-btn:hover { background: rgba(0, 0, 0, .95); }
+  .mini-btn svg { width: 17px; height: 17px; }
+  .live-badge {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    background: #cc0000;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: .4px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .live-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+
+  .progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, .35);
+    z-index: 2;
+  }
+  .progress span { display: block; height: 100%; background: #ff0033; }
+
+  .meta { display: flex; gap: 12px; align-items: flex-start; padding-right: 6px; }
+  .ch-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+  .meta-text { min-width: 0; flex: 1 1 auto; }
+  .v-title {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.4;
+    margin: 0 0 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    letter-spacing: -.1px;
+  }
+  .v-channel, .v-stats {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .v-channel { margin-bottom: 1px; }
+  .v-channel:hover { color: var(--text); }
+  .v-channel .verified { width: 13px; height: 13px; flex: none; color: var(--text-2); }
+  .more-btn {
+    border: 0;
+    background: transparent;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text);
+    opacity: 0;
+    transition: opacity .15s, background .15s;
+    margin-top: -2px;
+    flex: none;
+  }
+  .card:hover .more-btn, .more-btn:focus-visible { opacity: 1; }
+  .more-btn:hover { background: var(--hover); }
+  .more-btn svg { width: 18px; height: 18px; }
+
+  .empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-2);
+  }
+  .empty svg { width: 56px; height: 56px; margin: 0 auto 16px; opacity: .4; }
+  .empty h3 { margin: 0 0 6px; font-size: 18px; font-weight: 500; color: var(--text); }
+  .empty p { margin: 0; font-size: 14px; }
+
+  /* ---------- Watch overlay ---------- */
+  .watch {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    padding: 24px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, .55);
+    backdrop-filter: blur(4px);
+  }
+  .watch.open { display: block; animation: fade .18s ease both; }
+  @keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+  .watch-card {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    animation: pop .22s cubic-bezier(.2,.7,.3,1) both;
+  }
+  @keyframes pop { from { transform: scale(.97) translateY(8px); opacity: 0 } to { transform: none; opacity: 1 } }
+  .player {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .player img { width: 100%; height: 100%; object-fit: cover; opacity: .55; filter: blur(1px); }
+  .play-big {
+    position: absolute;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    border: 0;
+    background: rgba(255, 0, 51, .92);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform .15s ease, background .15s ease;
+  }
+  .play-big:hover { transform: scale(1.07); background: #ff0033; }
+  .play-big svg { width: 34px; height: 34px; margin-left: 4px; }
+  .player-bar {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 0 14px 10px;
+    color: #fff;
+    background: linear-gradient(transparent, rgba(0,0,0,.75));
+  }
+  .player-bar .track { height: 4px; border-radius: 2px; background: rgba(255,255,255,.3); margin: 10px 0 8px; }
+  .player-bar .track span { display: block; width: 32%; height: 100%; background: #ff0033; border-radius: 2px; }
+  .player-bar .row { display: flex; justify-content: space-between; font-size: 12px; opacity: .9; }
+
+  .watch-body { padding: 18px 22px 24px; }
+  .watch-body h2 { margin: 0 0 12px; font-size: 20px; line-height: 1.35; font-weight: 700; }
+  .watch-sub { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .watch-chan { display: flex; align-items: center; gap: 12px; }
+  .watch-chan .ch-avatar { width: 42px; height: 42px; font-size: 17px; }
+  .watch-chan .name { font-weight: 500; font-size: 15px; }
+  .watch-chan .subs { font-size: 12px; color: var(--text-2); }
+  .subscribe {
+    height: 36px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 18px;
+    background: var(--text);
+    color: var(--bg);
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    margin-left: 6px;
+    transition: opacity .15s;
+  }
+  .subscribe:hover { opacity: .85; }
+  .subscribe.on { background: var(--chip); color: var(--text); }
+  .watch-actions { display: flex; gap: 8px; }
+  .watch-actions button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 18px;
+    background: var(--chip);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .watch-actions button:hover { background: var(--chip-hover); }
+  .watch-actions button.liked { background: var(--text); color: var(--bg); }
+  .watch-actions svg { width: 20px; height: 20px; }
+  .watch-desc {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--chip);
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text);
+  }
+  .watch-desc b { display: block; margin-bottom: 4px; }
+  .watch-desc .dim { color: var(--text-2); }
+  .close-watch {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 3;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, .6);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .close-watch:hover { background: rgba(0, 0, 0, .85); }
+  .close-watch svg { width: 22px; height: 22px; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translate(-50%, 20px);
+    background: #272727;
+    color: #fff;
+    font-size: 14px;
+    padding: 12px 18px;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    z-index: 200;
+    max-width: calc(100vw - 40px);
+    text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 999px) {
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 56px;
+      transform: translateX(-100%);
+      transition: transform .22s cubic-bezier(.2,.7,.3,1);
+      box-shadow: 8px 0 24px rgba(0, 0, 0, .12);
+      height: calc(100vh - 56px);
+      width: 240px;
+      flex-basis: 240px;
+      padding: 12px;
+    }
+    .sidebar.open { transform: none; }
+    .backdrop.show { display: block; animation: fade .18s ease; }
+    .content { padding: 0 16px 40px; }
+  }
+  @media (max-width: 840px) {
+    .topbar-center { max-width: none; }
+    .pill-btn .label, .brand-country { display: none; }
+    .pill-btn { padding: 0; width: 40px; justify-content: center; background: transparent; }
+    .pill-btn:hover { background: var(--hover); }
+  }
+  @media (max-width: 680px) {
+    .topbar { padding: 0 8px; gap: 2px; }
+    .topbar-center { gap: 4px; }
+    .search-btn { width: 48px; }
+    .mic { display: none; }
+    .topbar-right { gap: 0; }
+    .theme-btn { display: none; }
+    .grid { grid-template-columns: 1fr; gap: 22px; }
+    .content { padding: 0 8px 40px; }
+    .chips-wrap { padding: 8px 0; }
+    .card { animation: none; }
+    .v-title { font-size: 14px; }
+    .more-btn { opacity: 1; }
+    .watch { padding: 0; }
+    .watch-card { border-radius: 0; border: 0; min-height: 100%; }
+    .watch-body { padding: 14px 16px 28px; }
+    .watch-body h2 { font-size: 17px; }
+  }
+  @media (max-width: 480px) {
+    .brand-name { display: none; }
+    .topbar-left { gap: 0; }
+    .search { height: 38px; }
+    .search input { padding: 0 12px; font-size: 15px; }
+    .avatar-btn { width: 30px; height: 30px; font-size: 13px; }
+    .watch-actions button span { display: none; }
+    .watch-actions button { padding: 0 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="icon-btn" id="menuBtn" aria-label="Guide" title="Guide">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <a class="brand" href="#" aria-label="YouTube Home">
+      <span class="brand-mark">
+        <svg viewBox="0 0 28 20" aria-hidden="true"><rect width="28" height="20" rx="5" fill="#ff0033"/><path d="M11 6l7 4-7 4z" fill="#fff"/></svg>
+      </span>
+      <span class="brand-name">YouTube</span>
+      <span class="brand-country">IN</span>
+    </a>
+  </div>
+
+  <div class="topbar-center">
+    <form class="search" id="searchForm" role="search">
+      <input id="searchInput" type="search" placeholder="Search" aria-label="Search" autocomplete="off">
+      <button class="search-btn" type="submit" aria-label="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
+      </button>
+    </form>
+    <button class="icon-btn mic" id="micBtn" title="Search with your voice" aria-label="Search with your voice">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+    </button>
+  </div>
+
+  <div class="topbar-right">
+    <button class="icon-btn theme-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
+      <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+    </button>
+    <button class="pill-btn" id="createBtn" title="Create">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+      <span class="label">Create</span>
+    </button>
+    <button class="icon-btn bell" id="bellBtn" title="Notifications" aria-label="Notifications">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
+      <span class="badge">9+</span>
+    </button>
+    <button class="avatar-btn" id="avatarBtn" title="Account">S</button>
+  </div>
+</header>
+
+<!-- ================= LAYOUT ================= -->
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Guide">
+    <nav class="nav-group" id="mainNav">
+      <button class="nav-item active" data-view="Home">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg></span>
+        <span class="label">Home</span>
+      </button>
+      <button class="nav-item keep" data-view="Shorts">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="4"/><path d="M11 8.5l4 3.5-4 3.5z" fill="currentColor" stroke="none"/></svg></span>
+        <span class="label">Shorts</span>
+      </button>
+      <button class="nav-item keep" data-view="Subscriptions">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 6h16M4 11h16"/><rect x="4" y="15" width="16" height="5" rx="1.5"/></svg></span>
+        <span class="label">Subscriptions</span>
+      </button>
+    </nav>
+
+    <div class="nav-sep"></div>
+
+    <div class="nav-group extra">
+      <div class="nav-title">You <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></div>
+      <button class="nav-item" data-view="You">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 18.5c1.2-2.4 3.2-3.5 5.5-3.5s4.3 1.1 5.5 3.5"/></svg></span>
+        <span class="label">You</span>
+      </button>
+      <button class="nav-item" data-view="History">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
+        <span class="label">History</span>
+      </button>
+      <button class="nav-item" data-view="Watch later">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5l3 1.8"/></svg></span>
+        <span class="label">Watch later</span>
+      </button>
+      <button class="nav-item" data-view="Liked videos">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M7 21V10l5-7 1 1.5V9h5.5a2 2 0 0 1 2 2.4l-1.4 7A2 2 0 0 1 17 20H7z"/><path d="M3 21V10h4"/></svg></span>
+        <span class="label">Liked videos</span>
+      </button>
+    </div>
+
+    <div class="nav-sep"></div>
+
+    <div class="nav-group extra">
+      <div class="nav-title">Subscriptions</div>
+      <button class="nav-item" data-view="Fireship">
+        <span class="chan-avatar" style="background:#ff5722">F</span>
+        <span class="label">Fireship</span>
+      </button>
+      <button class="nav-item" data-view="Veritasium">
+        <span class="chan-avatar" style="background:#1a73e8">V</span>
+        <span class="label">Veritasium</span>
+      </button>
+      <button class="nav-item" data-view="Marques Brownlee">
+        <span class="chan-avatar" style="background:#111;border:1px solid var(--border)">M</span>
+        <span class="label">Marques Brownlee</span>
+      </button>
+      <button class="nav-item" data-view="Kurzgesagt">
+        <span class="chan-avatar" style="background:#00a86b">K</span>
+        <span class="label">Kurzgesagt</span>
+      </button>
+    </div>
+
+    <div class="nav-sep"></div>
+
+    <div class="nav-group extra">
+      <div class="nav-title">Explore</div>
+      <button class="nav-item" data-view="Music">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></span>
+        <span class="label">Music</span>
+      </button>
+      <button class="nav-item" data-view="Gaming">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="10" rx="5"/><path d="M7 10v4M5 12h4M16 11h.01M18 13h.01"/></svg></span>
+        <span class="label">Gaming</span>
+      </button>
+      <button class="nav-item" data-view="News">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 8h3v9a2 2 0 0 1-2 2M7 9h4M7 12h7M7 15h7"/></svg></span>
+        <span class="label">News</span>
+      </button>
+      <button class="nav-item" data-view="Live">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="2.5"/><path d="M7.5 7.5a6.5 6.5 0 0 0 0 9M16.5 7.5a6.5 6.5 0 0 1 0 9M4.5 4.5a10 10 0 0 0 0 15M19.5 4.5a10 10 0 0 1 0 15"/></svg></span>
+        <span class="label">Live</span>
+      </button>
+      <button class="nav-item" data-view="Podcasts">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>
+        <span class="label">Podcasts</span>
+      </button>
+    </div>
+
+    <div class="nav-sep"></div>
+
+    <div class="nav-group extra">
+      <div class="nav-title">More from YouTube</div>
+      <button class="nav-item" data-view="YouTube Premium">
+        <span class="ic" style="color:#ff0033"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6L12 16.7 6.6 19.6l1.2-6L3.3 9.4l6.1-.8z"/></svg></span>
+        <span class="label">YouTube Premium</span>
+      </button>
+      <button class="nav-item" data-view="YouTube Music">
+        <span class="ic" style="color:#ff0033"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/></svg></span>
+        <span class="label">YouTube Music</span>
+      </button>
+      <button class="nav-item" data-view="YouTube Kids">
+        <span class="ic" style="color:#ff0033"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="4"/><path d="M9 11h.01M15 11h.01M9 15c1.8 1.2 4.2 1.2 6 0"/></svg></span>
+        <span class="label">YouTube Kids</span>
+      </button>
+    </div>
+
+    <div class="nav-sep"></div>
+    <div class="nav-group extra">
+      <button class="nav-item" data-view="Settings">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2.1-1.2L14.1 3h-4l-.4 2.6a7 7 0 0 0-2.1 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2.1 1.2l.4 2.6h4l.4-2.6a7 7 0 0 0 2.1-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></span>
+        <span class="label">Settings</span>
+      </button>
+      <button class="nav-item" data-view="Report history">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span>
+        <span class="label">Report history</span>
+      </button>
+      <button class="nav-item" data-view="Help">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.6 2.3c-.7.4-1.1 1-1.1 1.7M12 17h.01"/></svg></span>
+        <span class="label">Help</span>
+      </button>
+      <button class="nav-item" data-view="Send feedback">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 20l16-8L4 4v5l10 3-10 3z"/></svg></span>
+        <span class="label">Send feedback</span>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="links">
+        <span>About</span><span>Press</span><span>Copyright</span><span>Contact us</span><span>Creators</span><span>Advertise</span><span>Developers</span>
+      </div>
+      <div class="links" style="margin-top:8px">
+        <span>Terms</span><span>Privacy</span><span>Policy &amp; Safety</span><span>How YouTube works</span><span>Test new features</span>
+      </div>
+      <div class="copy">© 2026 Google LLC</div>
+    </div>
+  </aside>
+
+  <div class="backdrop" id="backdrop"></div>
+
+  <main class="content">
+    <div class="chips-wrap">
+      <div class="chips" id="chips"></div>
+    </div>
+    <section class="grid" id="grid" aria-label="Recommended videos"></section>
+  </main>
+</div>
+
+<!-- ================= WATCH OVERLAY ================= -->
+<div class="watch" id="watch" role="dialog" aria-modal="true" aria-label="Video player">
+  <div class="watch-card" id="watchCard"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Data ---------------- */
+  const categories = ["All", "Music", "Gaming", "Live", "News", "Podcasts", "JavaScript", "Linux", "Gadgets", "Comedy", "Cooking", "Design"];
+
+  const videos = [
+    { title: "I Built a YouTube Clone in 30 Minutes (No Frameworks)", channel: "Fireship", views: "1.2M views", time: "2 days ago", duration: "12:48", cat: "JavaScript", seed: "ytclone", color: "#ff5722", verified: true, live: false, desc: "We rebuild the world's biggest video platform from scratch with nothing but HTML, CSS and a few lines of JavaScript. No React, no build step, no excuses." },
+    { title: "Why Every Star in the Sky Is a Time Machine", channel: "Veritasium", views: "4.8M views", time: "1 week ago", duration: "21:03", cat: "News", seed: "stars", color: "#1a73e8", verified: true, live: false, desc: "Look up and you are looking back in time. We explore how light travels across billions of years to reach your eyes tonight." },
+    { title: "The M4 MacBook Air Review: Almost Perfect", channel: "Marques Brownlee", views: "3.1M views", time: "5 days ago", duration: "15:22", cat: "Gadgets", seed: "macbook", color: "#111111", verified: true, live: false, desc: "Two weeks with the new Air. Performance, battery, thermals, and the one thing that still bugs me." },
+    { title: "You Are Not Where You Think You Are", channel: "Kurzgesagt – In a Nutshell", views: "9.6M views", time: "3 weeks ago", duration: "09:41", cat: "News", seed: "space", color: "#00a86b", verified: true, live: false, desc: "A journey from your chair to the edge of the observable universe. Perspective is a strange thing." },
+    { title: "Lo-fi Beats to Study & Relax — 24/7 Live Radio", channel: "Chillhop Radio", views: "18K watching", time: "", duration: "LIVE", cat: "Live", seed: "lofi", color: "#7c4dff", verified: false, live: true, desc: "Non-stop mellow beats for focus, study and late-night coding sessions. Chat is open, be kind." },
+    { title: "The Ultimate Guide to CSS Grid in 2026", channel: "Kevin Powell", views: "842K views", time: "1 month ago", duration: "28:15", cat: "Design", seed: "cssgrid", color: "#e91e63", verified: true, live: false, desc: "Everything you need to know about CSS Grid, from the basics to advanced responsive layouts." },
+    { title: "I Switched to Linux for 90 Days — Here's What Happened", channel: "The Linux Experiment", views: "1.7M views", time: "2 weeks ago", duration: "18:37", cat: "Linux", seed: "linux", color: "#ff9800", verified: true, live: false, desc: "Ninety days without Windows or macOS. The good, the bad, and the terminal." },
+    { title: "Cooking the Perfect Ramen from Scratch", channel: "Chef's Lab", views: "2.3M views", time: "6 days ago", duration: "14:09", cat: "Cooking", seed: "ramen", color: "#8d6e63", verified: false, live: false, desc: "Broth, noodles, chashu and a jammy egg. Everything from first principles, timed to the second." },
+    { title: "Elden Ring: Shadow of the Erdtree — Full Review", channel: "Skill Up", views: "5.4M views", time: "4 days ago", duration: "34:56", cat: "Gaming", seed: "eldenring", color: "#607d8b", verified: true, live: false, desc: "A spoiler-free review of the biggest expansion of the year. Is it worth the wait?" },
+    { title: "How I Made a Hit Song in My Bedroom", channel: "Andrew Huang", views: "920K views", time: "3 days ago", duration: "11:24", cat: "Music", seed: "song", color: "#00bcd4", verified: true, live: false, desc: "One microphone, a laptop, and a lot of coffee. The full process from first idea to final master." },
+    { title: "The Quiet Art of Doing Nothing", channel: "Better Ideas", views: "2.9M views", time: "1 week ago", duration: "08:12", cat: "Podcasts", seed: "quiet", color: "#795548", verified: false, live: false, desc: "Why boredom might be the most underrated productivity tool you own." },
+    { title: "Speedrunning the World's Hardest Platformer", channel: "GameGrumps", views: "1.1M views", time: "9 days ago", duration: "42:07", cat: "Gaming", seed: "speedrun", color: "#f44336", verified: true, live: false, desc: "Two idiots against one impossible level. Place your bets." },
+    { title: "JavaScript Just Got a New Feature You'll Love", channel: "Web Dev Simplified", views: "487K views", time: "12 hours ago", duration: "10:02", cat: "JavaScript", seed: "jsfeature", color: "#ffea00", verified: true, live: false, desc: "The new language proposal is already shipping in every major browser. Here's how to use it today." },
+    { title: "This $60 Phone Might Be All You Need", channel: "Mrwhosetheboss", views: "3.7M views", time: "3 days ago", duration: "13:31", cat: "Gadgets", seed: "phone", color: "#3f51b5", verified: true, live: false, desc: "We spent a week using the cheapest smartphone that actually works. The results surprised us." },
+    { title: "A Tour of My Minimal Desk Setup", channel: "Ali Abdaal", views: "1.4M views", time: "2 weeks ago", duration: "16:45", cat: "Design", seed: "desk", color: "#009688", verified: true, live: false, desc: "Everything on my desk and why it earned its place. Fewer things, better things." },
+    { title: "Why Do We Dream? The Science of Sleep", channel: "AsapSCIENCE", views: "6.2M views", time: "1 month ago", duration: "07:58", cat: "Podcasts", seed: "dream", color: "#9c27b0", verified: true, live: false, desc: "Your brain runs a theater every night. We asked neuroscientists what is actually playing." },
+    { title: "Building a 3D Game Engine from Scratch", channel: "Sebastian Lague", views: "2.1M views", time: "3 weeks ago", duration: "26:19", cat: "JavaScript", seed: "engine", color: "#4caf50", verified: true, live: false, desc: "Vectors, matrices, shaders and a lot of debugging. The whole journey, condensed." },
+    { title: "The Most Beautiful City You've Never Heard Of", channel: "Geography Now", views: "1.9M views", time: "5 days ago", duration: "19:02", cat: "News", seed: "city", color: "#03a9f4", verified: false, live: false, desc: "Hidden streets, impossible architecture and a history that reads like fiction." },
+    { title: "1 Hour of Deep Focus Piano Music", channel: "Ambient Works", views: "8.3M views", time: "2 months ago", duration: "1:02:11", cat: "Music", seed: "piano", color: "#673ab7", verified: false, live: false, desc: "An hour of original piano for work, reading or quiet evenings." },
+    { title: "I Tried Cooking Everything in a Toaster", channel: "Joshua Weissman", views: "2.7M views", time: "1 week ago", duration: "17:40", cat: "Comedy", seed: "toaster", color: "#ff7043", verified: true, live: false, desc: "Today we find out exactly what a toaster can and cannot do. Spoiler: it is not a wok." }
+  ];
+
+  const icons = {
+    dots: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>',
+    save: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 4h12v17l-6-4.2L6 21z"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 1.8 3-.2 1 2.8 2.5 1.6-1.2 2.7 1.2 2.7-2.5 1.6-1 2.8-3-.2L12 22l-2.4-1.8-3 .2-1-2.8L3.1 16l1.2-2.7L3.1 10.6l2.5-1.6 1-2.8 3 .2z"/><path d="M8.5 12.2l2.3 2.3 4.7-4.7" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+    like: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 21V10l5-7 1 1.5V9h5.5a2 2 0 0 1 2 2.4l-1.4 7A2 2 0 0 1 17 20H7z"/><path d="M3 21V10h4"/></svg>',
+    share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 16V3M7 8l5-5 5 5"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>'
+  };
+
+  const avatarColors = ["#e91e63", "#3f51b5", "#009688", "#ff9800", "#795548", "#607d8b", "#9c27b0", "#00bcd4", "#8bc34a", "#f44336", "#673ab7", "#ff5722"];
+
+  function colorFor(name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+    return avatarColors[h % avatarColors.length];
+  }
+
+  function thumbUrl(seed) {
+    return "https://picsum.photos/seed/" + encodeURIComponent(seed) + "/640/360";
+  }
+
+  /* ---------------- Render ---------------- */
+  const grid = document.getElementById("grid");
+  const chips = document.getElementById("chips");
+  const searchInput = document.getElementById("searchInput");
+
+  let activeCat = "All";
+  let query = "";
+
+  const chipButtons = categories.map(function (cat, i) {
+    const b = document.createElement("button");
+    b.className = "chip" + (i === 0 ? " active" : "");
+    b.type = "button";
+    b.textContent = cat;
+    b.dataset.cat = cat;
+    b.addEventListener("click", function () {
+      activeCat = cat;
+      chipButtons.forEach(function (x) { x.classList.toggle("active", x.dataset.cat === cat); });
+      render();
+    });
+    chips.appendChild(b);
+    return b;
+  });
+
+  function matches(v) {
+    const catOK = activeCat === "All" || v.cat === activeCat;
+    if (!catOK) return false;
+    if (!query) return true;
+    const q = query.toLowerCase();
+    return v.title.toLowerCase().includes(q) || v.channel.toLowerCase().includes(q) || v.cat.toLowerCase().includes(q);
+  }
+
+  function cardHTML(v, index) {
+    const initial = v.channel.replace(/[^A-Za-z0-9]/g, "").charAt(0) || "?";
+    const thumbStyle = "background:linear-gradient(135deg," + v.color + "55," + v.color + "22)";
+    return '' +
+      '<article class="card" data-index="' + index + '" style="animation-delay:' + Math.min(index * 35, 350) + 'ms">' +
+        '<div class="thumb" style="' + thumbStyle + '">' +
+          '<img src="' + thumbUrl(v.seed) + '" alt="' + escapeAttr(v.title) + '" loading="lazy" onerror="this.remove()">' +
+          (v.live ? '<span class="live-badge">LIVE</span>' : '<span class="duration">' + v.duration + '</span>') +
+          '<div class="hover-actions">' +
+            '<button class="mini-btn" data-act="later" title="Watch later" aria-label="Watch later">' + icons.clock + '</button>' +
+            '<button class="mini-btn" data-act="save" title="Save to playlist" aria-label="Save to playlist">' + icons.save + '</button>' +
+          '</div>' +
+          (v.progress ? '<div class="progress"><span style="width:' + v.progress + '%"></span></div>' : '') +
+        '</div>' +
+        '<div class="meta">' +
+          '<div class="ch-avatar" style="background:' + colorFor(v.channel) + '">' + initial + '</div>' +
+          '<div class="meta-text">' +
+            '<h3 class="v-title">' + escapeHTML(v.title) + '</h3>' +
+            '<div class="v-channel">' + escapeHTML(v.channel) +
+              (v.verified ? ' <span class="verified">' + icons.check + '</span>' : '') +
+            '</div>' +
+            '<div class="v-stats">' + escapeHTML(v.views) + (v.time ? ' &middot; ' + escapeHTML(v.time) : '') + '</div>' +
+          '</div>' +
+          '<button class="more-btn" aria-label="More actions" title="More">' + icons.dots + '</button>' +
+        '</div>' +
+      '</article>';
+  }
+
+  function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+    });
+  }
+  function escapeAttr(s) { return escapeHTML(s); }
+
+  function render() {
+    const list = videos.filter(matches);
+    if (!list.length) {
+      grid.innerHTML =
+        '<div class="empty">' + icons.search +
+        '<h3>No results found</h3><p>Try different keywords or remove search filters.</p></div>';
+      return;
+    }
+    grid.innerHTML = list.map(function (v) { return cardHTML(v, videos.indexOf(v)); }).join("");
+  }
+
+  /* ---------------- Card interactions ---------------- */
+  grid.addEventListener("click", function (e) {
+    const actionBtn = e.target.closest("[data-act]");
+    const moreBtn = e.target.closest(".more-btn");
+    const card = e.target.closest(".card");
+
+    if (!card) return;
+    const index = Number(card.dataset.index);
+    const video = videos[index];
+
+    if (actionBtn) {
+      e.stopPropagation();
+      toast(actionBtn.dataset.act === "later" ? "Saved to Watch later" : "Saved to playlist");
+      return;
+    }
+    if (moreBtn) {
+      e.stopPropagation();
+      toast("More options are not available in this demo");
+      return;
+    }
+    openWatch(video);
+    if (video) markWatched(video);
+  });
+
+  function markWatched(v) {
+    v.progress = 12 + Math.floor(Math.random() * 40);
+  }
+
+  /* ---------------- Watch overlay ---------------- */
+  const watch = document.getElementById("watch");
+  const watchCard = document.getElementById("watchCard");
+  let lastFocus = null;
+
+  function openWatch(v) {
+    lastFocus = document.activeElement;
+    watchCard.innerHTML =
+      '<div class="player">' +
+        '<img src="' + thumbUrl(v.seed) + '" alt="" onerror="this.remove()">' +
+        '<button class="close-watch" id="closeWatch" aria-label="Close player">' + icons.close + '</button>' +
+        '<button class="play-big" id="playBig" aria-label="Play video">' + icons.play + '</button>' +
+        '<div class="player-bar">' +
+          '<div class="track"><span></span></div>' +
+          '<div class="row"><span>3:42 / ' + v.duration + '</span><span>1080p &middot; Settings</span></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="watch-body">' +
+        '<h2>' + escapeHTML(v.title) + '</h2>' +
+        '<div class="watch-sub">' +
+          '<div class="watch-chan">' +
+            '<div class="ch-avatar" style="background:' + colorFor(v.channel) + '">' + (v.channel.replace(/[^A-Za-z0-9]/g, "").charAt(0) || "?") + '</div>' +
+            '<div>' +
+              '<div class="name">' + escapeHTML(v.channel) + '</div>' +
+              '<div class="subs">' + (v.live ? "Live now" : "1.4M subscribers") + '</div>' +
+            '</div>' +
+            '<button class="subscribe" id="subBtn">Subscribe</button>' +
+          '</div>' +
+          '<div class="watch-actions">' +
+            '<button id="likeBtn">' + icons.like + '<span>24K</span></button>' +
+            '<button id="shareBtn">' + icons.share + '<span>Share</span></button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="watch-desc">' +
+          '<b>' + escapeHTML(v.views) + (v.time ? " &middot; " + escapeHTML(v.time) : "") + '</b>' +
+          escapeHTML(v.desc) +
+          '<div class="dim" style="margin-top:8px">Category: ' + escapeHTML(v.cat) + '</div>' +
+        '</div>' +
+      '</div>';
+
+    watch.classList.add("open");
+    document.body.style.overflow = "hidden";
+
+    document.getElementById("closeWatch").addEventListener("click", closeWatch);
+    document.getElementById("playBig").addEventListener("click", function () { toast("Playing preview…"); });
+    document.getElementById("subBtn").addEventListener("click", function () {
+      this.classList.toggle("on");
+      this.textContent = this.classList.contains("on") ? "Subscribed" : "Subscribe";
+      toast(this.classList.contains("on") ? "Subscribed to " + v.channel : "Unsubscribed");
+    });
+    document.getElementById("likeBtn").addEventListener("click", function () {
+      this.classList.toggle("liked");
+      toast(this.classList.contains("liked") ? "Added to liked videos" : "Removed from liked videos");
+    });
+    document.getElementById("shareBtn").addEventListener("click", function () {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(location.href + "#" + v.seed).catch(function () {});
+      }
+      toast("Link copied to clipboard");
+    });
+
+    watch.scrollTop = 0;
+  }
+
+  function closeWatch() {
+    watch.classList.remove("open");
+    document.body.style.overflow = "";
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  watch.addEventListener("click", function (e) {
+    if (e.target === watch) closeWatch();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && watch.classList.contains("open")) closeWatch();
+    if (e.key === "/" && document.activeElement !== searchInput && !watch.classList.contains("open")) {
+      e.preventDefault();
+      searchInput.focus();
+    }
+  });
+
+  /* ---------------- Search ---------------- */
+  document.getElementById("searchForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    query = searchInput.value.trim();
+    activeCat = "All";
+    chipButtons.forEach(function (x) { x.classList.toggle("active", x.dataset.cat === "All"); });
+    render();
+    if (query) toast('Results for "' + query + '"');
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  let searchTimer;
+  searchInput.addEventListener("input", function () {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function () {
+      query = searchInput.value.trim();
+      render();
+    }, 160);
+  });
+
+  document.getElementById("micBtn").addEventListener("click", function () { toast("Voice search is not available in this demo"); });
+
+  /* ---------------- Sidebar ---------------- */
+  const sidebar = document.getElementById("sidebar");
+  const backdrop = document.getElementById("backdrop");
+  const menuBtn = document.getElementById("menuBtn");
+
+  function isMobile() { return window.matchMedia("(max-width: 999px)").matches; }
+
+  menuBtn.addEventListener("click", function () {
+    if (isMobile()) {
+      sidebar.classList.toggle("open");
+      backdrop.classList.toggle("show", sidebar.classList.contains("open"));
+    } else {
+      sidebar.classList.toggle("collapsed");
+      document.body.classList.toggle("sidebar-hidden");
+      if (sidebar.classList.contains("collapsed")) {
+        sidebar.style.display = "none";
+        document.querySelector(".content").style.maxWidth = "1800px";
+      } else {
+        sidebar.style.display = "";
+      }
+    }
+  });
+  backdrop.addEventListener("click", function () {
+    sidebar.classList.remove("open");
+    backdrop.classList.remove("show");
+  });
+
+  document.querySelectorAll("#mainNav .nav-item").forEach(function (item) {
+    item.addEventListener("click", function () {
+      document.querySelectorAll("#mainNav .nav-item").forEach(function (x) { x.classList.remove("active"); });
+      item.classList.add("active");
+      activeCat = "All";
+      query = "";
+      searchInput.value = "";
+      chipButtons.forEach(function (x) { x.classList.toggle("active", x.dataset.cat === "All"); });
+      render();
+      if (isMobile()) {
+        sidebar.classList.remove("open");
+        backdrop.classList.remove("show");
+      }
+      if (item.dataset.view !== "Home") {
+        toast(item.dataset.view + " — coming soon in this demo");
+      }
+    });
+  });
+
+  document.querySelectorAll(".nav-item[data-view]:not(#mainNav .nav-item)").forEach(function (item) {
+    item.addEventListener("click", function () {
+      if (isMobile()) {
+        sidebar.classList.remove("open");
+        backdrop.classList.remove("show");
+      }
+      toast(item.dataset.view + " — coming soon in this demo");
+    });
+  });
+
+  /* ---------------- Theme ---------------- */
+  const themeBtn = document.getElementById("themeBtn");
+  const root = document.documentElement;
+
+  function applyTheme(theme) {
+    root.setAttribute("data-theme", theme);
+    themeBtn.innerHTML = theme === "dark"
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>';
+    themeBtn.title = theme === "dark" ? "Switch to light theme" : "Switch to dark theme";
+  }
+
+  let stored = null;
+  try { stored = localStorage.getItem("yt-theme"); } catch (err) {}
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme(stored || (prefersDark ? "dark" : "light"));
+
+  themeBtn.addEventListener("click", function () {
+    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem("yt-theme", next); } catch (err) {}
+  });
+
+  /* ---------------- Misc buttons ---------------- */
+  document.getElementById("createBtn").addEventListener("click", function () { toast("Upload — this is a demo"); });
+  document.getElementById("bellBtn").addEventListener("click", function () { toast("You have 9 new notifications"); });
+  document.getElementById("avatarBtn").addEventListener("click", function () { toast("Signed in as Sam"); });
+
+  /* ---------------- Toast ---------------- */
+  let toastTimer;
+  const toastEl = document.getElementById("toast");
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 2200);
+  }
+
+  /* ---------------- Init ---------------- */
+  render();
+  applyTheme(root.getAttribute("data-theme") || "light");
+})();
+</script>
+</body>
+</html>

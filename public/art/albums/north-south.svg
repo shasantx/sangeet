@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-northsouth" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E1E5E1" stop-opacity="1"/><stop offset="1" stop-color="#14232D" stop-opacity="1"/></linearGradient>
+  <filter id="grain-northsouth" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-northsouth" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-northsouth" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-northsouth)"/>
+
+      <rect width="1000" height="1000" fill="#17232D"/>
+      <path d="M0 0 H1000 V1000 L0 0Z" fill="#DAE1DD" opacity=".94"/>
+      <path d="M0 0 L1000 1000 H0Z" fill="#162732"/>
+      <path d="M0 0 L1000 1000" stroke="#9EABB1" stroke-width="3" opacity=".8"/>
+      <circle cx="500" cy="500" r="23" fill="#B54D39"/>
+      <g fill="#F0F3F0" opacity=".6">
+        <circle cx="276" cy="270" r="2"/><circle cx="756" cy="735" r="2"/>
+      </g>
+      <text x="74" y="928" font-family="Arial, sans-serif" font-size="24" letter-spacing="12" fill="#E8EEEC" opacity=".75">NORTHBOUND</text>
+      <text x="928" y="928" text-anchor="end" font-family="Arial, sans-serif" font-size="18" letter-spacing="5" fill="#E8EEEC" opacity=".38">NORTH / SOUTH</text>
+      
+<rect width="1000" height="1000" filter="url(#grain-northsouth)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>

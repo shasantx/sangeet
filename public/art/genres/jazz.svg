@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+<defs>
+  <linearGradient id="bg-genrejazz" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0A1514" stop-opacity="1"/><stop offset=".55" stop-color="#1D3A36" stop-opacity="1"/><stop offset="1" stop-color="#0A1514" stop-opacity="1"/></linearGradient>
+  <filter id="grain-genrejazz" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer>
+    <feBlend in="SourceGraphic" mode="soft-light"/>
+  </filter>
+  <filter id="blur-genrejazz" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="42"/></filter>
+  <filter id="blur-wide-genrejazz" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+  <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".5"/></radialGradient>
+</defs>
+<rect width="1000" height="1000" fill="url(#bg-genrejazz)"/>
+
+    <path d="M200 780 C 260 560 380 480 420 700 C 450 840 540 840 580 700 C 620 500 760 520 800 260" fill="none" stroke="#71A39B" stroke-width="2" opacity=".35"/>
+    <path d="M160 800 C 300 660 480 590 540 760 C 580 870 700 700 850 580" fill="none" stroke="#B6D1CD" stroke-width="1" opacity=".2"/>
+    <circle cx="690" cy="350" r="145" fill="#3A5D59" opacity=".3" filter="url(#blur-jazz)"/>
+    <circle cx="690" cy="350" r="38" fill="#B2CBC6" opacity=".16"/>
+<rect width="1000" height="1000" filter="url(#grain-genrejazz)" opacity="1"/>
+<rect width="1000" height="1000" fill="url(#vig)" opacity=".6"/>
+</svg>
