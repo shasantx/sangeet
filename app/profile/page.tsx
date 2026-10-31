@@ -484,7 +484,7 @@ export default function ProfilePage() {
               Your library stays on this device. Sign in with Google to connect your profile.
             </p>
             <div className="mt-4 flex items-center gap-2 border-t border-white/[.06] pt-4 text-[10px] text-muted-foreground/60">
-              <Artwork src="/sangeet-mark.svg" alt="" className="h-5 w-5 rounded-md" />
+              <Artwork src="/brand/sangeet-logo.png" alt="" className="h-5 w-5 rounded-md" />
               Sangeet · Music beyond boundaries
             </div>
           </div>
