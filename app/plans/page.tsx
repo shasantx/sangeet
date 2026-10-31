@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function PlansRedirect() {
-  redirect("/premium");
+  redirect("/welcome#support-project");
 }

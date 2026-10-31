@@ -5,7 +5,7 @@ import Link from "next/link";
 import { SangeetMark } from "@/components/brand/sangeet-mark";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { ArrowDown, ArrowRight, AudioLines, Heart, MonitorDown, Play, Smartphone } from "lucide-react";
+import { ArrowDown, ArrowRight, AudioLines, Github, Heart, MonitorDown, Play, Smartphone } from "lucide-react";
 import { getArtist, tracks } from "@/lib/catalog";
 import { registerYouTubeSearchResults, type YouTubeSearchResult } from "@/lib/dynamic-tracks";
 import type { Track } from "@/lib/types";
@@ -43,10 +43,10 @@ function Reveal({ children, className = "", delay = 0 }: { children: React.React
   const reduceMotion = useReducedMotion();
   return <motion.div
     className={className}
-    initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
+    initial={reduceMotion ? false : { opacity: 0, y: 22, filter: "blur(8px)" }}
+    whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
     viewport={{ once: true, amount: 0.18, margin: "0px 0px -55px 0px" }}
-    transition={{ duration: reduceMotion ? 0 : 0.48, delay: reduceMotion ? 0 : delay, ease: [0.22, 1, 0.36, 1] }}
+    transition={{ duration: reduceMotion ? 0 : 0.58, delay: reduceMotion ? 0 : delay, ease: [0.22, 1, 0.36, 1] }}
   >{children}</motion.div>;
 }
 
@@ -63,6 +63,8 @@ export default function WelcomePage() {
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const artworkY = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : 110]);
   const artworkScale = useTransform(scrollYProgress, [0, 1], [1, reduceMotion ? 1 : 0.92]);
+  const glowOneY = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : 130]);
+  const glowTwoY = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : -95]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -102,42 +104,38 @@ export default function WelcomePage() {
           </Link>
           <nav className="hidden items-center gap-9 text-[13px] text-white/60 md:flex" aria-label="Landing page">
             <a href="#discover" className="transition hover:text-white">Discover</a>
-            <a href="#features" className="transition hover:text-white">Your music</a>
+            <a href="#features" className="transition hover:text-white">Features</a>
+            <a href="#opensource" className="transition hover:text-white">Open source</a>
             <a href="#install" className="transition hover:text-white">Get the app</a>
-            <Link href="/premium" className="transition hover:text-white">Premium</Link>
           </nav>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <a href="https://github.com/shasantx/sangeet" target="_blank" rel="noopener noreferrer" className="hidden items-center gap-2 rounded-full px-3 py-2.5 text-xs font-semibold text-white/70 transition hover:text-white lg:inline-flex"><Github className="h-4 w-4" />GitHub</a>
             <button type="button" onClick={() => openAuthModal("signin")} className="rounded-full px-3 py-2.5 text-xs font-semibold text-white/70 transition hover:text-white sm:px-4">Log in</button>
-            <button type="button" onClick={signUp} className="rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-black transition hover:brightness-110 active:scale-[.98] sm:px-5">Create account</button>
+            <button type="button" onClick={signUp} className="rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-black transition hover:brightness-110 active:scale-[.98] sm:px-5">Join free</button>
           </div>
         </div>
       </header>
 
       <section ref={heroRef} className="relative isolate overflow-hidden border-b border-white/[.06]">
-        <div aria-hidden="true" className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_77%_36%,rgba(30,215,96,.13),transparent_42%),linear-gradient(180deg,#101510_0%,#0b0c0b_90%)]" />
-        <div className="mx-auto grid min-h-[680px] max-w-[1320px] items-center gap-12 px-5 pb-16 pt-16 sm:px-9 sm:py-20 lg:min-h-[750px] lg:grid-cols-[.92fr_1.08fr] lg:gap-14">
-          <div className="relative z-10 max-w-[610px]">
-            <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .42 }} className="eyebrow mb-6 flex items-center gap-3 text-primary"><span className="h-px w-7 bg-primary" />A listening home for every mood</motion.p>
-            <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .58, delay: .05, ease: [0.22, 1, 0.36, 1] }} className="max-w-[650px] font-display text-[clamp(3.5rem,8vw,6.8rem)] font-medium leading-[.94] tracking-[-.075em]">Your music.<br /><span className="text-primary">Your way</span> home.</motion.h1>
-            <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5, delay: .16 }} className="mt-6 max-w-[465px] text-[15px] leading-7 text-white/58 sm:text-[17px]">The Nepali and Hindi songs you grew up with, the artists you love now, and everything you haven’t found yet.</motion.p>
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .46, delay: .24 }} className="mt-8 flex flex-wrap gap-3">
-              <button type="button" onClick={listenOnline} className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-primary px-6 text-sm font-bold text-black transition hover:brightness-110 active:scale-[.98]"><Play className="h-4 w-4 fill-current" />Listen online<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></button>
-              <button type="button" onClick={signUp} className="inline-flex h-12 items-center rounded-full border border-white/15 px-6 text-sm font-semibold text-white/85 transition hover:border-white/35 hover:bg-white/[.04]">Create your account</button>
-            </motion.div>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .38 }} className="mt-7 flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] font-medium text-white/40"><span className="text-primary">NEPALI</span><span className="text-white/20">/</span><span className="text-primary">HINDI</span><span className="text-white/20">/</span><span>ENGLISH &amp; MORE</span></motion.div>
-          </div>
-
-          <motion.div style={reduceMotion ? undefined : { y: artworkY, scale: artworkScale }} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .7, delay: .12, ease: [0.22, 1, .36, 1] }} className="relative mx-auto w-full max-w-[600px]">
-            <div aria-hidden="true" className="absolute -inset-8 -z-10 rounded-full bg-primary/[.08] blur-[70px]" />
-            <div className="grid aspect-[1.12] grid-cols-[1.12fr_.88fr] grid-rows-2 gap-3 sm:gap-4">
-              {heroTracks.map((track, index) => <button key={track.id} type="button" onClick={listenOnline} className={`group relative min-h-0 overflow-hidden rounded-[20px] border border-white/[.08] bg-[#151a16] text-left shadow-[0_24px_70px_rgba(0,0,0,.35)] transition duration-500 hover:-translate-y-1 hover:border-primary/45 ${index === 0 ? "row-span-2" : ""}`}>
-                <Artwork src={track.artwork} alt={`${track.title} cover art`} priority={index < 2} className="absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-[1.035]" />
-                <span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/5 to-transparent" />
-                <span className="absolute bottom-0 left-0 right-0 p-3.5 sm:p-5"><span className="block text-[9px] font-semibold uppercase tracking-[.18em] text-primary">{index === 0 ? "Nepali favorites" : index === 1 ? "Hindi essentials" : "New discoveries"}</span><span className="mt-1.5 block truncate font-display text-base font-semibold text-white sm:text-lg">{track.title}</span><span className="mt-1 block truncate text-xs text-white/65">{getArtist(track.artistId)?.name ?? "Sangeet selection"}</span></span>
-              </button>)}
-            </div>
-            <div className="mt-4 flex items-center justify-between border-t border-white/[.08] pt-3 text-[10px] uppercase tracking-[.16em] text-white/35"><span>Made for the songs that stay with you</span><span className="hidden sm:inline">01 — 03</span></div>
+        <motion.div aria-hidden="true" style={reduceMotion ? undefined : { y: glowOneY }} className="pointer-events-none absolute -left-20 top-[-180px] -z-10 h-[520px] w-[520px] rounded-full bg-primary/20 blur-[130px]" />
+        <motion.div aria-hidden="true" style={reduceMotion ? undefined : { y: glowTwoY }} className="pointer-events-none absolute -right-28 top-[220px] -z-10 h-[460px] w-[460px] rounded-full bg-sky-400/10 blur-[130px]" />
+        <div className="relative mx-auto max-w-[1320px] px-5 pb-20 pt-16 text-center sm:px-9 sm:pb-28 sm:pt-24">
+          <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .42 }} className="eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/[.06] px-4 py-2 text-primary backdrop-blur-md"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Free listening · Open source</motion.p>
+          <motion.h1 initial={{ opacity: 0, y: 16, filter: "blur(8px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: .66, delay: .05, ease: [0.22, 1, 0.36, 1] }} className="mx-auto max-w-5xl font-display text-[clamp(3.3rem,8vw,7rem)] font-medium leading-[.93] tracking-[-.075em]">The songs you love,<br /><span className="bg-gradient-to-r from-primary via-emerald-200 to-sky-300 bg-clip-text text-transparent">always within reach.</span></motion.h1>
+          <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5, delay: .16 }} className="mx-auto mt-6 max-w-2xl text-[15px] leading-7 text-white/58 sm:text-[17px]">A listening home rooted in Nepali and Hindi music, open to every language, artist, and mood. No paid tiers—just music, discovery, and your own library.</motion.p>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .46, delay: .24 }} className="mt-8 flex flex-wrap justify-center gap-3">
+            <button type="button" onClick={listenOnline} className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-primary px-6 text-sm font-bold text-black transition hover:brightness-110 active:scale-[.98]"><Play className="h-4 w-4 fill-current" />Listen free<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></button>
+            <a href="https://github.com/shasantx/sangeet" target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center gap-2 rounded-full border border-white/15 px-6 text-sm font-semibold text-white/85 transition hover:border-white/35 hover:bg-white/[.04]"><Github className="h-4 w-4" />View the source</a>
           </motion.div>
+          <motion.div style={reduceMotion ? undefined : { y: artworkY, scale: artworkScale }} initial={{ opacity: 0, y: 24, filter: "blur(8px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: .72, delay: .18, ease: [0.22, 1, .36, 1] }} className="relative mx-auto mt-16 max-w-[1040px] text-left sm:mt-20">
+            <div aria-hidden="true" className="absolute -inset-10 -z-10 rounded-[40px] bg-primary/[.08] blur-[80px]" />
+            <div className="overflow-hidden rounded-[24px] border border-white/[.1] bg-[#0c0f0c]/80 p-3 shadow-[0_35px_100px_rgba(0,0,0,.5)] backdrop-blur-2xl sm:rounded-[30px] sm:p-5">
+              <div className="mb-4 flex items-center justify-between border-b border-white/[.07] px-1 pb-3"><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-red-400/80"/><span className="h-2 w-2 rounded-full bg-amber-300/80"/><span className="h-2 w-2 rounded-full bg-primary/90"/><span className="ml-2 text-[10px] text-white/35 sm:text-xs">Sangeet · Nepali, Hindi &amp; more</span></div><span className="hidden text-[10px] uppercase tracking-[.15em] text-white/35 sm:block">Your music space</span></div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">{heroTracks.map((track,index)=><button key={track.id} type="button" onClick={listenOnline} className={`group relative overflow-hidden rounded-[16px] border border-white/[.06] bg-white/[.025] text-left transition duration-500 hover:-translate-y-1 hover:border-primary/35 ${index>1?"hidden sm:block":""}`}><Artwork src={track.artwork} alt={`${track.title} artwork`} priority={index<2} className="aspect-square w-full transition-transform duration-700 group-hover:scale-[1.04]"/><span className="block p-3 sm:p-4"><span className="block truncate text-sm font-semibold text-white">{track.title}</span><span className="mt-1 block truncate text-xs text-white/45">{getArtist(track.artistId)?.name ?? "Sangeet discovery"}</span></span></button>)}</div>
+            </div>
+            <div className="mt-4 flex items-center justify-between px-1 text-[10px] uppercase tracking-[.16em] text-white/35"><span>A familiar song can feel like home</span><span className="hidden sm:inline">Discover · Save · Listen</span></div>
+          </motion.div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .45 }} className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[11px] font-medium text-white/40"><span className="text-primary">NEPALI</span><span className="text-white/20">/</span><span className="text-primary">HINDI</span><span className="text-white/20">/</span><span>ENGLISH &amp; MORE</span></motion.div>
         </div>
         <a href="#discover" aria-label="Scroll to discover music" className="absolute bottom-5 left-1/2 hidden -translate-x-1/2 items-center text-white/35 transition hover:text-white/75 sm:flex"><ArrowDown className="h-4 w-4" /></a>
       </section>
@@ -216,7 +214,7 @@ export default function WelcomePage() {
       <footer className="border-t border-white/[.07] bg-[#080908]">
         <div className="mx-auto grid max-w-7xl gap-9 px-5 py-10 sm:grid-cols-[1.4fr_1fr_1fr_1fr] sm:px-8 sm:py-14">
           <div><Link href="/" className="flex w-fit items-center gap-2.5" aria-label="Sangeet home"><SangeetMark size={36} /><span className="font-display text-lg font-semibold">Sangeet</span></Link><p className="mt-3 max-w-[220px] text-xs leading-relaxed text-white/38">A calmer home for the music you come back to.</p></div>
-          {[{ title: "Discover", items: [["Explore", "/explore"], ["Search", "/search"], ["New releases", "/new-releases"]] }, { title: "Your music", items: [["Your library", "/library"], ["Liked songs", "/liked"], ["Made for you", "/made-for-you"]] }, { title: "Sangeet", items: [["Premium", "/premium"], ["Sign in", "#signin"], ["Create account", "#signup"]] }].map((group) => <nav key={group.title} aria-label={group.title}><p className="mb-3 text-[10px] font-semibold uppercase tracking-[.16em] text-white/35">{group.title}</p><ul className="space-y-2.5">{group.items.map(([label, href]) => <li key={label}>{href.startsWith("#") ? <button type="button" onClick={() => openAuthModal(href === "#signup" ? "signup" : "signin")} className="text-left text-xs text-white/55 transition hover:text-primary">{label}</button> : <Link href={href} className="text-xs text-white/55 transition hover:text-primary">{label}</Link>}</li>)}</ul></nav>)}
+          {[{ title: "Discover", items: [["Explore", "/explore"], ["Search", "/search"], ["New releases", "/new-releases"]] }, { title: "Your music", items: [["Your library", "/library"], ["Liked songs", "/liked"], ["Made for you", "/made-for-you"]] }, { title: "Community", items: [["Support the project", "#support-project"], ["GitHub source", "https://github.com/shasantx/sangeet"], ["Sign in", "#signin"]] }].map((group) => <nav key={group.title} aria-label={group.title}><p className="mb-3 text-[10px] font-semibold uppercase tracking-[.16em] text-white/35">{group.title}</p><ul className="space-y-2.5">{group.items.map(([label, href]) => <li key={label}>{href.startsWith("#") ? <button type="button" onClick={() => href === "#support-project" ? document.getElementById("support-project")?.scrollIntoView({ behavior: "smooth" }) : openAuthModal("signin")} className="text-left text-xs text-white/55 transition hover:text-primary">{label}</button> : <a href={href} target="_blank" rel="noopener noreferrer" className="text-xs text-white/55 transition hover:text-primary">{label}</a>}</li>)}</ul></nav>)}
         </div>
         <div className="mx-auto flex max-w-7xl flex-col gap-2 border-t border-white/[.06] px-5 py-4 text-[10px] text-white/30 sm:flex-row sm:items-center sm:justify-between sm:px-8"><span>© {new Date().getFullYear()} Sangeet. Made for listening.</span><span>Independent music discovery experience</span><span>Made by <a href="https://shasant.xyz" target="_blank" rel="noopener noreferrer" className="font-medium text-white/55 transition hover:text-primary">Shasant ↗</a></span></div>
       </footer>

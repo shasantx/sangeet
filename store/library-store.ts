@@ -4,8 +4,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { getTrack } from "@/lib/catalog";
 import { safeStorage } from "@/lib/storage";
-import { useAuthStore } from "@/store/auth-store";
-import { canCreatePlaylist, historyLimit, PREMIUM_HISTORY_LIMIT } from "@/lib/plan-limits";
+import { HISTORY_RETENTION_LIMIT } from "@/lib/plan-limits";
 import type { UserPlaylist } from "@/lib/types";
 
 interface LibraryState {
@@ -86,16 +85,13 @@ export const useLibraryStore = create<LibraryState>()(
 
       addRecentlyPlayed: (trackId) => {
         if (!getTrack(trackId)) return;
-        const plan = useAuthStore.getState().session?.plan;
         set((state) => ({
-          recentlyPlayed: [trackId, ...state.recentlyPlayed.filter((id) => id !== trackId)].slice(0, historyLimit(plan)),
+          recentlyPlayed: [trackId, ...state.recentlyPlayed.filter((id) => id !== trackId)].slice(0, HISTORY_RETENTION_LIMIT),
         }));
       },
       clearHistory: () => set({ recentlyPlayed: [] }),
 
       createPlaylist: (title, description = "") => {
-        const plan = useAuthStore.getState().session?.plan;
-        if (!canCreatePlaylist(plan, get().playlists.length)) return "";
         const id = `user-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
         const index = get().playlists.length % 6;
         const playlist: UserPlaylist = {
@@ -226,7 +222,7 @@ export const useLibraryStore = create<LibraryState>()(
             ? source.followedArtistIds.filter((id): id is string => typeof id === "string")
             : current.followedArtistIds,
           playlists,
-          recentlyPlayed: uniqueValidTracks(source.recentlyPlayed ?? current.recentlyPlayed).slice(0, PREMIUM_HISTORY_LIMIT),
+          recentlyPlayed: uniqueValidTracks(source.recentlyPlayed ?? current.recentlyPlayed).slice(0, HISTORY_RETENTION_LIMIT),
         };
       },
     },

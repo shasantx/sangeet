@@ -1,4 +1,3 @@
-export type UserPlan = "free" | "premium";
 export type UserStatus = "active" | "suspended";
 
 export interface ManagedUser {
@@ -6,7 +5,6 @@ export interface ManagedUser {
   email: string;
   display_name: string;
   picture: string | null;
-  plan: UserPlan;
   status: UserStatus;
   created_at: string;
   updated_at: string;
@@ -55,7 +53,7 @@ export async function registerGoogleUser(user: { id: string; email: string; name
 }
 
 export async function getManagedUser(id: string): Promise<ManagedUser | null> {
-  const params = new URLSearchParams({ id: `eq.${id}`, select: "id,email,display_name,picture,plan,status,created_at,updated_at", limit: "1" });
+  const params = new URLSearchParams({ id: `eq.${id}`, select: "id,email,display_name,picture,status,created_at,updated_at", limit: "1" });
   const response = await db(`user_profiles?${params}`);
   if (!response.ok) throw new Error(`Profile lookup failed (${response.status})`);
   return ((await response.json()) as ManagedUser[])[0] ?? null;
@@ -63,7 +61,7 @@ export async function getManagedUser(id: string): Promise<ManagedUser | null> {
 
 export async function listManagedUsers(query: string, page: number) {
   const params = new URLSearchParams({
-    select: "id,email,display_name,picture,plan,status,created_at,updated_at",
+    select: "id,email,display_name,picture,status,created_at,updated_at",
     order: "created_at.desc",
     limit: "25",
     offset: String(page * 25),
@@ -83,12 +81,11 @@ async function countWhere(filter: string): Promise<number> {
 }
 
 export async function getAdminStats() {
-  const [total, premium, suspended] = await Promise.all([
+  const [total, suspended] = await Promise.all([
     countWhere("id=not.is.null"),
-    countWhere("plan=eq.premium"),
     countWhere("status=eq.suspended"),
   ]);
-  return { total, premium, suspended };
+  return { total, suspended };
 }
 
 export async function getRecentAdminActions(): Promise<AdminAuditEntry[]> {
@@ -97,10 +94,10 @@ export async function getRecentAdminActions(): Promise<AdminAuditEntry[]> {
   return (await response.json()) as AdminAuditEntry[];
 }
 
-export async function updateManagedUser(id: string, changes: { plan?: UserPlan; status?: UserStatus }, actorEmail: string) {
+export async function updateManagedUser(id: string, changes: { status?: UserStatus }, actorEmail: string) {
   const response = await db("rpc/admin_update_app_user", {
     method: "POST",
-    body: JSON.stringify({ p_id: id, p_plan: changes.plan ?? null, p_status: changes.status ?? null, p_actor_email: actorEmail }),
+    body: JSON.stringify({ p_id: id, p_plan: null, p_status: changes.status ?? null, p_actor_email: actorEmail }),
   });
   if (!response.ok) throw new Error(`User update failed (${response.status})`);
   const value = await response.json() as ManagedUser | null | ManagedUser[];

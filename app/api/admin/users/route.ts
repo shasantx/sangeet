@@ -52,22 +52,21 @@ export async function PATCH(request: NextRequest) {
   if (!session) return json({ error: "Admin access required." }, 403);
   if (request.headers.get("origin") !== request.nextUrl.origin) return json({ error: "Origin validation failed." }, 403);
 
-  let body: { id?: unknown; plan?: unknown; status?: unknown };
+  let body: { id?: unknown; status?: unknown };
   try {
     body = await request.json();
   } catch {
     return json({ error: "Invalid request." }, 400);
   }
   const id = typeof body.id === "string" ? body.id : "";
-  const changes: { plan?: "free" | "premium"; status?: "active" | "suspended" } = {};
-  if (body.plan === "free" || body.plan === "premium") changes.plan = body.plan;
+  const changes: { status?: "active" | "suspended" } = {};
   if (body.status === "active" || body.status === "suspended") changes.status = body.status;
   if (!id.startsWith("google:") || id.length > 220 || !Object.keys(changes).length) return json({ error: "Choose a valid user and change." }, 400);
 
   try {
     const target = await getManagedUser(id);
     if (!target) return json({ error: "User not found." }, 404);
-    if (isAdminEmail(target.email)) return json({ error: "Administrator accounts are protected from plan and status changes." }, 403);
+    if (isAdminEmail(target.email)) return json({ error: "Administrator accounts are protected from status changes." }, 403);
     const user = await updateManagedUser(id, changes, session.email);
     return user ? json({ user }) : json({ error: "User not found." }, 404);
   } catch (error) {
