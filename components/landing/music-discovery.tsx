@@ -19,12 +19,16 @@ export function MusicDiscovery() {
     const timer = window.setTimeout(async () => {
       setLoading(true);
       try {
-        const response = await fetch("/api/youtube/search?q=popular%20songs", { signal: controller.signal, cache: "no-store" });
-        if (!response.ok) return;
-        const payload = await response.json() as { results?: YouTubeSearchResult[] };
-        const liveTracks = registerYouTubeSearchResults(payload.results ?? []);
+        const searches = ["Nepali songs", "Hindi songs", "popular songs"];
+        const groups = await Promise.all(searches.map(async (query) => {
+          const response = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`, { signal: controller.signal, cache: "no-store" });
+          if (!response.ok) return [];
+          const payload = await response.json() as { results?: YouTubeSearchResult[] };
+          return payload.results ?? [];
+        }));
+        const liveTracks = registerYouTubeSearchResults(groups.flat());
         const deduped = Array.from(new Map(liveTracks.map((track) => [track.youtubeId, track])).values());
-        if (deduped.length) setTrackIds(deduped.slice(0, 10).map((track) => track.id));
+        if (deduped.length) setTrackIds(deduped.slice(0, 15).map((track) => track.id));
       } catch {
         // The bundled API-sourced tracks remain available if the live search service is unavailable.
       } finally {
@@ -41,7 +45,7 @@ export function MusicDiscovery() {
 
   return <section aria-labelledby="api-discovery-title">
     <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div><p className="eyebrow mb-3 text-primary">Fresh from the music catalog</p><h2 id="api-discovery-title" className="font-display text-3xl font-semibold tracking-[-.05em] sm:text-5xl">Real tracks. Real cover art.</h2><p className="mt-3 max-w-xl text-sm text-white/45 sm:text-base">Artwork and song picks arrive from the live music search, with a cached catalog ready as a fast fallback.</p></div>
+      <div><p className="eyebrow mb-3 text-primary">Nepali · Hindi · and everywhere</p><h2 id="api-discovery-title" className="font-display text-3xl font-semibold tracking-[-.05em] sm:text-5xl">Find your next favorite.</h2><p className="mt-3 max-w-xl text-sm text-white/45 sm:text-base">Start with the sounds you know. Follow the trail to something new, with artwork for every discovery.</p></div>
       <Link href="/search" className="group inline-flex items-center gap-2 text-sm font-semibold text-white/65 transition hover:text-primary">Search the catalog <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
     </div>
     {loading && <p className="mb-3 flex items-center gap-2 text-xs text-white/40"><LoaderCircle className="h-3.5 w-3.5 animate-spin" />Refreshing music and artwork</p>}

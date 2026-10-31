@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, LoaderCircle, Search, Sparkles } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { artists } from "@/lib/catalog";
+import { artists, getArtist } from "@/lib/catalog";
+import { registerYouTubeSearchResults, type YouTubeSearchResult } from "@/lib/dynamic-tracks";
+import type { Artist } from "@/lib/types";
 import { Artwork } from "@/components/music/artwork";
 import { useSiteConfigStore } from "@/store/site-config-store";
 import { SangeetMark } from "@/components/brand/sangeet-mark";
 
 const SIGNUP_ARTISTS_KEY = "sangeet-signup-artists-v1";
-const featuredArtists = artists.slice(0, 12);
+const artistLanguages = ["All", "Nepali", "Hindi", "Punjabi", "English", "Other"] as const;
 
 function GoogleMark() {
   return (
@@ -28,7 +30,54 @@ export function AuthModal() {
   const activeTab = useAuthStore((state) => state.authModalTab);
   const closeAuthModal = useAuthStore((state) => state.closeAuthModal);
   const [selectedArtists, setSelectedArtists] = useState<string[]>([]);
+  const [artistQuery, setArtistQuery] = useState("");
+  const [artistLanguage, setArtistLanguage] = useState<(typeof artistLanguages)[number]>("All");
+  const [liveArtists, setLiveArtists] = useState<Artist[]>([]);
+  const [searchingArtists, setSearchingArtists] = useState(false);
   const signupEnabled = useSiteConfigStore((state) => state.config.signup_enabled);
+  const visibleArtists = useMemo(() => {
+    const query = artistQuery.trim().toLocaleLowerCase();
+    return artists.filter((artist) => {
+      const matchesLanguage = artistLanguage === "All"
+        || (artistLanguage === "Other"
+          ? !artist.languages?.some((language) => ["Nepali", "Hindi", "Punjabi", "English"].includes(language))
+          : artist.languages?.includes(artistLanguage)
+            || (artistLanguage === "English" && (artist.location === "Global" || artist.languages?.includes("English"))));
+      const searchable = [artist.name, artist.shortBio, artist.location, ...(artist.genreIds ?? []), ...(artist.languages ?? []), ...(artist.aliases ?? [])].join(" ").toLocaleLowerCase();
+      return matchesLanguage && (!query || searchable.includes(query));
+    });
+  }, [artistLanguage, artistQuery]);
+  useEffect(() => {
+    const query = artistQuery.trim();
+    if (!isOpen || query.length < 2) {
+      setLiveArtists([]);
+      setSearchingArtists(false);
+      return;
+    }
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setLiveArtists([]);
+      setSearchingArtists(true);
+      try {
+        const response = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`, { signal: controller.signal, cache: "no-store" });
+        if (!response.ok) return;
+        const payload = await response.json() as { results?: YouTubeSearchResult[] };
+        const dynamicTracks = registerYouTubeSearchResults(payload.results ?? []);
+        const localNames = new Set(artists.map((artist) => artist.name.toLocaleLowerCase()));
+        const unique = new Map<string, Artist>();
+        dynamicTracks.forEach((track) => {
+          const artist = getArtist(track.artistId);
+          if (artist && !localNames.has(artist.name.toLocaleLowerCase())) unique.set(artist.id, artist);
+        });
+        if (!controller.signal.aborted) setLiveArtists(Array.from(unique.values()).slice(0, 8));
+      } catch {
+        if (!controller.signal.aborted) setLiveArtists([]);
+      } finally {
+        if (!controller.signal.aborted) setSearchingArtists(false);
+      }
+    }, 420);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [artistQuery, isOpen]);
 
   const handleGoogleSignIn = () => {
     const returnTo = `${window.location.pathname}${window.location.search}`;
@@ -63,8 +112,15 @@ export function AuthModal() {
           {activeTab === "signup" && signupEnabled && (
             <div className="mt-5 text-left">
               <div className="mb-2 flex items-center justify-between"><span className="text-xs font-semibold text-white/80">Choose artists</span><span className="text-[10px] text-white/45">{selectedArtists.length}/5 selected</span></div>
-              <div className="grid grid-cols-4 gap-2">
-                {featuredArtists.map((artist) => {
+              <label className="flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[.035] px-3 focus-within:border-primary/60">
+                <Search className="h-4 w-4 shrink-0 text-white/40" />
+                <input value={artistQuery} onChange={(event) => setArtistQuery(event.target.value)} placeholder="Search artists, genres or languages" aria-label="Search artists" className="min-w-0 flex-1 bg-transparent text-xs text-white outline-none placeholder:text-white/35" />
+              </label>
+              <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1" aria-label="Filter artists by language">
+                {artistLanguages.map((language) => <button key={language} type="button" onClick={() => setArtistLanguage(language)} aria-pressed={artistLanguage === language} className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium transition ${artistLanguage === language ? "bg-primary text-black" : "bg-white/[.06] text-white/55 hover:bg-white/10"}`}>{language}</button>)}
+              </div>
+              <div className="mt-2 grid max-h-64 grid-cols-4 gap-2 overflow-y-auto pr-1">
+                {visibleArtists.map((artist) => {
                   const selected = selectedArtists.includes(artist.id);
                   return <button key={artist.id} type="button" onClick={() => toggleArtist(artist.id)} aria-pressed={selected} className={`group relative min-w-0 rounded-xl p-1.5 text-center transition ${selected ? "bg-primary/15 ring-1 ring-primary" : "bg-white/[.035] hover:bg-white/[.07]"}`}>
                     <span className="relative block"><Artwork src={artist.image} alt={`${artist.name} portrait`} className="aspect-square w-full rounded-lg" /><span className={`absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full ${selected ? "bg-primary text-black" : "bg-black/60 text-transparent"}`}><Check className="h-3 w-3" /></span></span>
@@ -72,6 +128,19 @@ export function AuthModal() {
                   </button>;
                 })}
               </div>
+              {artistQuery.trim().length >= 2 && (searchingArtists || liveArtists.length > 0) && <div className="mt-3">
+                <p className="mb-2 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[.12em] text-white/45">{searchingArtists ? "Finding more artists…" : "More artists from your search"}{searchingArtists && <LoaderCircle className="h-3 w-3 animate-spin text-primary" aria-hidden="true" />}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {liveArtists.map((artist) => {
+                    const selected = selectedArtists.includes(artist.id);
+                    return <button key={artist.id} type="button" onClick={() => toggleArtist(artist.id)} aria-pressed={selected} className={`flex min-w-0 items-center gap-2 rounded-xl p-2 text-left transition ${selected ? "bg-primary/15 ring-1 ring-primary" : "bg-white/[.035] hover:bg-white/[.07]"}`}>
+                      <Artwork src={artist.image} alt={`${artist.name} artwork`} className="h-9 w-9 shrink-0 rounded-lg" />
+                      <span className="min-w-0 flex-1 truncate text-[11px] font-medium">{artist.name}</span><Check className={`h-3.5 w-3.5 shrink-0 ${selected ? "text-primary" : "text-transparent"}`} />
+                    </button>;
+                  })}
+                </div>
+              </div>}
+              {visibleArtists.length === 0 && <p className="py-5 text-center text-xs text-white/45">No artists found. Try another spelling or language.</p>}
               <p className="mt-2 flex items-center gap-1 text-[10px] text-white/40"><Sparkles className="h-3 w-3 text-primary" />You can follow more artists any time.</p>
             </div>
           )}

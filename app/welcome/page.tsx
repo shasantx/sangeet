@@ -5,8 +5,8 @@ import Link from "next/link";
 import { SangeetMark } from "@/components/brand/sangeet-mark";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { ArrowDown, ArrowRight, AudioLines, Compass, Headphones, Heart, Library, MonitorDown, Music2, Play, Search, Smartphone, Sparkles, Waves } from "lucide-react";
-import { albums, getArtist, tracks } from "@/lib/catalog";
+import { ArrowDown, ArrowRight, AudioLines, Compass, Headphones, Heart, Library, MonitorDown, Play, Search, Smartphone, Sparkles, Waves } from "lucide-react";
+import { artists, getArtist, tracks } from "@/lib/catalog";
 import { useAuthStore } from "@/store/auth-store";
 import { Artwork } from "@/components/music/artwork";
 import { MusicDiscovery } from "@/components/landing/music-discovery";
@@ -51,8 +51,7 @@ export default function WelcomePage() {
   const router = useRouter();
   const openAuthModal = useAuthStore((state) => state.openAuthModal);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const featured = albums.find((album) => album.id.startsWith("al-")) ?? albums[0];
-  const artist = featured ? getArtist(featured.artistId) : undefined;
+  const regionalSpotlights = artists.filter((item) => item.languages?.some((language) => language === "Nepali" || language === "Hindi")).slice(0, 4);
   const apiTracks = tracks.filter((track) => track.source === "youtube" && track.youtubeId).slice(0, 4);
   const heroRef = useRef<HTMLElement>(null);
   const reduceMotion = useReducedMotion();
@@ -93,39 +92,42 @@ export default function WelcomePage() {
         <div aria-hidden="true" className="pointer-events-none absolute -right-20 top-36 -z-10 h-[310px] w-[310px] rounded-full border border-white/[.05] sm:right-[13%] sm:top-40 sm:h-[470px] sm:w-[470px]" />
         <div className="mx-auto grid min-h-[690px] max-w-7xl items-center gap-5 px-5 pb-12 pt-12 sm:min-h-[760px] sm:px-8 sm:pb-16 lg:min-h-[820px] lg:grid-cols-[.95fr_1.05fr] lg:gap-2 lg:py-16">
           <div className="relative z-10 max-w-[640px]">
-            <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5 }} className="eyebrow mb-5 flex items-center gap-2 text-primary"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10"><Sparkles className="h-3.5 w-3.5" /></span>Your music, your space</motion.p>
+            <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5 }} className="eyebrow mb-5 flex items-center gap-2 text-primary"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10"><Sparkles className="h-3.5 w-3.5" /></span>Made for music that feels like home</motion.p>
             <motion.h1 initial={{ opacity: 0, y: 22, filter: "blur(8px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: .8, delay: .08, ease: [0.22, 1, .36, 1] }} className="max-w-[680px] font-display text-[clamp(3.3rem,11vw,6.8rem)] font-semibold leading-[.91] tracking-[-.075em]">
-              Find your <span className="text-primary">next</span><br className="hidden sm:block" /> favorite sound.
+              Nepali roots.<br className="hidden sm:block" />Hindi <span className="text-primary">hits.</span><br className="hidden sm:block" />Your whole world.
             </motion.h1>
-            <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .6, delay: .22 }} className="mt-6 max-w-[480px] text-[15px] leading-relaxed text-white/58 sm:text-lg">Explore records, build a library that feels like yours, and let the right track find its way into your day.</motion.p>
+            <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .6, delay: .22 }} className="mt-6 max-w-[480px] text-[15px] leading-relaxed text-white/58 sm:text-lg">From Kathmandu favorites and Hindi classics to the sounds you haven’t met yet. Find your artists, follow your feeling, and make every listen yours.</motion.p>
             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .55, delay: .32 }} className="mt-8 flex flex-wrap gap-3">
               <button type="button" onClick={listenOnline} className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-primary px-6 text-sm font-bold text-black shadow-[0_8px_34px_rgba(30,215,96,.2)] transition hover:brightness-110 active:scale-[.98]"><Play className="h-4 w-4 fill-current" />Listen online<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></button>
               <button type="button" onClick={signUp} className="inline-flex h-12 items-center rounded-full border border-white/15 px-6 text-sm font-semibold text-white/85 transition hover:border-white/35 hover:bg-white/[.04]">Create your account</button>
             </motion.div>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .65 }} className="mt-5 flex items-center gap-2 text-xs text-white/38"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Start free. Sign in to save your music.</motion.div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .65 }} className="mt-5 flex flex-wrap items-center gap-2 text-xs text-white/38"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Nepali <span className="text-white/20">·</span> Hindi <span className="text-white/20">·</span> English <span className="text-white/20">·</span> more, always yours</motion.div>
           </div>
 
-          {featured && <motion.div style={reduceMotion ? undefined : { y: artworkY, scale: artworkScale }} initial={{ opacity: 0, scale: .94, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: .9, delay: .18, ease: [0.22, 1, .36, 1] }} className="relative mx-auto w-full max-w-[410px] lg:max-w-[520px]">
+          <motion.div style={reduceMotion ? undefined : { y: artworkY, scale: artworkScale }} initial={{ opacity: 0, scale: .94, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: .9, delay: .18, ease: [0.22, 1, .36, 1] }} className="relative mx-auto w-full max-w-[410px] lg:max-w-[520px]">
             <div aria-hidden="true" className="absolute -inset-6 -z-10 rounded-[42px] bg-primary/[.1] blur-[50px] sm:-inset-10 sm:blur-[75px]" />
-            <div className="relative rotate-[2deg] rounded-[26px] border border-white/[.12] bg-[#171a17]/85 p-3 shadow-[0_40px_100px_rgba(0,0,0,.55)] backdrop-blur-sm transition-transform duration-700 hover:rotate-0 sm:rounded-[32px] sm:p-4">
-              <Artwork src={featured.artwork} alt={`${featured.title} album cover`} priority className="aspect-square w-full rounded-[19px] sm:rounded-[24px]" />
-              <div className="flex items-center gap-3 px-1 pb-1 pt-4 sm:px-2 sm:pt-5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-black"><Music2 className="h-4 w-4" /></span>
-                <div className="min-w-0 flex-1"><p className="eyebrow mb-1 text-primary">A place to begin</p><p className="truncate font-display text-lg font-medium">{featured.title}</p><p className="truncate text-xs text-white/50">{artist?.name ?? "Sangeet selection"}</p></div>
-                <Link href={`/album/${featured.id}`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 text-white/80 transition hover:border-primary hover:bg-primary hover:text-black" aria-label={`Explore ${featured.title}`}><ArrowRight className="h-4 w-4" /></Link>
+            <div className="relative overflow-hidden rounded-[28px] border border-white/[.12] bg-[#171a17]/90 p-4 shadow-[0_40px_100px_rgba(0,0,0,.55)] backdrop-blur-sm sm:rounded-[34px] sm:p-5">
+              <div className="mb-4 flex items-end justify-between gap-3 px-1"><div><p className="eyebrow mb-1 text-primary">Start with your sound</p><p className="font-display text-xl font-semibold tracking-tight sm:text-2xl">Music that feels like home.</p></div><span className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">NEPALI · HINDI</span></div>
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                {regionalSpotlights.map((spotlight, index) => <button key={spotlight.id} type="button" onClick={signUp} className="group relative aspect-[1.15] overflow-hidden rounded-2xl border border-white/[.06] text-left transition hover:-translate-y-1 hover:border-primary/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                  <Artwork src={spotlight.image} alt={`${spotlight.name} artwork`} priority={index < 2} className="absolute inset-0 h-full w-full transition duration-500 group-hover:scale-105" />
+                  <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/5 to-transparent" />
+                  <span className="absolute bottom-0 left-0 right-0 p-3"><span className="block text-[9px] font-semibold uppercase tracking-[.14em] text-primary">{spotlight.languages?.[0]} sound</span><span className="mt-1 block truncate font-display text-sm font-semibold text-white sm:text-base">{spotlight.name}</span></span>
+                </button>)}
               </div>
+              <button type="button" onClick={signUp} className="group mt-3 flex w-full items-center justify-between rounded-xl border border-white/[.08] bg-white/[.025] px-3.5 py-3 text-left transition hover:border-primary/25 hover:bg-primary/[.06]"><span><span className="block text-xs font-semibold">Choose the artists you love</span><span className="mt-1 block text-[10px] text-white/45">We’ll shape your first recommendations around them.</span></span><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-black"><ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span></button>
             </div>
             <motion.div animate={reduceMotion ? undefined : { y: [0, -8, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} className="absolute -left-4 top-[18%] hidden items-center gap-2.5 rounded-2xl border border-white/10 bg-[#151915]/95 p-3 shadow-xl sm:flex lg:-left-12">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><Headphones className="h-4 w-4" /></span><span><span className="block text-[11px] font-semibold">Made for the moment</span><span className="mt-0.5 block text-[10px] text-white/45">Your next listen starts here</span></span>
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><Headphones className="h-4 w-4" /></span><span><span className="block text-[11px] font-semibold">Made for your world</span><span className="mt-0.5 block text-[10px] text-white/45">Nepali, Hindi &amp; beyond</span></span>
             </motion.div>
-          </motion.div>}
+          </motion.div>
         </div>
         <a href="#discover" className="absolute bottom-5 left-1/2 hidden -translate-x-1/2 items-center gap-2 text-[10px] uppercase tracking-[.18em] text-white/35 transition hover:text-white/70 sm:flex"><ArrowDown className="h-3.5 w-3.5" />Scroll to explore</a>
       </section>
 
       <section className="border-b border-white/[.06] bg-[#111411]">
         <div className="mx-auto grid max-w-7xl gap-6 px-5 py-10 sm:grid-cols-3 sm:gap-10 sm:px-8 sm:py-12">
-          {[{ n: "01", title: "Discover freely", text: "Find records, artists and new sounds." }, { n: "02", title: "Keep what matters", text: "Save favorites and make playlists." }, { n: "03", title: "Stay in the moment", text: "A focused player with your queue close by." }].map((item, index) => <Reveal key={item.n} delay={index * .08} className="flex gap-4 sm:block"><span className="font-display text-sm text-primary/65 sm:text-xs">{item.n}</span><div><h2 className="font-display text-lg font-medium tracking-tight sm:mt-4 sm:text-xl">{item.title}</h2><p className="mt-1 text-sm text-white/45">{item.text}</p></div></Reveal>)}
+        {[{ n: "01", title: "Nepali, right at home", text: "Find the voices and bands you grew up with." }, { n: "02", title: "Hindi, from classics to now", text: "Build a library around the songs you love." }, { n: "03", title: "More of your world", text: "Explore every mood, genre and new favorite." }].map((item, index) => <Reveal key={item.n} delay={index * .08} className="flex gap-4 sm:block"><span className="font-display text-sm text-primary/65 sm:text-xs">{item.n}</span><div><h2 className="font-display text-lg font-medium tracking-tight sm:mt-4 sm:text-xl">{item.title}</h2><p className="mt-1 text-sm text-white/45">{item.text}</p></div></Reveal>)}
         </div>
       </section>
 
