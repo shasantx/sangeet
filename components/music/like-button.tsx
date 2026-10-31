@@ -36,7 +36,7 @@ export function LikeButton({
       aria-pressed={liked}
       className={cn(
         "flex shrink-0 items-center justify-center rounded-full text-muted-foreground transition-all duration-200 hover:bg-white/[0.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-        liked && "text-[#E7A84B] hover:text-[#F2BD69]",
+        liked && "text-[#1ED760] hover:text-[#46E982]",
         sizeClasses,
         className,
       )}

@@ -118,7 +118,7 @@ export default function LibraryPage() {
         <button
           type="button"
           onClick={() => openCreate()}
-          className="inline-flex h-11 w-fit items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground shadow-[0_12px_30px_-14px_rgba(231,168,75,.4)] transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="inline-flex h-11 w-fit items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground shadow-[0_12px_30px_-14px_rgba(30,215,96,.4)] transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <Plus className="h-4 w-4" />
           New playlist

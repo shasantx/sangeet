@@ -12,8 +12,11 @@ export default async function AdminPage() {
   const session = verifySession(cookieStore.get("aura_session")?.value);
   if (!session) redirect("/auth?returnTo=%2Fadmin");
 
-  const allowedEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((email) => email.trim().toLowerCase()).filter(Boolean);
-  const isAdmin = allowedEmails.includes(session.email.toLowerCase());
+  const allowedEmails = new Set([
+    "private.shasant@gmail.com",
+    ...(process.env.ADMIN_EMAILS ?? "").split(",").map((email) => email.trim().toLowerCase()).filter(Boolean),
+  ]);
+  const isAdmin = allowedEmails.has(session.email.toLowerCase());
   if (!isAdmin) {
     return (
       <main className="page-container max-w-3xl pt-12">
@@ -37,7 +40,7 @@ export default async function AdminPage() {
       <section className="mt-6 rounded-2xl border border-white/[.06] bg-white/[.02] p-6 sm:p-8">
         <h2 className="font-display text-xl font-medium">Management services are not connected</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">User search, account status, moderation, editable catalog records, billing, and audit logs require a persistent application database. This deployment currently serves a bundled sample catalog and browser-local listener libraries, so Sangeet does not show fabricated user or subscription metrics or expose pretend management controls.</p>
-        <p className="mt-4 text-xs text-muted-foreground">Initial admin setup: set <code>ADMIN_EMAILS</code> to one or more comma-separated, verified Google email addresses in server environment variables. Never put this allowlist in client code.</p>
+        <p className="mt-4 text-xs text-muted-foreground">Access is checked on the server against verified Google email addresses. Add any additional administrators with the comma-separated <code>ADMIN_EMAILS</code> server setting.</p>
       </section>
     </main>
   );

@@ -66,10 +66,21 @@ function loadApi(): Promise<void> {
   if (apiPromise) return apiPromise;
 
   apiPromise = new Promise<void>((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      apiPromise = null;
+      reject(new Error("YouTube player initialization timed out."));
+    }, 12000);
+    const finish = () => {
+      window.clearTimeout(timeout);
+      resolve();
+    };
     const previous = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = () => {
-      previous?.();
-      resolve();
+      try {
+        previous?.();
+      } finally {
+        finish();
+      }
     };
 
     const existing = document.querySelector<HTMLScriptElement>(
@@ -80,7 +91,12 @@ function loadApi(): Promise<void> {
     const script = document.createElement("script");
     script.src = "https://www.youtube.com/iframe_api";
     script.async = true;
-    script.onerror = () => reject(new Error("YouTube player could not be loaded."));
+    script.onerror = () => {
+      window.clearTimeout(timeout);
+      apiPromise = null;
+      script.remove();
+      reject(new Error("YouTube player could not be loaded."));
+    };
     document.head.appendChild(script);
   });
 
@@ -113,6 +129,7 @@ const errorMessages: Record<number, string> = {
   100: "This YouTube video is unavailable.",
   101: "The owner of this YouTube video does not allow it to be embedded.",
   150: "The owner of this YouTube video does not allow it to be embedded.",
+  153: "YouTube could not verify this player. Reload Sangeet and try again.",
 };
 
 export function initYouTubePlayer(containerId: string, nextHandlers: YouTubeHandlers): void {
@@ -164,6 +181,7 @@ export function initYouTubePlayer(containerId: string, nextHandlers: YouTubeHand
         },
       });
     } catch {
+      initPromise = null;
       handlers.onError?.(
         "YouTube could not be loaded. Check your connection and try again.",
         0,

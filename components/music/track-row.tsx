@@ -57,7 +57,7 @@ export function TrackRow({
     <div
       className={cn(
         "group relative flex min-w-0 items-center gap-3 rounded-lg py-2 pl-2 pr-1.5 transition-colors duration-200 hover:bg-white/[.06]",
-        isCurrent && "bg-[#E7A84B]/[0.08] hover:bg-[#E7A84B]/[0.12]",
+        isCurrent && "bg-[#1ED760]/[0.08] hover:bg-[#1ED760]/[0.12]",
         className,
       )}
       aria-current={isCurrent ? "true" : undefined}
@@ -112,7 +112,7 @@ export function TrackRow({
             onClick={handlePlay}
             className={cn(
               "min-w-0 truncate text-left text-[13px] font-medium leading-5 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-              isCurrent ? "text-[#E7A84B] font-semibold" : "text-foreground",
+              isCurrent ? "text-[#1ED760] font-semibold" : "text-foreground",
             )}
           >
             {track.title}

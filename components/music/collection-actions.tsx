@@ -33,7 +33,7 @@ export function CollectionPlayButton({
         else playTrack(trackIds[0], trackIds, label);
       }}
       className={cn(
-        "inline-flex items-center justify-center gap-2.5 rounded-full bg-[#E7A84B] text-black font-bold shadow-[0_14px_34px_-16px_rgba(29,185,84,.8)] transition hover:bg-[#F2BD69] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-40",
+        "inline-flex items-center justify-center gap-2.5 rounded-full bg-[#1ED760] text-black font-bold shadow-[0_14px_34px_-16px_rgba(29,185,84,.8)] transition hover:bg-[#46E982] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-40",
         size === "lg" ? "h-12 px-7 text-sm" : "h-10 px-5 text-xs",
         className,
       )}
