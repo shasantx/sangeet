@@ -8,6 +8,7 @@ import { getInitials } from "@/lib/utils";
 import type { DemoProfile } from "@/lib/types";
 
 export type ThemePreference = "dark" | "midnight" | "dusk";
+export type AccentPreference = "green" | "red" | "yellow" | "blue" | "violet";
 export type AudioQuality = "auto" | "high" | "lossless";
 
 export interface PreferenceState {
@@ -22,6 +23,7 @@ interface AppState extends PreferenceState {
   profile: DemoProfile;
   hasOnboarded: boolean;
   theme: ThemePreference;
+  accent: AccentPreference;
   sidebarCollapsed: boolean;
   rightPanelOpen: boolean;
   recentSearches: string[];
@@ -31,6 +33,7 @@ interface AppState extends PreferenceState {
   enterDemo: (name?: string) => void;
   signOut: () => void;
   setTheme: (theme: ThemePreference) => void;
+  setAccent: (accent: AccentPreference) => void;
   toggleSidebar: () => void;
   setRightPanelOpen: (open: boolean) => void;
   toggleRightPanel: () => void;
@@ -53,6 +56,7 @@ export const useAppStore = create<AppState>()(
       profile: demoProfile,
       hasOnboarded: true,
       theme: "dark",
+      accent: "green",
       sidebarCollapsed: false,
       rightPanelOpen: true,
       recentSearches: seedSearches,
@@ -92,6 +96,7 @@ export const useAppStore = create<AppState>()(
       },
       signOut: () => set({ hasOnboarded: false }),
       setTheme: (theme) => set({ theme }),
+      setAccent: (accent) => set({ accent }),
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
       toggleRightPanel: () => set((state) => ({ rightPanelOpen: !state.rightPanelOpen })),
@@ -124,6 +129,7 @@ export const useAppStore = create<AppState>()(
         profile: state.profile,
         hasOnboarded: state.hasOnboarded,
         theme: state.theme,
+        accent: state.accent,
         sidebarCollapsed: state.sidebarCollapsed,
         rightPanelOpen: state.rightPanelOpen,
         recentSearches: state.recentSearches,
@@ -158,6 +164,9 @@ export const useAppStore = create<AppState>()(
           theme: ["dark", "midnight", "dusk"].includes(source.theme as string)
             ? (source.theme as ThemePreference)
             : "dark",
+          accent: ["green", "red", "yellow", "blue", "violet"].includes(source.accent as string)
+            ? (source.accent as AccentPreference)
+            : "green",
         };
       },
     },

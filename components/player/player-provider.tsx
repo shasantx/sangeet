@@ -12,6 +12,7 @@ import {
 } from "@/lib/youtube-engine";
 import { isTypingTarget } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
+import { restoreLocalAudio } from "@/lib/local-audio";
 import { useLibraryStore } from "@/store/library-store";
 import { usePlayerStore } from "@/store/player-store";
 import { toast } from "@/store/ui-store";
@@ -139,7 +140,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       Promise.resolve(useAppStore.persist.rehydrate()),
       Promise.resolve(useLibraryStore.persist.rehydrate()),
       Promise.resolve(usePlayerStore.persist.rehydrate()),
-    ]).then(() => {
+    ]).then(async () => {
+      if (!active) return;
+      await restoreLocalAudio().catch(() => undefined);
       if (!active) return;
       usePlayerStore.getState().primeAudio();
     });
@@ -235,6 +238,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const theme = useAppStore((state) => state.theme);
+  const accent = useAppStore((state) => state.accent);
   const addRecentlyPlayed = useLibraryStore((state) => state.addRecentlyPlayed);
 
   useEffect(() => {
@@ -247,6 +251,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.dataset.accent = accent;
+  }, [accent]);
 
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;

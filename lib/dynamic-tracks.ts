@@ -164,3 +164,19 @@ export function registerYouTubeSearchResult(result: YouTubeSearchResult): Track 
 export function registerYouTubeSearchResults(results: YouTubeSearchResult[]): Track[] {
   return results.map(registerYouTubeSearchResult);
 }
+
+export function registerLocalAudioTrack(track: Track, artist: Artist, album: Album): Track {
+  hydrate();
+  artistRegistry.set(artist.id, artist);
+  albumRegistry.set(album.id, album);
+  trackRegistry.set(track.id, track);
+  persist();
+  return track;
+}
+
+export function removeDynamicLocalTrack(id: string): void {
+  hydrate();
+  if (!id.startsWith("local-")) return;
+  trackRegistry.delete(id);
+  persist();
+}

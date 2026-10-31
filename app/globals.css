@@ -51,6 +51,11 @@
     --muted-foreground: 24 8% 62%;
   }
 
+  html[data-accent="red"] { --primary: 2 78% 57%; --secondary: 5 82% 65%; --accent: 2 78% 57%; --ring: 2 78% 57%; }
+  html[data-accent="yellow"] { --primary: 45 94% 52%; --secondary: 39 92% 60%; --accent: 45 94% 52%; --ring: 45 94% 52%; }
+  html[data-accent="blue"] { --primary: 211 90% 60%; --secondary: 199 91% 62%; --accent: 211 90% 60%; --ring: 211 90% 60%; }
+  html[data-accent="violet"] { --primary: 267 84% 67%; --secondary: 279 84% 70%; --accent: 267 84% 67%; --ring: 267 84% 67%; }
+
   * {
     @apply border-border;
   }
