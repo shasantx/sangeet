@@ -799,15 +799,7 @@ for (const [name, palette] of Object.entries(artistImages)) {
 }
 
 // Brand mark.
-const brand = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
-  <rect width="48" height="48" rx="14" fill="#8B5CF6"/>
-  <g fill="#F5F3FA">
-    <rect x="12" y="20" width="3.4" height="8" rx="1.7"/>
-    <rect x="18.2" y="15" width="3.4" height="18" rx="1.7"/>
-    <rect x="24.4" y="11" width="3.4" height="26" rx="1.7"/>
-    <rect x="30.6" y="18" width="3.4" height="12" rx="1.7"/>
-  </g>
-</svg>`;
+const brand = fs.readFileSync(path.join(root, "..", "sangeet-mark.svg"), "utf8");
 fs.writeFileSync(path.join(root, "..", "aura-mark.svg"), brand);
 
 // Generated artwork provenance / license note.
