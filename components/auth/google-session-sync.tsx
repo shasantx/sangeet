@@ -12,6 +12,7 @@ interface SessionPayload {
   email: string;
   name: string;
   picture?: string;
+  plan?: "free" | "premium";
 }
 
 const errorMessages: Record<string, string> = {
@@ -58,6 +59,7 @@ export function GoogleSessionSync() {
           return;
         }
         setGoogleSession(payload.session);
+        useAppStore.getState().setPlan(payload.session.plan === "premium" ? "Premium" : "Free");
         if (outcome === "success") {
           let selectedArtistIds: string[] = [];
           try {
