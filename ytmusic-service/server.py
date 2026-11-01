@@ -138,7 +138,8 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/health":
             self._send(200, {"ok": True})
             return
-        if parsed.path not in ("/search", "/api/search"):
+        allowed_paths = ("/search", "/api/search", "/api/catalog", "/api/details")
+        if parsed.path not in allowed_paths:
             self._send(404, {"error": "not found"})
             return
 
@@ -151,6 +152,20 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         params = parse_qs(parsed.query)
+        if parsed.path == "/api/details":
+            browse_id = (params.get("browseId") or [""])[0]
+            kind = (params.get("kind") or [""])[0]
+            if kind not in ("artist", "album") or not browse_id or not browse_id.replace("_", "").replace("-", "").isalnum() or len(browse_id) > 100:
+                self._send(400, {"error": "invalid details request"})
+                return
+            try:
+                from discovery import get_album, get_creator
+                details = get_creator(browse_id) if kind == "artist" else get_album(browse_id)
+                self._send(200, {"details": details, "type": kind})
+            except Exception:  # noqa: BLE001
+                self._send(502, {"error": "upstream details unavailable"})
+            return
+
         query = (params.get("q") or [""])[0].strip()
         if not query:
             self._send(200, {"results": []})
@@ -164,6 +179,18 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError:
             limit = 12
         limit = max(1, min(25, limit))
+
+        if parsed.path in ("/api/catalog",):
+            kind = (params.get("kind") or [""])[0]
+            if kind not in ("artists", "albums", "playlists"):
+                self._send(400, {"results": [], "error": "invalid catalog type"})
+                return
+            try:
+                from discovery import search_catalog
+                self._send(200, {"results": search_catalog(query, kind, min(limit, 8)), "query": query, "type": kind})
+            except Exception:  # noqa: BLE001
+                self._send(502, {"results": [], "error": "upstream catalog unavailable"})
+            return
 
         try:
             results = search(query, limit)

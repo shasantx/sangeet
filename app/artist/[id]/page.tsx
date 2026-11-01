@@ -18,6 +18,7 @@ import { FollowArtistButton } from "@/components/music/follow-artist-button";
 import { PlaylistCard } from "@/components/music/playlist-card";
 import { SectionHeader } from "@/components/music/section-header";
 import { TrackList } from "@/components/music/track-list";
+import { LiveCatalogPage } from "@/components/search/live-music-discovery";
 
 export function generateStaticParams() {
   return artists.map((artist) => ({ id: artist.id }));
@@ -40,6 +41,7 @@ export async function generateMetadata({
 export default async function ArtistPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const artist = getArtist(id);
+  if (!artist && id.startsWith("ytm-") && id.length > 4) return <LiveCatalogPage kind="artist" browseId={id.slice(4)} />;
   if (!artist) notFound();
 
   const artistTracks = getArtistTracks(artist.id);

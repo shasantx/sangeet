@@ -13,7 +13,6 @@ import {
   Plus,
   Search,
   Settings2,
-  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
@@ -199,20 +198,6 @@ export function Sidebar() {
           </div>
         )}
 
-        {!collapsed && (
-          <Link
-            href="/made-for-you"
-            className="group mt-6 flex items-center gap-3 rounded-xl border border-primary/15 bg-primary/[.055] p-3 transition hover:border-primary/25 hover:bg-primary/[.085] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[11.5px] font-medium text-foreground">Sangeet mixes</span>
-              <span className="mt-0.5 block truncate text-[10px] text-muted-foreground">Curated listening paths</span>
-            </span>
-          </Link>
-        )}
       </div>
 
       <div className={cn("shrink-0 border-t border-white/[.055] p-3", collapsed && "px-2")}>

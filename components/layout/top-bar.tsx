@@ -68,14 +68,14 @@ export function TopBar() {
   const avatarColor = session?.avatarColor || profile.avatarColor;
 
   return (
-    <header className="sticky top-0 z-30 flex h-[62px] items-center gap-3 border-b border-white/[.04] bg-[#101014] px-4 sm:h-[70px] sm:px-6 sm:backdrop-blur-2xl lg:px-8">
+    <header className="sticky top-0 z-30 flex h-[60px] items-center gap-1.5 border-b border-white/[.04] bg-[#101014]/95 px-2.5 backdrop-blur-xl sm:h-[70px] sm:gap-3 sm:px-6 lg:px-8">
       <button type="button" onClick={toggleMobileSidebar} aria-label={mobileSidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={mobileSidebarOpen} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.055] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:hidden">
         <Menu className="h-5 w-5" />
       </button>
       {/* Mobile Logo */}
-      <Link href="/home" className="flex items-center gap-2 md:hidden" aria-label="Sangeet home">
-        <SangeetMark size={30} />
-        <span className="font-display text-[17px] font-bold tracking-tight text-white">Sangeet</span>
+      <Link href="/home" className="flex shrink-0 items-center gap-1.5 md:hidden" aria-label="Sangeet home">
+        <SangeetMark size={29} />
+        <span className="mobile-brand-name font-display text-[16px] font-bold tracking-tight text-white">Sangeet</span>
       </Link>
 
       {/* Search Input (Sangeet / YT Music pill style) */}
@@ -107,7 +107,7 @@ export function TopBar() {
           aria-label={queueOpen ? "Close queue" : "Open queue"}
           aria-pressed={queueOpen}
           className={cn(
-            "relative flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.055] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+            "relative hidden h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.055] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary min-[380px]:flex",
             queueOpen && "bg-white/[.055] text-foreground",
           )}
         >
@@ -170,20 +170,21 @@ export function TopBar() {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <div className="ml-2 flex items-center gap-2">
+          <div className="ml-0.5 flex shrink-0 items-center gap-0.5 sm:ml-2 sm:gap-2">
             <button
               type="button"
               onClick={() => openAuthModal("signin")}
-              className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-white/80 hover:text-white transition hover:bg-white/[.06]"
+              className="min-h-9 whitespace-nowrap rounded-full px-2 py-1.5 text-[11px] font-semibold text-white/80 transition hover:bg-white/[.06] hover:text-white sm:px-3.5 sm:text-xs"
             >
-              Sign In
+              Sign in
             </button>
             <button
               type="button"
               onClick={() => openAuthModal("signup")}
-              className="px-4 py-1.5 rounded-full bg-white text-black hover:bg-white/90 text-xs font-semibold shadow-md transition active:scale-95"
+              aria-label="Create account"
+              className="min-h-9 whitespace-nowrap rounded-full bg-white px-2.5 py-1.5 text-[11px] font-semibold text-black shadow-md transition hover:bg-white/90 active:scale-95 sm:px-4 sm:text-xs"
             >
-              Create account
+              <span className="sm:hidden">Sign up</span><span className="hidden sm:inline">Create account</span>
             </button>
           </div>
         )}

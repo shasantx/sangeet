@@ -2,15 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Headphones, Search, Sparkles } from "lucide-react";
+import { ArrowRight, Headphones, Search } from "lucide-react";
 import { albums, getAlbum, getArtist, getPlaylist, getTracks, selectedAlbums, tracks } from "@/lib/catalog";
-import { dailyMixes } from "@/lib/mixes";
 import { getFirstName, getGreeting } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { useAppStore } from "@/store/app-store";
 import { useLibraryStore } from "@/store/library-store";
-import { AlbumCard } from "@/components/music/album-card";
-import { MixCard } from "@/components/music/mix-card";
 import { PlayButton } from "@/components/music/play-button";
 import { QuickTrackTile } from "@/components/music/quick-track-tile";
 import { SectionHeader } from "@/components/music/section-header";
@@ -18,8 +15,7 @@ import { TrackList } from "@/components/music/track-list";
 import { Artwork } from "@/components/music/artwork";
 import { registerYouTubeSearchResult, type YouTubeSearchResult } from "@/lib/dynamic-tracks";
 import { useSiteConfigStore } from "@/store/site-config-store";
-
-const selectionTrackIds = ["t07", "t16", "t04", "t28", "t22", "t01", "t25", "t10"];
+import { LiveMusicHome } from "@/components/search/live-music-discovery";
 
 export default function HomePage() {
   const session = useAuthStore((state) => state.session);
@@ -104,10 +100,8 @@ export default function HomePage() {
         <section className="relative mt-10 grid overflow-hidden rounded-2xl border border-white/[.07] bg-[#151b17] md:min-h-[300px] md:grid-cols-[1fr_300px]">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_15%,rgba(96,190,120,.18),transparent_50%)]" />
           <div className="relative flex flex-col items-start justify-center p-6 sm:p-9 lg:p-11">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.16em] text-white/65">
-              <Sparkles className="h-3.5 w-3.5 text-primary" /> Sangeet selection
-            </span>
-            <h2 className="mt-5 max-w-xl text-3xl font-semibold leading-tight tracking-[-.045em] sm:text-4xl">A good place to start listening.</h2>
+            <p className="eyebrow">Featured album</p>
+            <h2 className="mt-4 max-w-xl text-3xl font-semibold leading-tight tracking-[-.045em] sm:text-4xl">A good place to start listening.</h2>
             <p className="mt-2 text-sm text-white/60">{heroAlbum.title}{heroArtist ? ` · ${heroArtist.name}` : ""}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               <PlayButton trackIds={heroAlbum.trackIds} label={heroAlbum.title} size="md" />
@@ -120,26 +114,7 @@ export default function HomePage() {
         </section>
       )}
 
-      <section className="section-space">
-        <SectionHeader title="A mix for the moment" eyebrow="Sangeet mixes" description="Curated listening paths from the bundled catalog." href="/made-for-you" />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {dailyMixes.slice(0, 3).map((mix) => <MixCard key={mix.id} mix={mix} />)}
-        </div>
-      </section>
-
-      <section className="section-space">
-        <SectionHeader title="A few to explore" eyebrow="Selected from the catalog" href="/explore" />
-        <div className="rounded-xl border border-white/[.06] bg-white/[.015] px-2 py-2 sm:px-4">
-          <TrackList trackIds={selectionTrackIds} label="Selected tracks" showAlbum />
-        </div>
-      </section>
-
-      <section className="section-space">
-        <SectionHeader title="Albums for a closer listen" eyebrow="From the catalog" href="/new-releases" />
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">
-          {selectedAlbums.slice(0, 5).map((album) => <AlbumCard key={album.id} album={album} />)}
-        </div>
-      </section>
+      <LiveMusicHome />
 
       {homePlaylists.length > 0 && <section className="section-space pb-3">
         <SectionHeader title="Curated playlists" eyebrow="Playlists" href="/explore" />
@@ -156,7 +131,6 @@ export default function HomePage() {
           })}
         </div>
       </section>}
-      <p className="mt-12 border-t border-white/[.06] pt-5 text-xs text-muted-foreground">Sangeet is an independent music discovery experience.</p>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Disc3, ListMusic, MoreHorizontal, Plus, Radio, Share2 } from "lucide-react";
+import { ArrowLeft, Disc3, ListMusic, MoreHorizontal, Plus, Radio, Share2 } from "lucide-react";
 import { getAlbum, getArtist, getTrack, getTracks, tracks } from "@/lib/catalog";
 import { formatDuration } from "@/lib/utils";
 import type { Track } from "@/lib/types";
@@ -97,12 +97,18 @@ export default function NowPlayingPage() {
 
   return (
     <main className="page-container max-w-[1480px] space-y-6 pb-8 pt-5 sm:space-y-8 sm:pt-8">
+      <Tabs defaultValue="queue" className="w-full">
       <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <p className="eyebrow text-primary">Now playing</p>
-          <p className="mt-1 truncate text-xs text-muted-foreground">
-            {current ? contextLabel || "Your listening session" : "Your listening space"}
-          </p>
+        <div className="flex min-w-0 items-center gap-3">
+          <Link href="/home" className="flex h-10 shrink-0 items-center gap-2 rounded-full border border-white/[.08] bg-white/[.035] px-3 text-xs font-medium text-muted-foreground transition hover:bg-white/[.07] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Back to Sangeet">
+            <ArrowLeft className="h-4 w-4" /><span className="hidden sm:inline">Back to Sangeet</span>
+          </Link>
+          <div className="min-w-0">
+            <p className="eyebrow text-primary">Now playing</p>
+            <p className="mt-1 truncate text-xs text-muted-foreground">
+              {current ? contextLabel || "Your listening session" : "Your listening space"}
+            </p>
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {current && (
@@ -154,6 +160,14 @@ export default function NowPlayingPage() {
           )}
         </div>
       </div>
+
+      <TabsList className="player-section-tabs sticky top-2 z-30 grid h-auto w-full grid-cols-5 rounded-full border border-white/[.09] bg-[#17171c]/90 p-1 shadow-xl backdrop-blur-2xl sm:inline-flex sm:w-auto">
+        <TabsTrigger value="queue" className="min-h-10 px-2.5 text-[11px] sm:px-4 sm:text-xs">Up next</TabsTrigger>
+        <TabsTrigger value="lyrics" className="min-h-10 px-2.5 text-[11px] sm:px-4 sm:text-xs">Lyrics</TabsTrigger>
+        <TabsTrigger value="related" className="min-h-10 px-2.5 text-[11px] sm:px-4 sm:text-xs">Related</TabsTrigger>
+        <TabsTrigger value="recent" className="min-h-10 min-w-0 px-1.5 text-[11px] sm:px-4 sm:text-xs"><span className="sm:hidden">Recent</span><span className="hidden sm:inline">Recently played</span></TabsTrigger>
+        <TabsTrigger value="artist" className="min-h-10 px-2.5 text-[11px] sm:px-4 sm:text-xs">Artist</TabsTrigger>
+      </TabsList>
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-7">
         <section className="min-w-0 rounded-2xl border border-white/[.07] bg-white/[.018] p-4 sm:p-6 lg:p-7">
@@ -244,15 +258,6 @@ export default function NowPlayingPage() {
       </div>
 
       <section className="min-w-0 border-t border-white/[.06] pt-5 sm:pt-6" aria-label="More about your music">
-        <Tabs defaultValue="queue" className="w-full">
-          <TabsList className="grid h-auto w-full grid-cols-5 rounded-xl border-0 bg-white/[.025] p-1 sm:inline-flex sm:w-auto sm:rounded-full sm:border sm:border-white/[.05] sm:bg-white/[.035]">
-            <TabsTrigger value="queue" className="min-h-10 px-2 text-[11px] sm:px-4 sm:text-xs">Up next</TabsTrigger>
-            <TabsTrigger value="lyrics" className="min-h-10 px-2 text-[11px] sm:px-4 sm:text-xs">Lyrics</TabsTrigger>
-            <TabsTrigger value="related" className="min-h-10 px-2 text-[11px] sm:px-4 sm:text-xs">Related</TabsTrigger>
-            <TabsTrigger value="recent" className="min-h-10 min-w-0 px-1 text-[11px] sm:px-4 sm:text-xs"><span className="sm:hidden">Recent</span><span className="hidden sm:inline">Recently played</span></TabsTrigger>
-            <TabsTrigger value="artist" className="min-h-10 px-2 text-[11px] sm:px-4 sm:text-xs">Artist</TabsTrigger>
-          </TabsList>
-
           <TabsContent value="queue" className="mt-4 xl:hidden">
             <div className="space-y-1">
               {current && <QueueTrack track={current} active onClick={() => undefined} />}
@@ -284,8 +289,8 @@ export default function NowPlayingPage() {
               </div>
             ) : <p className="py-6 text-sm text-muted-foreground">Artist details will appear when a track is playing.</p>}
           </TabsContent>
-        </Tabs>
       </section>
+      </Tabs>
       <span className="sr-only" aria-live="polite">{current ? `${current.title} by ${artist?.name ?? "unknown artist"}, ${isPlaying ? "playing" : "paused"}` : "Nothing playing"}</span>
     </main>
   );

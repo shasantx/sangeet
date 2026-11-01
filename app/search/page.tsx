@@ -17,6 +17,7 @@ import { TrackList } from "@/components/music/track-list";
 import { SearchInput } from "@/components/search/search-input";
 import { SearchResultsSkeleton } from "@/components/search/search-results-skeleton";
 import { YouTubeSearchResults, type YouTubeSearchStatus } from "@/components/search/youtube-search-results";
+import { LiveMusicDiscovery } from "@/components/search/live-music-discovery";
 import { cn } from "@/lib/utils";
 
 interface TopResult {
@@ -31,14 +32,14 @@ interface TopResult {
 }
 
 const searchSuggestionsPool = [
-  "Mira Vale",
-  "KAIROS",
-  "Ambient",
-  "Halcyon Hours",
-  "Soft Static",
-  "Late night",
-  "Iris Ember",
-  "Blue Hour Cinema",
+  "Arijit Singh",
+  "Sajjan Raj Vaidya",
+  "Narayan Gopal",
+  "Shreya Ghoshal",
+  "Tribal Rain",
+  "Hindi indie",
+  "Nepali pop",
+  "A.R. Rahman",
 ];
 
 export default function SearchPage() {
@@ -400,6 +401,7 @@ export default function SearchPage() {
       {hasQuery && (
         <YouTubeSearchResults query={query} onStatusChange={onCatalogStatusChange} />
       )}
+      {hasQuery && <LiveMusicDiscovery query={query} />}
 
     </div>
   );
