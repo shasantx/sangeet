@@ -5,6 +5,11 @@ public/audio/*.wav
 scripts/tmp
 .env*
 !.env.example
+.vercel
+*.pem
+*.key
+credentials*.json
+service-account*.json
 *.log
 .DS_Store
 next-env.d.ts

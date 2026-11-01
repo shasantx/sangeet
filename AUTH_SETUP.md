@@ -13,7 +13,7 @@ For deployment, use the canonical HTTPS origin in `APP_URL` and register `https:
 
 ## Admin access
 
-`private.shasant@gmail.com` is the initial server-side administrator. Add any additional verified Google accounts to the comma-separated `ADMIN_EMAILS` server environment variable. `/admin` checks the signed server session against this allowlist; users cannot grant themselves admin access. The admin console manages server-stored member status, site settings, donation QR settings, and audit history through server-only Supabase access. See [ADMIN_SETUP.md](./ADMIN_SETUP.md) for migrations and environment setup.
+Set `ADMIN_EMAILS` in the deployment environment to a comma-separated list of verified Google accounts allowed to administer the server. Keep this value out of source control. `/admin` checks the signed server session against this allowlist; users cannot grant themselves admin access. The admin console manages server-stored member status, site settings, donation QR settings, and audit history through server-only Supabase access. See [ADMIN_SETUP.md](./ADMIN_SETUP.md) for migrations and environment setup.
 
 ## Account and library scope
 
