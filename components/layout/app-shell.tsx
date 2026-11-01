@@ -30,6 +30,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return <main className="min-h-dvh bg-[#090c0a] text-white">{children}</main>;
   }
 
+  if (pathname === "/") return <>{children}</>;
+
   if (immersive) {
     return (
       <main className="min-h-dvh">

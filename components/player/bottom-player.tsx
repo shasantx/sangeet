@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { PlaybackControls } from "./playback-controls";
 import { ProgressBar } from "./progress-bar";
 import { VolumeControl } from "./volume-control";
+import { ConnectedDevices } from "./connected-devices";
 
 export function BottomPlayer() {
   const currentTrackId = usePlayerStore((state) => state.currentTrackId);
@@ -26,7 +27,7 @@ export function BottomPlayer() {
 
   return (
     <footer
-      className="fixed inset-x-0 bottom-0 z-50 hidden h-[88px] border-t border-white/[.065] bg-[#0e0e13]/95 backdrop-blur-2xl md:flex"
+      className="fixed inset-x-0 bottom-0 z-50 hidden h-[92px] border-t border-white/[.07] bg-[#0c0e0c]/95 shadow-[0_-18px_48px_rgba(0,0,0,.22)] backdrop-blur-2xl md:flex before:absolute before:inset-x-[4%] before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/45 before:to-transparent"
       aria-label="Music player"
     >
       {error && (
@@ -42,7 +43,7 @@ export function BottomPlayer() {
         </div>
       )}
 
-      <div className="grid h-full w-full grid-cols-[minmax(0,.9fr)_minmax(360px,1.3fr)_minmax(0,.9fr)] items-center gap-5 px-4 xl:px-6">
+      <div className="grid h-full w-full grid-cols-[minmax(0,.8fr)_minmax(250px,1.4fr)_minmax(84px,.7fr)] items-center gap-2 px-3 lg:gap-4 lg:px-5 xl:px-7">
         <div className="flex min-w-0 items-center gap-3">
           {current ? (
             <>
@@ -97,6 +98,7 @@ export function BottomPlayer() {
         </div>
 
         <div className="flex items-center justify-end gap-2.5">
+          <ConnectedDevices />
           <Tooltip>
             <TooltipTrigger asChild>
               <button

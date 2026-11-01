@@ -12,7 +12,7 @@ type Library = {
   recentlyPlayed: string[];
   recentlyPlayedAt: Record<string, number>;
   playlists: { id: string; title: string; description: string; artwork?: string; trackIds: string[]; createdAt: number; updatedAt: number }[];
-  tracks: { videoId: string; title: string; artist: string; album?: string; durationSeconds?: number; thumbnail?: string; year?: number }[];
+  tracks: ({ source?: "youtube"; videoId: string; title: string; artist: string; album?: string; durationSeconds?: number; thumbnail?: string; year?: number } | { source: "audius"; trackId: string; title: string; artist: string; album?: string; durationSeconds?: number; thumbnail?: string; genre?: string })[];
 };
 
 function database() {
@@ -48,12 +48,18 @@ function cleanLibrary(value: unknown): Library {
     const artwork = typeof p.artwork === "string" && (p.artwork.startsWith("/art/") || /^https:\/\/(i\.ytimg\.com|img\.youtube\.com|yt3\.ggpht\.com)\//.test(p.artwork)) ? p.artwork.slice(0, 600) : undefined;
     return [{ id: p.id.slice(0, 100), title: p.title.slice(0, 80), description: typeof p.description === "string" ? p.description.slice(0, 240) : "", artwork, trackIds: boundedStrings(p.trackIds, 500), createdAt: Number.isFinite(p.createdAt) ? Number(p.createdAt) : Date.now(), updatedAt: Number.isFinite(p.updatedAt) ? Number(p.updatedAt) : Date.now() }];
   }) : [];
-  const tracks = Array.isArray(x.tracks) ? x.tracks.slice(0, 80).flatMap((item) => {
+  const tracks = Array.isArray(x.tracks) ? x.tracks.slice(0, 80).flatMap<Library["tracks"][number]>((item) => {
     if (!item || typeof item !== "object") return [];
     const t = item as Record<string, unknown>;
-    if (typeof t.videoId !== "string" || !/^[\w-]{11}$/.test(t.videoId) || typeof t.title !== "string") return [];
+    if (typeof t.title !== "string") return [];
+    if (t.source === "audius") {
+      if (typeof t.trackId !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(t.trackId)) return [];
+      const thumbnail = typeof t.thumbnail === "string" && /^https:\/\/(?:[A-Za-z0-9-]+\.)*audius\.co\//.test(t.thumbnail) ? t.thumbnail.slice(0, 600) : undefined;
+      return [{ source: "audius" as const, trackId: t.trackId, title: t.title.slice(0, 180), artist: typeof t.artist === "string" ? t.artist.slice(0, 140) : "Independent artist", album: typeof t.album === "string" ? t.album.slice(0, 160) : "", durationSeconds: Number.isFinite(t.durationSeconds) ? Math.min(86400, Number(t.durationSeconds)) : 0, thumbnail, genre: typeof t.genre === "string" ? t.genre.slice(0, 80) : "" }];
+    }
+    if (typeof t.videoId !== "string" || !/^[\w-]{11}$/.test(t.videoId)) return [];
     const thumbnail = typeof t.thumbnail === "string" && /^https:\/\/(i\.ytimg\.com|img\.youtube\.com|yt3\.ggpht\.com)\//.test(t.thumbnail) ? t.thumbnail.slice(0, 600) : undefined;
-    return [{ videoId: t.videoId, title: t.title.slice(0, 180), artist: typeof t.artist === "string" ? t.artist.slice(0, 140) : "YouTube", album: typeof t.album === "string" ? t.album.slice(0, 160) : "", durationSeconds: Number.isFinite(t.durationSeconds) ? Math.min(86400, Number(t.durationSeconds)) : 0, thumbnail, year: Number.isFinite(t.year) ? Number(t.year) : undefined }];
+    return [{ source: "youtube" as const, videoId: t.videoId, title: t.title.slice(0, 180), artist: typeof t.artist === "string" ? t.artist.slice(0, 140) : "Music", album: typeof t.album === "string" ? t.album.slice(0, 160) : "", durationSeconds: Number.isFinite(t.durationSeconds) ? Math.min(86400, Number(t.durationSeconds)) : 0, thumbnail, year: Number.isFinite(t.year) ? Number(t.year) : undefined }];
   }) : [];
   const recentIds = boundedStrings(x.recentlyPlayed, 500);
   const recentInput = x.recentlyPlayedAt && typeof x.recentlyPlayedAt === "object" ? x.recentlyPlayedAt as Record<string, unknown> : {};

@@ -56,7 +56,7 @@ export interface Track {
   duration: number;
   audioUrl: string;
   artwork: string;
-  source?: "local" | "youtube";
+  source?: "local" | "youtube" | "audius";
   youtubeId?: string;
   genreIds: GenreId[];
   mood: string;
