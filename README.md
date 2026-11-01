@@ -1,23 +1,25 @@
 # Sangeet
 
-Sangeet is a free, open-source music discovery app built with Next.js 15, React 19, TypeScript, Tailwind CSS, and Zustand. It includes browser-local playlists and likes, music discovery, an embedded player, Google sign-in, a server-side admin console, and an optional project donation QR.
+Sangeet is a free, open-source music discovery app built with Next.js 15, React 19, TypeScript, Tailwind CSS, and Zustand. It includes synced playlists, favorites and listening history for signed-in users, music discovery, an embedded player, Google sign-in, a server-side admin console, and an optional project donation QR.
 
 ## Local development
 
 1. Install Node.js 20 or later and Python 3.10 or later.
 2. Install JavaScript dependencies with `npm ci`.
 3. Copy `.env.example` to `.env.local`. Set `APP_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and a private random `AUTH_SECRET` to enable Google sign-in. The app remains browsable without OAuth credentials.
-4. In one terminal, start the local music search service with `npm run ytmusic`.
-5. In another terminal, start Next.js with `npm run dev` and open `http://localhost:3000`.
+4. Apply the migrations documented in [AUTH_SETUP.md](./AUTH_SETUP.md) to enable per-account library sync and optional YouTube Library access.
+5. In one terminal, start the local music search service with `npm run ytmusic`.
+6. In another terminal, start Next.js with `npm run dev` and open `http://localhost:3000`.
 
 Google OAuth client setup and callback registration are documented in [AUTH_SETUP.md](./AUTH_SETUP.md).
 
 ## Current features
 
 - Responsive browse, search, artist, album, playlist, genre, library, and recently played pages.
-- Local playlists, likes, saved albums, followed artists, and playback queue stored in browser storage (not yet synced between devices).
+- Guest libraries and playback preferences are browser-local. Signed-in favorites, playlists and recently played data sync to the private Supabase library table.
 - YouTube Music metadata search through the separate local `ytmusicapi` service, plus the official YouTube IFrame Player for playback.
 - Google OAuth code flow with state, PKCE, ID-token verification, and signed HTTP-only session cookie.
+- Optional separate read-only Google OAuth connection for a listener's YouTube playlists and liked videos; refresh tokens are encrypted server-side.
 - Server-checked admin email allowlist and a Supabase-backed admin console for members, site settings, audit history, and donation display.
 - Playlists, recently played history, and eligible offline audio are not restricted by a paid plan.
 - Public open-source project support section with donation QR and instructions managed from the admin console.
@@ -34,7 +36,7 @@ Bundled Sangeet recordings are sample assets, separate from YouTube-powered resu
 
 - Google OAuth credentials and a secure deployed HTTPS origin are required for sign-in.
 - Run the admin and site-control migrations plus `20261031150000_open_access_project_donations.sql`; see [ADMIN_SETUP.md](./ADMIN_SETUP.md).
-- Listener library data remains browser-local; account state and admin-managed settings are in Supabase, but library data is not synced between devices.
+- Apply `20261101000000_user_library_sync.sql` to enable cross-device library sync and `20261101010000_youtube_connections.sql` for optional YouTube account access; generate `YOUTUBE_TOKEN_ENCRYPTION_KEY` as described in [AUTH_SETUP.md](./AUTH_SETUP.md).
 - There are no paid plans, checkout, or payment collection. Donation QR display is optional and does not unlock features.
 - Android background playback depends on the media source and browser lock-screen support. The native HTML audio element uses Media Session where supported; embedded YouTube playback cannot reliably continue in the background.
 - The YouTube Music metadata source is unofficial. For a durable production catalog, connect a licensed music provider or an approved API and verify its rights, quota, and deployment requirements.

@@ -527,11 +527,10 @@ export default function SettingsPage() {
               <div className="rounded-2xl border border-white/[.055] bg-surface/70 p-5">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                  <p className="eyebrow">Local by design</p>
+                  <p className="eyebrow">Your data, in sync</p>
                 </div>
                 <p className="mt-3 text-[11.5px] leading-relaxed text-muted-foreground">
-                  Google sign-in is verified on the server. Your likes, playlists, listening history,
-                  player state and preferences are still stored in this browser&apos;s localStorage.
+                  Google sign-in is verified on the server. Favorites, playlists and listening history sync to your private Sangeet account. Playback preferences stay on this device.
                 </p>
                 <div className="mt-4 space-y-2 border-t border-white/[.06] pt-4 text-[10px]">
                   {[
@@ -541,7 +540,7 @@ export default function SettingsPage() {
                   ].map((label) => (
                     <div key={label} className="flex items-center justify-between gap-3">
                       <span className="text-muted-foreground/70">{label}</span>
-                      <span className="shrink-0 text-right text-muted-foreground/55">This browser</span>
+                      <span className="shrink-0 text-right text-muted-foreground/55">{label === "Likes, playlists & history" ? "Account sync" : "This browser"}</span>
                     </div>
                   ))}
                 </div>
@@ -550,8 +549,7 @@ export default function SettingsPage() {
               <div className="rounded-2xl border border-white/[.055] bg-white/[.015] p-5">
                 <p className="eyebrow">A note on privacy</p>
                 <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-                  No listening data is transmitted. Clearing site data in your browser is the only
-                  way to remove everything completely.
+                  Sangeet stores your library to keep it available across devices. Connecting YouTube is optional and read-only; disconnect it any time from your YouTube library.
                 </p>
                 <Link
                   href="/profile"
@@ -561,6 +559,14 @@ export default function SettingsPage() {
                   <ArrowUpRight className="h-3 w-3" />
                 </Link>
               </div>
+
+              <Link href="/my-youtube-library" className="group relative isolate block overflow-hidden rounded-2xl border border-white/[.08] bg-[#15161a] p-5 transition hover:border-white/[.16] hover:bg-[#191a1f]">
+                <span aria-hidden="true" className="pointer-events-none absolute -right-8 -top-12 -z-10 h-32 w-32 rounded-full bg-primary/20 blur-3xl transition group-hover:bg-primary/30" />
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><ListMusic className="h-5 w-5" /></span>
+                <p className="mt-4 text-sm font-medium">My YouTube Library</p>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">Optionally connect to browse your own playlists and liked videos.</p>
+                <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-primary">Manage connection <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" /></span>
+              </Link>
             </div>
           </div>
         </TabsContent>

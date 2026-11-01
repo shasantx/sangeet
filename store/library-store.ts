@@ -13,6 +13,7 @@ interface LibraryState {
   followedArtistIds: string[];
   playlists: UserPlaylist[];
   recentlyPlayed: string[];
+  recentlyPlayedAt: Record<string, number>;
 
   toggleLike: (trackId: string) => boolean;
   isLiked: (trackId: string) => boolean;
@@ -37,6 +38,7 @@ const seedState = {
   followedArtistIds: [] as string[],
   playlists: [] as UserPlaylist[],
   recentlyPlayed: [] as string[],
+  recentlyPlayedAt: {} as Record<string, number>,
 };
 
 function uniqueValidTracks(ids: unknown): string[] {
@@ -85,11 +87,14 @@ export const useLibraryStore = create<LibraryState>()(
 
       addRecentlyPlayed: (trackId) => {
         if (!getTrack(trackId)) return;
-        set((state) => ({
-          recentlyPlayed: [trackId, ...state.recentlyPlayed.filter((id) => id !== trackId)].slice(0, HISTORY_RETENTION_LIMIT),
-        }));
+        set((state) => {
+          const recentlyPlayed = [trackId, ...state.recentlyPlayed.filter((id) => id !== trackId)].slice(0, HISTORY_RETENTION_LIMIT);
+          const recentlyPlayedAt = { ...state.recentlyPlayedAt, [trackId]: Date.now() };
+          for (const id of Object.keys(recentlyPlayedAt)) if (!recentlyPlayed.includes(id)) delete recentlyPlayedAt[id];
+          return { recentlyPlayed, recentlyPlayedAt };
+        });
       },
-      clearHistory: () => set({ recentlyPlayed: [] }),
+      clearHistory: () => set({ recentlyPlayed: [], recentlyPlayedAt: {} }),
 
       createPlaylist: (title, description = "") => {
         const id = `user-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
@@ -178,14 +183,15 @@ export const useLibraryStore = create<LibraryState>()(
       name: "aura-library-v1",
       storage: createJSONStorage(() => safeStorage),
       skipHydration: true,
-      version: 2,
-      migrate: () => seedState,
+      version: 3,
+      migrate: (persisted) => ({ ...seedState, ...(persisted as Partial<LibraryState>), recentlyPlayedAt: {} }),
       partialize: (state) => ({
         likedTrackIds: state.likedTrackIds,
         savedAlbumIds: state.savedAlbumIds,
         followedArtistIds: state.followedArtistIds,
         playlists: state.playlists,
         recentlyPlayed: state.recentlyPlayed,
+        recentlyPlayedAt: state.recentlyPlayedAt,
       }),
       merge: (persisted, current) => {
         const source = (persisted ?? {}) as Partial<LibraryState>;
@@ -223,6 +229,10 @@ export const useLibraryStore = create<LibraryState>()(
             : current.followedArtistIds,
           playlists,
           recentlyPlayed: uniqueValidTracks(source.recentlyPlayed ?? current.recentlyPlayed).slice(0, HISTORY_RETENTION_LIMIT),
+          recentlyPlayedAt:
+            source.recentlyPlayedAt && typeof source.recentlyPlayedAt === "object"
+              ? Object.fromEntries(Object.entries(source.recentlyPlayedAt).filter(([id, at]) => typeof at === "number" && Number.isFinite(at) && Boolean(getTrack(id))).slice(0, HISTORY_RETENTION_LIMIT))
+              : current.recentlyPlayedAt,
         };
       },
     },
