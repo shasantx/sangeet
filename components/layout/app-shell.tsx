@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed);
   const rightPanelOpen = useAppStore((state) => state.rightPanelOpen);
   const reduceMotion = useReducedMotion();
-  const immersive = pathname === "/now-playing" || pathname === "/premium";
+  const immersive = pathname === "/premium";
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
