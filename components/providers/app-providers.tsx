@@ -11,6 +11,7 @@ import { SiteConfigSync } from "@/components/site/site-config-sync";
 import { AppShell } from "@/components/layout/app-shell";
 import { Toaster } from "./toaster";
 import { CloudLibrarySync } from "@/components/library/cloud-library-sync";
+import { ConnectedDeviceSync } from "@/components/player/connected-device-sync";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -23,6 +24,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <AuthModal />
         <GoogleSessionSync />
         <CloudLibrarySync />
+        <ConnectedDeviceSync />
         <SiteConfigSync />
         <Toaster />
       </PlayerProvider>

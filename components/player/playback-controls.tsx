@@ -104,7 +104,8 @@ export function PlaybackControls({
         aria-label={isPlaying ? "Pause" : "Play"}
         onClick={togglePlay}
         className={cn(
-          "flex items-center justify-center rounded-full bg-foreground text-background shadow-lg transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95",
+          "flex items-center justify-center rounded-full shadow-lg transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95",
+          large ? "bg-foreground text-background" : "bg-primary text-primary-foreground shadow-[0_4px_18px_hsl(var(--primary)/.22)]",
           playSize,
         )}
       >

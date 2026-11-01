@@ -22,6 +22,18 @@ export interface YouTubeSearchResult {
   videoType?: string;
 }
 
+export interface AudiusSearchResult {
+  id: string;
+  title: string;
+  artist: string;
+  album?: string;
+  durationSeconds?: number;
+  artwork?: string;
+  genre?: string;
+  audioUrl?: string;
+  permalink?: string;
+}
+
 interface RegistrySnapshot {
   tracks: Track[];
   artists: Artist[];
@@ -163,6 +175,31 @@ export function registerYouTubeSearchResult(result: YouTubeSearchResult): Track 
 
 export function registerYouTubeSearchResults(results: YouTubeSearchResult[]): Track[] {
   return results.map(registerYouTubeSearchResult);
+}
+
+export function registerAudiusSearchResult(result: AudiusSearchResult): Track {
+  hydrate();
+  const id = result.id.trim();
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(id)) throw new Error("Invalid open music track");
+  const trackId = `aud-${id}`;
+  const existing = trackRegistry.get(trackId);
+  if (existing) return existing;
+  const artistName = result.artist.trim() || "Independent artist";
+  const artistId = `aud-artist-${slugify(artistName) || "unknown"}`;
+  const albumName = result.album?.trim() || `${result.title} · Single`;
+  const albumId = `aud-album-${id}`;
+  const artwork = result.artwork || "/art/album/blue-hour-cinema.svg";
+  if (!artistRegistry.has(artistId)) artistRegistry.set(artistId, { id: artistId, name: artistName, bio: `${artistName} on the open music catalog.`, shortBio: `Independent music by ${artistName}.`, image: artwork, location: "Open music catalog", genreIds: [], relatedArtistIds: [] });
+  if (!albumRegistry.has(albumId)) albumRegistry.set(albumId, { id: albumId, title: albumName, artistId, year: new Date().getFullYear(), releaseDate: `${new Date().getFullYear()}-01-01`, type: "Single", artwork, genreIds: [], description: result.genre || "Independent release", trackIds: [trackId] });
+  const track: Track = { id: trackId, title: result.title, artistId, albumId, duration: result.durationSeconds ?? 0, audioUrl: result.audioUrl || `https://api.audius.co/v1/tracks/${encodeURIComponent(id)}/stream`, artwork, genreIds: [], mood: result.genre || "Music", trackNumber: 1, source: "audius" };
+  trackRegistry.set(trackId, track);
+  persist();
+  return track;
+}
+
+export function restoreAudiusTrack(result: AudiusSearchResult): Track | undefined {
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(result.id) || !result.title?.trim()) return undefined;
+  return registerAudiusSearchResult(result);
 }
 
 /** Rehydrate a previously discovered YouTube track from its safe metadata snapshot. */

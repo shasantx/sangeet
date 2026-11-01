@@ -18,6 +18,7 @@ import { SearchInput } from "@/components/search/search-input";
 import { SearchResultsSkeleton } from "@/components/search/search-results-skeleton";
 import { YouTubeSearchResults, type YouTubeSearchStatus } from "@/components/search/youtube-search-results";
 import { LiveMusicDiscovery } from "@/components/search/live-music-discovery";
+import { OpenMusicSearchResults } from "@/components/search/open-music-results";
 import { cn } from "@/lib/utils";
 
 interface TopResult {
@@ -402,6 +403,7 @@ export default function SearchPage() {
         <YouTubeSearchResults query={query} onStatusChange={onCatalogStatusChange} />
       )}
       {hasQuery && <LiveMusicDiscovery query={query} />}
+      {hasQuery && <OpenMusicSearchResults query={query} />}
 
     </div>
   );

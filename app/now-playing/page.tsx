@@ -14,6 +14,7 @@ import { LikeButton } from "@/components/music/like-button";
 import { PlaybackControls } from "@/components/player/playback-controls";
 import { ProgressBar } from "@/components/player/progress-bar";
 import { VolumeControl } from "@/components/player/volume-control";
+import { ConnectedDevices } from "@/components/player/connected-devices";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -111,6 +112,7 @@ export default function NowPlayingPage() {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          <ConnectedDevices />
           {current && (
             <>
               <button

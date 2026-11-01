@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { getDynamicAlbum, getDynamicArtist, getDynamicTracks, restoreYouTubeTrack } from "@/lib/dynamic-tracks";
+import { getDynamicAlbum, getDynamicArtist, getDynamicTracks, restoreAudiusTrack, restoreYouTubeTrack } from "@/lib/dynamic-tracks";
 import { getTrack } from "@/lib/catalog";
 import { useAuthStore } from "@/store/auth-store";
 import { useLibraryStore } from "@/store/library-store";
@@ -14,7 +14,7 @@ type CloudLibrary = {
   recentlyPlayed: string[];
   recentlyPlayedAt: Record<string, number>;
   playlists: { id: string; title: string; description: string; artwork?: string; trackIds: string[]; createdAt: number; updatedAt: number }[];
-  tracks: { videoId: string; title: string; artist: string; album?: string; durationSeconds?: number; thumbnail?: string; year?: number }[];
+  tracks: ({ source?: "youtube"; videoId: string; title: string; artist: string; album?: string; durationSeconds?: number; thumbnail?: string; year?: number } | { source: "audius"; trackId: string; title: string; artist: string; album?: string; durationSeconds?: number; thumbnail?: string; genre?: string })[];
 };
 
 function unique<T>(...groups: T[][]): T[] {
@@ -30,7 +30,12 @@ function snapshot(ids: string[]): CloudLibrary {
     recentlyPlayed: state.recentlyPlayed,
     recentlyPlayedAt: state.recentlyPlayedAt,
     playlists: state.playlists,
-    tracks: getDynamicTracks(ids).filter((track) => track.source === "youtube" && track.youtubeId).map((track) => ({ videoId: track.youtubeId!, title: track.title, artist: getDynamicArtist(track.artistId)?.name ?? "YouTube", album: getDynamicAlbum(track.albumId)?.title, durationSeconds: track.duration, thumbnail: track.artwork })),
+    tracks: getDynamicTracks(ids).flatMap<CloudLibrary["tracks"][number]>((track) => {
+      const common = { title: track.title, artist: getDynamicArtist(track.artistId)?.name ?? "Independent artist", album: getDynamicAlbum(track.albumId)?.title, durationSeconds: track.duration, thumbnail: track.artwork };
+      if (track.source === "youtube" && track.youtubeId) return [{ ...common, source: "youtube" as const, videoId: track.youtubeId }];
+      if (track.source === "audius") return [{ ...common, source: "audius" as const, trackId: track.id.slice(4), genre: track.mood }];
+      return [];
+    }),
   };
 }
 
@@ -60,7 +65,10 @@ export function CloudLibrarySync() {
         const canMergeLocal = !localOwner || localOwner === userId;
         const local = useLibraryStore.getState();
         const remote = payload.library;
-        for (const track of remote?.tracks ?? []) restoreYouTubeTrack(track);
+        for (const track of remote?.tracks ?? []) {
+          if (track.source === "audius") restoreAudiusTrack({ id: track.trackId, title: track.title, artist: track.artist, album: track.album, durationSeconds: track.durationSeconds, artwork: track.thumbnail, genre: track.genre });
+          else restoreYouTubeTrack({ videoId: track.videoId, title: track.title, artist: track.artist, album: track.album, durationSeconds: track.durationSeconds, thumbnail: track.thumbnail, year: track.year });
+        }
         const valid = (ids: string[]) => unique(ids).filter((id) => Boolean(getTrack(id)));
         const timestamps = { ...(canMergeLocal ? local.recentlyPlayedAt : {}), ...(remote?.recentlyPlayedAt ?? {}) };
         if (canMergeLocal && remote?.recentlyPlayedAt) for (const [id, playedAt] of Object.entries(local.recentlyPlayedAt)) timestamps[id] = Math.max(playedAt, timestamps[id] ?? 0);

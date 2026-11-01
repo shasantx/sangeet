@@ -5,6 +5,7 @@ import { Pause, Play, SkipForward } from "lucide-react";
 import { getArtist, getTrack } from "@/lib/catalog";
 import { usePlayerStore } from "@/store/player-store";
 import { Artwork } from "@/components/music/artwork";
+import { ConnectedDevices } from "./connected-devices";
 
 export function MobileMiniPlayer() {
   const currentTrackId = usePlayerStore((state) => state.currentTrackId);
@@ -54,6 +55,7 @@ export function MobileMiniPlayer() {
             <Play className="ml-0.5 h-[18px] w-[18px] fill-current" strokeWidth={0} />
           )}
         </button>
+        <ConnectedDevices />
         <button
           type="button"
           onClick={() => next()}

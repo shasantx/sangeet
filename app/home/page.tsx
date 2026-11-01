@@ -2,27 +2,24 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Headphones, Search } from "lucide-react";
-import { albums, getAlbum, getArtist, getPlaylist, getTracks, selectedAlbums, tracks } from "@/lib/catalog";
+import { ArrowRight, Search } from "lucide-react";
+import { getArtist, getTracks, tracks } from "@/lib/catalog";
 import { getFirstName, getGreeting } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { useAppStore } from "@/store/app-store";
 import { useLibraryStore } from "@/store/library-store";
-import { PlayButton } from "@/components/music/play-button";
 import { QuickTrackTile } from "@/components/music/quick-track-tile";
 import { SectionHeader } from "@/components/music/section-header";
 import { TrackList } from "@/components/music/track-list";
-import { Artwork } from "@/components/music/artwork";
 import { registerYouTubeSearchResult, type YouTubeSearchResult } from "@/lib/dynamic-tracks";
-import { useSiteConfigStore } from "@/store/site-config-store";
 import { LiveMusicHome } from "@/components/search/live-music-discovery";
+import { OpenMusicHome } from "@/components/search/open-music-results";
 
 export default function HomePage() {
   const session = useAuthStore((state) => state.session);
   const preferredArtistIds = useAppStore((state) => state.preferredArtistIds);
   const recentlyPlayed = useLibraryStore((state) => state.recentlyPlayed);
   const likedTrackIds = useLibraryStore((state) => state.likedTrackIds);
-  const siteConfig = useSiteConfigStore((state) => state.config);
   const [greeting, setGreeting] = useState("Good evening");
   const [artistTrackIds, setArtistTrackIds] = useState<string[]>([]);
   const [loadingArtistTracks, setLoadingArtistTracks] = useState(false);
@@ -32,12 +29,9 @@ export default function HomePage() {
 
   const recentIds = useMemo(() => {
     const ids = recentlyPlayed.length ? recentlyPlayed : likedTrackIds;
-    return ids.length ? ids.slice(0, 6) : tracks.slice(0, 6).map((track) => track.id);
+    return ids.slice(0, 6);
   }, [recentlyPlayed, likedTrackIds]);
   const recentTracks = getTracks(recentIds);
-  const heroAlbum = (siteConfig.featured_album_id ? getAlbum(siteConfig.featured_album_id) : undefined) ?? selectedAlbums[0] ?? albums[0];
-  const heroArtist = heroAlbum ? getArtist(heroAlbum.artistId) : undefined;
-  const homePlaylists = siteConfig.featured_playlist_ids.map((id) => getPlaylist(id)).filter((playlist): playlist is NonNullable<typeof playlist> => Boolean(playlist));
 
   useEffect(() => {
     let active = true;
@@ -58,7 +52,7 @@ export default function HomePage() {
         const response = await fetch(`/api/youtube/search?q=${encodeURIComponent(artist.name)}`, { signal: AbortSignal.timeout(7000) });
         if (!response.ok) return [];
         const payload = await response.json() as { results?: YouTubeSearchResult[] };
-        return (payload.results ?? []).slice(0, 4).map((result) => registerYouTubeSearchResult(result).id);
+        return (payload.results ?? []).slice(0, 4).map((result) => registerYouTubeSearchResult({ ...result, artist: artist.name }).id);
       } catch {
         return [];
       }
@@ -83,9 +77,9 @@ export default function HomePage() {
         </Link>
       </header>
 
-      <section aria-label="Quick access" className="grid grid-cols-2 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+      {recentTracks.length > 0 && <section aria-label="Continue listening" className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-2 xl:grid-cols-3">
         {recentTracks.map((track) => <QuickTrackTile key={track.id} track={track} contextIds={recentIds} contextLabel="Your listening" />)}
-      </section>
+      </section>}
 
       {preferredArtistIds.length > 0 && (
         <section className="section-space" aria-label="Recommended from your artist picks">
@@ -96,41 +90,8 @@ export default function HomePage() {
         </section>
       )}
 
-      {heroAlbum && (
-        <section className="relative mt-10 grid overflow-hidden rounded-2xl border border-white/[.07] bg-[#151b17] md:min-h-[300px] md:grid-cols-[1fr_300px]">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_15%,rgba(96,190,120,.18),transparent_50%)]" />
-          <div className="relative flex flex-col items-start justify-center p-6 sm:p-9 lg:p-11">
-            <p className="eyebrow">Featured album</p>
-            <h2 className="mt-4 max-w-xl text-3xl font-semibold leading-tight tracking-[-.045em] sm:text-4xl">A good place to start listening.</h2>
-            <p className="mt-2 text-sm text-white/60">{heroAlbum.title}{heroArtist ? ` · ${heroArtist.name}` : ""}</p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <PlayButton trackIds={heroAlbum.trackIds} label={heroAlbum.title} size="md" />
-              <Link href={`/album/${heroAlbum.id}`} className="inline-flex h-11 items-center rounded-full border border-white/15 px-5 text-sm font-medium text-white/85 transition hover:bg-white/[.08]">View album</Link>
-            </div>
-          </div>
-          <Link href={`/album/${heroAlbum.id}`} className="relative order-first mx-auto w-full max-w-[220px] p-5 sm:max-w-[260px] md:order-last md:mx-0 md:max-w-none md:p-8" aria-label={`Open ${heroAlbum.title}`}>
-            <Artwork src={heroAlbum.artwork} alt={`${heroAlbum.title} cover`} priority className="aspect-square w-full rounded-xl shadow-2xl" />
-          </Link>
-        </section>
-      )}
-
+      <OpenMusicHome />
       <LiveMusicHome />
-
-      {homePlaylists.length > 0 && <section className="section-space pb-3">
-        <SectionHeader title="Curated playlists" eyebrow="Playlists" href="/explore" />
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-          {homePlaylists.map((playlist) => {
-            const firstTrack = getTracks(playlist.trackIds.slice(0, 1))[0];
-            return (
-              <Link key={playlist.id} href={`/playlist/${playlist.id}`} className="group flex min-w-0 items-center gap-3 rounded-lg border border-white/[.04] bg-white/[.025] p-2 transition hover:bg-white/[.06]">
-                <Artwork src={firstTrack?.artwork ?? playlist.artwork} alt="" className="h-14 w-14 shrink-0 rounded-md" />
-                <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{playlist.title}</span><span className="mt-1 block truncate text-xs text-muted-foreground">{playlist.description}</span></span>
-                <Headphones className="mr-2 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-primary" />
-              </Link>
-            );
-          })}
-        </div>
-      </section>}
     </div>
   );
 }
