@@ -247,6 +247,24 @@
     pointer-events: none;
   }
 
+  .mobile-dock-shell::before {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: calc(6.25rem + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, transparent, rgba(7, 7, 10, 0.58) 44%, rgba(7, 7, 10, 0.86));
+    pointer-events: none;
+  }
+
+  .mobile-mini-player {
+    background:
+      radial-gradient(ellipse at 6% 0%, hsl(var(--primary) / 0.12), transparent 48%),
+      linear-gradient(110deg, rgba(27, 27, 33, 0.96), rgba(18, 18, 23, 0.94));
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    -webkit-backdrop-filter: blur(18px) saturate(1.18);
+    backdrop-filter: blur(18px) saturate(1.18);
+  }
+
   .mobile-sidebar-layer {
     position: fixed;
     z-index: 80;
@@ -275,6 +293,7 @@
   }
 
   .dock.mobile-dock {
+    z-index: 1;
     position: static;
     display: flex;
     width: min(100%, 430px);
@@ -283,10 +302,12 @@
     justify-content: space-around;
     gap: 0.15rem;
     padding: 0.3rem 0.45rem;
-    border: 1px solid rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 999px;
-    background: #171521;
-    box-shadow: 0 12px 38px rgba(0, 0, 0, 0.42);
+    background: linear-gradient(145deg, rgba(28, 26, 38, 0.91), rgba(17, 17, 23, 0.94));
+    -webkit-backdrop-filter: blur(22px) saturate(1.25);
+    backdrop-filter: blur(22px) saturate(1.25);
+    box-shadow: 0 14px 42px rgba(0, 0, 0, 0.46), inset 0 1px 0 rgba(255, 255, 255, 0.055);
     pointer-events: auto;
   }
 
@@ -326,7 +347,16 @@
 
   .mobile-dock-item.dock-active .mobile-dock-pill {
     min-width: 80px;
-    background: #fff;
+    background: linear-gradient(180deg, #fff, #ecebf1);
+    box-shadow: 0 2px 12px rgba(255, 255, 255, 0.16);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .dock.mobile-dock,
+    .mobile-mini-player {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
   }
 
   .dock-label {

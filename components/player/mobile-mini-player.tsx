@@ -22,19 +22,19 @@ export function MobileMiniPlayer() {
 
   return (
     <div
-      className="fixed inset-x-0 z-40 border-t border-white/[.08] bg-[#17171e] md:hidden"
-      style={{ bottom: "calc(76px + env(safe-area-inset-bottom))" }}
+      className="mobile-mini-player fixed inset-x-2 z-40 overflow-hidden rounded-2xl border border-white/[.1] md:hidden"
+      style={{ bottom: "calc(80px + env(safe-area-inset-bottom))" }}
     >
       <div className="absolute inset-x-0 top-0 h-[2px] bg-white/[.08]">
         <div className="h-full bg-primary transition-[width] duration-200" style={{ width: `${progress}%` }} />
       </div>
-      <div className="flex h-[62px] items-center gap-3 pl-3 pr-2">
+      <div className="flex h-[64px] items-center gap-2.5 px-2.5">
         <Link
           href="/now-playing"
           className="flex min-w-0 flex-1 items-center gap-3 outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label={`Open now playing: ${current.title} by ${artist?.name ?? "Unknown artist"}`}
         >
-          <Artwork src={current.artwork} alt="" className="h-10 w-10 shrink-0 rounded-md" />
+          <Artwork src={current.artwork} alt="" className="h-11 w-11 shrink-0 rounded-xl" />
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <p className="truncate text-[12.5px] font-medium leading-4 text-foreground">{current.title}</p>

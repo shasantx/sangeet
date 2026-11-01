@@ -10,6 +10,7 @@ import { GoogleSessionSync } from "@/components/auth/google-session-sync";
 import { SiteConfigSync } from "@/components/site/site-config-sync";
 import { AppShell } from "@/components/layout/app-shell";
 import { Toaster } from "./toaster";
+import { CloudLibrarySync } from "@/components/library/cloud-library-sync";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -21,6 +22,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <CreatePlaylistDialog />
         <AuthModal />
         <GoogleSessionSync />
+        <CloudLibrarySync />
         <SiteConfigSync />
         <Toaster />
       </PlayerProvider>

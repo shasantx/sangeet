@@ -17,4 +17,8 @@ For deployment, use the canonical HTTPS origin in `APP_URL` and register `https:
 
 ## Account and library scope
 
-Google sign-in creates a server-verified identity session. Sangeet listener data (likes, playlists, history, and preferences) is currently kept in the browser and does not sync across devices. Password recovery is handled by Google. Sangeet does not implement local email/password accounts.
+Google sign-in creates a server-verified identity session. Favorites, playlists, and recently played tracks sync to the Sangeet database after the `20261101000000_user_library_sync.sql` migration is applied. Player and appearance preferences remain on each device. Password recovery is handled by Google; Sangeet does not implement local email/password accounts.
+
+### Optional My YouTube Library
+
+To enable the separate read-only connection, add `https://your-domain.example/api/youtube/connect/callback` (and the localhost equivalent for development) as an authorized redirect URI in the same Google OAuth web client. Apply `20261101010000_youtube_connections.sql`, then set `YOUTUBE_TOKEN_ENCRYPTION_KEY` to 64 random hexadecimal characters (32 random bytes). For example, generate it with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Store this key as a server-only deployment secret. Users connect from **Settings → My YouTube Library**; normal sign-in never requests this scope. Sangeet reads owned playlists, playlist contents, and liked videos when the YouTube Data API permits it. It does not read YouTube Music listening history and does not edit remote playlists.

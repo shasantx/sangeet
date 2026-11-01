@@ -58,7 +58,7 @@ export default function RecentlyPlayedPage() {
               Recently played
             </h1>
             <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-muted-foreground">
-              `Your latest ${HISTORY_RETENTION_LIMIT.toLocaleString()} tracks, kept on this device.`
+              `Your latest ${HISTORY_RETENTION_LIMIT.toLocaleString()} tracks. Sign in to sync your listening history across devices.`
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground">
               <span className="font-medium text-foreground">Your history</span>
@@ -90,7 +90,7 @@ export default function RecentlyPlayedPage() {
           <EmptyState
             icon={<History className="h-5 w-5" />}
             title="Nothing played yet"
-            description="Start a record and your listening history will build here automatically. It stays on this device."
+            description="Start a record and your listening history will build here automatically. Sign in to keep it in sync across devices."
             action={
               <Link
                 href="/home"
@@ -152,8 +152,7 @@ export default function RecentlyPlayedPage() {
               <div className="rounded-xl border border-white/[.055] bg-surface/70 p-5">
                 <p className="eyebrow mb-3">Your history, privately</p>
                 <p className="text-[11px] leading-relaxed text-muted-foreground">
-                  Sangeet is a local demo. Your history is stored in this browser only and is never
-                  uploaded. Clearing it cannot be undone.
+                  Your history is private to your Sangeet account when signed in. Clearing it removes the saved history from this device and syncs that change.
                 </p>
                 <Link
                   href="/liked"

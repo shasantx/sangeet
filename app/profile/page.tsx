@@ -259,8 +259,8 @@ export default function ProfilePage() {
       <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-white/[.05] bg-white/[.015] px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">
         <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
         <p>{isAuthenticated
-          ? "Your Google account authenticates your Sangeet profile. Likes, playlists, and listening history are currently stored only in this browser."
-          : "You are listening as a guest. Your likes, playlists, and listening history are stored only in this browser. Sign in with Google to connect an account profile."}</p>
+          ? "Your Google account secures your Sangeet profile. Favorites, playlists and listening history sync to your account when the library database migration is installed."
+          : "You are listening as a guest. Your library stays on this device until you sign in with Google."}</p>
       </div>
 
       <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -481,7 +481,7 @@ export default function ProfilePage() {
           <div className="rounded-xl border border-white/[.055] bg-white/[.018] p-5">
             <p className="eyebrow">About this profile</p>
             <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-              Your library stays on this device. Sign in with Google to connect your profile.
+              Guests keep a local library. Sign in with Google to sync favorites, playlists and history across devices.
             </p>
             <div className="mt-4 flex items-center gap-2 border-t border-white/[.06] pt-4 text-[10px] text-muted-foreground/60">
               <Artwork src="/brand/sangeet-logo.png" alt="" className="h-5 w-5 rounded-md" />

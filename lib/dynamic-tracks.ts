@@ -165,6 +165,12 @@ export function registerYouTubeSearchResults(results: YouTubeSearchResult[]): Tr
   return results.map(registerYouTubeSearchResult);
 }
 
+/** Rehydrate a previously discovered YouTube track from its safe metadata snapshot. */
+export function restoreYouTubeTrack(result: YouTubeSearchResult): Track | undefined {
+  if (!/^[\w-]{11}$/.test(result.videoId) || !result.title?.trim()) return undefined;
+  return registerYouTubeSearchResult(result);
+}
+
 export function registerLocalAudioTrack(track: Track, artist: Artist, album: Album): Track {
   hydrate();
   artistRegistry.set(artist.id, artist);
