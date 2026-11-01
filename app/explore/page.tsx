@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, Compass, Play, Sparkles } from "lucide-react";
+import { ArrowUpRight, Compass, Play } from "lucide-react";
 import {
   albums,
   artists,
@@ -68,7 +68,6 @@ export default function ExplorePage() {
                 <span className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-[#C9B5F5]">
                   Editor’s pick
                 </span>
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
               </div>
               <h2 className="mt-5 max-w-lg font-display text-[36px] font-medium leading-[.98] tracking-[-0.05em] text-white sm:text-[48px]">
                 {editorial.title}
@@ -142,9 +141,9 @@ export default function ExplorePage() {
 
       <section className="section-space">
         <SectionHeader
-          title="Sangeet selections"
+          title="Music to explore"
           eyebrow="From the catalog"
-          description="A hand-picked route into the sample catalog."
+          description="Browse songs and albums across the Sangeet catalog."
           href="/new-releases"
           linkLabel="More releases"
         />
@@ -180,11 +179,11 @@ export default function ExplorePage() {
           <div className="min-w-0 rounded-xl border border-white/[.045] bg-white/[.012] px-2 py-3 sm:px-3">
             <TrackList
               trackIds={selectedTracks.map((track) => track.id)}
-              label="Sangeet selections"
+              label="Music to explore"
               showAlbum
             />
             <div className="mx-2 mt-4 flex items-center justify-between border-t border-white/[.055] pt-3">
-              <p className="text-[10px] text-muted-foreground/60">Curated selection</p>
+              <p className="text-[10px] text-muted-foreground/60">More music</p>
               <Link
                 href="/new-releases"
                 className="text-[11px] font-medium text-muted-foreground transition hover:text-foreground"
@@ -199,10 +198,10 @@ export default function ExplorePage() {
       <section className="section-space">
         <SectionHeader
           title="Selected for you"
-          eyebrow="Sangeet editorial"
-          description="Sequenced records for a particular hour, not just a collection of songs."
+          eyebrow="Playlists"
+          description="Browse playlists and find your next listen."
           href="/made-for-you"
-          linkLabel="Sangeet mixes"
+          linkLabel="Playlists"
         />
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">
           {playlists.slice(0, 5).map((playlist) => (

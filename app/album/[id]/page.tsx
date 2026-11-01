@@ -16,6 +16,7 @@ import { CollectionPlayButton, CollectionShuffleButton } from "@/components/musi
 import { SaveAlbumButton } from "@/components/music/save-album-button";
 import { SectionHeader } from "@/components/music/section-header";
 import { TrackList } from "@/components/music/track-list";
+import { LiveCatalogPage } from "@/components/search/live-music-discovery";
 
 export function generateStaticParams() {
   return albums.map((album) => ({ id: album.id }));
@@ -39,6 +40,7 @@ export async function generateMetadata({
 export default async function AlbumPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const album = getAlbum(id);
+  if (!album && id.startsWith("ytm-") && id.length > 4) return <LiveCatalogPage kind="album" browseId={id.slice(4)} />;
   if (!album) notFound();
 
   const artist = getArtist(album.artistId);

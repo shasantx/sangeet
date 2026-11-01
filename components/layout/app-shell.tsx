@@ -13,13 +13,14 @@ import { MobileSidebar } from "./mobile-sidebar";
 import { BottomPlayer } from "@/components/player/bottom-player";
 import { MobileMiniPlayer } from "@/components/player/mobile-mini-player";
 import { SiteAnnouncement } from "@/components/site/site-announcement";
+import { SiteFooter } from "@/components/site/site-footer";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed);
   const rightPanelOpen = useAppStore((state) => state.rightPanelOpen);
   const reduceMotion = useReducedMotion();
-  const immersive = pathname === "/premium";
+  const immersive = pathname === "/premium" || pathname === "/now-playing";
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -40,7 +41,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           {children}
         </motion.div>
-        {pathname !== "/premium" && <MobileSidebar />}
+        {pathname !== "/premium" && pathname !== "/now-playing" && <MobileSidebar />}
       </main>
     );
   }
@@ -67,6 +68,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {children}
           </motion.div>
         </main>
+        <SiteFooter />
       </div>
       <RightPanel />
       <BottomPlayer />

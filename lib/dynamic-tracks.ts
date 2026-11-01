@@ -150,7 +150,7 @@ export function registerYouTubeSearchResult(result: YouTubeSearchResult): Track 
     audioUrl: "",
     artwork,
     genreIds: [] as GenreId[],
-    mood: "YouTube video",
+    mood: "Music",
     trackNumber: 1,
     source: "youtube",
     youtubeId: result.videoId,
