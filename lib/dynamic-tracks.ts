@@ -1,4 +1,5 @@
 import type { Album, Artist, GenreId, Track } from "./types";
+import { toHighResArtwork } from "./artwork";
 
 /**
  * A small runtime registry for YouTube videos discovered through the local
@@ -122,7 +123,7 @@ export function registerYouTubeSearchResult(result: YouTubeSearchResult): Track 
   const artistId = `yt-artist-${slugify(artistName) || "unknown"}`;
   const albumTitle = result.album?.trim() || `${result.title} · Single`;
   const albumId = `yt-album-${result.videoId}`;
-  const artwork = result.thumbnail || `https://i.ytimg.com/vi/${result.videoId}/hqdefault.jpg`;
+  const artwork = toHighResArtwork(result.thumbnail) || `https://i.ytimg.com/vi/${result.videoId}/hqdefault.jpg`;
   const duration = result.durationSeconds && result.durationSeconds > 0 ? result.durationSeconds : 0;
 
   if (!artistRegistry.has(artistId)) {

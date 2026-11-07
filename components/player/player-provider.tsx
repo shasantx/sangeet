@@ -321,6 +321,48 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     };
   }, [currentTrackId, addRecentlyPlayed]);
 
+  // Desktop native app integration (Windows media keys, tray status, presence)
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.sangeetDesktop) return;
+    const desktop = window.sangeetDesktop;
+
+    const cleanup = desktop.onMediaAction((action) => {
+      const state = usePlayerStore.getState();
+      if (action === "play-pause") {
+        state.togglePlay();
+      } else if (action === "next") {
+        state.next();
+      } else if (action === "previous") {
+        state.previous();
+      } else if (action === "stop") {
+        const audio = getAudioElement();
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+        state.syncFromAudio({ currentTime: 0, isPlaying: false, isLoading: false });
+      }
+    });
+
+    return cleanup;
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.sangeetDesktop) return;
+    const track = currentTrackId ? getTrack(currentTrackId) : null;
+    const artist = track ? getArtist(track.artistId) : null;
+    window.sangeetDesktop.sendPlaybackState({
+      isPlaying,
+      track: track
+        ? {
+            title: track.title,
+            artist: artist?.name ?? "Featured artist",
+            artwork: track.artwork,
+          }
+        : undefined,
+    });
+  }, [currentTrackId, isPlaying]);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!useAppStore.getState().shortcuts) return;

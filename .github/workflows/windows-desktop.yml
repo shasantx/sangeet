@@ -1,0 +1,52 @@
+name: Build Windows Desktop App
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'electron/**'
+      - '.github/workflows/windows-desktop.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows Portable Executable
+        run: npm run desktop:dist
+
+      - name: Rename executable for download
+        shell: pwsh
+        run: |
+          if (Test-Path "release\Sangeet 1.0.0.exe") {
+            Copy-Item "release\Sangeet 1.0.0.exe" -Destination "release\Sangeet.exe"
+          } elseif (Test-Path "release\win-unpacked\Sangeet.exe") {
+            Copy-Item "release\win-unpacked\Sangeet.exe" -Destination "release\Sangeet.exe"
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sangeet-windows-exe
+          path: release/Sangeet.exe
+          if-no-files-found: error
+          retention-days: 14
+
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: desktop-build-${{ github.run_number }}
+          name: Sangeet Windows Desktop · build ${{ github.run_number }}
+          make_latest: false
+          files: release/Sangeet.exe

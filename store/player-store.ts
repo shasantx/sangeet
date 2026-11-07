@@ -277,28 +277,47 @@ export const usePlayerStore = create<PlayerState>()(
             }
             return;
           }
-          const track = getTrack(state.currentTrackId);
-          if (track?.youtubeId) {
-            if (state.isPlaying) {
-              pauseYouTube();
-              set({ isPlaying: false, isLoading: false });
-            } else {
-              set({ isPlaying: true, isLoading: true, error: null });
-              playYouTube();
-            }
-            return;
-          }
-          if (!audio) {
-            set({ error: "The audio engine is still loading. Please try again." });
-            return;
-          }
+
+          const hasAudioStream = Boolean(audio && audio.src && audio.src !== window.location.href && !audio.error);
+
           if (state.isPlaying) {
-            audio.pause();
+            if (hasAudioStream && audio) {
+              audio.pause();
+            }
+            pauseYouTube();
             set({ isPlaying: false, isLoading: false });
             return;
           }
-          set({ isPlaying: true, isLoading: true, error: null });
-          resumeAudio(audio);
+
+          set({ isPlaying: true, isLoading: false, error: null });
+          if (hasAudioStream && audio) {
+            resumeAudio(audio);
+            return;
+          }
+          const track = getTrack(state.currentTrackId);
+          if (track?.youtubeId) {
+            playYouTube();
+          } else if (audio) {
+            resumeAudio(audio);
+          }
+        },
+
+        seek: (timeSeconds: number) => {
+          const state = get();
+          const target = Math.max(0, Math.min(timeSeconds, state.duration || timeSeconds));
+          set({ currentTime: target });
+          const audio = getAudioElement();
+          const hasAudioStream = Boolean(audio && audio.src && audio.src !== window.location.href && !audio.error);
+          if (hasAudioStream && audio) {
+            audio.currentTime = target;
+            return;
+          }
+          const track = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+          if (track?.youtubeId) {
+            seekYouTube(target);
+          } else if (audio) {
+            audio.currentTime = target;
+          }
         },
 
         next: (automatic = false) => {
@@ -403,16 +422,6 @@ export const usePlayerStore = create<PlayerState>()(
           if (isYouTube) seekYouTube(0);
           else if (audio) audio.currentTime = 0;
           set({ currentTime: 0 });
-        },
-
-        seek: (seconds) => {
-          const state = get();
-          const audio = getAudioElement();
-          const current = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
-          const target = clamp(seconds, 0, state.duration || 0);
-          if (current?.youtubeId) seekYouTube(target);
-          else if (audio) audio.currentTime = target;
-          set({ currentTime: target, error: null });
         },
 
         setVolume: (volume) => {

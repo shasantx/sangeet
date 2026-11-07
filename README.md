@@ -15,6 +15,11 @@ Google OAuth client setup and callback registration are documented in [AUTH_SETU
 
 ## Current features
 
+- **Real-time Synchronized Lyrics**: Word-for-word and line-by-line synchronized karaoke lyrics view powered by LRCLIB and YouTube Music with interactive click-to-seek playback.
+- **Ultra-HD Retina Artwork Engine**: High-resolution album art upscale (up to 1200px) with adaptive ambient background glows matching each track.
+- **Windows Desktop Application**: Standalone Windows `.exe` desktop client with global media shortcuts, system tray playback controls, taskbar preview buttons, and session sync.
+- **Cross-Platform Cloud Sync**: Real-time Supabase library sync for liked songs, custom playlists, recently played queue, and listening history across Web, Windows, and Android.
+- **100M+ Track Discovery**: Fast YouTube Music and regional search for Nepali, Hindi, Bollywood, Indie, and international songs.
 - Responsive browse, search, artist, album, playlist, genre, library, and recently played pages.
 - Guest libraries and playback preferences are browser-local. Signed-in favorites, playlists and recently played data sync to the private Supabase library table.
 - YouTube Music metadata search through the separate local `ytmusicapi` service, plus the official YouTube IFrame Player for playback.

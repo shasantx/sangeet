@@ -3,6 +3,7 @@
 import * as React from "react";
 import { AudioLines } from "lucide-react";
 import { cn, hashString } from "@/lib/utils";
+import { toHighResArtwork } from "@/lib/artwork";
 
 interface ArtworkProps {
   src?: string | null;
@@ -29,26 +30,46 @@ export function Artwork({
   priority = false,
   children,
 }: ArtworkProps) {
+  const [currentSrc, setCurrentSrc] = React.useState<string>(() => toHighResArtwork(src));
   const [failed, setFailed] = React.useState(false);
 
   React.useEffect(() => {
+    setCurrentSrc(toHighResArtwork(src));
     setFailed(false);
   }, [src]);
+
+  const handleError = () => {
+    // If maxres failed on ytimg, try sddefault or hqdefault fallback
+    if (currentSrc.includes("maxresdefault.jpg")) {
+      setCurrentSrc(currentSrc.replace("maxresdefault.jpg", "sddefault.jpg"));
+      return;
+    }
+    if (currentSrc.includes("sddefault.jpg")) {
+      setCurrentSrc(currentSrc.replace("sddefault.jpg", "hqdefault.jpg"));
+      return;
+    }
+    // If upgraded googleusercontent failed, try original src
+    if (src && currentSrc !== src) {
+      setCurrentSrc(src);
+      return;
+    }
+    setFailed(true);
+  };
 
   const palette = fallbackPalettes[hashString(alt) % fallbackPalettes.length];
 
   return (
     <div className={cn("relative isolate overflow-hidden bg-elevated", className)}>
-      {src && !failed ? (
-        // Local SVG artwork is intentionally rendered with a plain img to support graceful fallbacks.
+      {currentSrc && !failed ? (
+        // Plain img for high-res CDN flexibility and seamless fallback chain
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={src}
+          src={currentSrc}
           alt={alt}
           loading={priority ? "eager" : "lazy"}
           decoding="async"
-          onError={() => setFailed(true)}
-          className={cn("h-full w-full object-cover", imgClassName)}
+          onError={handleError}
+          className={cn("h-full w-full object-cover transition-opacity duration-300", imgClassName)}
           draggable={false}
         />
       ) : (

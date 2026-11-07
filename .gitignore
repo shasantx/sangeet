@@ -17,3 +17,6 @@ next-env.d.ts
 .venv-ytm
 __pycache__
 *.pyc
+release
+dist
+

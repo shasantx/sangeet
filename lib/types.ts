@@ -95,3 +95,18 @@ export interface DemoProfile {
   plan: string;
   avatarColor: string;
 }
+
+declare global {
+  interface Window {
+    sangeetDesktop?: {
+      isDesktop: boolean;
+      platform: string;
+      onMediaAction: (callback: (action: string) => void) => () => void;
+      sendPlaybackState: (data: { isPlaying: boolean; track?: { title: string; artist: string; artwork?: string } }) => void;
+      minimize: () => void;
+      maximize: () => void;
+      close: () => void;
+    };
+  }
+}
+
