@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Copy, Check, Loader2, Music2, Sparkles } from "lucide-react";
+import { Copy, Check, Loader2, Music2, Mic2 } from "lucide-react";
 import { usePlayerStore } from "@/store/player-store";
 import { toast } from "@/store/ui-store";
 
@@ -130,24 +130,24 @@ export function LyricsView({ trackTitle, artistName, videoId, duration }: Lyrics
   }
 
   return (
-    <div className="relative rounded-2xl border border-white/[.07] bg-white/[.018] p-5 sm:p-8">
+    <div className="flex h-full min-h-[380px] flex-col rounded-xl border border-white/[0.06] bg-[#0b0d0c] p-4 sm:p-6">
       {/* Header controls */}
-      <div className="mb-6 flex items-center justify-between border-b border-white/[.06] pb-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          <span className="text-xs font-semibold uppercase tracking-wider text-primary">
-            {data.hasTimestamps ? "Synchronized Lyrics" : "Song Lyrics"}
+      <div className="mb-4 flex items-center justify-between border-b border-white/[0.06] pb-3">
+        <div className="flex items-center gap-2 text-xs">
+          <Mic2 className="h-3.5 w-3.5 text-[#1ed760]" />
+          <span className="font-semibold text-white">
+            {data.hasTimestamps ? "Synchronized Lyrics" : "Plain Lyrics"}
           </span>
-          <span className="text-[11px] text-muted-foreground/60">· {data.source}</span>
+          <span className="font-mono text-[11px] text-[#636c65]">· {data.source}</span>
         </div>
         <button
           type="button"
           onClick={handleCopy}
-          className="inline-flex items-center gap-1.5 rounded-full border border-white/[.08] bg-white/[.03] px-3 py-1.5 text-xs text-muted-foreground transition hover:border-white/[.15] hover:bg-white/[.06] hover:text-foreground"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-[#9ba39d] transition hover:bg-white/[0.07] hover:text-white"
           aria-label="Copy lyrics text"
         >
-          {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-          {copied ? "Copied" : "Copy lyrics"}
+          {copied ? <Check className="h-3 w-3 text-[#1ed760]" /> : <Copy className="h-3 w-3" />}
+          <span>{copied ? "Copied" : "Copy"}</span>
         </button>
       </div>
 
@@ -155,7 +155,7 @@ export function LyricsView({ trackTitle, artistName, videoId, duration }: Lyrics
       {data.hasTimestamps && data.syncedLines.length > 0 ? (
         <div
           ref={scrollContainerRef}
-          className="max-h-[520px] overflow-y-auto pr-3 space-y-4 scroll-smooth scrollbar-thin scrollbar-thumb-white/10"
+          className="flex-1 overflow-y-auto pr-2 space-y-3.5 scroll-smooth"
         >
           {data.syncedLines.map((line, idx) => {
             const isActive = idx === activeIndex;
@@ -165,12 +165,12 @@ export function LyricsView({ trackTitle, artistName, videoId, duration }: Lyrics
                 key={`${line.timeMs}-${idx}`}
                 ref={isActive ? activeLineRef : null}
                 onClick={() => seek(line.timeSec)}
-                className={`cursor-pointer transition-all duration-300 select-none ${
+                className={`cursor-pointer transition-all duration-200 select-none ${
                   isActive
-                    ? "text-2xl sm:text-3xl font-bold text-white scale-[1.02] origin-left drop-shadow-[0_2px_12px_rgba(30,215,96,.3)]"
+                    ? "text-xl sm:text-2xl font-bold text-[#1ed760]"
                     : isPast
-                    ? "text-lg sm:text-xl font-medium text-white/45 hover:text-white/80"
-                    : "text-lg sm:text-xl font-medium text-white/30 hover:text-white/70"
+                    ? "text-sm sm:text-base font-normal text-[#9ba39d] hover:text-white"
+                    : "text-sm sm:text-base font-normal text-[#636c65] hover:text-[#9ba39d]"
                 }`}
               >
                 {line.text}
@@ -180,14 +180,14 @@ export function LyricsView({ trackTitle, artistName, videoId, duration }: Lyrics
         </div>
       ) : (
         /* Plain text lyrics formatted in stanzas */
-        <div className="max-h-[520px] overflow-y-auto pr-3 whitespace-pre-line text-base sm:text-lg leading-relaxed text-white/85">
+        <div className="flex-1 overflow-y-auto pr-2 whitespace-pre-line text-sm sm:text-base leading-relaxed text-[#9ba39d]">
           {data.plainLyrics}
         </div>
       )}
 
       {data.hasTimestamps && (
-        <p className="mt-6 border-t border-white/[.06] pt-3 text-[11px] text-muted-foreground/60">
-          Tip: Tap any lyric line to jump directly to that part of the song.
+        <p className="mt-3 border-t border-white/[0.06] pt-2 font-mono text-[10px] text-[#636c65]">
+          Click any lyric line to jump directly to that point in the song.
         </p>
       )}
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Expand, ListMusic, RotateCcw } from "lucide-react";
+import { Expand, ListMusic, Mic2, RotateCcw } from "lucide-react";
 import { albumMap, artistMap, getArtist, getTrack } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/store/player-store";
@@ -101,6 +101,18 @@ export function BottomPlayer() {
           <ConnectedDevices />
           <Tooltip>
             <TooltipTrigger asChild>
+              <Link
+                href="/now-playing"
+                aria-label="View synchronized lyrics"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <Mic2 className="h-[16px] w-[16px]" strokeWidth={1.7} />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>Lyrics</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
               <button
                 type="button"
                 onClick={toggleQueue}
@@ -112,7 +124,7 @@ export function BottomPlayer() {
             </TooltipTrigger>
             <TooltipContent>Queue</TooltipContent>
           </Tooltip>
-          <VolumeControl className="hidden 2xl:flex" />
+          <VolumeControl className="hidden lg:flex w-28 xl:w-36" />
           <Tooltip>
             <TooltipTrigger asChild>
               <Link

@@ -14,11 +14,14 @@ import { BottomPlayer } from "@/components/player/bottom-player";
 import { MobileMiniPlayer } from "@/components/player/mobile-mini-player";
 import { SiteAnnouncement } from "@/components/site/site-announcement";
 import { SiteFooter } from "@/components/site/site-footer";
+import { usePlayerStore } from "@/store/player-store";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed);
   const rightPanelOpen = useAppStore((state) => state.rightPanelOpen);
+  const currentTrackId = usePlayerStore((state) => state.currentTrackId);
+  const hasTrack = Boolean(currentTrackId);
   const reduceMotion = useReducedMotion();
   const immersive = pathname === "/premium" || pathname === "/now-playing";
 
@@ -60,7 +63,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         <TopBar />
         <SiteAnnouncement />
-        <main className="min-h-[calc(100dvh-70px)] pb-[calc(146px+env(safe-area-inset-bottom))] md:pb-[108px]">
+        <main
+          className={cn(
+            "min-h-[calc(100dvh-70px)]",
+            hasTrack
+              ? "pb-[calc(146px+env(safe-area-inset-bottom))] md:pb-[104px]"
+              : "pb-[calc(76px+env(safe-area-inset-bottom))] md:pb-[28px]"
+          )}
+        >
           <motion.div
             key={pathname}
             initial={reduceMotion ? false : { opacity: 0, y: 5 }}

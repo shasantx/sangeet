@@ -134,7 +134,7 @@ export default function HomePage() {
               {recentTracks.length >= 4 ? "Continue listening" : "Popular quick picks"}
             </h2>
           </div>
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 sm:gap-2.5">
             {quickPicks.map((track) => (
               <QuickTrackTile
                 key={track.id}
@@ -156,7 +156,7 @@ export default function HomePage() {
             description="The most played playlists on Sangeet and YouTube Music."
             href="/explore"
           />
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {featuredPlaylists.slice(0, 6).map((playlist) => (
               <PlaylistCard key={playlist.id} playlist={playlist} />
             ))}
@@ -173,7 +173,7 @@ export default function HomePage() {
             description="Explore discography, albums, and top songs."
             href="/explore"
           />
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {popularSingers.slice(0, 6).map((artist) => (
               <ArtistCard key={artist.id} artist={artist} />
             ))}
@@ -190,7 +190,7 @@ export default function HomePage() {
             description="Full-length records with original tracklists and high-res covers."
             href="/explore"
           />
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {popularAlbumsList.map((album) => (
               <AlbumCard key={album.id} album={album} />
             ))}
