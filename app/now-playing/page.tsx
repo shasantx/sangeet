@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  ChevronDown,
   Disc3,
   ListMusic,
   Mic2,
@@ -149,19 +150,21 @@ export default function NowPlayingPage() {
         className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,rgba(30,215,96,0.06),transparent_70%)]"
       />
 
-      {/* Top Header - Always Fixed at top */}
-      <header className="h-14 sm:h-16 shrink-0 border-b border-white/[0.08] bg-[#090b09]/95 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <div className="flex min-w-0 items-center gap-3">
+      {/* Top Header - Responsive for Mobile & Desktop */}
+      <header className="h-14 sm:h-16 shrink-0 border-b border-white/[0.08] bg-[#090b09]/95 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2">
+        {/* Left Side: Back action */}
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Link
             href="/home"
-            className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-xs font-medium text-[#9ba39d] transition hover:bg-white/[0.07] hover:text-white"
+            className="flex h-9 w-9 sm:w-auto shrink-0 items-center justify-center sm:justify-start gap-1.5 rounded-full sm:rounded-lg border border-white/[0.08] bg-white/[0.03] sm:px-3 text-xs font-medium text-[#9ba39d] transition hover:bg-white/[0.07] hover:text-white"
             aria-label="Back to home"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ChevronDown className="h-4 w-4 sm:hidden" />
+            <ArrowLeft className="hidden sm:inline h-3.5 w-3.5" />
             <span className="hidden sm:inline">Back</span>
           </Link>
 
-          <div className="min-w-0">
+          <div className="hidden sm:block min-w-0">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-[#1ed760]">
               Now Playing
             </span>
@@ -171,45 +174,45 @@ export default function NowPlayingPage() {
           </div>
         </div>
 
-        {/* Right Header Extras */}
-        <div className="flex items-center gap-2">
-          {/* Mobile Mode Switcher (visible on < lg) */}
-          <div className="flex items-center rounded-lg border border-white/[0.08] bg-white/[0.03] p-0.5 lg:hidden">
-            <button
-              type="button"
-              onClick={() => setMobileMode("player")}
-              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition ${
-                mobileMode === "player"
-                  ? "bg-white/[0.12] text-white"
-                  : "text-[#9ba39d] hover:text-white"
-              }`}
-            >
-              Player
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileMode("lyrics")}
-              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition ${
-                mobileMode === "lyrics"
-                  ? "bg-[#1ed760] text-black font-semibold"
-                  : "text-[#9ba39d] hover:text-white"
-              }`}
-            >
-              Lyrics
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileMode("queue")}
-              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition ${
-                mobileMode === "queue"
-                  ? "bg-white/[0.12] text-white"
-                  : "text-[#9ba39d] hover:text-white"
-              }`}
-            >
-              Queue ({upcoming.length})
-            </button>
-          </div>
+        {/* Center: Mobile 3-Way Mode Switcher (visible on < lg) */}
+        <div className="flex items-center rounded-xl border border-white/[0.08] bg-white/[0.03] p-0.5 lg:hidden">
+          <button
+            type="button"
+            onClick={() => setMobileMode("player")}
+            className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+              mobileMode === "player"
+                ? "bg-white/[0.12] text-white"
+                : "text-[#9ba39d] hover:text-white"
+            }`}
+          >
+            Player
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileMode("lyrics")}
+            className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+              mobileMode === "lyrics"
+                ? "bg-[#1ed760] text-black"
+                : "text-[#9ba39d] hover:text-white"
+            }`}
+          >
+            Lyrics
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileMode("queue")}
+            className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+              mobileMode === "queue"
+                ? "bg-white/[0.12] text-white"
+                : "text-[#9ba39d] hover:text-white"
+            }`}
+          >
+            Queue
+          </button>
+        </div>
 
+        {/* Right Header Extras */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <ConnectedDevices />
 
           {current && (
@@ -218,7 +221,7 @@ export default function NowPlayingPage() {
                 type="button"
                 onClick={() => void copyLink()}
                 aria-label="Copy song link"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-[#9ba39d] transition hover:text-white"
+                className="hidden sm:flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-[#9ba39d] transition hover:text-white"
               >
                 <Share2 className="h-3.5 w-3.5" />
               </button>
@@ -239,6 +242,9 @@ export default function NowPlayingPage() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={toggleQueue}>
                     <ListMusic className="mr-2 h-3.5 w-3.5" /> Full queue
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => void copyLink()}>
+                    <Share2 className="mr-2 h-3.5 w-3.5" /> Share song
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-white/[0.06]" />
                   {artist && (
@@ -268,18 +274,18 @@ export default function NowPlayingPage() {
       </header>
 
       {/* Main Content Area - Strictly Viewport Height Constrained */}
-      <main className="flex-1 min-h-0 overflow-hidden p-3 sm:p-5 lg:p-6">
+      <main className="flex-1 min-h-0 overflow-hidden p-2.5 sm:p-5 lg:p-6">
         {current ? (
-          <div className="h-full grid items-stretch gap-5 lg:grid-cols-[minmax(320px,390px)_1fr] overflow-hidden">
+          <div className="h-full grid items-stretch gap-4 sm:gap-5 lg:grid-cols-[minmax(320px,390px)_1fr] overflow-hidden">
             {/* Left Column: Player Deck (Never scrolls away!) */}
             <div
-              className={`h-full flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-[#111412] p-5 shadow-2xl overflow-hidden ${
+              className={`h-full flex flex-col justify-between rounded-2xl sm:rounded-3xl border border-white/[0.08] bg-[#111412] p-4 sm:p-5 shadow-2xl overflow-hidden ${
                 mobileMode !== "player" ? "hidden lg:flex" : "flex"
               }`}
             >
               {/* Artwork Box */}
               <div className="flex flex-col items-center">
-                <div className="relative aspect-square w-full max-w-[270px] sm:max-w-[310px] max-h-[38vh] overflow-hidden rounded-xl border border-white/[0.08] bg-[#161a17] shadow-2xl shrink-0">
+                <div className="relative aspect-square w-full max-w-[240px] sm:max-w-[310px] max-h-[32vh] sm:max-h-[38vh] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#161a17] shadow-2xl shrink-0">
                   <Artwork
                     key={current.id}
                     src={current.artwork}
@@ -290,9 +296,9 @@ export default function NowPlayingPage() {
                 </div>
 
                 {/* Song Meta */}
-                <div className="mt-4 flex w-full items-start justify-between gap-3 shrink-0">
+                <div className="mt-3 sm:mt-4 flex w-full items-start justify-between gap-3 shrink-0">
                   <div className="min-w-0 flex-1">
-                    <h1 className="truncate font-display text-lg font-bold tracking-tight text-white sm:text-xl">
+                    <h1 className="truncate font-display text-base font-bold tracking-tight text-white sm:text-xl">
                       {current.title}
                     </h1>
                     <Link
@@ -316,22 +322,35 @@ export default function NowPlayingPage() {
                 </div>
               </div>
 
+              {/* Mobile Lyrics Teaser / Drawer Peek */}
+              <button
+                type="button"
+                onClick={() => setMobileMode("lyrics")}
+                className="my-1 flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] p-2.5 text-left text-xs transition hover:bg-white/[0.06] lg:hidden"
+              >
+                <div className="flex items-center gap-2 text-[#1ed760]">
+                  <Mic2 className="h-3.5 w-3.5 shrink-0" />
+                  <span className="font-semibold text-white">View Synced Lyrics</span>
+                </div>
+                <span className="text-[11px] text-[#9ba39d]">Tap to open →</span>
+              </button>
+
               {/* Controls Deck */}
-              <div className="mt-3 space-y-3 pt-3 border-t border-white/[0.06] shrink-0">
+              <div className="mt-2 sm:mt-3 space-y-2.5 sm:space-y-3 pt-2.5 sm:pt-3 border-t border-white/[0.06] shrink-0">
                 <ProgressBar
                   className="w-full"
                   timeClassName="w-9 shrink-0 text-center font-mono text-[10px] text-[#636c65]"
                 />
 
                 <div className="flex items-center justify-center">
-                  <PlaybackControls size="large" className="gap-3" />
+                  <PlaybackControls size="large" className="gap-3 sm:gap-4" />
                 </div>
 
                 <div className="flex items-center justify-between pt-1">
                   <span className="font-mono text-[9px] text-[#636c65] uppercase tracking-wider">
                     Lossless · 320 kbps
                   </span>
-                  <div className="w-32">
+                  <div className="hidden sm:block w-32">
                     <VolumeControl />
                   </div>
                 </div>
@@ -340,7 +359,7 @@ export default function NowPlayingPage() {
 
             {/* Right Column: Context Panels (Lyrics, Queue, Related, Artist) */}
             <div
-              className={`h-full flex flex-col rounded-2xl border border-white/[0.08] bg-[#111412] p-4 sm:p-5 shadow-2xl overflow-hidden ${
+              className={`h-full flex flex-col rounded-2xl sm:rounded-3xl border border-white/[0.08] bg-[#111412] p-3 sm:p-5 shadow-2xl overflow-hidden ${
                 mobileMode === "player" ? "hidden lg:flex" : "flex"
               }`}
             >
@@ -409,7 +428,7 @@ export default function NowPlayingPage() {
               </div>
 
               {/* Viewport for Active Tab - Internally Scrollable Only */}
-              <div className="flex-1 min-h-0 overflow-hidden flex flex-col pt-3">
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col pt-2 sm:pt-3">
                 {/* 1. Lyrics Panel */}
                 {(activeTab === "lyrics" || mobileMode === "lyrics") && (
                   <div className="h-full flex-1 min-h-0 overflow-hidden flex flex-col">
@@ -448,50 +467,38 @@ export default function NowPlayingPage() {
                             <QueueTrackRow
                               key={`${track.id}-${idx}`}
                               track={track}
-                              onClick={() => playQueueIndex(queueIndex + 1 + idx)}
+                              onClick={() => {
+                                playQueueIndex(queueIndex + 1 + idx);
+                              }}
                             />
                           ))}
                         </div>
                       ) : (
-                        <div className="py-12 text-center text-xs text-[#636c65]">
-                          <p>You&apos;ve reached the end of the current queue.</p>
-                          <Link
-                            href="/explore"
-                            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3.5 py-1.5 text-xs font-semibold text-[#1ed760] transition hover:bg-white/[0.07]"
-                          >
-                            <Plus className="h-3 w-3" /> Find songs to add
-                          </Link>
+                        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6 text-center text-xs text-[#9ba39d]">
+                          <Music2 className="mx-auto mb-2 h-6 w-6 text-[#636c65]" />
+                          <p className="font-semibold text-white">Queue is empty</p>
+                          <p className="mt-1 text-[11px] text-[#636c65]">
+                            Pick songs from Search or Explore to schedule them next.
+                          </p>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
 
-                {/* 3. Related Tracks Panel */}
+                {/* 3. Related Panel */}
                 {activeTab === "related" && mobileMode !== "lyrics" && mobileMode !== "queue" && (
                   <div className="flex-1 min-h-0 overflow-y-auto pr-2 space-y-2">
-                    <p className="mb-3 text-xs text-[#9ba39d]">
-                      Tracks similar to &ldquo;{current.title}&rdquo; from the Sangeet catalog:
+                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[#1ed760]">
+                      Recommended Based On Current Track
                     </p>
-                    {relatedTracks.length > 0 ? (
-                      relatedTracks.map((track) => (
-                        <QueueTrackRow
-                          key={track.id}
-                          track={track}
-                          onClick={() =>
-                            playTrack(
-                              track.id,
-                              relatedTracks.map((t) => t.id),
-                              `Related to ${current.title}`,
-                            )
-                          }
-                        />
-                      ))
-                    ) : (
-                      <p className="py-12 text-center text-xs text-[#636c65]">
-                        No related tracks found for this song.
-                      </p>
-                    )}
+                    {relatedTracks.map((track) => (
+                      <QueueTrackRow
+                        key={track.id}
+                        track={track}
+                        onClick={() => playTrack(track.id, [track.id], "Related tracks")}
+                      />
+                    ))}
                   </div>
                 )}
 
@@ -503,42 +510,57 @@ export default function NowPlayingPage() {
                         <div className="flex items-center gap-4">
                           <Artwork
                             src={artist.image}
-                            alt={artist.name}
-                            className="h-16 w-16 shrink-0 rounded-full border border-white/[0.1] object-cover"
+                            alt=""
+                            className="h-16 w-16 rounded-full object-cover shadow-lg"
                           />
-                          <div className="min-w-0 flex-1">
-                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#1ed760]">
-                              Artist
-                            </span>
-                            <Link
-                              href={`/artist/${artist.id}`}
-                              className="mt-0.5 block truncate font-display text-lg font-bold text-white hover:underline"
-                            >
-                              {artist.name}
-                            </Link>
-                            <p className="mt-0.5 text-xs text-[#9ba39d]">
-                              {artist.location || "South Asian Independent Music"}
+                          <div>
+                            <h3 className="font-display text-lg font-bold text-white">{artist.name}</h3>
+                            <p className="text-xs text-[#9ba39d]">
+                              {artist.location || "Regional Artist"}
                             </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next = toggleFollow(artist.id);
+                                toast.show(
+                                  next ? "Following" : "Unfollowed",
+                                  artist.name,
+                                  next ? "success" : "default",
+                                );
+                              }}
+                              className={`mt-2 rounded-full px-3 py-1 text-xs font-semibold transition ${
+                                followed
+                                  ? "border border-white/20 text-white"
+                                  : "bg-[#1ed760] text-black hover:bg-[#1db954]"
+                              }`}
+                            >
+                              {followed ? "Following" : "Follow"}
+                            </button>
                           </div>
                         </div>
 
-                        <p className="text-xs leading-relaxed text-[#9ba39d] whitespace-pre-line">
-                          {artist.bio || artist.shortBio || "No bio available for this artist."}
-                        </p>
+                        <p className="text-xs leading-relaxed text-[#9ba39d]">{artist.bio}</p>
 
-                        <div className="pt-2">
-                          <Link
-                            href={`/artist/${artist.id}`}
-                            className="inline-flex h-9 items-center justify-center rounded-lg bg-[#1ed760] px-4 text-xs font-semibold text-black transition hover:brightness-105"
-                          >
-                            Explore discography
-                          </Link>
+                        <div>
+                          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[#1ed760]">
+                            Top Tracks
+                          </p>
+                          <div className="space-y-1">
+                            {tracks
+                              .filter((t) => t.artistId === artist.id)
+                              .slice(0, 5)
+                              .map((track) => (
+                                <QueueTrackRow
+                                  key={track.id}
+                                  track={track}
+                                  onClick={() => playTrack(track.id, [track.id], artist.name)}
+                                />
+                              ))}
+                          </div>
                         </div>
                       </div>
                     ) : (
-                      <div className="py-12 text-center text-xs text-[#636c65]">
-                        Artist details unavailable.
-                      </div>
+                      <p className="text-xs text-[#9ba39d]">No artist information available.</p>
                     )}
                   </div>
                 )}
@@ -546,17 +568,17 @@ export default function NowPlayingPage() {
             </div>
           </div>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center text-center">
-            <Disc3 className="h-12 w-12 text-[#636c65] animate-spin" />
-            <h2 className="mt-4 text-lg font-semibold text-white">No track is playing</h2>
+          <div className="flex h-full flex-col items-center justify-center p-8 text-center">
+            <Music2 className="h-12 w-12 text-[#636c65]" />
+            <h2 className="mt-4 font-display text-lg font-bold text-white">No track is playing</h2>
             <p className="mt-1 text-xs text-[#9ba39d]">
-              Choose any song from Home, Search, or Explore to start your session.
+              Choose any song from Home, Explore, or Search to start listening.
             </p>
             <Link
               href="/home"
-              className="mt-5 rounded-lg bg-[#1ed760] px-5 py-2 text-xs font-semibold text-black transition hover:brightness-105"
+              className="mt-4 rounded-full bg-[#1ed760] px-5 py-2 text-xs font-bold text-black hover:bg-[#1db954]"
             >
-              Browse music
+              Go to Home
             </Link>
           </div>
         )}

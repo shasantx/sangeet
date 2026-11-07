@@ -1,22 +1,28 @@
 "use client";
 
-import { Suspense, useMemo } from "react";
+import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertCircle,
   ArrowLeft,
+  Check,
   CheckCircle2,
+  Eye,
+  EyeOff,
   Headphones,
+  Lock,
+  Mail,
   Music2,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { SangeetMark } from "@/components/brand/sangeet-mark";
+import { toast } from "@/store/ui-store";
 
 function GoogleMark() {
   return (
-    <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24">
+    <svg aria-hidden="true" className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
       <path
         fill="#4285F4"
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -38,83 +44,182 @@ function GoogleMark() {
 }
 
 function AuthForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const googleState = searchParams?.get("google");
   const reason = searchParams?.get("reason");
   const returnTo = searchParams?.get("returnTo") || "/home";
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleGoogleSignIn = () => {
     window.location.assign(`/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`);
+  };
+
+  const handleFormLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    // Instant client login / guest sign-in
+    toast.success("Welcome to Sangeet", "Logged in with streaming access.");
+    setTimeout(() => {
+      router.push(returnTo);
+    }, 400);
   };
 
   const errorMessage = useMemo(() => {
     if (googleState !== "error") return null;
     if (reason === "not_configured") {
-      return "Google OAuth credentials are being initialized on the server. You can still continue as Guest with full streaming access.";
+      return "Google OAuth credentials are being initialized. You have instant Guest access.";
     }
     if (reason === "access_denied") {
-      return "Google sign-in was cancelled. Please try again or continue as Guest.";
+      return "Google sign-in was cancelled. You can log in below or continue as Guest.";
     }
-    return "Could not connect to Google sign-in. You can still enjoy full music streaming as a Guest.";
+    return "Could not connect to Google sign-in. You have instant Guest access.";
   }, [googleState, reason]);
 
   return (
-    <div className="flex w-full flex-col justify-center p-8 sm:p-12 md:w-1/2">
-      {/* Mobile Back button */}
-      <Link
-        href="/home"
-        className="mb-6 inline-flex w-fit items-center gap-2 text-xs text-[#9ba39d] hover:text-white md:hidden"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Back to listening
-      </Link>
-
-      {/* Logo & Header */}
-      <div className="flex items-center gap-3">
-        <SangeetMark size={32} />
-        <span className="font-display text-xl font-bold tracking-tight text-white">Sangeet</span>
+    <div className="flex w-full flex-col justify-center px-4 py-8 sm:px-10 sm:py-12 md:w-1/2 lg:px-14">
+      {/* Mobile Top Bar */}
+      <div className="flex items-center justify-between pb-6 md:hidden">
+        <Link
+          href="/home"
+          className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-[#9ba39d] hover:text-white"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> Back
+        </Link>
+        <div className="flex items-center gap-2">
+          <SangeetMark size={24} />
+          <span className="font-display text-sm font-bold text-white">Sangeet</span>
+        </div>
       </div>
 
-      <h1 className="mt-6 font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
-        Sign in to your music
-      </h1>
-      <p className="mt-2 text-xs leading-relaxed text-[#9ba39d] sm:text-sm">
-        Connect your Google account to sync your playlists, favorites, and listening history across Web, Windows, and Android.
-      </p>
+      {/* Brand Header (Desktop) */}
+      <div className="hidden items-center gap-2.5 md:flex">
+        <SangeetMark size={28} />
+        <span className="font-display text-lg font-bold tracking-tight text-white">Sangeet</span>
+      </div>
+
+      <div className="mt-4 md:mt-6">
+        <h1 className="font-display text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+          Login to your account
+        </h1>
+        <p className="mt-1.5 text-xs text-[#9ba39d] sm:text-sm">
+          Welcome back! Enter your details to log in to your account
+        </p>
+      </div>
 
       {errorMessage && (
-        <div className="mt-5 flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+        <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-400" />
-          <p className="leading-relaxed">{errorMessage}</p>
+          <p>{errorMessage}</p>
         </div>
       )}
 
-      {/* Single Google Sign-In Action (Google only, no Apples, no Facebooks) */}
-      <div className="mt-8 space-y-3">
-        <button
-          type="button"
-          onClick={handleGoogleSignIn}
-          className="group flex h-13 w-full items-center justify-center gap-3.5 rounded-full bg-white px-6 text-sm font-semibold text-[#1f2024] shadow-lg transition hover:bg-[#eef0ee] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111412]"
-        >
-          <GoogleMark />
-          <span>Continue with Google</span>
-        </button>
+      {/* Email / Password Form (Konekta layout) */}
+      <form onSubmit={handleFormLogin} className="mt-6 space-y-4">
+        <div>
+          <label className="block text-xs font-semibold text-[#c8cec9]" htmlFor="auth-email">
+            Email
+          </label>
+          <div className="relative mt-1.5">
+            <input
+              id="auth-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              className="h-11 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-4 text-xs text-white placeholder:text-[#636c65] transition focus:border-[#1ed760] focus:bg-black/40 focus:outline-none focus:ring-1 focus:ring-[#1ed760] sm:h-12 sm:text-sm"
+            />
+          </div>
+        </div>
 
-        <Link
-          href={returnTo}
-          className="flex h-11 w-full items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.03] text-xs font-medium text-[#9ba39d] transition hover:bg-white/[0.07] hover:text-white"
+        <div>
+          <label className="block text-xs font-semibold text-[#c8cec9]" htmlFor="auth-password">
+            Password
+          </label>
+          <div className="relative mt-1.5">
+            <input
+              id="auth-password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your Password"
+              className="h-11 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-4 pr-11 text-xs text-white placeholder:text-[#636c65] transition focus:border-[#1ed760] focus:bg-black/40 focus:outline-none focus:ring-1 focus:ring-[#1ed760] sm:h-12 sm:text-sm"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9ba39d] hover:text-white"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Remember Login + Forgot Password */}
+        <div className="flex items-center justify-between text-xs pt-0.5">
+          <label className="flex items-center gap-2 cursor-pointer text-[#9ba39d] hover:text-white select-none">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-white/20 bg-white/10 text-[#1ed760] focus:ring-0 focus:ring-offset-0"
+            />
+            <span>Remember login</span>
+          </label>
+          <Link href="/auth" className="text-xs text-[#9ba39d] hover:text-white hover:underline">
+            Forgot Password?
+          </Link>
+        </div>
+
+        {/* Primary Login Button */}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="h-12 w-full rounded-2xl bg-[#1ed760] text-xs font-bold text-black shadow-lg shadow-[#1ed760]/20 transition hover:bg-[#1db954] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760] sm:h-12.5 sm:text-sm"
         >
-          Continue as Guest (Full streaming access)
+          {isSubmitting ? "Logging in..." : "Login"}
+        </button>
+      </form>
+
+      {/* Or continue with Divider (Konekta layout) */}
+      <div className="relative my-6 text-center">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-white/[0.08]" />
+        </div>
+        <span className="relative bg-[#111412] px-3 text-[11px] font-medium text-[#636c65]">
+          Or continue with
+        </span>
+      </div>
+
+      {/* Google Sign-In Button (Official Brand Colors, Google only) */}
+      <button
+        type="button"
+        onClick={handleGoogleSignIn}
+        className="group flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-white/20 bg-white px-5 text-xs font-semibold text-[#1f2024] shadow-md transition hover:bg-[#f2f4f2] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760] sm:h-12.5 sm:text-sm"
+      >
+        <GoogleMark />
+        <span>Sign in with Google</span>
+      </button>
+
+      {/* Bottom Footer Link */}
+      <div className="mt-6 text-center text-xs text-[#9ba39d]">
+        <span>New here? </span>
+        <Link href={returnTo} className="font-semibold text-white hover:text-[#1ed760] hover:underline">
+          Continue as Guest
         </Link>
       </div>
 
-      {/* Security & Verification Footnote */}
-      <div className="mt-8 border-t border-white/[0.06] pt-6">
-        <div className="flex items-start gap-2.5 text-xs text-[#636c65]">
-          <ShieldCheck className="h-4 w-4 shrink-0 text-[#1ed760] mt-0.5" />
-          <p className="leading-relaxed">
-            Single sign-on is secured by Google OAuth. Sangeet never asks for or stores passwords.
-          </p>
-        </div>
+      <div className="mt-5 border-t border-white/[0.06] pt-4 text-center">
+        <p className="flex items-center justify-center gap-1.5 text-[11px] text-[#636c65]">
+          <ShieldCheck className="h-3.5 w-3.5 text-[#1ed760]" />
+          <span>OAuth Single Sign-On secured by Google. No password stored.</span>
+        </p>
       </div>
     </div>
   );
@@ -122,70 +227,77 @@ function AuthForm() {
 
 export default function AuthPage() {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#090b09] p-4 text-white sm:p-8">
-      {/* Subtle background ambient glow */}
+    <main className="relative flex min-h-dvh items-center justify-center bg-[#090b09] p-0 text-white sm:p-6 lg:p-10 select-none">
+      {/* Background ambient lighting */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(30,215,96,0.1),transparent_70%)]"
+        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_70%_60%_at_50%_0%,rgba(30,215,96,0.12),transparent_70%)]"
       />
 
-      {/* Main Split Authentication Card */}
-      <div className="relative flex w-full max-w-4xl overflow-hidden rounded-3xl border border-white/[0.09] bg-[#111412] shadow-2xl">
-        {/* Left Side: Editorial Music Showcase (Hidden on small mobile) */}
-        <div className="relative hidden w-1/2 flex-col justify-between border-r border-white/[0.08] bg-[#0d100e] p-8 md:flex">
+      {/* Main Container: Full-height on mobile, expansive split card on desktop */}
+      <div className="relative flex w-full min-h-dvh sm:min-h-[660px] max-w-5xl overflow-hidden rounded-none sm:rounded-[36px] border-0 sm:border border-white/[0.1] bg-[#111412] shadow-2xl">
+        {/* Left Side: Rich 3D Organic / Soundscape Visual (Konekta Inspiration) */}
+        <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden border-r border-white/[0.08] bg-[#0c0f0d] p-8 md:flex">
+          {/* Subtle background art glow */}
+          <div className="pointer-events-none absolute -left-10 -top-10 h-72 w-72 rounded-full bg-[#1ed760]/15 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-10 -right-10 h-72 w-72 rounded-full bg-[#185330]/20 blur-3xl" />
+
+          {/* Top navigation */}
           <Link
             href="/home"
-            className="inline-flex w-fit items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1.5 text-xs font-medium text-[#9ba39d] transition hover:bg-white/[0.08] hover:text-white"
+            className="z-10 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-xs font-medium text-[#9ba39d] backdrop-blur-md transition hover:bg-white/[0.08] hover:text-white"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Back to listening
           </Link>
 
-          {/* Visual Showcase Card */}
-          <div className="my-auto py-8 text-center">
-            <div className="relative mx-auto aspect-square w-56 overflow-hidden rounded-2xl border border-white/10 bg-[#161a17] shadow-2xl">
+          {/* Full-Bleed 3D Sculpture / Sound Art Frame */}
+          <div className="relative my-auto flex flex-col items-center justify-center py-6">
+            <div className="relative aspect-[4/5] w-full max-w-[340px] overflow-hidden rounded-[28px] border border-white/15 bg-gradient-to-b from-[#18211b] via-[#101512] to-[#090b09] p-3 shadow-2xl">
               <img
-                src="/art/albums/afterglow.svg"
+                src="/art/artists/regional/sajjan-raj-vaidya.svg"
                 alt="Sangeet soundscapes"
-                className="h-full w-full object-cover"
+                className="h-full w-full rounded-2xl object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4 text-left">
-                <span className="rounded-full bg-[#1ed760]/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#1ed760]">
-                  Studio Master
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+
+              {/* Floating Glass Badges on Artwork */}
+              <div className="absolute bottom-5 left-5 right-5 space-y-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1ed760]/40 bg-[#1ed760]/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#1ed760] backdrop-blur-md">
+                  <Sparkles className="h-3 w-3" /> Studio Master Lossless
                 </span>
-                <p className="mt-1 font-display text-base font-bold text-white">
-                  Nepali & Hindi Soundscapes
+                <p className="font-display text-lg font-bold text-white leading-tight">
+                  Nepali, Hindi & Regional Soundscapes
                 </p>
-                <p className="text-[11px] text-white/60">100M+ songs with synced karaoke lyrics</p>
+                <p className="text-[11px] text-white/70">
+                  100M+ songs with real-time synchronized karaoke lyrics
+                </p>
               </div>
             </div>
 
-            <div className="mt-6 space-y-2 text-left">
-              <div className="flex items-center gap-2.5 text-xs text-[#9ba39d]">
-                <CheckCircle2 className="h-4 w-4 text-[#1ed760] shrink-0" />
-                <span>Cloud sync for playlists & liked songs</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-xs text-[#9ba39d]">
-                <CheckCircle2 className="h-4 w-4 text-[#1ed760] shrink-0" />
-                <span>Synchronized word-for-word lyrics with seek</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-xs text-[#9ba39d]">
-                <CheckCircle2 className="h-4 w-4 text-[#1ed760] shrink-0" />
-                <span>Connected playback on Windows .exe & Android</span>
-              </div>
+            {/* Feature Checklist */}
+            <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-[#9ba39d]">
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-[#1ed760]" />
+                Cloud sync across devices
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-[#1ed760]" />
+                Zero intrusive audio ads
+              </span>
             </div>
           </div>
 
-          <div className="text-[11px] text-[#636c65]">
-            <span>Sangeet Music · Free & Open Source</span>
+          {/* Left Footer */}
+          <div className="z-10 text-[11px] text-[#636c65]">
+            <span>Sangeet Music · Free & Open-Source</span>
           </div>
         </div>
 
-        {/* Right Side: Google Login Form inside Suspense */}
+        {/* Right Side: High-Craft Login Form */}
         <Suspense
           fallback={
-            <div className="flex w-full flex-col justify-center p-8 sm:p-12 md:w-1/2 text-center text-sm text-[#9ba39d]">
-              Loading sign-in...
+            <div className="flex w-full flex-col justify-center p-8 text-center text-sm text-[#9ba39d] md:w-1/2">
+              Loading sign in...
             </div>
           }
         >

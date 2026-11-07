@@ -49,10 +49,10 @@ export function LandingPage() {
     <div className="min-h-screen bg-[#090b09] text-white antialiased selection:bg-[#1ed760]/30 selection:text-white">
       {/* Top Navbar */}
       <nav className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#090b09]/85 backdrop-blur-md">
-        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6 sm:px-8">
-          <Link href="/" className="flex items-center gap-2.5 group" aria-label="Sangeet home">
-            <SangeetMark size={32} />
-            <span className="font-display text-xl font-bold tracking-tight text-white group-hover:text-[#1ed760] transition">
+        <div className="mx-auto flex h-16 sm:h-20 max-w-6xl items-center justify-between px-4 sm:px-8">
+          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group" aria-label="Sangeet home">
+            <SangeetMark size={28} />
+            <span className="font-display text-lg sm:text-xl font-bold tracking-tight text-white group-hover:text-[#1ed760] transition">
               Sangeet
             </span>
           </Link>
@@ -77,16 +77,16 @@ export function LandingPage() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/auth"
-              className="hidden h-10 items-center px-4 text-xs font-semibold text-[#9ba39d] transition hover:text-white sm:inline-flex"
+              className="inline-flex h-9 sm:h-10 items-center px-3 sm:px-4 text-xs font-semibold text-[#9ba39d] transition hover:text-white"
             >
               Sign In
             </Link>
             <Link
               href="/home"
-              className="inline-flex h-11 items-center justify-center rounded-full bg-[#1ed760] px-6 text-xs font-bold text-black shadow-lg shadow-[#1ed760]/20 transition hover:bg-[#1db954] hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex h-9 sm:h-11 items-center justify-center rounded-full bg-[#1ed760] px-4 sm:px-6 text-xs font-bold text-black shadow-lg shadow-[#1ed760]/20 transition hover:bg-[#1db954] hover:scale-[1.02] active:scale-[0.98]"
             >
               Launch Player
             </Link>
@@ -95,7 +95,7 @@ export function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative mx-auto max-w-6xl px-6 pt-12 pb-20 sm:px-8 lg:pt-20 lg:pb-28">
+      <section className="relative mx-auto max-w-6xl px-4 pt-8 pb-16 sm:px-8 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-28">
         {/* Subtle ambient lighting */}
         <div
           aria-hidden="true"
@@ -164,12 +164,12 @@ export function LandingPage() {
 
           {/* Right Hero Column: Smartphone Device Frame */}
           <div className="relative mx-auto flex w-full justify-center lg:justify-end">
-            <div className="relative w-[300px] sm:w-[320px]">
+            <div className="relative w-full max-w-[300px] sm:max-w-[320px] mx-auto">
               {/* Colored backdrop card glow */}
               <div className="absolute -inset-4 -z-10 rounded-[44px] bg-[#1ed760]/20 blur-2xl opacity-60 sm:-inset-6" />
 
               {/* iPhone Hardware Outer Body */}
-              <div className="relative overflow-hidden rounded-[38px] border-[5px] border-[#222823] bg-[#0c0e0c] p-4 text-white shadow-2xl">
+              <div className="relative overflow-hidden rounded-[38px] border-[5px] border-[#222823] bg-[#0c0e0c] p-3.5 sm:p-4 text-white shadow-2xl">
                 {/* Notch / Dynamic Island */}
                 <div className="mx-auto mb-4 flex h-4 w-28 items-center justify-center rounded-full bg-[#1a1f1b]">
                   <div className="h-2 w-2 rounded-full bg-[#2a332c]" />
@@ -189,12 +189,12 @@ export function LandingPage() {
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-[#1ed760]">
                     Now Streaming
                   </p>
-                  <h3 className="mt-1 text-lg font-bold tracking-tight text-white">Suna Kaanchi</h3>
+                  <h3 className="mt-1 text-base sm:text-lg font-bold tracking-tight text-white">Suna Kaanchi</h3>
                   <p className="text-xs text-white/60">Sajjan Raj Vaidya</p>
                 </div>
 
                 {/* Album Cover: using reliable local SVG asset */}
-                <div className="relative mx-auto mt-4 aspect-square w-48 overflow-hidden rounded-2xl border border-white/10 bg-[#161a17] shadow-lg">
+                <div className="relative mx-auto mt-4 aspect-square w-full max-w-[192px] overflow-hidden rounded-2xl border border-white/10 bg-[#161a17] shadow-lg">
                   <img
                     src="/art/artists/regional/sajjan-raj-vaidya.svg"
                     alt="Suna Kaanchi - Sajjan Raj Vaidya cover"
@@ -271,13 +271,13 @@ export function LandingPage() {
       </section>
 
       {/* Feature Section: High-Contrast Dark Pod */}
-      <section id="features" className="mx-auto max-w-6xl px-6 py-12 sm:px-8">
-        <div className="overflow-hidden rounded-[36px] border border-white/[0.08] bg-[#111412] px-6 py-16 text-white shadow-2xl sm:px-12 sm:py-20">
+      <section id="features" className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-12">
+        <div className="overflow-hidden rounded-[28px] sm:rounded-[36px] border border-white/[0.08] bg-[#111412] px-4 py-10 sm:px-12 sm:py-20 text-white shadow-2xl">
           <div className="text-center">
-            <h2 className="font-display text-3xl font-extrabold tracking-tight sm:text-5xl text-white">
+            <h2 className="font-display text-2xl font-extrabold tracking-tight sm:text-5xl text-white">
               We Made Music Streaming <span className="text-[#1ed760]">Sangeet-Simple.</span>
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[#9ba39d] sm:text-base">
+            <p className="mx-auto mt-3 max-w-xl text-xs sm:text-base leading-relaxed text-[#9ba39d]">
               No paywalls. No 30-second audio advertisements interrupting your quiet moments. Designed from Kathmandu for everyone who cares about sound.
             </p>
           </div>
