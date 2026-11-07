@@ -23,8 +23,8 @@ export function MobileMiniPlayer() {
 
   return (
     <div
-      className="mobile-mini-player fixed inset-x-2 z-50 overflow-hidden rounded-xl border border-white/[.12] md:hidden shadow-2xl backdrop-blur-xl pointer-events-auto"
-      style={{ bottom: "calc(70px + env(safe-area-inset-bottom))" }}
+      className="mobile-mini-player fixed inset-x-2 z-50 overflow-hidden rounded-xl border border-white/[0.14] bg-[#161a17]/98 shadow-2xl backdrop-blur-2xl md:hidden pointer-events-auto"
+      style={{ bottom: "calc(58px + env(safe-area-inset-bottom))" }}
     >
       <div className="absolute inset-x-0 top-0 h-[2px] bg-white/[.08]">
         <div className="h-full bg-primary transition-[width] duration-200" style={{ width: `${progress}%` }} />

@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const currentTrackId = usePlayerStore((state) => state.currentTrackId);
   const hasTrack = Boolean(currentTrackId);
   const reduceMotion = useReducedMotion();
-  const immersive = pathname === "/premium" || pathname === "/now-playing";
+  const immersive = pathname === "/premium" || pathname === "/now-playing" || pathname === "/auth";
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -46,7 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           {children}
         </motion.div>
-        {pathname !== "/premium" && pathname !== "/now-playing" && <MobileSidebar />}
+        {pathname !== "/premium" && pathname !== "/now-playing" && pathname !== "/auth" && <MobileSidebar />}
       </main>
     );
   }
@@ -67,8 +67,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className={cn(
             "min-h-[calc(100dvh-70px)]",
             hasTrack
-              ? "pb-[calc(146px+env(safe-area-inset-bottom))] md:pb-[104px]"
-              : "pb-[calc(76px+env(safe-area-inset-bottom))] md:pb-[28px]"
+              ? "pb-[calc(130px+env(safe-area-inset-bottom))] md:pb-[104px]"
+              : "pb-[calc(68px+env(safe-area-inset-bottom))] md:pb-[28px]"
           )}
         >
           <motion.div

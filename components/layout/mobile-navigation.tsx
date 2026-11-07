@@ -17,8 +17,11 @@ export function MobileNavigation() {
   const pathname = usePathname();
 
   return (
-    <nav className="mobile-dock-shell md:hidden" aria-label="Mobile navigation">
-      <div className="dock dock-md mobile-dock" role="list">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-[#0c0e0c]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl md:hidden"
+      aria-label="Mobile navigation"
+    >
+      <div className="flex h-14 items-center justify-around px-2">
         {items.map((item) => {
           const active = item.match(pathname);
           const Icon = item.icon;
@@ -27,13 +30,19 @@ export function MobileNavigation() {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={cn("mobile-dock-item", active && "dock-active")}
+              className={cn(
+                "flex flex-1 flex-col items-center justify-center gap-1 py-1 transition-colors",
+                active ? "text-[#1ed760]" : "text-white/50 hover:text-white/80",
+              )}
             >
-              <span className="mobile-dock-pill">
-                <Icon aria-hidden="true" className="h-[18px] w-[18px]" strokeWidth={active ? 2.3 : 1.8} />
-                {active && <span className="dock-label">{item.label}</span>}
+              <Icon
+                aria-hidden="true"
+                className="h-5 w-5"
+                strokeWidth={active ? 2.2 : 1.7}
+              />
+              <span className="text-[10px] font-medium leading-none tracking-tight">
+                {item.label}
               </span>
-              <span className="sr-only">{item.label}</span>
             </Link>
           );
         })}
