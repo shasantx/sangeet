@@ -9,7 +9,7 @@ import os
 from urllib.parse import parse_qs
 
 from server import search
-from discovery import get_album, get_creator, search_catalog
+from discovery import get_album, get_creator, get_playlist, search_catalog
 
 
 async def app(scope: dict, receive, send) -> None:
@@ -23,7 +23,7 @@ async def app(scope: dict, receive, send) -> None:
 
     if path == "/health" and method == "GET":
         payload = {"ok": True}
-    elif path not in ("/search", "/api/search", "/api/catalog", "/api/details"):
+    elif path not in ("/search", "/api/search", "/api/catalog", "/api/details", "/api/playlist"):
         status, payload = 404, {"error": "not found"}
     elif method != "GET":
         status, payload = 405, {"error": "method not allowed"}

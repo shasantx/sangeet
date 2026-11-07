@@ -98,10 +98,7 @@ function playableError() {
 }
 
 function requireListenerAccount(): boolean {
-  if (useAuthStore.getState().isAuthenticated) return true;
-  useAuthStore.getState().openAuthModal("signin");
-  toast.info("Sign in to listen", "Continue with Google to start playing music.");
-  return false;
+  return true;
 }
 
 function resumeAudio(audio: HTMLAudioElement) {
@@ -152,8 +149,28 @@ export const usePlayerStore = create<PlayerState>()(
         });
 
         if (track.youtubeId) {
-          audio?.pause();
-          loadYouTubeVideo(track.youtubeId, shouldPlay);
+          if (!audio) {
+            loadYouTubeVideo(track.youtubeId, shouldPlay);
+            return;
+          }
+          fetch(`/api/youtube/stream?videoId=${encodeURIComponent(track.youtubeId)}`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.ok && data.streamUrl && audio) {
+                stopYouTube();
+                audio.src = data.streamUrl;
+                audio.volume = get().volume;
+                audio.muted = get().muted;
+                if (shouldPlay) resumeAudio(audio);
+                return;
+              }
+              audio.pause();
+              loadYouTubeVideo(track.youtubeId!, shouldPlay);
+            })
+            .catch(() => {
+              audio.pause();
+              loadYouTubeVideo(track.youtubeId!, shouldPlay);
+            });
           return;
         }
 

@@ -2,12 +2,7 @@
 """Local YouTube Music search service for Sangeet.
 
 Uses the unofficial `ytmusicapi` client to search YouTube-wide and returns
-metadata only (video IDs, titles, artists, durations, thumbnails). Playback
-still happens through the official YouTube IFrame Player in the browser — this
-service never downloads or streams audio.
-
-Run:  py ytmusic-service/server.py
-Port: 8765 (override with YTMUSIC_PORT)
+metadata (video IDs, titles, artists, durations, thumbnails).
 """
 
 from __future__ import annotations
@@ -55,7 +50,10 @@ def thumb_for(item: dict, video_id: str) -> str:
     if thumbnails:
         largest = max(thumbnails, key=lambda thumb: (thumb.get("width") or 0))
         if largest.get("url"):
-            return str(largest["url"]).split("?")[0]
+            url = str(largest["url"])
+            if url.startswith("//"):
+                url = "https:" + url
+            return url
     return f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
 
 
@@ -63,17 +61,36 @@ def normalize(item: dict) -> dict | None:
     video_id = item.get("videoId")
     if not video_id:
         return None
-    if item.get("videoType") == "MUSIC_VIDEO_TYPE_ATV":
-        # Art tracks are frequently not embeddable. Prefer real videos.
-        return None
-    artists = [artist.get("name") for artist in (item.get("artists") or []) if artist.get("name")]
+    artists_raw = item.get("artists") or []
+    artists = []
+    if isinstance(artists_raw, list):
+        for entry in artists_raw:
+            if isinstance(entry, dict):
+                name = entry.get("name")
+                if name:
+                    artists.append(name)
+            elif isinstance(entry, str) and entry:
+                artists.append(entry)
+    elif isinstance(artists_raw, str) and artists_raw:
+        artists.append(artists_raw)
+
     artist = ", ".join(artists) if artists else (item.get("author") or "YouTube")
-    album = (item.get("album") or {}).get("name") or ""
+    if isinstance(artist, dict):
+        artist = artist.get("name") or "YouTube"
+
+    raw_album = item.get("album")
+    if isinstance(raw_album, dict):
+        album = raw_album.get("name") or ""
+    elif isinstance(raw_album, str):
+        album = raw_album
+    else:
+        album = ""
+
     return {
         "videoId": video_id,
         "title": item.get("title") or "Untitled",
-        "artist": artist,
-        "album": album,
+        "artist": str(artist),
+        "album": str(album),
         "durationSeconds": parse_duration(
             item.get("duration_seconds") or item.get("duration")
         ),
@@ -93,12 +110,28 @@ def search(query: str, limit: int) -> list[dict]:
             return cached[1]
 
     client = get_client()
-    raw = client.search(query, filter="videos", limit=max(limit * 2, 12))
-    # Prefer official music videos, which are the most likely to allow embeds.
-    raw = sorted(
-        raw,
-        key=lambda item: 0 if item.get("videoType") == "MUSIC_VIDEO_TYPE_OMV" else 1,
-    )
+    raw = []
+    # Search both songs and videos to guarantee official tracks from popular singers are found
+    try:
+        songs = client.search(query, filter="songs", limit=max(limit, 8))
+        if songs:
+            raw.extend(songs)
+    except Exception:
+        pass
+
+    try:
+        videos = client.search(query, filter="videos", limit=max(limit, 8))
+        if videos:
+            raw.extend(videos)
+    except Exception:
+        pass
+
+    if not raw:
+        try:
+            raw = client.search(query, limit=max(limit * 2, 12))
+        except Exception:
+            raw = []
+
     results: list[dict] = []
     seen: set[str] = set()
     for item in raw:
@@ -129,7 +162,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(body)
 
@@ -138,7 +171,7 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/health":
             self._send(200, {"ok": True})
             return
-        allowed_paths = ("/search", "/api/search", "/api/catalog", "/api/details")
+        allowed_paths = ("/search", "/api/search", "/api/catalog", "/api/details", "/api/playlist", "/api/lyrics")
         if parsed.path not in allowed_paths:
             self._send(404, {"error": "not found"})
             return
@@ -152,18 +185,58 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         params = parse_qs(parsed.query)
+
+        # /api/playlist
+        if parsed.path == "/api/playlist":
+            playlist_id = (params.get("id") or params.get("playlistId") or [""])[0].strip()
+            if not playlist_id:
+                self._send(400, {"error": "missing playlist id"})
+                return
+            try:
+                from discovery import get_playlist
+                playlist = get_playlist(playlist_id)
+                self._send(200, {"ok": True, "playlist": playlist})
+            except Exception as e:
+                self._send(502, {"error": f"upstream playlist unavailable: {e}"})
+            return
+
+        # /api/lyrics
+        if parsed.path == "/api/lyrics":
+            video_id = (params.get("videoId") or [""])[0].strip()
+            if not video_id:
+                self._send(400, {"error": "missing videoId"})
+                return
+            try:
+                client = get_client()
+                wp = client.get_watch_playlist(videoId=video_id)
+                lyrics_id = wp.get("lyrics")
+                if lyrics_id:
+                    data = client.get_lyrics(lyrics_id)
+                    self._send(200, {"ok": True, "lyrics": data.get("lyrics") or "", "source": data.get("source") or "", "hasTimestamps": data.get("hasTimestamps", False)})
+                else:
+                    self._send(200, {"ok": True, "lyrics": "", "source": "", "hasTimestamps": False})
+            except Exception as e:
+                self._send(502, {"error": str(e), "lyrics": ""})
+            return
+
+        # /api/details
         if parsed.path == "/api/details":
             browse_id = (params.get("browseId") or [""])[0]
             kind = (params.get("kind") or [""])[0]
-            if kind not in ("artist", "album") or not browse_id or not browse_id.replace("_", "").replace("-", "").isalnum() or len(browse_id) > 100:
+            if kind not in ("artist", "album", "playlist") or not browse_id or len(browse_id) > 100:
                 self._send(400, {"error": "invalid details request"})
                 return
             try:
-                from discovery import get_album, get_creator
-                details = get_creator(browse_id) if kind == "artist" else get_album(browse_id)
+                from discovery import get_album, get_creator, get_playlist
+                if kind == "artist":
+                    details = get_creator(browse_id)
+                elif kind == "album":
+                    details = get_album(browse_id)
+                else:
+                    details = get_playlist(browse_id)
                 self._send(200, {"details": details, "type": kind})
-            except Exception:  # noqa: BLE001
-                self._send(502, {"error": "upstream details unavailable"})
+            except Exception as e:
+                self._send(502, {"error": f"upstream details unavailable: {e}"})
             return
 
         query = (params.get("q") or [""])[0].strip()
@@ -180,27 +253,26 @@ class Handler(BaseHTTPRequestHandler):
             limit = 12
         limit = max(1, min(25, limit))
 
-        if parsed.path in ("/api/catalog",):
+        if parsed.path == "/api/catalog":
             kind = (params.get("kind") or [""])[0]
             if kind not in ("artists", "albums", "playlists"):
                 self._send(400, {"results": [], "error": "invalid catalog type"})
                 return
             try:
                 from discovery import search_catalog
-                self._send(200, {"results": search_catalog(query, kind, min(limit, 8)), "query": query, "type": kind})
-            except Exception:  # noqa: BLE001
-                self._send(502, {"results": [], "error": "upstream catalog unavailable"})
+                self._send(200, {"results": search_catalog(query, kind, limit), "query": query, "type": kind})
+            except Exception as e:
+                self._send(502, {"results": [], "error": f"upstream catalog unavailable: {e}"})
             return
 
         try:
             results = search(query, limit)
-        except Exception:  # noqa: BLE001 - keep upstream details out of client responses
+        except Exception:
             self._send(502, {"results": [], "error": "upstream search unavailable"})
             return
         self._send(200, {"results": results, "query": query})
 
     def log_message(self, fmt: str, *args: object) -> None:
-        # Search strings and client IP addresses are not written to logs.
         return
 
 

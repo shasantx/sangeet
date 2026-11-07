@@ -63,7 +63,13 @@ function sanitizeResults(input: unknown): ServiceResult[] {
     let safeThumbnail = `https://i.ytimg.com/vi/${result.videoId}/hqdefault.jpg`;
     try {
       const url = new URL(thumbnail);
-      if (url.protocol === "https:" && ["i.ytimg.com", "img.youtube.com", "yt3.ggpht.com", "lh3.googleusercontent.com"].includes(url.hostname)) {
+      if (
+        url.protocol === "https:" &&
+        (url.hostname.endsWith(".googleusercontent.com") ||
+          url.hostname.endsWith(".ggpht.com") ||
+          url.hostname.endsWith(".ytimg.com") ||
+          url.hostname.endsWith(".youtube.com"))
+      ) {
         safeThumbnail = url.toString();
       }
     } catch {

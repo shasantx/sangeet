@@ -49,6 +49,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     let active = true;
 
     const currentIsYouTube = () => {
+      if (audio.src && audio.src !== window.location.href && !audio.error) {
+        return false;
+      }
       const id = usePlayerStore.getState().currentTrackId;
       return Boolean(id && getTrack(id)?.youtubeId);
     };
@@ -164,8 +167,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const current = currentTrackId ? getTrack(currentTrackId) : undefined;
-    if (!current?.youtubeId) return;
     const activeYouTube = () => {
       const id = usePlayerStore.getState().currentTrackId;
       return Boolean(id && getTrack(id)?.youtubeId);
@@ -203,7 +204,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         toast.error("YouTube playback stopped", message);
       },
     });
-  }, [currentTrackId, isPlaying]);
+  }, []);
 
   useEffect(() => {
     const timer = window.setInterval(() => {

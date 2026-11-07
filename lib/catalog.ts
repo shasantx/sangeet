@@ -812,6 +812,72 @@ export const albums: Album[] = [
 
 export const playlists: Playlist[] = [
   {
+    id: "todays-top-hits",
+    title: "Today's Top Hits",
+    description: "The biggest songs in the world right now on Sangeet and YouTube Music.",
+    curator: "Sangeet Editorial",
+    artwork: "https://yt3.googleusercontent.com/tNLZ989q1j4VOQDi12q-y3QugYeiQgYs1WHQggvamEUu9C2NMiJBWBuiRQAPZKR6TU9zXUMeJQ=s1200",
+    trackIds: (ytCatalog.tracks as unknown as Track[]).slice(0, 12).map((t) => t.id),
+    genreIds: ["pop", "alternative"],
+    accent: "#1ED760",
+    featured: true,
+  },
+  {
+    id: "global-top-50",
+    title: "Global Top 50",
+    description: "The most played tracks across the globe, updated daily.",
+    curator: "Sangeet Charts",
+    artwork: "https://yt3.googleusercontent.com/BE2wRTWDhQVO_qcGonXeWgxHQJ8OF8ql6QIMizmEnpG-UZTztn7cMOE27l3vT92qtwZjrB2mIII=s1200",
+    trackIds: (ytCatalog.tracks as unknown as Track[]).slice(12, 24).map((t) => t.id),
+    genreIds: ["pop", "electronic"],
+    accent: "#3B82F6",
+    featured: true,
+  },
+  {
+    id: "hot-hits-nepal",
+    title: "Hot Hits Nepal",
+    description: "The hottest Nepali tracks from Sajjan Raj Vaidya, Sushant KC, Bipul Chettri, and Yabesh Thapa.",
+    curator: "Sangeet Nepal",
+    artwork: "https://yt3.googleusercontent.com/IqwAXc_xj1ALxobNs74iJAHNH-ltJf838YvN7xFqiZKXtdT6VVvJTto35XQvi4p04ZgTF_J0bA=w544-h544-l90-rj",
+    trackIds: (ytCatalog.tracks as unknown as Track[]).slice(24, 36).map((t) => t.id),
+    genreIds: ["indie", "pop"],
+    accent: "#EF4444",
+    featured: true,
+  },
+  {
+    id: "bollywood-butter",
+    title: "Bollywood Butter",
+    description: "The ultimate Bollywood playlist: Arijit Singh, Shreya Ghoshal, A.R. Rahman, Pritam, and Vishal Mishra.",
+    curator: "Sangeet Bollywood",
+    artwork: "https://yt3.googleusercontent.com/QBNzNXnxI9p7uBhxJ15lGdPt4V-2yFUcf98Z0TmcjrduyNh721yDrcwB3LY8xk5l2KUqYzCruVdrHhA=s1200",
+    trackIds: (ytCatalog.tracks as unknown as Track[]).slice(36, 48).map((t) => t.id),
+    genreIds: ["pop", "cinematic"],
+    accent: "#F59E0B",
+    featured: true,
+  },
+  {
+    id: "rapcaviar",
+    title: "RapCaviar",
+    description: "Heavyweight hip-hop and rap hits from Kendrick Lamar, Drake, and global icons.",
+    curator: "Sangeet Hip-Hop",
+    artwork: "https://yt3.googleusercontent.com/jsUDtc7NsYx9GR97yLZSh3KVaqLd2mRWnia_-0P_A0O-Oq51zagiArCX2c_Oh3c9ASFCdgoev_8=s1200",
+    trackIds: (ytCatalog.tracks as unknown as Track[]).slice(48, 60).map((t) => t.id),
+    genreIds: ["hiphop"],
+    accent: "#10B981",
+    featured: true,
+  },
+  {
+    id: "chill-hits",
+    title: "Chill Hits",
+    description: "Kick back to the best chill pop, indie, and downtempo music.",
+    curator: "Sangeet Editorial",
+    artwork: "https://yt3.googleusercontent.com/UUA6gn8LXYYtTc6bAOj4OJrlFpYwSBft_SJVUPAAqA9T0gRHOoeEudBv1hOEkyB_8dP__4Nncg=s1200",
+    trackIds: (ytCatalog.tracks as unknown as Track[]).slice(60, 72).map((t) => t.id),
+    genreIds: ["ambient", "downtempo"],
+    accent: "#8B5CF6",
+    featured: true,
+  },
+  {
     id: "violet-hours",
     title: "Violet Hours",
     description:
@@ -1065,15 +1131,18 @@ export function getRelatedArtists(artist: Artist): Artist[] {
     .filter((artist): artist is Artist => Boolean(artist));
 }
 
-export const selectedTracks = getTracks(["t07", "t16", "t04", "t28", "t22", "t01", "t25", "t10"]);
+const realPopularTracks = tracks.filter((t) => Boolean(t.youtubeId) && t.artwork?.startsWith("https://"));
+export const selectedTracks = realPopularTracks.length >= 8
+  ? realPopularTracks.slice(0, 10)
+  : getTracks(["t07", "t16", "t04", "t28", "t22", "t01", "t25", "t10"]);
 
 export const newReleaseAlbums = [...albums]
+  .filter((a) => a.artwork?.startsWith("https://") || a.featured)
   .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate))
   .slice(0, 8);
 
-export const selectedAlbums = getTracks(["t07", "t04", "t01", "t16", "t25", "t28"])
-  .map((track) => albumMap.get(track.albumId))
-  .filter((album): album is Album => Boolean(album))
-  .filter((album, index, list) => list.findIndex((item) => item.id === album.id) === index);
+export const selectedAlbums = albums
+  .filter((a) => a.artwork?.startsWith("https://"))
+  .slice(0, 8);
 
 export const featuredPlaylists = playlists.filter((playlist) => playlist.featured);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -32,6 +32,7 @@ import { EmptyState } from "@/components/music/empty-state";
 import { PlaylistCard } from "@/components/music/playlist-card";
 import { SectionHeader } from "@/components/music/section-header";
 import { TrackList } from "@/components/music/track-list";
+import { registerYouTubeSearchResults, type YouTubeSearchResult } from "@/lib/dynamic-tracks";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -78,19 +79,72 @@ export default function PlaylistPage() {
   const curated = getPlaylist(id);
   const userPlaylist = userPlaylists.find((playlist) => playlist.id === id);
   const playlist: UserPlaylist | null = !curated && userPlaylist ? userPlaylist : null;
-  const trackIds = curated?.trackIds ?? playlist?.trackIds ?? [];
-  const playlistTracks = getTracks(trackIds);
+
+  const [livePlaylist, setLivePlaylist] = useState<{
+    id: string;
+    title: string;
+    description: string;
+    author: string;
+    thumbnail: string;
+    tracks: YouTubeSearchResult[];
+  } | null>(null);
+  const [liveLoading, setLiveLoading] = useState(false);
+  const [liveFailed, setLiveFailed] = useState(false);
+
+  useEffect(() => {
+    if (curated && curated.trackIds.length > 0) return;
+    if (playlist && playlist.trackIds.length > 0) return;
+    if (!id) return;
+
+    let active = true;
+    setLiveLoading(true);
+    fetch(`/api/youtube/playlist?id=${encodeURIComponent(id)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Playlist not found");
+        return res.json();
+      })
+      .then((data) => {
+        if (!active) return;
+        const pl = data?.playlist;
+        if (pl && Array.isArray(pl.tracks) && pl.tracks.length > 0) {
+          registerYouTubeSearchResults(pl.tracks);
+          setLivePlaylist(pl);
+        } else {
+          setLiveFailed(true);
+        }
+      })
+      .catch(() => {
+        if (active) setLiveFailed(true);
+      })
+      .finally(() => {
+        if (active) setLiveLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id, curated, playlist]);
+
+  const effectiveTrackIds =
+    livePlaylist && livePlaylist.tracks.length > 0
+      ? livePlaylist.tracks.map((t) => `yt-${t.videoId}`)
+      : curated?.trackIds ?? playlist?.trackIds ?? [];
+
+  const playlistTracks = getTracks(effectiveTrackIds);
   const totalDuration = playlistTracks.reduce((total, track) => total + track.duration, 0);
-  const title = curated?.title ?? playlist?.title ?? "Playlist";
+  const title = livePlaylist?.title ?? curated?.title ?? playlist?.title ?? "Playlist";
   const description =
+    livePlaylist?.description ??
     curated?.description ??
     playlist?.description ??
     "A playlist from your library.";
   const artwork =
+    livePlaylist?.thumbnail ??
     curated?.artwork ??
     playlist?.artwork ??
     playlistTracks[0]?.artwork ??
     "/art/playlists/user-01.svg";
+  const curatorLabel = livePlaylist?.author ?? curated?.curator ?? "Made by you";
 
   const pickable = useMemo(() => {
     const query = pickQuery.trim().toLowerCase();
@@ -110,7 +164,16 @@ export default function PlaylistPage() {
     )
     .slice(0, 4);
 
-  if (!curated && !playlist) {
+  if (liveLoading && !curated && !playlist) {
+    return (
+      <div className="page-container py-16">
+        <div className="h-64 animate-pulse rounded-2xl bg-white/[.04]" />
+        <p className="mt-4 text-sm text-muted-foreground">Loading playlist…</p>
+      </div>
+    );
+  }
+
+  if (!curated && !playlist && !livePlaylist) {
     return (
       <div className="page-container">
         <Link
@@ -156,7 +219,7 @@ export default function PlaylistPage() {
         accent={curated?.accent}
         meta={
           <>
-            <span>{curated?.curator ?? "Made by you"}</span>
+            <span>{curatorLabel}</span>
             <span className="text-muted-foreground/35">·</span>
             <span>
               {playlistTracks.length} {playlistTracks.length === 1 ? "song" : "songs"}
@@ -167,8 +230,8 @@ export default function PlaylistPage() {
         }
         actions={
           <>
-            <CollectionPlayButton trackIds={trackIds} label={title} />
-            <CollectionShuffleButton trackIds={trackIds} label={title} />
+            <CollectionPlayButton trackIds={effectiveTrackIds} label={title} />
+            <CollectionShuffleButton trackIds={effectiveTrackIds} label={title} />
             {playlist && (
               <button
                 type="button"
@@ -206,7 +269,7 @@ export default function PlaylistPage() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onSelect={() => {
-                      addTracksToPlaylist(playlist.id, trackIds);
+                      addTracksToPlaylist(playlist.id, effectiveTrackIds);
                     }}
                     disabled
                   >
@@ -231,7 +294,7 @@ export default function PlaylistPage() {
             <h2 className="text-xl font-medium tracking-[-0.025em]">
               {playlistTracks.length > 0 ? "Songs" : "No songs yet"}
             </h2>
-            {playlist && trackIds.length > 0 && (
+            {playlist && effectiveTrackIds.length > 0 && (
               <button
                 type="button"
                 onClick={() => {
@@ -267,7 +330,7 @@ export default function PlaylistPage() {
           ) : (
             <div className="rounded-xl border border-white/[.045] bg-white/[.012] px-2 py-3 sm:px-3">
               <TrackList
-                trackIds={trackIds}
+                trackIds={effectiveTrackIds}
                 label={title}
                 showAlbum
                 onRemove={

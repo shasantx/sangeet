@@ -7,8 +7,8 @@ import { Artwork } from "@/components/music/artwork";
 import { registerYouTubeSearchResults, type YouTubeSearchResult } from "@/lib/dynamic-tracks";
 import { usePlayerStore } from "@/store/player-store";
 
-interface CatalogItem { browseId: string; title: string; artist: string; thumbnail: string; year?: number | null; type?: string; subscribers?: string }
-interface LiveDetails { title: string; artist: string; description: string; thumbnail: string; year?: number | null; tracks: YouTubeSearchResult[] }
+interface CatalogItem { browseId: string; title: string; artist: string; thumbnail: string; year?: number | null | string; type?: string; subscribers?: string }
+interface LiveDetails { title: string; artist: string; description: string; thumbnail: string; year?: number | null; subscribers?: string; tracks: YouTubeSearchResult[]; albums?: CatalogItem[] }
 
 const cache = new Map<string, CatalogItem[]>();
 
@@ -96,10 +96,68 @@ export function LiveCatalogPage({ kind, browseId }: { kind: "artist" | "album"; 
         </div>
       </div>
     </header>
-    <section className="mt-9"><h2 className="mb-4 text-2xl font-semibold tracking-tight">{kind === "artist" ? "Popular tracks" : "Track list"}</h2>
-      {details.tracks.length ? <div className="overflow-hidden rounded-xl border border-white/[.06] bg-white/[.015]">{details.tracks.map((row, index) => { const track = registerYouTubeSearchResults([row])[0]; return <button key={row.videoId} type="button" onClick={() => playTrack(track.id, trackIds, details.title)} className="group flex min-h-[68px] w-full items-center gap-3 border-b border-white/[.045] px-3 text-left last:border-0 hover:bg-white/[.045] sm:gap-4 sm:px-4">
-        <span className="w-6 text-right text-xs tabular-nums text-muted-foreground">{index + 1}</span><Artwork src={row.thumbnail || details.thumbnail} alt="" className="h-11 w-11 shrink-0 rounded-md" /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium group-hover:text-primary">{row.title}</span><span className="mt-1 block truncate text-xs text-muted-foreground">{row.artist || details.artist || details.title}</span></span><span className="text-xs tabular-nums text-muted-foreground">{row.durationSeconds ? `${Math.floor(row.durationSeconds / 60)}:${String(row.durationSeconds % 60).padStart(2, "0")}` : ""}</span>
-      </button>; })}</div> : <p className="rounded-xl border border-white/[.06] p-5 text-sm text-muted-foreground">No playable tracks were returned for this {kind}.</p>}
+    <section className="mt-9">
+      <h2 className="mb-4 text-2xl font-semibold tracking-tight">{kind === "artist" ? "Popular tracks" : "Track list"}</h2>
+      {details.tracks.length ? (
+        <div className="overflow-hidden rounded-xl border border-white/[.06] bg-white/[.015]">
+          {details.tracks.map((row, index) => {
+            const track = registerYouTubeSearchResults([row])[0];
+            return (
+              <button
+                key={row.videoId}
+                type="button"
+                onClick={() => playTrack(track.id, trackIds, details.title)}
+                className="group flex min-h-[64px] w-full items-center gap-3 border-b border-white/[.045] px-3 text-left last:border-0 hover:bg-white/[.045] sm:gap-4 sm:px-4"
+              >
+                <span className="w-6 text-right text-xs tabular-nums text-muted-foreground group-hover:hidden">{index + 1}</span>
+                <span className="hidden w-6 text-right text-xs text-primary group-hover:inline-block">▶</span>
+                <Artwork src={row.thumbnail || details.thumbnail} alt="" className="h-11 w-11 shrink-0 rounded-md shadow" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium group-hover:text-primary">{row.title}</span>
+                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">{row.artist || details.artist || details.title}</span>
+                </span>
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {row.durationSeconds ? `${Math.floor(row.durationSeconds / 60)}:${String(row.durationSeconds % 60).padStart(2, "0")}` : ""}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="rounded-xl border border-white/[.06] p-5 text-sm text-muted-foreground">No playable tracks were returned for this {kind}.</p>
+      )}
     </section>
+
+    {kind === "artist" && details.albums && details.albums.length > 0 && (
+      <section className="mt-12">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Discography</h2>
+            <p className="text-xs text-muted-foreground">Albums and singles by {details.title}</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          {details.albums.map((album) => (
+            <Link
+              key={album.browseId}
+              href={`/album/ytm-${album.browseId}`}
+              className="group block rounded-xl border border-white/[.04] bg-white/[.015] p-3 transition hover:border-white/[.09] hover:bg-white/[.045]"
+            >
+              <Artwork
+                src={album.thumbnail || details.thumbnail}
+                alt={album.title}
+                className="aspect-square w-full rounded-lg shadow-md"
+              />
+              <span className="mt-3 block truncate text-[13px] font-semibold text-foreground group-hover:text-primary">
+                {album.title}
+              </span>
+              <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                {[album.type || "Album", album.year].filter(Boolean).join(" · ")}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+    )}
   </div>;
 }

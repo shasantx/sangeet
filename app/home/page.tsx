@@ -2,12 +2,22 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Search } from "lucide-react";
-import { getArtist, getTracks, tracks } from "@/lib/catalog";
+import { ArrowRight, Flame, Music, Search, Sparkles, Trophy } from "lucide-react";
+import {
+  albums,
+  artists,
+  featuredPlaylists,
+  getArtist,
+  getTracks,
+  tracks,
+} from "@/lib/catalog";
 import { getFirstName, getGreeting } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { useAppStore } from "@/store/app-store";
 import { useLibraryStore } from "@/store/library-store";
+import { AlbumCard } from "@/components/music/album-card";
+import { ArtistCard } from "@/components/music/artist-card";
+import { PlaylistCard } from "@/components/music/playlist-card";
 import { QuickTrackTile } from "@/components/music/quick-track-tile";
 import { SectionHeader } from "@/components/music/section-header";
 import { TrackList } from "@/components/music/track-list";
@@ -32,6 +42,39 @@ export default function HomePage() {
     return ids.slice(0, 6);
   }, [recentlyPlayed, likedTrackIds]);
   const recentTracks = getTracks(recentIds);
+
+  const quickPicks = useMemo(() => {
+    if (recentTracks.length >= 4) return recentTracks;
+    const popularYouTubeTracks = tracks
+      .filter((t) => Boolean(t.youtubeId) && t.artwork && t.artwork.startsWith("https://"))
+      .slice(0, 6);
+    return popularYouTubeTracks.length ? popularYouTubeTracks : recentTracks;
+  }, [recentTracks]);
+
+  const popularSingers = useMemo(() => {
+    const desired = [
+      "the-weeknd",
+      "taylor-swift",
+      "billie-eilish",
+      "coldplay",
+      "arijit-singh",
+      "sajjan-raj-vaidya",
+      "shreya-ghoshal",
+      "diljit-dosanjh",
+      "sushant-kc",
+      "bipul-chettri",
+      "yabesh-thapa",
+      "ar-rahman",
+    ];
+    return desired
+      .map((id) => getArtist(id))
+      .filter((a): a is NonNullable<typeof a> => Boolean(a));
+  }, []);
+
+  const popularAlbumsList = useMemo(() => {
+    const online = albums.filter((a) => a.artwork && a.artwork.startsWith("https://"));
+    return online.length ? online.slice(0, 6) : albums.slice(0, 6);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -69,29 +112,113 @@ export default function HomePage() {
       <header className="mb-8 flex flex-col gap-5 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="eyebrow mb-2">Your listening space</p>
-          <h1 className="text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">{greeting}{displayName ? `, ${getFirstName(displayName)}` : ""}</h1>
+          <h1 className="text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">
+            {greeting}{displayName ? `, ${getFirstName(displayName)}` : ""}
+          </h1>
           <p className="mt-2 text-sm text-muted-foreground">Pick up where you left off, or find something new.</p>
         </div>
-        <Link href="/search" className="inline-flex h-11 items-center gap-2 self-start rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:brightness-110 sm:self-auto">
+        <Link
+          href="/search"
+          className="inline-flex h-11 items-center gap-2 self-start rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:brightness-110 sm:self-auto"
+        >
           <Search className="h-4 w-4" /> Find music <ArrowRight className="h-4 w-4" />
         </Link>
       </header>
 
-      {recentTracks.length > 0 && <section aria-label="Continue listening" className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-        {recentTracks.map((track) => <QuickTrackTile key={track.id} track={track} contextIds={recentIds} contextLabel="Your listening" />)}
-      </section>}
+      {/* Quick Picks / Continue Listening */}
+      {quickPicks.length > 0 && (
+        <section aria-label="Quick picks" className="mb-10">
+          <div className="mb-3 flex items-center gap-2">
+            <Flame className="h-4 w-4 text-primary" />
+            <h2 className="text-xl font-semibold tracking-[-.025em]">
+              {recentTracks.length >= 4 ? "Continue listening" : "Popular quick picks"}
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+            {quickPicks.map((track) => (
+              <QuickTrackTile
+                key={track.id}
+                track={track}
+                contextIds={quickPicks.map((t) => t.id)}
+                contextLabel="Quick picks"
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
+      {/* Featured Playlists */}
+      {featuredPlaylists.length > 0 && (
+        <section className="section-space" aria-label="Featured playlists">
+          <SectionHeader
+            title="Featured Playlists"
+            eyebrow="Curated & trending"
+            description="The most played playlists on Sangeet and YouTube Music."
+            href="/explore"
+          />
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {featuredPlaylists.slice(0, 6).map((playlist) => (
+              <PlaylistCard key={playlist.id} playlist={playlist} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Popular Singers & Artists */}
+      {popularSingers.length > 0 && (
+        <section className="section-space" aria-label="Popular singers and artists">
+          <SectionHeader
+            title="Popular Artists"
+            eyebrow="Global & Regional Icons"
+            description="Explore discography, albums, and top songs."
+            href="/explore"
+          />
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {popularSingers.slice(0, 6).map((artist) => (
+              <ArtistCard key={artist.id} artist={artist} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Popular Albums */}
+      {popularAlbumsList.length > 0 && (
+        <section className="section-space" aria-label="Popular albums">
+          <SectionHeader
+            title="Popular Albums"
+            eyebrow="Essential releases"
+            description="Full-length records with original tracklists and high-res covers."
+            href="/explore"
+          />
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {popularAlbumsList.map((album) => (
+              <AlbumCard key={album.id} album={album} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Picked for you from preferences */}
       {preferredArtistIds.length > 0 && (
         <section className="section-space" aria-label="Recommended from your artist picks">
           <SectionHeader title="Picked for you" eyebrow="Your artist picks" description="Songs from the artists you chose." href="/library" />
-          {artistTrackIds.length ? <div className="rounded-xl border border-white/[.06] bg-white/[.015] px-2 py-2 sm:px-4"><TrackList trackIds={artistTrackIds} label="Songs from your chosen artists" showAlbum /></div> : (
-            <p className="rounded-xl border border-white/[.06] bg-white/[.025] p-4 text-sm text-muted-foreground">{loadingArtistTracks ? "Finding songs from your artists…" : "We couldn’t load artist recommendations right now. Try Search or Explore."}</p>
+          {artistTrackIds.length ? (
+            <div className="rounded-xl border border-white/[.06] bg-white/[.015] px-2 py-2 sm:px-4">
+              <TrackList trackIds={artistTrackIds} label="Songs from your chosen artists" showAlbum />
+            </div>
+          ) : (
+            <p className="rounded-xl border border-white/[.06] bg-white/[.025] p-4 text-sm text-muted-foreground">
+              {loadingArtistTracks ? "Finding songs from your artists…" : "We couldn’t load artist recommendations right now. Try Search or Explore."}
+            </p>
           )}
         </section>
       )}
 
-      <OpenMusicHome />
+      {/* Regional Live Music */}
       <LiveMusicHome />
+
+      {/* Independent Music */}
+      <OpenMusicHome />
     </div>
   );
 }

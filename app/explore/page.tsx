@@ -24,7 +24,7 @@ import { TrackList } from "@/components/music/track-list";
 import { buttonVariants } from "@/components/ui/button";
 import { cn, formatCount } from "@/lib/utils";
 
-const editorial = playlists.find((playlist) => playlist.id === "violet-hours") ?? featuredPlaylists[0];
+const editorial = featuredPlaylists[0] ?? playlists[0];
 const editorialTracks = editorial ? getTracks(editorial.trackIds) : [];
 const mosaic = editorial ? getAlbumMosaic(editorial.trackIds) : [];
 

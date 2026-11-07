@@ -41,10 +41,15 @@ export async function generateMetadata({
 export default async function ArtistPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const artist = getArtist(id);
-  if (!artist && id.startsWith("ytm-") && id.length > 4) return <LiveCatalogPage kind="artist" browseId={id.slice(4)} />;
-  if (!artist) notFound();
+  if (!artist) {
+    return <LiveCatalogPage kind="artist" browseId={id.replace(/^ytm-/, "")} />;
+  }
 
   const artistTracks = getArtistTracks(artist.id);
+  if (artistTracks.length === 0) {
+    return <LiveCatalogPage kind="artist" browseId={artist.id} />;
+  }
+
   const artistTrackIds = artistTracks.map((track) => track.id);
   const artistAlbums = getArtistAlbums(artist.id);
   const related = getRelatedArtists(artist);

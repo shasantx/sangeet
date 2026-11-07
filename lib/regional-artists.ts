@@ -1,5 +1,26 @@
 import type { Artist } from "./types";
 
+const regionalImages: Record<string, string> = {
+  "sajjan-raj-vaidya": "https://yt3.googleusercontent.com/IqwAXc_xj1ALxobNs74iJAHNH-ltJf838YvN7xFqiZKXtdT6VVvJTto35XQvi4p04ZgTF_J0bA=w544-h544-l90-rj",
+  "sushant-kc": "https://lh3.googleusercontent.com/54S9S_ssxmW3tC2loO-jLHglqTxfwOMy0VoqCFRjTeUFYF8Ufx5H6TudjxouuACmjlmJxBM2OBK-i0nM=w544-h544-p-l90-rj",
+  "bipul-chettri": "https://yt3.googleusercontent.com/OQKqwv-7gl_SskTPHhfz8tqtcRmpfHeeA3O1yNhHiZMR3StrHcFP8n50zLxqiBiscUMCnp5-Ymfl7ygO=w544-h544-l90-rj",
+  "yabesh-thapa": "https://yt3.googleusercontent.com/3GC_JaNsS-lLTX5UvhVVdm7mlvPwfocq_z-M_ZUC-DAwgKPr2PSLZ0bWJJ7xHe50M9KHVH0aPg=w544-h544-l90-rj",
+  "tribal-rain": "https://yt3.googleusercontent.com/c-Rx1GhJZoXAxyg-UKRxVLxepJAP0G4HksJ4MDIXFFb0aKYnNbOIyvmdLWdfzbWNU04_q9D9QUYpAQw=w544-h544-l90-rj",
+  "1974-ad": "https://yt3.ggpht.com/ytc/AIdro_lIw4vrvdIEm_5vztTs5aVYDOzn7G_-SSsm-x1fy5yUSME=w544-h544-l90-rj",
+  "the-edge-band": "https://yt3.googleusercontent.com/w0L29oFfE3RrIGvv0YG5Loid98uc4XhxgZ9EiAaGIATzi2dVF1GCMN9C7djZS3AOwJUMZvxmWO7iZ1Bvew=w544-h544-l90-rj",
+  "arijit-singh": "https://lh3.googleusercontent.com/W_yOqnKSDYyeVOY_AsXhuAtb6rW3vCL3GtJ9DA1GxWOrJfyeSOqzvTv_TkFHijdkVPXWutASBlRFPg=w544-h544-p-l90-rj",
+  "shreya-ghoshal": "https://yt3.googleusercontent.com/PgINZNe0qVxgMSXKG5vF82bNN4WCC12zgWsz9I7OLs4CLF9Cn0Vxq7Xc1ToupnzXrCv0nKfe3VM=w544-h544-l90-rj",
+  "ar-rahman": "https://yt3.googleusercontent.com/vHMOuDn8gr3SW9Pm8yFgmtYzM5kj4ayng5HKRjW0OyjG9mPK923XMVtTZTt4NUG_1aemWNLSQ27zjtA=w544-h544-l90-rj",
+  "sonu-nigam": "https://yt3.googleusercontent.com/iWH_XSIO8yZvIqz8vxkwC9BjzGM4giAhR69Z6LZ0t8Rp79ASNFVwpwHZWOyyo94B_jsXl8HtFueMgMA=w544-h544-p-l90-rj",
+  "diljit-dosanjh": "https://yt3.googleusercontent.com/7EYXXMXY594V8y4sZT2aawmdKgDAGTu5jNm9C-HpR3jY9cZJ0NMxS__nZKBdWZ1PUpJPjc2BAA=w544-h544-l90-rj",
+  "pritam": "https://yt3.googleusercontent.com/sjGMYJQ1J3FZEIBsMYUztMjjYOM4-NJ24CjmIHqxTWCxAM1YgjL-d_17u7_PRhTouOwwAjbu-2x5S6I=w544-h544-p-l90-rj",
+  "anuv-jain": "https://lh3.googleusercontent.com/CAu3xx6p8BwER8QaY0YDJBBhROtJJbrm-NZwL97zhZjZkwipdUDSZXL1WWdWVD1X9FyQFFpwmOj-WQ=w544-h544-p-l90-rj",
+  "jubin-nautiyal": "https://yt3.googleusercontent.com/4Jd9XSimz29-o12oJKUmgfTx3otHBHlTy0jb3Ace4ti2bz8Nuo59IeneNlM9EKRQXNRpLwk6YoEuNQ=w544-h544-p-l90-rj",
+  "sunidhi-chauhan": "https://lh3.googleusercontent.com/_c102EBASHERqDnrU32iygceCB0ItZy5PSeR6rvnKEusmQWNZhZRcp_xdlZHS578a82QVSPKfOyrzn8=w544-h544-p-l90-rj",
+  "badshah": "https://yt3.googleusercontent.com/bbR8znm7CX07mCGQH-M484ckFRaKkSmTjwrwuFZxQUBy7Uc5gQcintkpqDXCuSX0DdLLg2aPskZhC2s=w544-h544-p-l90-rj",
+  "vishal-mishra": "https://yt3.googleusercontent.com/4Jd9XSimz29-o12oJKUmgfTx3otHBHlTy0jb3Ace4ti2bz8Nuo59IeneNlM9EKRQXNRpLwk6YoEuNQ=w544-h544-p-l90-rj",
+};
+
 /** Searchable starting points for the music communities Sangeet serves first. */
 const nepaliHindiNames = [
   ["sajjan-raj-vaidya", "Sajjan Raj Vaidya", "Nepali singer-songwriter", "Nepali", "indie"],
@@ -33,9 +54,9 @@ const nepaliHindiNames = [
 export const regionalArtists: Artist[] = nepaliHindiNames.map(([id, name, shortBio, language, genre]) => ({
   id,
   name,
-  bio: `${name} is part of Sangeet’s ${language} music discovery collection. Explore songs, save favorites, and get recommendations after choosing this artist.`,
+  bio: `${name} is part of Sangeet’s ${language} music discovery collection. Explore songs, albums, and recommendations for this artist.`,
   shortBio,
-  image: `/art/artists/regional/${id}.svg`,
+  image: regionalImages[id] || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=18181b&color=1ed760&size=512`,
   location: language,
   genreIds: [genre],
   relatedArtistIds: [],

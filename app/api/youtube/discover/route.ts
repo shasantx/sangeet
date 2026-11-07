@@ -10,7 +10,12 @@ function safeThumbnail(value: unknown) {
   if (typeof value !== "string") return "";
   try {
     const url = new URL(value);
-    return url.protocol === "https:" && ["yt3.ggpht.com", "i.ytimg.com", "img.youtube.com", "lh3.googleusercontent.com"].includes(url.hostname) ? url.toString() : "";
+    const validHost =
+      url.hostname.endsWith(".googleusercontent.com") ||
+      url.hostname.endsWith(".ggpht.com") ||
+      url.hostname.endsWith(".ytimg.com") ||
+      url.hostname.endsWith(".youtube.com");
+    return url.protocol === "https:" && validHost ? url.toString() : "";
   } catch { return ""; }
 }
 

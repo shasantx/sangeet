@@ -40,8 +40,12 @@ export async function generateMetadata({
 export default async function AlbumPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const album = getAlbum(id);
-  if (!album && id.startsWith("ytm-") && id.length > 4) return <LiveCatalogPage kind="album" browseId={id.slice(4)} />;
-  if (!album) notFound();
+  if (!album) {
+    return <LiveCatalogPage kind="album" browseId={id.replace(/^ytm-/, "")} />;
+  }
+  if (album.trackIds.length === 0) {
+    return <LiveCatalogPage kind="album" browseId={album.id.replace(/^ytm-/, "")} />;
+  }
 
   const artist = getArtist(album.artistId);
   const albumTracks = getTracks(album.trackIds);
