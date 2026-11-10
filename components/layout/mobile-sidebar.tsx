@@ -69,7 +69,7 @@ export function MobileSidebar() {
           {session ? <Link href="/profile" className="flex items-center gap-3 rounded-xl p-2 hover:bg-white/[.05]">
             {session.picture ? <img src={session.picture} alt="" className="h-10 w-10 rounded-full object-cover" /> : <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-semibold text-black">{session.initials}</span>}
             <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium text-white">{session.displayName}</span><span className="block truncate text-xs text-white/45">View profile</span></span><Settings2 className="h-4 w-4 text-white/45" />
-          </Link> : <button type="button" onClick={() => { setOpen(false); openAuthModal("signin"); }} className="h-11 w-full rounded-full bg-primary text-sm font-semibold text-black transition hover:brightness-110">Sign in</button>}
+          </Link> : <Link href="/auth" onClick={() => setOpen(false)} className="flex h-11 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-black transition hover:brightness-110">Sign in</Link>}
           {!session && <p className="mt-2 text-center text-[10px] text-white/35">{profile.name ? `Continue as ${profile.name}` : "Your music, your library"}</p>}
         </div>
       </aside>

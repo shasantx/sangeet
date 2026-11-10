@@ -221,13 +221,12 @@ export default function ProfilePage() {
 
           <div className="flex flex-wrap items-center gap-2">
             {!isAuthenticated && (
-              <button
-                type="button"
-                onClick={() => openAuthModal("signin")}
+              <Link
+                href="/auth"
                 className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-xs font-semibold text-primary-foreground shadow-md hover:bg-secondary transition"
               >
                 Sign In
-              </button>
+              </Link>
             )}
             {!isAuthenticated && <button
               type="button"

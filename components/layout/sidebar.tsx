@@ -257,22 +257,20 @@ export function Sidebar() {
         ) : (
           <div className="flex flex-col gap-2">
             {!collapsed ? (
-              <button
-                type="button"
-                onClick={() => openAuthModal("signin")}
+              <Link
+                href="/auth"
                 className="w-full py-2 px-3 rounded-lg bg-white/[.06] hover:bg-white/[.12] text-xs font-semibold text-foreground transition text-center"
               >
                 Sign In
-              </button>
+              </Link>
             ) : (
-              <button
-                type="button"
-                onClick={() => openAuthModal("signin")}
+              <Link
+                href="/auth"
                 title="Sign In"
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[.06] text-xs font-semibold text-foreground transition"
               >
                 in
-              </button>
+              </Link>
             )}
           </div>
         )}

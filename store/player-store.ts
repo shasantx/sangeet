@@ -98,7 +98,18 @@ function playableError() {
 }
 
 function requireListenerAccount(): boolean {
-  return true;
+  const auth = useAuthStore.getState();
+  if (auth.isAuthenticated) {
+    return true;
+  }
+  toast.error("Login Required", "You must be signed in to play songs on Sangeet.");
+  if (typeof window !== "undefined") {
+    const currentPath = window.location.pathname + window.location.search;
+    if (!window.location.pathname.startsWith("/auth") && !window.location.pathname.startsWith("/login")) {
+      window.location.assign(`/auth?reason=play_required&returnTo=${encodeURIComponent(currentPath)}`);
+    }
+  }
+  return false;
 }
 
 function resumeAudio(audio: HTMLAudioElement) {

@@ -171,21 +171,19 @@ export function TopBar() {
           </DropdownMenu>
         ) : (
           <div className="ml-0.5 flex shrink-0 items-center gap-0.5 sm:ml-2 sm:gap-2">
-            <button
-              type="button"
-              onClick={() => openAuthModal("signin")}
-              className="min-h-9 whitespace-nowrap rounded-full px-2 py-1.5 text-[11px] font-semibold text-white/80 transition hover:bg-white/[.06] hover:text-white sm:px-3.5 sm:text-xs"
+            <Link
+              href={`/auth?tab=signin&returnTo=${encodeURIComponent(pathname)}`}
+              className="inline-flex min-h-9 items-center whitespace-nowrap rounded-full px-2 py-1.5 text-[11px] font-semibold text-white/80 transition hover:bg-white/[.06] hover:text-white sm:px-3.5 sm:text-xs"
             >
               Sign in
-            </button>
-            <button
-              type="button"
-              onClick={() => openAuthModal("signup")}
+            </Link>
+            <Link
+              href={`/auth?tab=signup&returnTo=${encodeURIComponent(pathname)}`}
               aria-label="Create account"
-              className="min-h-9 whitespace-nowrap rounded-full bg-white px-2.5 py-1.5 text-[11px] font-semibold text-black shadow-md transition hover:bg-white/90 active:scale-95 sm:px-4 sm:text-xs"
+              className="inline-flex min-h-9 items-center whitespace-nowrap rounded-full bg-white px-2.5 py-1.5 text-[11px] font-semibold text-black shadow-md transition hover:bg-white/90 active:scale-95 sm:px-4 sm:text-xs"
             >
               <span className="sm:hidden">Sign up</span><span className="hidden sm:inline">Create account</span>
-            </button>
+            </Link>
           </div>
         )}
       </div>

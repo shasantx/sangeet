@@ -1,12 +1,11 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertCircle,
   ArrowLeft,
-  Check,
   CheckCircle2,
   Eye,
   EyeOff,
@@ -16,8 +15,10 @@ import {
   Music2,
   ShieldCheck,
   Sparkles,
+  User,
 } from "lucide-react";
 import { SangeetMark } from "@/components/brand/sangeet-mark";
+import { useAuthStore } from "@/store/auth-store";
 import { toast } from "@/store/ui-store";
 
 function GoogleMark() {
@@ -48,13 +49,25 @@ function AuthForm() {
   const searchParams = useSearchParams();
   const googleState = searchParams?.get("google");
   const reason = searchParams?.get("reason");
+  const initialTab = searchParams?.get("tab") === "signup" ? "signup" : "signin";
   const returnTo = searchParams?.get("returnTo") || "/home";
 
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const loginWithEmail = useAuthStore((state) => state.loginWithEmail);
+
+  const [mode, setMode] = useState<"signin" | "signup">(initialTab);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace(returnTo);
+    }
+  }, [isAuthenticated, returnTo, router]);
 
   const handleGoogleSignIn = () => {
     window.location.assign(`/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`);
@@ -62,23 +75,38 @@ function AuthForm() {
 
   const handleFormLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim()) {
+      toast.error("Email required", "Please enter your email address.");
+      return;
+    }
+    if (mode === "signup" && !name.trim()) {
+      toast.error("Name required", "Please enter your name.");
+      return;
+    }
     setIsSubmitting(true);
-    // Instant client login / guest sign-in
-    toast.success("Welcome to Sangeet", "Logged in with streaming access.");
+
+    loginWithEmail(email.trim(), mode === "signup" ? name.trim() : undefined);
+    toast.success(
+      mode === "signup" ? "Welcome to Sangeet!" : "Welcome back!",
+      "Streaming access unlocked. Enjoy your music."
+    );
+
     setTimeout(() => {
       router.push(returnTo);
-    }, 400);
+    }, 300);
   };
+
+  const playRequiredNotice = reason === "play_required";
 
   const errorMessage = useMemo(() => {
     if (googleState !== "error") return null;
     if (reason === "not_configured") {
-      return "Google OAuth credentials are being initialized. You have instant Guest access.";
+      return "Google OAuth credentials are being configured. You can log in directly with your email below.";
     }
     if (reason === "access_denied") {
-      return "Google sign-in was cancelled. You can log in below or continue as Guest.";
+      return "Google sign-in was cancelled. You can log in with email below.";
     }
-    return "Could not connect to Google sign-in. You have instant Guest access.";
+    return "Could not connect to Google sign-in. You can log in with email below.";
   }, [googleState, reason]);
 
   return (
@@ -86,7 +114,7 @@ function AuthForm() {
       {/* Mobile Top Bar */}
       <div className="flex items-center justify-between pb-6 md:hidden">
         <Link
-          href="/home"
+          href={returnTo === "/auth" ? "/" : returnTo}
           className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-[#9ba39d] hover:text-white"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Back
@@ -105,12 +133,53 @@ function AuthForm() {
 
       <div className="mt-4 md:mt-6">
         <h1 className="font-display text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-          Login to your account
+          {mode === "signup" ? "Create your account" : "Login to your account"}
         </h1>
         <p className="mt-1.5 text-xs text-[#9ba39d] sm:text-sm">
-          Welcome back! Enter your details to log in to your account
+          {mode === "signup"
+            ? "Sign up to unlock ad-free streaming, personalized mixes, and synced lyrics"
+            : "Welcome back! Enter your details to start listening"}
         </p>
       </div>
+
+      {/* Mode Switcher Tabs */}
+      <div className="mt-6 flex rounded-xl border border-white/10 bg-white/[0.04] p-1">
+        <button
+          type="button"
+          onClick={() => setMode("signin")}
+          className={`flex-1 rounded-lg py-2 text-xs font-semibold transition ${
+            mode === "signin"
+              ? "bg-[#1ed760] text-black shadow-md"
+              : "text-[#9ba39d] hover:text-white"
+          }`}
+        >
+          Sign In
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("signup")}
+          className={`flex-1 rounded-lg py-2 text-xs font-semibold transition ${
+            mode === "signup"
+              ? "bg-[#1ed760] text-black shadow-md"
+              : "text-[#9ba39d] hover:text-white"
+          }`}
+        >
+          Create Account
+        </button>
+      </div>
+
+      {/* Play Required Alert Banner */}
+      {playRequiredNotice && (
+        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-[#1ed760]/30 bg-[#1ed760]/10 p-3.5 text-xs text-[#a0f0bd]">
+          <Headphones className="h-4 w-4 shrink-0 mt-0.5 text-[#1ed760]" />
+          <div>
+            <p className="font-semibold text-white">Login required to play songs</p>
+            <p className="mt-0.5 text-[#9ba39d]">
+              Sign in with Google or your email to stream 100M+ ad-free tracks with live synced lyrics.
+            </p>
+          </div>
+        </div>
+      )}
 
       {errorMessage && (
         <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
@@ -119,8 +188,26 @@ function AuthForm() {
         </div>
       )}
 
-      {/* Email / Password Form (Konekta layout) */}
-      <form onSubmit={handleFormLogin} className="mt-6 space-y-4">
+      {/* Email / Password Form */}
+      <form onSubmit={handleFormLogin} className="mt-5 space-y-3.5">
+        {mode === "signup" && (
+          <div>
+            <label className="block text-xs font-semibold text-[#c8cec9]" htmlFor="auth-name">
+              Your Name
+            </label>
+            <div className="relative mt-1.5">
+              <input
+                id="auth-name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name"
+                className="h-11 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-4 text-xs text-white placeholder:text-[#636c65] transition focus:border-[#1ed760] focus:bg-black/40 focus:outline-none focus:ring-1 focus:ring-[#1ed760] sm:h-12 sm:text-sm"
+              />
+            </div>
+          </div>
+        )}
+
         <div>
           <label className="block text-xs font-semibold text-[#c8cec9]" htmlFor="auth-email">
             Email
@@ -132,6 +219,7 @@ function AuthForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
+              required
               className="h-11 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-4 text-xs text-white placeholder:text-[#636c65] transition focus:border-[#1ed760] focus:bg-black/40 focus:outline-none focus:ring-1 focus:ring-[#1ed760] sm:h-12 sm:text-sm"
             />
           </div>
@@ -147,7 +235,7 @@ function AuthForm() {
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your Password"
+              placeholder="Enter your password"
               className="h-11 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-4 pr-11 text-xs text-white placeholder:text-[#636c65] transition focus:border-[#1ed760] focus:bg-black/40 focus:outline-none focus:ring-1 focus:ring-[#1ed760] sm:h-12 sm:text-sm"
             />
             <button
@@ -172,23 +260,25 @@ function AuthForm() {
             />
             <span>Remember login</span>
           </label>
-          <Link href="/auth" className="text-xs text-[#9ba39d] hover:text-white hover:underline">
-            Forgot Password?
-          </Link>
+          <span className="text-xs text-[#636c65]">Instant session setup</span>
         </div>
 
-        {/* Primary Login Button */}
+        {/* Primary Submit Button */}
         <button
           type="submit"
           disabled={isSubmitting}
           className="h-12 w-full rounded-2xl bg-[#1ed760] text-xs font-bold text-black shadow-lg shadow-[#1ed760]/20 transition hover:bg-[#1db954] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760] sm:h-12.5 sm:text-sm"
         >
-          {isSubmitting ? "Logging in..." : "Login"}
+          {isSubmitting
+            ? "Signing in..."
+            : mode === "signup"
+            ? "Create Account & Start Listening"
+            : "Sign In"}
         </button>
       </form>
 
-      {/* Or continue with Divider (Konekta layout) */}
-      <div className="relative my-6 text-center">
+      {/* Divider */}
+      <div className="relative my-5 text-center">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-white/[0.08]" />
         </div>
@@ -197,28 +287,20 @@ function AuthForm() {
         </span>
       </div>
 
-      {/* Google Sign-In Button (Official Brand Colors, Google only) */}
+      {/* Google Sign-In Button */}
       <button
         type="button"
         onClick={handleGoogleSignIn}
         className="group flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-white/20 bg-white px-5 text-xs font-semibold text-[#1f2024] shadow-md transition hover:bg-[#f2f4f2] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760] sm:h-12.5 sm:text-sm"
       >
         <GoogleMark />
-        <span>Sign in with Google</span>
+        <span>Continue with Google</span>
       </button>
-
-      {/* Bottom Footer Link */}
-      <div className="mt-6 text-center text-xs text-[#9ba39d]">
-        <span>New here? </span>
-        <Link href={returnTo} className="font-semibold text-white hover:text-[#1ed760] hover:underline">
-          Continue as Guest
-        </Link>
-      </div>
 
       <div className="mt-5 border-t border-white/[0.06] pt-4 text-center">
         <p className="flex items-center justify-center gap-1.5 text-[11px] text-[#636c65]">
           <ShieldCheck className="h-3.5 w-3.5 text-[#1ed760]" />
-          <span>OAuth Single Sign-On secured by Google. No password stored.</span>
+          <span>Stream anywhere across Web, Windows, and Android.</span>
         </p>
       </div>
     </div>
@@ -234,9 +316,9 @@ export default function AuthPage() {
         className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_70%_60%_at_50%_0%,rgba(30,215,96,0.12),transparent_70%)]"
       />
 
-      {/* Main Container: Full-height on mobile, expansive split card on desktop */}
+      {/* Main Container */}
       <div className="relative flex w-full min-h-dvh sm:min-h-[660px] max-w-5xl overflow-hidden rounded-none sm:rounded-[36px] border-0 sm:border border-white/[0.1] bg-[#111412] shadow-2xl">
-        {/* Left Side: Rich 3D Organic / Soundscape Visual (Konekta Inspiration) */}
+        {/* Left Side: Rich Visual / Soundscape Showcase */}
         <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden border-r border-white/[0.08] bg-[#0c0f0d] p-8 md:flex">
           {/* Subtle background art glow */}
           <div className="pointer-events-none absolute -left-10 -top-10 h-72 w-72 rounded-full bg-[#1ed760]/15 blur-3xl" />
@@ -244,32 +326,32 @@ export default function AuthPage() {
 
           {/* Top navigation */}
           <Link
-            href="/home"
+            href="/"
             className="z-10 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-xs font-medium text-[#9ba39d] backdrop-blur-md transition hover:bg-white/[0.08] hover:text-white"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to listening
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to home
           </Link>
 
-          {/* Full-Bleed 3D Sculpture / Sound Art Frame */}
+          {/* Full-Bleed Sound Art Frame with Weeknd cover */}
           <div className="relative my-auto flex flex-col items-center justify-center py-6">
             <div className="relative aspect-[4/5] w-full max-w-[340px] overflow-hidden rounded-[28px] border border-white/15 bg-gradient-to-b from-[#18211b] via-[#101512] to-[#090b09] p-3 shadow-2xl">
               <img
-                src="/art/artists/regional/sajjan-raj-vaidya.svg"
+                src="/art/albums/the-weeknd-sao-paulo.jpg"
                 alt="Sangeet soundscapes"
                 className="h-full w-full rounded-2xl object-cover"
               />
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
               {/* Floating Glass Badges on Artwork */}
               <div className="absolute bottom-5 left-5 right-5 space-y-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1ed760]/40 bg-[#1ed760]/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#1ed760] backdrop-blur-md">
-                  <Sparkles className="h-3 w-3" /> Studio Master Lossless
+                  <Sparkles className="h-3 w-3" /> Lossless 320 KBPS
                 </span>
                 <p className="font-display text-lg font-bold text-white leading-tight">
-                  Nepali, Hindi & Regional Soundscapes
+                  High-Fidelity Studio Audio
                 </p>
                 <p className="text-[11px] text-white/70">
-                  100M+ songs with real-time synchronized karaoke lyrics
+                  Real-time synchronized lyrics & 100M+ songs with zero interruptions
                 </p>
               </div>
             </div>
@@ -293,7 +375,7 @@ export default function AuthPage() {
           </div>
         </div>
 
-        {/* Right Side: High-Craft Login Form */}
+        {/* Right Side: Clean Login Form */}
         <Suspense
           fallback={
             <div className="flex w-full flex-col justify-center p-8 text-center text-sm text-[#9ba39d] md:w-1/2">

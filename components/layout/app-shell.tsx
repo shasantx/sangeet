@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const currentTrackId = usePlayerStore((state) => state.currentTrackId);
   const hasTrack = Boolean(currentTrackId);
   const reduceMotion = useReducedMotion();
-  const immersive = pathname === "/premium" || pathname === "/now-playing" || pathname === "/auth";
+  const immersive = pathname === "/premium" || pathname === "/now-playing" || pathname === "/auth" || pathname === "/login";
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
