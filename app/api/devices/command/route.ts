@@ -47,6 +47,11 @@ async function resolveUserId(request: NextRequest): Promise<string> {
     // Fall through
   }
 
+  const headerUserId = request.headers.get("x-sangeet-user-id");
+  if (headerUserId && /^(google|email):[A-Za-z0-9_.@+-]{3,120}$/.test(headerUserId)) {
+    return headerUserId;
+  }
+
   const headerSync = request.headers.get("x-sangeet-sync-id");
   const cookieSync = request.cookies.get("sangeet_guest_sync")?.value;
   const querySync = request.nextUrl.searchParams.get("syncId");
@@ -70,8 +75,8 @@ export async function POST(request: NextRequest) {
     const action = String(body.action);
 
     if (
-      !/^[A-Za-z0-9_-]{8,80}$/.test(deviceId) ||
-      !["play", "pause", "next", "previous", "seek", "volume"].includes(action)
+      (!/^[A-Za-z0-9_-]{8,80}$/.test(deviceId) && deviceId !== "all") ||
+      !["play", "pause", "next", "previous", "seek", "volume", "sync"].includes(action)
     ) {
       return NextResponse.json({ error: "invalid_command" }, { status: 400 });
     }

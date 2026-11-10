@@ -52,7 +52,13 @@ async function resolveUserId(request: NextRequest): Promise<{ userId: string; se
     // Fall through to guest sync
   }
 
-  // 2. Guest Sync Room token (from header, cookie, or query)
+  // 2. Client authenticated user ID
+  const headerUserId = request.headers.get("x-sangeet-user-id");
+  if (headerUserId && /^(google|email):[A-Za-z0-9_.@+-]{3,120}$/.test(headerUserId)) {
+    return { userId: headerUserId };
+  }
+
+  // 3. Guest Sync Room token (from header, cookie, or query)
   const headerSync = request.headers.get("x-sangeet-sync-id");
   const cookieSync = request.cookies.get("sangeet_guest_sync")?.value;
   const querySync = request.nextUrl.searchParams.get("syncId");

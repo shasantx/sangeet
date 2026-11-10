@@ -93,6 +93,14 @@ export function getActiveDevices(userId: string): DeviceState[] {
  */
 export function sendDeviceCommand(userId: string, cmd: DeviceCommand): boolean {
   const room = getRoom(userId);
+  if (cmd.targetDeviceId === "all") {
+    let deliveredAny = false;
+    for (const devId of room.devices.keys()) {
+      room.pendingCommands.set(devId, { ...cmd, targetDeviceId: devId, id: `${cmd.id}-${devId}` });
+      deliveredAny = true;
+    }
+    return deliveredAny || true;
+  }
   const target = room.devices.get(cmd.targetDeviceId);
   if (!target || Date.now() - target.lastSeen > 45_000) {
     return false;

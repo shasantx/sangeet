@@ -8,6 +8,22 @@ import { usePlayerStore } from "@/store/player-store";
 
 export const DEVICE_KEY = "sangeet-device-id-v1";
 export const GUEST_SYNC_KEY = "sangeet-sync-session-id-v1";
+export const CUSTOM_DEVICE_NAME_KEY = "sangeet-custom-device-name-v1";
+
+export function getCustomDeviceName(): string {
+  if (typeof window === "undefined") return "";
+  return window.localStorage.getItem(CUSTOM_DEVICE_NAME_KEY) || "";
+}
+
+export function setCustomDeviceName(name: string): void {
+  if (typeof window === "undefined") return;
+  const clean = name.trim().slice(0, 40);
+  if (!clean) {
+    window.localStorage.removeItem(CUSTOM_DEVICE_NAME_KEY);
+  } else {
+    window.localStorage.setItem(CUSTOM_DEVICE_NAME_KEY, clean);
+  }
+}
 
 export function getDeviceId(): string {
   if (typeof window === "undefined") return "";
@@ -43,6 +59,8 @@ export function getDeviceType(): "phone" | "tablet" | "computer" | "browser" {
 }
 
 export function getDeviceName(): string {
+  const custom = getCustomDeviceName();
+  if (custom) return custom;
   if (typeof navigator === "undefined") return "Browser";
   const ua = navigator.userAgent;
   const isWindows = /windows/i.test(ua);
@@ -93,7 +111,7 @@ export function ConnectedDeviceSync() {
         broadcast.onmessage = (event) => {
           if (!active || !event.data) return;
           const { targetId, action, track, currentTime, volume } = event.data;
-          if (targetId && targetId !== deviceId) return;
+          if (targetId && targetId !== "all" && targetId !== deviceId) return;
 
           const player = usePlayerStore.getState();
           if (action === "pause" && player.isPlaying) {
@@ -153,13 +171,19 @@ export function ConnectedDeviceSync() {
         const type = getDeviceType();
         const name = getDeviceName();
 
+        const session = useAuthStore.getState().session;
+        const requestHeaders: Record<string, string> = {
+          "content-type": "application/json",
+          "x-sangeet-sync-id": syncId,
+        };
+        if (session?.userId) {
+          requestHeaders["x-sangeet-user-id"] = session.userId;
+        }
+
         // Send Heartbeat (PUT)
         await fetch(`/api/devices?syncId=${encodeURIComponent(syncId)}`, {
           method: "PUT",
-          headers: {
-            "content-type": "application/json",
-            "x-sangeet-sync-id": syncId,
-          },
+          headers: requestHeaders,
           body: JSON.stringify({
             deviceId,
             name,
@@ -179,9 +203,7 @@ export function ConnectedDeviceSync() {
           `/api/devices?deviceId=${encodeURIComponent(deviceId)}&syncId=${encodeURIComponent(syncId)}${ackParam}`,
           {
             cache: "no-store",
-            headers: {
-              "x-sangeet-sync-id": syncId,
-            },
+            headers: requestHeaders,
           },
         );
 

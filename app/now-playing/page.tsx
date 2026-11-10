@@ -213,7 +213,7 @@ export default function NowPlayingPage() {
 
         {/* Right Header Extras */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <ConnectedDevices />
+          <ConnectedDevices variant="header" placement="top" />
 
           {current && (
             <>
