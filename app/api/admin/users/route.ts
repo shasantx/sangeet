@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminSession, isAdminEmail } from "@/lib/admin-auth";
 import { getAdminStats, getManagedUser, getRecentAdminActions, listManagedUsers, updateManagedUser } from "@/lib/admin-users";
+import { enforceRateLimit, safeJsonParse, verifySameOrigin } from "@/lib/security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,9 +31,12 @@ function databaseError(error: unknown) {
 }
 
 export async function GET(request: NextRequest) {
+  const rateLimited = enforceRateLimit(request, "admin:users:get", 60, 60_000);
+  if (rateLimited) return rateLimited;
+
   const session = adminSession(request.cookies.get("aura_session")?.value);
   if (!session) return json({ error: "Admin access required." }, 403);
-  const query = request.nextUrl.searchParams.get("q") ?? "";
+  const query = (request.nextUrl.searchParams.get("q") ?? "").slice(0, 80);
   const page = Math.max(0, Math.min(1000, Number(request.nextUrl.searchParams.get("page")) || 0));
   try {
     const [users, stats, actions] = await Promise.all([
@@ -40,7 +44,13 @@ export async function GET(request: NextRequest) {
       getAdminStats(),
       getRecentAdminActions(),
     ]);
-    return json({ ...users, users: users.users.map((user) => ({ ...user, is_admin: isAdminEmail(user.email) })), stats, actions, page });
+    return json({
+      ...users,
+      users: users.users.map((user) => ({ ...user, is_admin: isAdminEmail(user.email) })),
+      stats,
+      actions,
+      page,
+    });
   } catch (error) {
     if (isConfiguredError(error)) return json({ error: "Admin database is not configured. Add the Supabase server secrets and apply the admin migration." }, 503);
     return json({ error: databaseError(error) }, 503);
@@ -48,20 +58,23 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const rateLimited = enforceRateLimit(request, "admin:users:patch", 30, 60_000);
+  if (rateLimited) return rateLimited;
+
   const session = adminSession(request.cookies.get("aura_session")?.value);
   if (!session) return json({ error: "Admin access required." }, 403);
-  if (request.headers.get("origin") !== request.nextUrl.origin) return json({ error: "Origin validation failed." }, 403);
+  if (!verifySameOrigin(request)) return json({ error: "Origin validation failed." }, 403);
 
-  let body: { id?: unknown; status?: unknown };
-  try {
-    body = await request.json();
-  } catch {
-    return json({ error: "Invalid request." }, 400);
-  }
+  const parsedBody = await safeJsonParse<{ id?: unknown; status?: unknown }>(request, 8_192);
+  if (!parsedBody.ok) return json({ error: "Invalid request." }, parsedBody.status);
+  const body = parsedBody.data;
+
   const id = typeof body.id === "string" ? body.id : "";
   const changes: { status?: "active" | "suspended" } = {};
   if (body.status === "active" || body.status === "suspended") changes.status = body.status;
-  if (!id.startsWith("google:") || id.length > 220 || !Object.keys(changes).length) return json({ error: "Choose a valid user and change." }, 400);
+  if (!id.startsWith("google:") || id.length > 220 || !Object.keys(changes).length) {
+    return json({ error: "Choose a valid user and change." }, 400);
+  }
 
   try {
     const target = await getManagedUser(id);

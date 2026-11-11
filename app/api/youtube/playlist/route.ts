@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { execFile } from "child_process";
 import { promisify } from "util";
+import fs from "fs";
 import path from "path";
+import { enforceRateLimit } from "@/lib/security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,18 +13,16 @@ const serviceUrl = process.env.YTMUSIC_SERVICE_URL ?? (process.env.VERCEL ? "" :
 const cache = new Map<string, { at: number; data: unknown }>();
 
 function findPythonExe(): string {
-  if (process.env.PYTHON_PATH) return process.env.PYTHON_PATH;
-  const localVenv = path.join(process.cwd(), ".venv-ytm", process.platform === "win32" ? "Scripts\\python.exe" : "bin/python");
-  if (process.platform === "win32") {
-    const knownCore = "C:\\Users\\shasa\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe";
-    try {
-      const fs = require("fs");
-      if (fs.existsSync(localVenv)) return localVenv;
-      if (fs.existsSync(knownCore)) return knownCore;
-    } catch {}
-    return "py";
+  const localVenv = path.join(
+    process.cwd(),
+    ".venv-ytm",
+    process.platform === "win32" ? "Scripts\\python.exe" : "bin/python",
+  );
+  if (fs.existsSync(localVenv)) return localVenv;
+  if (process.env.PYTHON_PATH && fs.existsSync(process.env.PYTHON_PATH)) {
+    return process.env.PYTHON_PATH;
   }
-  return "python3";
+  return process.platform === "win32" ? "py" : "python3";
 }
 
 function safeThumb(url: unknown) {
@@ -40,14 +40,55 @@ function safeThumb(url: unknown) {
   }
 }
 
+function sanitizePlaylistPayload(raw: unknown, fallbackId: string) {
+  if (!raw || typeof raw !== "object") return null;
+  const root = raw as Record<string, unknown>;
+  const pl = (root.playlist && typeof root.playlist === "object" ? root.playlist : root) as Record<string, unknown>;
+  const rawTracks = Array.isArray(pl.tracks) ? pl.tracks : [];
+  const tracks = rawTracks
+    .flatMap((item) => {
+      if (!item || typeof item !== "object") return [];
+      const t = item as Record<string, unknown>;
+      if (typeof t.videoId !== "string" || !/^[A-Za-z0-9_-]{11}$/.test(t.videoId)) return [];
+      return [
+        {
+          videoId: t.videoId,
+          title: typeof t.title === "string" ? t.title.slice(0, 180) : "Untitled",
+          artist: typeof t.artist === "string" ? t.artist.slice(0, 140) : "YouTube Music",
+          durationSeconds: Number.isFinite(t.durationSeconds) ? Math.max(0, Math.min(86400, Number(t.durationSeconds))) : 0,
+          thumbnail: safeThumb(t.thumbnail) || `https://i.ytimg.com/vi/${t.videoId}/hqdefault.jpg`,
+        },
+      ];
+    })
+    .slice(0, 100);
+
+  return {
+    ok: true,
+    playlist: {
+      id: fallbackId,
+      title: typeof pl.title === "string" ? pl.title.slice(0, 180) : "Playlist",
+      description: typeof pl.description === "string" ? pl.description.slice(0, 1200) : "",
+      author: typeof pl.author === "string" ? pl.author.slice(0, 140) : "YouTube Music",
+      thumbnail: safeThumb(pl.thumbnail),
+      trackCount: tracks.length,
+      tracks,
+    },
+  };
+}
+
 export async function GET(request: Request) {
+  const rateLimited = enforceRateLimit(request, "youtube:playlist", 30, 60_000);
+  if (rateLimited) return rateLimited;
+
   const params = new URL(request.url).searchParams;
   const id = (params.get("id") || params.get("playlistId") || "").trim();
-  if (!id) {
-    return NextResponse.json({ error: "missing_id" }, { status: 400 });
+  const cleanId = id.replace(/^ytm-/, "");
+
+  // Strict validation: must be alphanumeric/underscore/dash, 2..100 chars, and not start with '-'
+  if (!cleanId || cleanId.startsWith("-") || !/^[A-Za-z0-9_-]{2,100}$/.test(cleanId)) {
+    return NextResponse.json({ error: "invalid_id" }, { status: 400, headers: { "cache-control": "no-store" } });
   }
 
-  const cleanId = id.replace(/^ytm-/, "");
   const cached = cache.get(cleanId);
   if (cached && Date.now() - cached.at < 600_000) {
     return NextResponse.json(cached.data);
@@ -61,17 +102,22 @@ export async function GET(request: Request) {
         signal: AbortSignal.timeout(8000),
       });
       if (res.ok) {
-        const data = await res.json();
-        cache.set(cleanId, { at: Date.now(), data });
-        return NextResponse.json(data);
+        const rawData = await res.json();
+        const sanitized = sanitizePlaylistPayload(rawData, cleanId);
+        if (sanitized) {
+          cache.set(cleanId, { at: Date.now(), data: sanitized });
+          if (cache.size > 250) cache.delete(cache.keys().next().value!);
+          return NextResponse.json(sanitized);
+        }
       }
     } catch {}
   }
 
-  // 2. Direct Python fallback
-  try {
-    const pythonExe = findPythonExe();
-    const script = `
+  // 2. Direct Python fallback (local dev only)
+  if (!process.env.VERCEL) {
+    try {
+      const pythonExe = findPythonExe();
+      const script = `
 import json, sys
 from ytmusicapi import YTMusic
 
@@ -120,19 +166,24 @@ try:
         }
     }
     print(json.dumps(result))
-except Exception as e:
-    print(json.dumps({"ok": False, "error": str(e)}))
+except Exception:
+    print(json.dumps({"ok": False, "error": "playlist_unavailable"}))
 `;
-    const { stdout } = await execFileAsync(pythonExe, ["-c", script, cleanId], { timeout: 12000 });
-    const trimmed = stdout.trim();
-    const jsonStart = trimmed.indexOf("{");
-    const jsonStr = jsonStart >= 0 ? trimmed.slice(jsonStart) : trimmed;
-    const parsed = JSON.parse(jsonStr || "{}");
-    if (parsed.ok) {
-      cache.set(cleanId, { at: Date.now(), data: parsed });
-      return NextResponse.json(parsed);
-    }
-  } catch {}
+      const { stdout } = await execFileAsync(pythonExe, ["-c", script, cleanId], { timeout: 12000 });
+      const trimmed = stdout.trim();
+      const jsonStart = trimmed.indexOf("{");
+      const jsonStr = jsonStart >= 0 ? trimmed.slice(jsonStart) : trimmed;
+      const parsed = JSON.parse(jsonStr || "{}") as { ok?: boolean };
+      if (parsed.ok) {
+        const sanitized = sanitizePlaylistPayload(parsed, cleanId);
+        if (sanitized) {
+          cache.set(cleanId, { at: Date.now(), data: sanitized });
+          if (cache.size > 250) cache.delete(cache.keys().next().value!);
+          return NextResponse.json(sanitized);
+        }
+      }
+    } catch {}
+  }
 
-  return NextResponse.json({ error: "playlist_unavailable" }, { status: 502 });
+  return NextResponse.json({ error: "playlist_unavailable" }, { status: 502, headers: { "cache-control": "no-store" } });
 }

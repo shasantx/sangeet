@@ -7,8 +7,8 @@ metadata (video IDs, titles, artists, durations, thumbnails).
 
 from __future__ import annotations
 
-import json
 import hmac
+import json
 import os
 import re
 import threading
@@ -21,6 +21,8 @@ from ytmusicapi import YTMusic
 PORT = int(os.environ.get("YTMUSIC_PORT", "8765"))
 BIND = os.environ.get("YTMUSIC_BIND", "127.0.0.1")
 CACHE_TTL_SECONDS = 300
+SAFE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{2,100}$")
+SAFE_VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 
 _ytmusic: YTMusic | None = None
 _cache: dict[tuple[str, int], tuple[float, list[dict]]] = {}
@@ -59,7 +61,7 @@ def thumb_for(item: dict, video_id: str) -> str:
 
 def normalize(item: dict) -> dict | None:
     video_id = item.get("videoId")
-    if not video_id:
+    if not video_id or not isinstance(video_id, str) or not SAFE_VIDEO_ID_RE.match(video_id):
         return None
     artists_raw = item.get("artists") or []
     artists = []
@@ -88,9 +90,9 @@ def normalize(item: dict) -> dict | None:
 
     return {
         "videoId": video_id,
-        "title": item.get("title") or "Untitled",
-        "artist": str(artist),
-        "album": str(album),
+        "title": str(item.get("title") or "Untitled")[:180],
+        "artist": str(artist)[:140],
+        "album": str(album)[:160],
         "durationSeconds": parse_duration(
             item.get("duration_seconds") or item.get("duration")
         ),
@@ -111,7 +113,6 @@ def search(query: str, limit: int) -> list[dict]:
 
     client = get_client()
     raw = []
-    # Search both songs and videos to guarantee official tracks from popular singers are found
     try:
         songs = client.search(query, filter="songs", limit=max(limit, 8))
         if songs:
@@ -162,7 +163,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
         self.end_headers()
         self.wfile.write(body)
 
@@ -189,22 +192,22 @@ class Handler(BaseHTTPRequestHandler):
         # /api/playlist
         if parsed.path == "/api/playlist":
             playlist_id = (params.get("id") or params.get("playlistId") or [""])[0].strip()
-            if not playlist_id:
-                self._send(400, {"error": "missing playlist id"})
+            if not playlist_id or not SAFE_ID_RE.match(playlist_id):
+                self._send(400, {"error": "invalid playlist id"})
                 return
             try:
                 from discovery import get_playlist
                 playlist = get_playlist(playlist_id)
                 self._send(200, {"ok": True, "playlist": playlist})
-            except Exception as e:
-                self._send(502, {"error": f"upstream playlist unavailable: {e}"})
+            except Exception:
+                self._send(502, {"error": "upstream playlist unavailable"})
             return
 
         # /api/lyrics
         if parsed.path == "/api/lyrics":
             video_id = (params.get("videoId") or [""])[0].strip()
-            if not video_id:
-                self._send(400, {"error": "missing videoId"})
+            if not video_id or not SAFE_VIDEO_ID_RE.match(video_id):
+                self._send(400, {"error": "invalid videoId"})
                 return
             try:
                 client = get_client()
@@ -212,18 +215,23 @@ class Handler(BaseHTTPRequestHandler):
                 lyrics_id = wp.get("lyrics")
                 if lyrics_id:
                     data = client.get_lyrics(lyrics_id)
-                    self._send(200, {"ok": True, "lyrics": data.get("lyrics") or "", "source": data.get("source") or "", "hasTimestamps": data.get("hasTimestamps", False)})
+                    self._send(200, {
+                        "ok": True,
+                        "lyrics": str(data.get("lyrics") or "")[:20000],
+                        "source": str(data.get("source") or "")[:80],
+                        "hasTimestamps": bool(data.get("hasTimestamps", False)),
+                    })
                 else:
                     self._send(200, {"ok": True, "lyrics": "", "source": "", "hasTimestamps": False})
-            except Exception as e:
-                self._send(502, {"error": str(e), "lyrics": ""})
+            except Exception:
+                self._send(502, {"error": "upstream lyrics unavailable", "lyrics": ""})
             return
 
         # /api/details
         if parsed.path == "/api/details":
-            browse_id = (params.get("browseId") or [""])[0]
-            kind = (params.get("kind") or [""])[0]
-            if kind not in ("artist", "album", "playlist") or not browse_id or len(browse_id) > 100:
+            browse_id = (params.get("browseId") or [""])[0].strip()
+            kind = (params.get("kind") or [""])[0].strip()
+            if kind not in ("artist", "album", "playlist") or not SAFE_ID_RE.match(browse_id):
                 self._send(400, {"error": "invalid details request"})
                 return
             try:
@@ -235,8 +243,8 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     details = get_playlist(browse_id)
                 self._send(200, {"details": details, "type": kind})
-            except Exception as e:
-                self._send(502, {"error": f"upstream details unavailable: {e}"})
+            except Exception:
+                self._send(502, {"error": "upstream details unavailable"})
             return
 
         query = (params.get("q") or [""])[0].strip()
@@ -261,8 +269,8 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 from discovery import search_catalog
                 self._send(200, {"results": search_catalog(query, kind, limit), "query": query, "type": kind})
-            except Exception as e:
-                self._send(502, {"results": [], "error": f"upstream catalog unavailable: {e}"})
+            except Exception:
+                self._send(502, {"results": [], "error": "upstream catalog unavailable"})
             return
 
         try:

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, globalShortcut, Menu, Tray, ipcMain, shell, nativeImage } = require("electron");
+const { app, BrowserWindow, globalShortcut, Menu, Tray, ipcMain, shell, nativeImage, session } = require("electron");
 const path = require("path");
 const fs = require("fs");
 
@@ -21,6 +21,38 @@ if (process.platform === "win32") {
 const isDev = process.env.NODE_ENV === "development" || process.argv.includes("--dev");
 const APP_URL = process.env.SANGEET_APP_URL || (isDev ? "http://localhost:3000" : "https://sangeet.shasant.xyz");
 
+const ALLOWED_WINDOW_ORIGINS = new Set([
+  "https://sangeet.shasant.xyz",
+  "https://accounts.google.com",
+]);
+if (isDev) {
+  ALLOWED_WINDOW_ORIGINS.add("http://localhost:3000");
+  ALLOWED_WINDOW_ORIGINS.add("http://127.0.0.1:3000");
+}
+try {
+  ALLOWED_WINDOW_ORIGINS.add(new URL(APP_URL).origin);
+} catch {
+  // Ignore invalid env override
+}
+
+function isAllowedInWindowUrl(rawUrl) {
+  try {
+    const parsed = new URL(rawUrl);
+    return ALLOWED_WINDOW_ORIGINS.has(parsed.origin);
+  } catch {
+    return false;
+  }
+}
+
+function isSafeExternalUrl(rawUrl) {
+  try {
+    const parsed = new URL(rawUrl);
+    return (parsed.protocol === "https:" || parsed.protocol === "http:") && !parsed.username && !parsed.password;
+  } catch {
+    return false;
+  }
+}
+
 function getAppIcon() {
   const iconPaths = [
     path.join(__dirname, "../public/brand/sangeet-icon-512.png"),
@@ -35,7 +67,20 @@ function getAppIcon() {
   return null;
 }
 
+function lockDownSessionPermissions() {
+  try {
+    const targetSession = session.fromPartition("persist:sangeet_desktop_session");
+    targetSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
+      callback(false);
+    });
+    targetSession.setPermissionCheckHandler(() => false);
+  } catch {
+    // Ignore if session not initialized yet
+  }
+}
+
 function createMainWindow() {
+  lockDownSessionPermissions();
   const icon = getAppIcon();
 
   mainWindow = new BrowserWindow({
@@ -51,34 +96,40 @@ function createMainWindow() {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
       contextIsolation: true,
-      partition: "persist:sangeet_desktop_session", // Persists all Supabase auth tokens, preferences, and cache
+      sandbox: true,
+      partition: "persist:sangeet_desktop_session",
       webSecurity: true,
-      backgroundThrottling: false, // Ensures music keeps playing smoothly when minimized or in background!
+      allowRunningInsecureContent: false,
+      backgroundThrottling: false,
     },
   });
 
   mainWindow.loadURL(APP_URL).catch((err) => {
     console.error("Failed to load APP_URL:", err);
-    // If remote connection fails, attempt localhost fallback or offline page
     if (!isDev) {
-      mainWindow.loadURL("http://localhost:3000").catch(() => {
-        const offlinePath = path.join(__dirname, "../public/offline.html");
-        if (fs.existsSync(offlinePath)) {
-          mainWindow.loadFile(offlinePath);
-        }
-      });
+      const offlinePath = path.join(__dirname, "../public/offline.html");
+      if (fs.existsSync(offlinePath)) {
+        mainWindow.loadFile(offlinePath);
+      }
+    }
+  });
+
+  // Prevent navigation to untrusted origins inside the Electron window
+  mainWindow.webContents.on("will-navigate", (event, navigationUrl) => {
+    if (!isAllowedInWindowUrl(navigationUrl)) {
+      event.preventDefault();
+      if (isSafeExternalUrl(navigationUrl)) {
+        shell.openExternal(navigationUrl);
+      }
     }
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    // Open external web links in default system browser
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-      // Keep Google OAuth or internal links in window or popup
-      if (url.includes("accounts.google.com") || url.includes("sangeet.shasant.xyz") || url.includes("localhost:3000")) {
-        return { action: "allow" };
-      }
+    if (isAllowedInWindowUrl(url)) {
+      return { action: "allow" };
+    }
+    if (isSafeExternalUrl(url)) {
       shell.openExternal(url);
-      return { action: "deny" };
     }
     return { action: "deny" };
   });
@@ -188,14 +239,16 @@ ipcMain.on("window-close", () => {
   if (mainWindow) mainWindow.close();
 });
 
-// Playback state updates from frontend app
+// Playback state updates from frontend app (strictly sanitized)
 ipcMain.on("playback-state-update", (_event, data) => {
-  if (!data) return;
+  if (!data || typeof data !== "object") return;
   isPlaying = Boolean(data.isPlaying);
-  if (data.track) {
-    currentTrack = data.track;
+  if (data.track && typeof data.track === "object") {
+    const safeTitle = typeof data.track.title === "string" ? data.track.title.slice(0, 120) : "Untitled";
+    const safeArtist = typeof data.track.artist === "string" ? data.track.artist.slice(0, 100) : "Sangeet";
+    currentTrack = { title: safeTitle, artist: safeArtist };
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.setTitle(`${currentTrack.title} · ${currentTrack.artist || "Sangeet"} — Sangeet`);
+      mainWindow.setTitle(`${safeTitle} · ${safeArtist} — Sangeet`);
     }
   }
   if (tray) {

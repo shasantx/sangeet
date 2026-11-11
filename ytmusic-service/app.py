@@ -6,10 +6,14 @@ import asyncio
 import hmac
 import json
 import os
+import re
 from urllib.parse import parse_qs
 
-from server import search
+from server import get_client, search
 from discovery import get_album, get_creator, get_playlist, search_catalog
+
+SAFE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{2,100}$")
+SAFE_VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 
 
 async def app(scope: dict, receive, send) -> None:
@@ -23,7 +27,7 @@ async def app(scope: dict, receive, send) -> None:
 
     if path == "/health" and method == "GET":
         payload = {"ok": True}
-    elif path not in ("/search", "/api/search", "/api/catalog", "/api/details", "/api/playlist"):
+    elif path not in ("/search", "/api/search", "/api/catalog", "/api/details", "/api/playlist", "/api/lyrics"):
         status, payload = 404, {"error": "not found"}
     elif method != "GET":
         status, payload = 405, {"error": "method not allowed"}
@@ -35,14 +39,52 @@ async def app(scope: dict, receive, send) -> None:
             status, payload = 401, {"error": "unauthorized"}
         else:
             params = parse_qs(scope.get("query_string", b"").decode("utf-8", "replace"))
-            if path == "/api/details":
-                browse_id = (params.get("browseId") or [""])[0]
-                kind = (params.get("kind") or [""])[0]
-                if kind not in ("artist", "album") or not browse_id or not browse_id.replace("_", "").replace("-", "").isalnum() or len(browse_id) > 100:
+            if path == "/api/playlist":
+                playlist_id = (params.get("id") or params.get("playlistId") or [""])[0].strip()
+                if not playlist_id or not SAFE_ID_RE.match(playlist_id):
+                    status, payload = 400, {"error": "invalid playlist id"}
+                else:
+                    try:
+                        playlist = await asyncio.to_thread(get_playlist, playlist_id)
+                        payload = {"ok": True, "playlist": playlist}
+                    except Exception:
+                        status, payload = 502, {"error": "upstream playlist unavailable"}
+            elif path == "/api/lyrics":
+                video_id = (params.get("videoId") or [""])[0].strip()
+                if not video_id or not SAFE_VIDEO_ID_RE.match(video_id):
+                    status, payload = 400, {"error": "invalid videoId"}
+                else:
+                    try:
+                        def _fetch_lyrics(vid: str) -> dict:
+                            client = get_client()
+                            wp = client.get_watch_playlist(videoId=vid)
+                            lyrics_id = wp.get("lyrics")
+                            if lyrics_id:
+                                data = client.get_lyrics(lyrics_id)
+                                return {
+                                    "ok": True,
+                                    "lyrics": str(data.get("lyrics") or "")[:20000],
+                                    "source": str(data.get("source") or "")[:80],
+                                    "hasTimestamps": bool(data.get("hasTimestamps", False)),
+                                }
+                            return {"ok": True, "lyrics": "", "source": "", "hasTimestamps": False}
+
+                        payload = await asyncio.to_thread(_fetch_lyrics, video_id)
+                    except Exception:
+                        status, payload = 502, {"error": "upstream lyrics unavailable", "lyrics": ""}
+            elif path == "/api/details":
+                browse_id = (params.get("browseId") or [""])[0].strip()
+                kind = (params.get("kind") or [""])[0].strip()
+                if kind not in ("artist", "album", "playlist") or not SAFE_ID_RE.match(browse_id):
                     status, payload = 400, {"error": "invalid details request"}
                 else:
                     try:
-                        details = await asyncio.to_thread(get_creator, browse_id) if kind == "artist" else await asyncio.to_thread(get_album, browse_id)
+                        if kind == "artist":
+                            details = await asyncio.to_thread(get_creator, browse_id)
+                        elif kind == "album":
+                            details = await asyncio.to_thread(get_album, browse_id)
+                        else:
+                            details = await asyncio.to_thread(get_playlist, browse_id)
                         payload = {"details": details, "type": kind}
                     except Exception:  # noqa: BLE001
                         status, payload = 502, {"error": "upstream details unavailable"}
@@ -78,6 +120,8 @@ async def app(scope: dict, receive, send) -> None:
         "headers": [
             (b"content-type", b"application/json; charset=utf-8"),
             (b"cache-control", b"no-store"),
+            (b"x-content-type-options", b"nosniff"),
+            (b"x-frame-options", b"DENY"),
             (b"content-length", str(len(body)).encode("ascii")),
         ],
     })

@@ -1,5 +1,9 @@
 import { albums, playlists, selectedAlbums } from "@/lib/catalog";
 
+if (typeof window !== "undefined") {
+  throw new Error("lib/admin-settings is a server-only module.");
+}
+
 export interface SiteSettings {
   announcement_enabled: boolean;
   announcement_text: string;
@@ -35,6 +39,7 @@ async function db(path: string, init: RequestInit = {}) {
   return fetch(`${base}/rest/v1/${path}`, {
     ...init,
     cache: "no-store",
+    signal: init.signal ?? AbortSignal.timeout(8_000),
     headers: {
       apikey: key,
       authorization: `Bearer ${key}`,
@@ -46,10 +51,14 @@ async function db(path: string, init: RequestInit = {}) {
 
 export async function getSiteSettings(): Promise<SiteSettings> {
   if (cachedSettings && cachedSettings.expiresAt > Date.now()) return cachedSettings.value;
-  const params = new URLSearchParams({ select: "announcement_enabled,announcement_text,signup_enabled,live_search_enabled,featured_album_id,featured_playlist_ids,updated_at", id: "eq.1", limit: "1" });
+  const params = new URLSearchParams({
+    select: "announcement_enabled,announcement_text,signup_enabled,live_search_enabled,featured_album_id,featured_playlist_ids,updated_at",
+    id: "eq.1",
+    limit: "1",
+  });
   const response = await db(`site_settings?${params}`);
   if (!response.ok) throw new Error(`Site settings lookup failed (${response.status})`);
-  const rows = await response.json() as SiteSettings[];
+  const rows = (await response.json()) as SiteSettings[];
   if (!rows[0]) throw new Error("Site settings row is missing; apply the site controls migration");
   const value = { ...defaultSiteSettings, ...rows[0] };
   cachedSettings = { value, expiresAt: Date.now() + SETTINGS_CACHE_MS };
@@ -73,7 +82,7 @@ export async function saveSiteSettings(
     }),
   });
   if (!response.ok) throw new Error(`Site settings update failed (${response.status})`);
-  const row = await response.json() as SiteSettings | SiteSettings[];
+  const row = (await response.json()) as SiteSettings | SiteSettings[];
   const updatedSettings = Array.isArray(row) ? row[0] : row;
   if (!updatedSettings) throw new Error("Site settings row is missing; apply the site controls migration");
   cachedSettings = undefined;
@@ -102,8 +111,10 @@ export function validAlbumId(id: unknown): id is string {
 }
 
 export function validPlaylistIds(ids: unknown): ids is string[] {
-  return Array.isArray(ids)
-    && ids.length <= 6
-    && ids.every((id) => typeof id === "string" && playlists.some((playlist) => playlist.id === id))
-    && new Set(ids).size === ids.length;
+  return (
+    Array.isArray(ids) &&
+    ids.length <= 6 &&
+    ids.every((id) => typeof id === "string" && playlists.some((playlist) => playlist.id === id)) &&
+    new Set(ids).size === ids.length
+  );
 }

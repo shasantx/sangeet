@@ -1,4 +1,9 @@
 import { createHmac, createPublicKey, createVerify, timingSafeEqual } from "crypto";
+import { safeCompare } from "@/lib/security";
+
+if (typeof window !== "undefined") {
+  throw new Error("lib/google-auth is a server-only module.");
+}
 
 export interface GoogleIdentity {
   sub: string;
@@ -29,6 +34,8 @@ interface GoogleClaims extends GoogleIdentity {
   email_verified: boolean;
 }
 
+const MAX_SESSION_LIFETIME_SECONDS = 8 * 24 * 60 * 60;
+
 let discoveryCache: { value: GoogleDiscovery; expiresAt: number } | undefined;
 let keysCache: { value: GoogleJwk[]; expiresAt: number } | undefined;
 
@@ -56,7 +63,9 @@ export function appUrl(requestUrl: string): URL {
 }
 
 export function safeReturnTo(value: string | null, base: URL): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return "/";
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\") || /[\u0000-\u001F\u007F]/.test(value)) {
+    return "/";
+  }
   try {
     const parsed = new URL(value, base);
     if (parsed.origin !== base.origin) return "/";
@@ -89,7 +98,7 @@ export function signSession(payload: GoogleIdentity & { exp: number }): string {
 }
 
 export function verifySession(value: string | undefined): (GoogleIdentity & { exp: number }) | null {
-  if (!value) return null;
+  if (!value || value.length > 4096) return null;
   const secret = process.env.AUTH_SECRET;
   if (!secret || secret.length < 32) return null;
   const [encoded, signature, extra] = value.split(".");
@@ -104,7 +113,20 @@ export function verifySession(value: string | undefined): (GoogleIdentity & { ex
   if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return null;
   try {
     const payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as GoogleIdentity & { exp: number };
-    if (!payload.sub || !payload.email || !Number.isFinite(payload.exp) || payload.exp <= Math.floor(Date.now() / 1000)) return null;
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (
+      typeof payload.sub !== "string" ||
+      !payload.sub ||
+      payload.sub.length > 128 ||
+      typeof payload.email !== "string" ||
+      !payload.email ||
+      payload.email.length > 320 ||
+      !Number.isFinite(payload.exp) ||
+      payload.exp <= nowSec ||
+      payload.exp > nowSec + MAX_SESSION_LIFETIME_SECONDS
+    ) {
+      return null;
+    }
     return payload;
   } catch {
     return null;
@@ -131,6 +153,7 @@ export async function exchangeGoogleCode(code: string, redirectUri: string, veri
     headers: { "content-type": "application/x-www-form-urlencoded" },
     body,
     cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) throw new Error("Google token exchange failed");
   const tokenPayload = (await response.json()) as { id_token?: string };
@@ -159,14 +182,17 @@ async function verifyGoogleIdToken(token: string, expectedNonce: string): Promis
   if (!audiences.includes(googleClientId())) throw new Error("Google ID token audience mismatch");
   if (!["https://accounts.google.com", "accounts.google.com"].includes(claims.iss)) throw new Error("Invalid Google ID token issuer");
   if (!Number.isFinite(claims.exp) || claims.exp <= Math.floor(Date.now() / 1000)) throw new Error("Google ID token expired");
-  if (claims.nonce !== expectedNonce) throw new Error("Google ID token nonce mismatch");
+  if (!safeCompare(claims.nonce, expectedNonce)) throw new Error("Google ID token nonce mismatch");
   if (!claims.sub || !claims.email || claims.email_verified !== true) throw new Error("Google account email is not verified");
   return { sub: claims.sub, email: claims.email, name: claims.name || claims.email.split("@")[0], picture: claims.picture };
 }
 
 async function getDiscovery(): Promise<GoogleDiscovery> {
   if (discoveryCache && discoveryCache.expiresAt > Date.now()) return discoveryCache.value;
-  const response = await fetch("https://accounts.google.com/.well-known/openid-configuration", { cache: "no-store" });
+  const response = await fetch("https://accounts.google.com/.well-known/openid-configuration", {
+    cache: "no-store",
+    signal: AbortSignal.timeout(8_000),
+  });
   if (!response.ok) throw new Error("Unable to load Google OpenID configuration");
   const value = (await response.json()) as GoogleDiscovery;
   if (!value.authorization_endpoint || !value.token_endpoint || !value.jwks_uri) throw new Error("Invalid Google OpenID configuration");
@@ -176,7 +202,10 @@ async function getDiscovery(): Promise<GoogleDiscovery> {
 
 async function getGoogleKeys(uri: string): Promise<GoogleJwk[]> {
   if (keysCache && keysCache.expiresAt > Date.now()) return keysCache.value;
-  const response = await fetch(uri, { cache: "no-store" });
+  const response = await fetch(uri, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(8_000),
+  });
   if (!response.ok) throw new Error("Unable to load Google signing keys");
   const payload = (await response.json()) as { keys?: GoogleJwk[] };
   if (!Array.isArray(payload.keys)) throw new Error("Invalid Google signing key response");

@@ -1,3 +1,7 @@
+if (typeof window !== "undefined") {
+  throw new Error("lib/admin-users is a server-only module.");
+}
+
 export type UserStatus = "active" | "suspended";
 
 export interface ManagedUser {
@@ -35,6 +39,7 @@ async function db(path: string, init: RequestInit = {}) {
   return fetch(`${base}/rest/v1/${path}`, {
     ...init,
     cache: "no-store",
+    signal: init.signal ?? AbortSignal.timeout(8_000),
     headers: {
       apikey: key,
       authorization: `Bearer ${key}`,
@@ -45,15 +50,29 @@ async function db(path: string, init: RequestInit = {}) {
 }
 
 export async function registerGoogleUser(user: { id: string; email: string; name: string; picture?: string }) {
+  const safePicture =
+    typeof user.picture === "string" && user.picture.startsWith("https://")
+      ? user.picture.slice(0, 1000)
+      : null;
   const response = await db("rpc/register_app_user", {
     method: "POST",
-    body: JSON.stringify({ p_id: `google:${user.id}`, p_email: user.email.toLowerCase(), p_name: user.name, p_picture: user.picture ?? null }),
+    body: JSON.stringify({
+      p_id: `google:${user.id.slice(0, 128)}`,
+      p_email: user.email.toLowerCase().slice(0, 320),
+      p_name: user.name.slice(0, 120),
+      p_picture: safePicture,
+    }),
   });
   if (!response.ok) throw new Error(`User profile sync failed (${response.status})`);
 }
 
 export async function getManagedUser(id: string): Promise<ManagedUser | null> {
-  const params = new URLSearchParams({ id: `eq.${id}`, select: "id,email,display_name,picture,status,created_at,updated_at", limit: "1" });
+  if (!id || id.length > 220) return null;
+  const params = new URLSearchParams({
+    id: `eq.${id}`,
+    select: "id,email,display_name,picture,status,created_at,updated_at",
+    limit: "1",
+  });
   const response = await db(`user_profiles?${params}`);
   if (!response.ok) throw new Error(`Profile lookup failed (${response.status})`);
   return ((await response.json()) as ManagedUser[])[0] ?? null;
@@ -75,7 +94,10 @@ export async function listManagedUsers(query: string, page: number) {
 }
 
 async function countWhere(filter: string): Promise<number> {
-  const response = await db(`user_profiles?select=id&${filter}`, { method: "HEAD", headers: { prefer: "count=exact" } });
+  const response = await db(`user_profiles?select=id&${filter}`, {
+    method: "HEAD",
+    headers: { prefer: "count=exact" },
+  });
   if (!response.ok) throw new Error(`User count failed (${response.status})`);
   return Number(response.headers.get("content-range")?.split("/")[1]) || 0;
 }
@@ -89,7 +111,9 @@ export async function getAdminStats() {
 }
 
 export async function getRecentAdminActions(): Promise<AdminAuditEntry[]> {
-  const response = await db("admin_audit_log?select=id,actor_email,target_user_id,action,details,created_at&order=created_at.desc&limit=8");
+  const response = await db(
+    "admin_audit_log?select=id,actor_email,target_user_id,action,details,created_at&order=created_at.desc&limit=8",
+  );
   if (!response.ok) throw new Error(`Audit history failed (${response.status})`);
   return (await response.json()) as AdminAuditEntry[];
 }
@@ -97,10 +121,15 @@ export async function getRecentAdminActions(): Promise<AdminAuditEntry[]> {
 export async function updateManagedUser(id: string, changes: { status?: UserStatus }, actorEmail: string) {
   const response = await db("rpc/admin_update_app_user", {
     method: "POST",
-    body: JSON.stringify({ p_id: id, p_plan: null, p_status: changes.status ?? null, p_actor_email: actorEmail }),
+    body: JSON.stringify({
+      p_id: id,
+      p_plan: null,
+      p_status: changes.status ?? null,
+      p_actor_email: actorEmail.toLowerCase(),
+    }),
   });
   if (!response.ok) throw new Error(`User update failed (${response.status})`);
-  const value = await response.json() as ManagedUser | null | ManagedUser[];
+  const value = (await response.json()) as ManagedUser | null | ManagedUser[];
   const user = Array.isArray(value) ? value[0] : value ?? undefined;
   if (!user) return null;
   return user;

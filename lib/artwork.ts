@@ -1,11 +1,37 @@
 /**
  * Helpers for upgrading low-res thumbnails from YouTube Music and YouTube
- * into crystal-clear HD artwork (up to 1200x1200 or maxresdefault).
+ * into crystal-clear HD artwork (up to 1200x1200 or maxresdefault),
+ * while strictly sanitizing URLs against injection or unsafe schemes.
  */
 
-export function toHighResArtwork(url?: string | null): string {
+function sanitizeArtworkUrl(url?: string | null): string {
   if (!url || typeof url !== "string") return "";
   const trimmed = url.trim();
+  if (!trimmed || trimmed.length > 1024 || /[\u0000-\u001F\u007F]/.test(trimmed)) return "";
+
+  // Allow safe local relative paths
+  if (trimmed.startsWith("/") && !trimmed.startsWith("//") && !trimmed.includes("..")) {
+    return trimmed;
+  }
+
+  // Allow blob: URLs generated locally for imported device audio
+  if (trimmed.startsWith("blob:")) {
+    return trimmed;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "https:" || parsed.username || parsed.password) {
+      return "";
+    }
+    return parsed.toString();
+  } catch {
+    return "";
+  }
+}
+
+export function toHighResArtwork(url?: string | null): string {
+  const trimmed = sanitizeArtworkUrl(url);
   if (!trimmed) return "";
 
   // 1. Google user content (YouTube Music artist photos and album art)
@@ -33,8 +59,7 @@ export function toHighResArtwork(url?: string | null): string {
 }
 
 export function toMediumResArtwork(url?: string | null): string {
-  if (!url || typeof url !== "string") return "";
-  const trimmed = url.trim();
+  const trimmed = sanitizeArtworkUrl(url);
   if (!trimmed) return "";
 
   if (

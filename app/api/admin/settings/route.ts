@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminSession } from "@/lib/admin-auth";
 import { adminContentOptions, getSiteSettings, saveSiteSettings, validAlbumId, validPlaylistIds } from "@/lib/admin-settings";
+import { enforceRateLimit, safeJsonParse, verifySameOrigin } from "@/lib/security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,6 +24,9 @@ function safeError(error: unknown) {
 }
 
 export async function GET(request: NextRequest) {
+  const rateLimited = enforceRateLimit(request, "admin:settings:get", 60, 60_000);
+  if (rateLimited) return rateLimited;
+
   const session = adminSession(request.cookies.get("aura_session")?.value);
   if (!session) return json({ error: "Admin access required." }, 403);
   try {
@@ -34,35 +38,41 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const rateLimited = enforceRateLimit(request, "admin:settings:patch", 20, 60_000);
+  if (rateLimited) return rateLimited;
+
   const session = adminSession(request.cookies.get("aura_session")?.value);
   if (!session) return json({ error: "Admin access required." }, 403);
-  if (request.headers.get("origin") !== request.nextUrl.origin) return json({ error: "Origin validation failed." }, 403);
+  if (!verifySameOrigin(request)) return json({ error: "Origin validation failed." }, 403);
 
-  let body: Record<string, unknown>;
-  try {
-    body = await request.json() as Record<string, unknown>;
-  } catch {
-    return json({ error: "Invalid request." }, 400);
-  }
+  const parsedBody = await safeJsonParse<Record<string, unknown>>(request, 16_384);
+  if (!parsedBody.ok) return json({ error: "Invalid request." }, parsedBody.status);
+  const body = parsedBody.data;
+
   if (
-    typeof body.announcement_enabled !== "boolean"
-    || typeof body.announcement_text !== "string"
-    || body.announcement_text.length > 240
-    || typeof body.signup_enabled !== "boolean"
-    || typeof body.live_search_enabled !== "boolean"
-    || !validAlbumId(body.featured_album_id)
-    || !validPlaylistIds(body.featured_playlist_ids)
-  ) return json({ error: "Check the announcement, feature switches, album and playlist selections." }, 400);
+    typeof body.announcement_enabled !== "boolean" ||
+    typeof body.announcement_text !== "string" ||
+    body.announcement_text.length > 240 ||
+    typeof body.signup_enabled !== "boolean" ||
+    typeof body.live_search_enabled !== "boolean" ||
+    !validAlbumId(body.featured_album_id) ||
+    !validPlaylistIds(body.featured_playlist_ids)
+  ) {
+    return json({ error: "Check the announcement, feature switches, album and playlist selections." }, 400);
+  }
 
   try {
-    const settings = await saveSiteSettings({
-      announcement_enabled: body.announcement_enabled,
-      announcement_text: body.announcement_text.trim(),
-      signup_enabled: body.signup_enabled,
-      live_search_enabled: body.live_search_enabled,
-      featured_album_id: body.featured_album_id || null,
-      featured_playlist_ids: body.featured_playlist_ids,
-    }, session.email);
+    const settings = await saveSiteSettings(
+      {
+        announcement_enabled: body.announcement_enabled,
+        announcement_text: body.announcement_text.trim(),
+        signup_enabled: body.signup_enabled,
+        live_search_enabled: body.live_search_enabled,
+        featured_album_id: body.featured_album_id || null,
+        featured_playlist_ids: body.featured_playlist_ids,
+      },
+      session.email,
+    );
     return json({ settings });
   } catch (error) {
     return json({ error: safeError(error) }, 503);

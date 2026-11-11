@@ -28,7 +28,7 @@ export function setCustomDeviceName(name: string): void {
 export function getDeviceId(): string {
   if (typeof window === "undefined") return "";
   let id = window.localStorage.getItem(DEVICE_KEY);
-  if (!id) {
+  if (!id || !/^[A-Za-z0-9_-]{16,80}$/.test(id)) {
     id = crypto.randomUUID().replace(/-/g, "");
     window.localStorage.setItem(DEVICE_KEY, id);
   }
@@ -38,16 +38,20 @@ export function getDeviceId(): string {
 export function getGuestSyncId(): string {
   if (typeof window === "undefined") return "";
   let id = window.localStorage.getItem(GUEST_SYNC_KEY);
-  if (!id) {
-    id = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+  if (!id || !/^[A-Za-z0-9_-]{16,80}$/.test(id)) {
+    // 128-bit cryptographic random identifier (32 hex chars)
+    id = crypto.randomUUID().replace(/-/g, "");
     window.localStorage.setItem(GUEST_SYNC_KEY, id);
   }
   return id;
 }
 
-export function setGuestSyncId(id: string): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(GUEST_SYNC_KEY, id.trim());
+export function setGuestSyncId(id: string): boolean {
+  if (typeof window === "undefined") return false;
+  const trimmed = id.trim();
+  if (!/^[A-Za-z0-9_-]{16,80}$/.test(trimmed)) return false;
+  window.localStorage.setItem(GUEST_SYNC_KEY, trimmed);
+  return true;
 }
 
 export function getDeviceType(): "phone" | "tablet" | "computer" | "browser" {
@@ -101,44 +105,61 @@ export function ConnectedDeviceSync() {
   useEffect(() => {
     let active = true;
     const deviceId = getDeviceId();
-    const guestSyncId = getGuestSyncId();
 
-    // 1. Cross-tab fast local sync via BroadcastChannel
+    // Check URL for ?syncId= pairing parameter and clean it from the address bar immediately
+    if (typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        const urlSyncId = url.searchParams.get("syncId");
+        if (urlSyncId && setGuestSyncId(urlSyncId)) {
+          url.searchParams.delete("syncId");
+          window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+        }
+      } catch {
+        // Ignore URL parse errors
+      }
+    }
+
+    // 1. Cross-tab fast local sync via BroadcastChannel with strict payload validation
     let broadcast: BroadcastChannel | null = null;
     try {
       if (typeof window !== "undefined" && "BroadcastChannel" in window) {
         broadcast = new BroadcastChannel("sangeet_device_bus");
         broadcast.onmessage = (event) => {
-          if (!active || !event.data) return;
-          const { targetId, action, track, currentTime, volume } = event.data;
-          if (targetId && targetId !== "all" && targetId !== deviceId) return;
+          if (!active || !event.data || typeof event.data !== "object") return;
+          const { targetId, action, track, currentTime, volume } = event.data as Record<string, unknown>;
+          if (typeof targetId === "string" && targetId !== "all" && targetId !== deviceId) return;
+          if (typeof action !== "string") return;
 
           const player = usePlayerStore.getState();
           if (action === "pause" && player.isPlaying) {
             player.togglePlay();
           } else if (action === "play") {
-            if (track) {
+            if (track && typeof track === "object") {
+              const t = track as Record<string, unknown>;
               const restored =
-                track.source === "youtube"
+                t.source === "youtube" && typeof t.videoId === "string"
                   ? restoreYouTubeTrack({
-                      videoId: track.videoId,
-                      title: track.title,
-                      artist: track.artist,
-                      album: track.album,
-                      thumbnail: track.artwork,
-                      durationSeconds: track.duration,
+                      videoId: t.videoId,
+                      title: String(t.title ?? ""),
+                      artist: String(t.artist ?? ""),
+                      album: String(t.album ?? ""),
+                      thumbnail: String(t.artwork ?? ""),
+                      durationSeconds: Number(t.duration) || 0,
                     })
-                  : restoreAudiusTrack({
-                      id: track.trackId,
-                      title: track.title,
-                      artist: track.artist,
-                      album: track.album,
-                      artwork: track.artwork,
-                      durationSeconds: track.duration,
-                    });
+                  : t.source === "audius" && typeof t.trackId === "string"
+                    ? restoreAudiusTrack({
+                        id: t.trackId,
+                        title: String(t.title ?? ""),
+                        artist: String(t.artist ?? ""),
+                        album: String(t.album ?? ""),
+                        artwork: String(t.artwork ?? ""),
+                        durationSeconds: Number(t.duration) || 0,
+                      })
+                    : undefined;
               if (restored) {
                 player.playTrack(restored.id, [restored.id], "Playing on this device");
-                if (Number(currentTime) > 0) {
+                if (Number(currentTime) > 0 && Number.isFinite(Number(currentTime))) {
                   window.setTimeout(() => usePlayerStore.getState().seek(Number(currentTime)), 600);
                 }
               }
@@ -150,9 +171,9 @@ export function ConnectedDeviceSync() {
           } else if (action === "previous") {
             player.previous();
           } else if (action === "seek" && Number.isFinite(currentTime)) {
-            player.seek(Number(currentTime));
+            player.seek(Math.max(0, Math.min(86400, Number(currentTime))));
           } else if (action === "volume" && Number.isFinite(volume)) {
-            player.setVolume(Number(volume));
+            player.setVolume(Math.max(0, Math.min(1, Number(volume))));
           }
         };
       }
@@ -171,17 +192,13 @@ export function ConnectedDeviceSync() {
         const type = getDeviceType();
         const name = getDeviceName();
 
-        const session = useAuthStore.getState().session;
         const requestHeaders: Record<string, string> = {
           "content-type": "application/json",
           "x-sangeet-sync-id": syncId,
         };
-        if (session?.userId) {
-          requestHeaders["x-sangeet-user-id"] = session.userId;
-        }
 
-        // Send Heartbeat (PUT)
-        await fetch(`/api/devices?syncId=${encodeURIComponent(syncId)}`, {
+        // Send Heartbeat (PUT) - server authenticates via HttpOnly session cookie or x-sangeet-sync-id
+        await fetch("/api/devices", {
           method: "PUT",
           headers: requestHeaders,
           body: JSON.stringify({
@@ -200,7 +217,7 @@ export function ConnectedDeviceSync() {
         lastAckRef.current = null;
 
         const response = await fetch(
-          `/api/devices?deviceId=${encodeURIComponent(deviceId)}&syncId=${encodeURIComponent(syncId)}${ackParam}`,
+          `/api/devices?deviceId=${encodeURIComponent(deviceId)}${ackParam}`,
           {
             cache: "no-store",
             headers: requestHeaders,
@@ -216,23 +233,25 @@ export function ConnectedDeviceSync() {
               sentAt?: string;
               currentTime?: number;
               volume?: number;
-              track?: {
-                source: "youtube";
-                videoId: string;
-                title: string;
-                artist: string;
-                album: string;
-                artwork: string;
-                duration: number;
-              } | {
-                source: "audius";
-                trackId: string;
-                title: string;
-                artist: string;
-                album: string;
-                artwork: string;
-                duration: number;
-              };
+              track?:
+                | {
+                    source: "youtube";
+                    videoId: string;
+                    title: string;
+                    artist: string;
+                    album: string;
+                    artwork: string;
+                    duration: number;
+                  }
+                | {
+                    source: "audius";
+                    trackId: string;
+                    title: string;
+                    artist: string;
+                    album: string;
+                    artwork: string;
+                    duration: number;
+                  };
             };
           } | null;
         };
@@ -298,8 +317,7 @@ export function ConnectedDeviceSync() {
     };
 
     void cycle();
-    // Fast 1.8s polling interval for instant Spotify Connect responsiveness
-    const timer = window.setInterval(cycle, 1800);
+    const timer = window.setInterval(cycle, 2200);
 
     return () => {
       active = false;

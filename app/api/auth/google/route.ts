@@ -9,10 +9,15 @@ import {
   safeReturnTo,
   secureCookies,
 } from "@/lib/google-auth";
+import { enforceRateLimit } from "@/lib/security";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  const rateLimited = enforceRateLimit(request, "auth:google:start", 20, 60_000);
+  if (rateLimited) return rateLimited;
+
   let base: URL;
   try {
     base = appUrl(request.url);
@@ -46,7 +51,14 @@ export async function GET(request: NextRequest) {
     }).toString();
 
     const response = NextResponse.redirect(authorizationUrl);
-    const common = { httpOnly: true, secure: secureCookies(base), sameSite: "lax" as const, path: "/api/auth/google/callback", maxAge: 600 };
+    response.headers.set("cache-control", "no-store");
+    const common = {
+      httpOnly: true,
+      secure: secureCookies(base),
+      sameSite: "lax" as const,
+      path: "/api/auth/google/callback",
+      maxAge: 600,
+    };
     response.cookies.set("aura_google_state", state, common);
     response.cookies.set("aura_google_nonce", nonce, common);
     response.cookies.set("aura_google_verifier", verifier, common);

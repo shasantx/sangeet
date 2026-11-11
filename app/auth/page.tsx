@@ -10,16 +10,33 @@ import {
   Eye,
   EyeOff,
   Headphones,
-  Lock,
-  Mail,
-  Music2,
   ShieldCheck,
   Sparkles,
-  User,
 } from "lucide-react";
 import { SangeetMark } from "@/components/brand/sangeet-mark";
 import { useAuthStore } from "@/store/auth-store";
 import { toast } from "@/store/ui-store";
+
+function sanitizeClientReturnTo(value: string | null | undefined, fallback = "/home"): string {
+  if (!value || typeof value !== "string") return fallback;
+  const trimmed = value.trim();
+  if (
+    !trimmed.startsWith("/") ||
+    trimmed.startsWith("//") ||
+    trimmed.includes("\\") ||
+    /[\u0000-\u001F\u007F]/.test(trimmed)
+  ) {
+    return fallback;
+  }
+  try {
+    const base = new URL("https://sangeet.local");
+    const parsed = new URL(trimmed, base);
+    if (parsed.origin !== base.origin) return fallback;
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return fallback;
+  }
+}
 
 function GoogleMark() {
   return (
@@ -50,7 +67,10 @@ function AuthForm() {
   const googleState = searchParams?.get("google");
   const reason = searchParams?.get("reason");
   const initialTab = searchParams?.get("tab") === "signup" ? "signup" : "signin";
-  const returnTo = searchParams?.get("returnTo") || "/home";
+  const returnTo = useMemo(
+    () => sanitizeClientReturnTo(searchParams?.get("returnTo"), "/home"),
+    [searchParams],
+  );
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const loginWithEmail = useAuthStore((state) => state.loginWithEmail);
@@ -75,20 +95,21 @@ function AuthForm() {
 
   const handleFormLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
-      toast.error("Email required", "Please enter your email address.");
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail) || cleanEmail.length > 254) {
+      toast.error("Valid email required", "Please enter a valid email address.");
       return;
     }
-    if (mode === "signup" && !name.trim()) {
-      toast.error("Name required", "Please enter your name.");
+    if (mode === "signup" && (!name.trim() || name.trim().length > 80)) {
+      toast.error("Name required", "Please enter your name (up to 80 characters).");
       return;
     }
     setIsSubmitting(true);
 
-    loginWithEmail(email.trim(), mode === "signup" ? name.trim() : undefined);
+    loginWithEmail(cleanEmail, mode === "signup" ? name.trim().slice(0, 80) : undefined);
     toast.success(
       mode === "signup" ? "Welcome to Sangeet!" : "Welcome back!",
-      "Streaming access unlocked. Enjoy your music."
+      "Streaming access unlocked. Enjoy your music.",
     );
 
     setTimeout(() => {
@@ -103,8 +124,11 @@ function AuthForm() {
     if (reason === "not_configured") {
       return "Google OAuth credentials are being configured. You can log in directly with your email below.";
     }
-    if (reason === "access_denied") {
+    if (reason === "access_denied" || reason === "cancelled") {
       return "Google sign-in was cancelled. You can log in with email below.";
+    }
+    if (reason === "suspended") {
+      return "This account has been suspended by an administrator.";
     }
     return "Could not connect to Google sign-in. You can log in with email below.";
   }, [googleState, reason]);
@@ -200,6 +224,7 @@ function AuthForm() {
                 id="auth-name"
                 type="text"
                 value={name}
+                maxLength={80}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
                 className="h-11 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-4 text-xs text-white placeholder:text-[#636c65] transition focus:border-[#1ed760] focus:bg-black/40 focus:outline-none focus:ring-1 focus:ring-[#1ed760] sm:h-12 sm:text-sm"
@@ -217,6 +242,7 @@ function AuthForm() {
               id="auth-email"
               type="email"
               value={email}
+              maxLength={254}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required
@@ -234,6 +260,7 @@ function AuthForm() {
               id="auth-password"
               type={showPassword ? "text" : "password"}
               value={password}
+              maxLength={128}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               className="h-11 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-4 pr-11 text-xs text-white placeholder:text-[#636c65] transition focus:border-[#1ed760] focus:bg-black/40 focus:outline-none focus:ring-1 focus:ring-[#1ed760] sm:h-12 sm:text-sm"
@@ -272,8 +299,8 @@ function AuthForm() {
           {isSubmitting
             ? "Signing in..."
             : mode === "signup"
-            ? "Create Account & Start Listening"
-            : "Sign In"}
+              ? "Create Account & Start Listening"
+              : "Sign In"}
         </button>
       </form>
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,10 +17,15 @@ function safeThumbnail(value: unknown) {
       url.hostname.endsWith(".ytimg.com") ||
       url.hostname.endsWith(".youtube.com");
     return url.protocol === "https:" && validHost ? url.toString() : "";
-  } catch { return ""; }
+  } catch {
+    return "";
+  }
 }
 
 export async function GET(request: Request) {
+  const rateLimited = enforceRateLimit(request, "youtube:discover", 45, 60_000);
+  if (rateLimited) return rateLimited;
+
   const params = new URL(request.url).searchParams;
   const query = params.get("q")?.trim() ?? "";
   const kind = params.get("kind") ?? "";
@@ -37,13 +43,29 @@ export async function GET(request: Request) {
       signal: AbortSignal.timeout(9000),
     });
     if (!response.ok) throw new Error("Discovery service unavailable");
-    const data = await response.json() as { results?: unknown };
-    const rows = Array.isArray(data.results) ? data.results.flatMap((value) => {
-      if (!value || typeof value !== "object") return [];
-      const item = value as Record<string, unknown>;
-      if (typeof item.browseId !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(item.browseId) || typeof item.title !== "string" || !item.title.trim()) return [];
-      return [{ browseId: item.browseId, title: item.title.slice(0, 180), artist: typeof item.artist === "string" ? item.artist.slice(0, 140) : "", year: Number.isFinite(item.year) ? Number(item.year) : null, type: typeof item.type === "string" ? item.type.slice(0, 40) : "", subscribers: typeof item.subscribers === "string" ? item.subscribers.slice(0, 60) : "", thumbnail: safeThumbnail(item.thumbnail) }];
-    }).slice(0, 8) : [];
+    const data = (await response.json()) as { results?: unknown };
+    const rows = Array.isArray(data.results)
+      ? data.results
+          .flatMap((value) => {
+            if (!value || typeof value !== "object") return [];
+            const item = value as Record<string, unknown>;
+            if (typeof item.browseId !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(item.browseId) || typeof item.title !== "string" || !item.title.trim()) {
+              return [];
+            }
+            return [
+              {
+                browseId: item.browseId,
+                title: item.title.slice(0, 180),
+                artist: typeof item.artist === "string" ? item.artist.slice(0, 140) : "",
+                year: Number.isFinite(item.year) ? Number(item.year) : null,
+                type: typeof item.type === "string" ? item.type.slice(0, 40) : "",
+                subscribers: typeof item.subscribers === "string" ? item.subscribers.slice(0, 60) : "",
+                thumbnail: safeThumbnail(item.thumbnail),
+              },
+            ];
+          })
+          .slice(0, 8)
+      : [];
     cache.set(key, { at: Date.now(), rows });
     if (cache.size > 250) cache.delete(cache.keys().next().value!);
     return NextResponse.json({ results: rows, provider: "ytmusicapi" }, { headers: { "cache-control": "private, max-age=60" } });

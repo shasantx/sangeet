@@ -5,19 +5,16 @@ import {
   Cast,
   Check,
   Copy,
-  Edit2,
-  Globe,
+  KeyRound,
   Laptop,
   Laptop2,
   LoaderCircle,
-  Monitor,
   MonitorSmartphone,
   Pause,
   Pencil,
-  Play,
   QrCode,
   Radio,
-  Share2,
+  ShieldCheck,
   SkipBack,
   SkipForward,
   Smartphone,
@@ -25,8 +22,6 @@ import {
   Tablet,
   Tv,
   Volume2,
-  VolumeX,
-  Wifi,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,10 +30,8 @@ import { useAuthStore } from "@/store/auth-store";
 import { usePlayerStore } from "@/store/player-store";
 import { toast } from "@/store/ui-store";
 import {
-  getCustomDeviceName,
   getDeviceId,
   getDeviceName,
-  getDeviceType,
   getGuestSyncId,
   setCustomDeviceName,
   setGuestSyncId,
@@ -132,14 +125,10 @@ export function ConnectedDevices({
   const refresh = useCallback(async () => {
     try {
       const syncId = getGuestSyncId();
-      const currentSession = useAuthStore.getState().session;
       const headers: Record<string, string> = { "x-sangeet-sync-id": syncId };
-      if (currentSession?.userId) {
-        headers["x-sangeet-user-id"] = currentSession.userId;
-      }
 
       const response = await fetch(
-        `/api/devices?deviceId=${encodeURIComponent(thisId)}&syncId=${encodeURIComponent(syncId)}`,
+        `/api/devices?deviceId=${encodeURIComponent(thisId)}`,
         {
           cache: "no-store",
           headers,
@@ -172,7 +161,6 @@ export function ConnectedDevices({
   ) => {
     setBusy(true);
     const syncId = getGuestSyncId();
-    const currentSession = useAuthStore.getState().session;
     const targetId = targetDevice === "all" ? "all" : targetDevice.deviceId;
 
     try {
@@ -218,11 +206,8 @@ export function ConnectedDevices({
         "content-type": "application/json",
         "x-sangeet-sync-id": syncId,
       };
-      if (currentSession?.userId) {
-        headers["x-sangeet-user-id"] = currentSession.userId;
-      }
 
-      const response = await fetch(`/api/devices/command?syncId=${encodeURIComponent(syncId)}`, {
+      const response = await fetch("/api/devices/command", {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -281,20 +266,17 @@ export function ConnectedDevices({
 
   const handlePairSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pairCodeInput.trim()) return;
-    setGuestSyncId(pairCodeInput.trim());
-    toast.success("Syncing room", `Joined room ${pairCodeInput.trim().slice(0, 8)}...`);
+    const candidate = pairCodeInput.trim();
+    if (!candidate) return;
+    if (!setGuestSyncId(candidate)) {
+      toast.error("Invalid room code", "Enter a valid 16 to 80 character room code.");
+      return;
+    }
+    toast.success("Syncing room", `Joined room ${candidate.slice(0, 8)}...`);
     setShowPairDrawer(false);
     setPairCodeInput("");
     void refresh();
   };
-
-  const pairUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/home?syncId=${encodeURIComponent(guestSyncId)}`
-    : "";
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-    pairUrl,
-  )}&bgcolor=14-18-15&color=1e-d7-60&margin=4`;
 
   const isHeaderVariant = variant === "header";
   const dropDirection = placement === "top" || (placement === "auto" && isHeaderVariant) ? "down" : "up";
@@ -392,9 +374,9 @@ export function ConnectedDevices({
                     </span>
                   </h3>
                   <p className="text-[10px] text-[#9ba39d]">
-                    {authenticated
-                      ? `Syncing via account: ${session?.displayName ?? "Listener"}`
-                      : "Sangeet Multi-Device Connect"}
+                    {authenticated && session?.provider === "google"
+                      ? `Syncing via Google account: ${session?.displayName ?? "Listener"}`
+                      : "Sangeet Encrypted Room Connect"}
                   </p>
                 </div>
               </div>
@@ -508,6 +490,7 @@ export function ConnectedDevices({
                           value={deviceNameInput}
                           onChange={(e) => setDeviceNameInput(e.target.value)}
                           placeholder="Device name..."
+                          maxLength={40}
                           className="h-7 w-36 rounded-lg border border-white/20 bg-black/50 px-2 text-xs text-white focus:outline-none focus:border-[#1ed760]"
                           autoFocus
                         />
@@ -681,7 +664,7 @@ export function ConnectedDevices({
               </div>
             </div>
 
-            {/* Quick Pair Drawer (QR Code + Link + Code) */}
+            {/* Private Room Pairing Drawer (Zero third-party secret transmission) */}
             <div className="mt-4 border-t border-white/[0.08] pt-3.5">
               <div className="flex items-center justify-between text-xs">
                 <button
@@ -699,29 +682,25 @@ export function ConnectedDevices({
                   className="flex items-center gap-1 text-[#9ba39d] hover:text-white transition"
                 >
                   <QrCode className="h-3.5 w-3.5" />
-                  <span>{showPairDrawer ? "Close QR" : "Scan QR"}</span>
+                  <span>{showPairDrawer ? "Close Pair Key" : "Room Pair Key"}</span>
                 </button>
               </div>
 
-              {/* QR Code & Manual Pair View */}
               {showPairDrawer && (
                 <div className="mt-3.5 rounded-2xl border border-white/10 bg-black/50 p-4 text-center transition animate-in fade-in duration-200">
-                  <p className="text-xs font-bold text-white">Scan with phone to pair instantly</p>
+                  <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-[#1ed760]/15 text-[#1ed760]">
+                    <KeyRound className="h-4 w-4" />
+                  </div>
+                  <p className="text-xs font-bold text-white">Private Room Pair Code</p>
                   <p className="mt-0.5 text-[10px] text-[#9ba39d]">
-                    Point your camera at this code to open and sync Sangeet
+                    Enter this 128-bit key on another device or share your Connect Link
                   </p>
 
-                  <div className="mx-auto my-3 flex h-44 w-44 items-center justify-center rounded-2xl border border-white/15 bg-[#141815] p-2 shadow-xl">
-                    <img
-                      src={qrCodeUrl}
-                      alt="Pairing QR Code"
-                      className="h-full w-full rounded-xl object-contain"
-                    />
-                  </div>
-
-                  <div className="mt-2 text-center">
-                    <span className="font-mono text-[10px] text-[#636c65]">Room Pair Code:</span>
-                    <p className="font-mono text-xs font-bold tracking-wider text-[#1ed760]">{guestSyncId}</p>
+                  <div className="mt-3 rounded-xl border border-white/10 bg-[#141815] px-3 py-2.5">
+                    <span className="block font-mono text-[10px] text-[#636c65]">Room Pair Code</span>
+                    <p className="mt-0.5 break-all font-mono text-xs font-bold tracking-wider text-[#1ed760]">
+                      {guestSyncId}
+                    </p>
                   </div>
 
                   <form onSubmit={handlePairSubmit} className="mt-3 flex items-center gap-1.5">
@@ -730,6 +709,7 @@ export function ConnectedDevices({
                       value={pairCodeInput}
                       onChange={(e) => setPairCodeInput(e.target.value)}
                       placeholder="Enter room code to join..."
+                      maxLength={80}
                       className="flex-1 rounded-xl border border-white/15 bg-white/[0.04] px-3 py-1.5 text-xs text-white placeholder:text-[#636c65] focus:outline-none focus:border-[#1ed760]"
                     />
                     <button
@@ -739,6 +719,11 @@ export function ConnectedDevices({
                       Join
                     </button>
                   </form>
+
+                  <p className="mt-2.5 flex items-center justify-center gap-1 text-[10px] text-[#636c65]">
+                    <ShieldCheck className="h-3 w-3 text-[#1ed760]" />
+                    <span>Kept strictly in your browser; never sent to third parties</span>
+                  </p>
                 </div>
               )}
             </div>
