@@ -89,9 +89,22 @@ export function isGoogleOAuthConfigured(): boolean {
   return Boolean(process.env.GOOGLE_CLIENT_ID?.trim() && process.env.GOOGLE_CLIENT_SECRET?.trim());
 }
 
+function getSessionSecret(): string | null {
+  const explicit = process.env.AUTH_SECRET?.trim();
+  if (explicit && explicit.length >= 32) return explicit;
+  const seed =
+    explicit ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    process.env.GOOGLE_CLIENT_SECRET?.trim() ||
+    process.env.ADMIN_PASSWORD?.trim() ||
+    process.env.ADMIN_EMAILS?.trim();
+  if (!seed) return null;
+  return createHmac("sha256", "sangeet-aura-session-key-v1").update(seed).digest("base64url");
+}
+
 export function signSession(payload: GoogleIdentity & { exp: number }): string {
-  const secret = requiredEnv("AUTH_SECRET");
-  if (secret.length < 32) throw new Error("AUTH_SECRET must be at least 32 characters");
+  const secret = getSessionSecret();
+  if (!secret) throw new Error("Missing AUTH_SECRET");
   const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const signature = createHmac("sha256", secret).update(encoded).digest("base64url");
   return `${encoded}.${signature}`;
@@ -99,8 +112,8 @@ export function signSession(payload: GoogleIdentity & { exp: number }): string {
 
 export function verifySession(value: string | undefined): (GoogleIdentity & { exp: number }) | null {
   if (!value || value.length > 4096) return null;
-  const secret = process.env.AUTH_SECRET;
-  if (!secret || secret.length < 32) return null;
+  const secret = getSessionSecret();
+  if (!secret) return null;
   const [encoded, signature, extra] = value.split(".");
   if (!encoded || !signature || extra) return null;
   const expected = createHmac("sha256", secret).update(encoded).digest();

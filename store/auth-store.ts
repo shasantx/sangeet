@@ -23,7 +23,7 @@ interface AuthState {
   openAuthModal: (tab?: "signin" | "signup") => void;
   closeAuthModal: () => void;
   signOut: () => void;
-  loginWithEmail: (email: string, name?: string) => void;
+  loginWithEmail: (email: string, name?: string, isAdmin?: boolean) => void;
   setGoogleSession: (user: { id: string; email: string; name: string; picture?: string; isAdmin?: boolean }) => void;
   updateProfile: (displayName: string) => void;
 }
@@ -71,7 +71,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      loginWithEmail: (email: string, name?: string) => {
+      loginWithEmail: (email: string, name?: string, isAdmin = false) => {
         const cleanEmail = email.trim().toLowerCase();
         const displayName = name?.trim() || cleanEmail.split("@")[0] || "Listener";
         set({
@@ -82,7 +82,7 @@ export const useAuthStore = create<AuthState>()(
             avatarColor: "#1ED760",
             initials: initialsFor(displayName),
             provider: "email",
-            isAdmin: false,
+            isAdmin,
           },
           isAuthenticated: true,
           authModalOpen: false,

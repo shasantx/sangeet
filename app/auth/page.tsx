@@ -88,17 +88,17 @@ function AuthForm() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    if (isAdminReturn && (session?.provider !== "google" || !session?.isAdmin)) {
+    if (isAdminReturn && !session?.isAdmin) {
       return;
     }
     router.replace(returnTo);
-  }, [isAuthenticated, isAdminReturn, returnTo, router, session?.isAdmin, session?.provider]);
+  }, [isAuthenticated, isAdminReturn, returnTo, router, session?.isAdmin]);
 
   const handleGoogleSignIn = () => {
     window.location.assign(`/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`);
   };
 
-  const handleFormLogin = (e: React.FormEvent) => {
+  const handleFormLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail) || cleanEmail.length > 254) {
@@ -111,15 +111,37 @@ function AuthForm() {
     }
     setIsSubmitting(true);
 
-    loginWithEmail(cleanEmail, mode === "signup" ? name.trim().slice(0, 80) : undefined);
-    toast.success(
-      mode === "signup" ? "Welcome to Sangeet!" : "Welcome back!",
-      "Streaming access unlocked. Enjoy your music.",
-    );
-
-    setTimeout(() => {
-      router.push(returnTo);
-    }, 300);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email: cleanEmail,
+          password,
+          name: mode === "signup" ? name.trim().slice(0, 80) : undefined,
+          requireAdmin: isAdminReturn,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        session?: { isAdmin?: boolean };
+      };
+      if (!res.ok) {
+        setIsSubmitting(false);
+        toast.error("Sign in failed", data.error || "Unable to sign in.");
+        return;
+      }
+      const isAdmin = Boolean(data.session?.isAdmin);
+      loginWithEmail(cleanEmail, mode === "signup" ? name.trim().slice(0, 80) : undefined, isAdmin);
+      toast.success(
+        mode === "signup" ? "Welcome to Sangeet!" : "Welcome back!",
+        isAdmin ? "Admin access unlocked." : "Streaming access unlocked. Enjoy your music.",
+      );
+      router.replace(returnTo);
+    } catch {
+      loginWithEmail(cleanEmail, mode === "signup" ? name.trim().slice(0, 80) : undefined, false);
+      router.replace(isAdminReturn ? "/home" : returnTo);
+    }
   };
 
   const playRequiredNotice = reason === "play_required";
@@ -196,20 +218,6 @@ function AuthForm() {
           Create Account
         </button>
       </div>
-
-      {/* Admin Console Notice */}
-      {isAdminReturn && (
-        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-[#1ed760]/30 bg-[#1ed760]/10 p-3.5 text-xs text-[#a0f0bd]">
-          <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-[#1ed760]" />
-          <div>
-            <p className="font-semibold text-white">Administrator Sign-In Required</p>
-            <p className="mt-0.5 text-[#9ba39d]">
-              Use <strong>Continue with Google</strong> below with an email listed in{" "}
-              <code className="rounded bg-white/10 px-1 py-0.5 text-white">ADMIN_EMAILS</code> to access the Admin Console.
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Play Required Alert Banner */}
       {playRequiredNotice && (
