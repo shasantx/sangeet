@@ -11,6 +11,7 @@ import {
   PanelRightClose,
   Search,
   Settings,
+  ShieldCheck,
   Sparkles,
   User,
   X,
@@ -162,6 +163,12 @@ export function TopBar() {
                 <Settings className="h-3.5 w-3.5 mr-2" />
                 Settings
               </DropdownMenuItem>
+              {session.isAdmin && (
+                <DropdownMenuItem onSelect={() => router.push("/admin")} className="text-[#1ed760] focus:text-[#8ff2ae]">
+                  <ShieldCheck className="h-3.5 w-3.5 mr-2" />
+                  Admin Console
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={handleSignOut} className="text-red-400 focus:text-red-300">
                 <LogOut className="h-3.5 w-3.5 mr-2" />

@@ -73,7 +73,10 @@ function AuthForm() {
   );
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const session = useAuthStore((state) => state.session);
   const loginWithEmail = useAuthStore((state) => state.loginWithEmail);
+  const isAdminReturn =
+    returnTo === "/admin" || returnTo.startsWith("/admin/") || returnTo.startsWith("/admin?");
 
   const [mode, setMode] = useState<"signin" | "signup">(initialTab);
   const [name, setName] = useState("");
@@ -84,10 +87,12 @@ function AuthForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      router.replace(returnTo);
+    if (!isAuthenticated) return;
+    if (isAdminReturn && (session?.provider !== "google" || !session?.isAdmin)) {
+      return;
     }
-  }, [isAuthenticated, returnTo, router]);
+    router.replace(returnTo);
+  }, [isAuthenticated, isAdminReturn, returnTo, router, session?.isAdmin, session?.provider]);
 
   const handleGoogleSignIn = () => {
     window.location.assign(`/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`);
@@ -191,6 +196,20 @@ function AuthForm() {
           Create Account
         </button>
       </div>
+
+      {/* Admin Console Notice */}
+      {isAdminReturn && (
+        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-[#1ed760]/30 bg-[#1ed760]/10 p-3.5 text-xs text-[#a0f0bd]">
+          <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-[#1ed760]" />
+          <div>
+            <p className="font-semibold text-white">Administrator Sign-In Required</p>
+            <p className="mt-0.5 text-[#9ba39d]">
+              Use <strong>Continue with Google</strong> below with an email listed in{" "}
+              <code className="rounded bg-white/10 px-1 py-0.5 text-white">ADMIN_EMAILS</code> to access the Admin Console.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Play Required Alert Banner */}
       {playRequiredNotice && (

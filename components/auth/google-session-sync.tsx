@@ -36,6 +36,7 @@ export function GoogleSessionSync() {
     const query = new URLSearchParams(window.location.search);
     const outcome = query.get("google");
     const reason = query.get("reason");
+    const rawReturnTo = query.get("returnTo");
 
     if (outcome) {
       query.delete("google");
@@ -85,7 +86,13 @@ export function GoogleSessionSync() {
           } else {
             toast.success(`Welcome, ${payload.session.name}!`, "Signed in with Google.");
           }
-          if (window.location.pathname === "/auth" || window.location.pathname === "/") window.location.replace("/home");
+          if (window.location.pathname === "/auth" || window.location.pathname === "/") {
+            const safeDest =
+              rawReturnTo && rawReturnTo.startsWith("/") && !rawReturnTo.startsWith("//")
+                ? rawReturnTo
+                : "/home";
+            window.location.replace(safeDest);
+          }
         }
       })
       .catch(() => {

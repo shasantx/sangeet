@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [pathname]);
 
-  if (pathname === "/admin") {
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     return <main className="min-h-dvh bg-[#090c0a] text-white">{children}</main>;
   }
 

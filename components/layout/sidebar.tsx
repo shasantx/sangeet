@@ -13,6 +13,7 @@ import {
   Plus,
   Search,
   Settings2,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
@@ -226,6 +227,16 @@ export function Sidebar() {
             </Link>
             {!collapsed && (
               <>
+                {session.isAdmin && (
+                  <Link
+                    href="/admin"
+                    aria-label="Admin Console"
+                    title="Admin Console"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#1ED760] transition hover:bg-[#1ED760]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                  </Link>
+                )}
                 <Link
                   href="/settings"
                   aria-label="Settings"

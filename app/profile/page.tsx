@@ -13,6 +13,7 @@ import {
   LogOut,
   Pencil,
   Settings2,
+  ShieldCheck,
   Sparkles,
   UserRound,
   Users,
@@ -236,6 +237,15 @@ export default function ProfilePage() {
               <Pencil className="h-3.5 w-3.5" />
               Edit profile
             </button>}
+            {session?.isAdmin && (
+              <Link
+                href="/admin"
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-primary/35 bg-primary/15 px-4 text-xs font-semibold text-primary transition hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Admin Console
+              </Link>
+            )}
             <Link
               href="/settings"
               className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.1] bg-white/[.03] px-4 text-xs font-medium text-foreground transition hover:border-white/[.18] hover:bg-white/[.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
