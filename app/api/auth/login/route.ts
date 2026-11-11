@@ -14,14 +14,23 @@ interface LoginBody {
 }
 
 export async function POST(request: NextRequest) {
-  const originError = verifySameOrigin(request);
-  if (originError) return originError;
+  if (!verifySameOrigin(request)) {
+    return NextResponse.json(
+      { error: "Cross-origin request blocked." },
+      { status: 403, headers: { "cache-control": "no-store" } },
+    );
+  }
 
   const rateLimited = enforceRateLimit(request, "auth:login", 15, 60_000);
   if (rateLimited) return rateLimited;
 
   const parsed = await safeJsonParse<LoginBody>(request, 4096);
-  if ("error" in parsed) return parsed.error;
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error },
+      { status: parsed.status, headers: { "cache-control": "no-store" } },
+    );
+  }
 
   const rawEmail = typeof parsed.data?.email === "string" ? parsed.data.email.trim().toLowerCase() : "";
   const rawPassword = typeof parsed.data?.password === "string" ? parsed.data.password : "";
