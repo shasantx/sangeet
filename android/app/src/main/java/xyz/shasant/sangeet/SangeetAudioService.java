@@ -133,8 +133,9 @@ public final class SangeetAudioService extends MediaSessionService {
         });
 
         ForwardingPlayer forwardingPlayer = new ForwardingPlayer(player) {
+            @NonNull
             @Override
-            public int getAvailableCommands() {
+            public Player.Commands getAvailableCommands() {
                 return super.getAvailableCommands().buildUpon()
                         .add(COMMAND_SEEK_TO_NEXT)
                         .add(COMMAND_SEEK_TO_PREVIOUS)
