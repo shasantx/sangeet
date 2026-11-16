@@ -12,7 +12,6 @@ import {
   MoreHorizontal,
   Music2,
   Plus,
-  Radio,
   Share2,
   Sparkles,
   Users,
@@ -29,6 +28,7 @@ import { PlaybackControls } from "@/components/player/playback-controls";
 import { ProgressBar } from "@/components/player/progress-bar";
 import { VolumeControl } from "@/components/player/volume-control";
 import { ConnectedDevices } from "@/components/player/connected-devices";
+import { EqualizerMenu } from "@/components/player/equalizer-menu";
 import { LyricsView } from "@/components/player/lyrics-view";
 import { SleepTimerMenu } from "@/components/player/sleep-timer-menu";
 import {
@@ -144,20 +144,31 @@ export default function NowPlayingPage() {
   };
 
   return (
-    <div className="h-dvh max-h-dvh w-full overflow-hidden flex flex-col bg-[#090b09] text-white select-none">
+    <div className="h-dvh max-h-dvh w-full overflow-hidden flex flex-col bg-[#090b09] text-white select-none pt-[env(safe-area-inset-top)] pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       {/* Background ambient lighting */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,rgba(30,215,96,0.06),transparent_70%)]"
+        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(30,215,96,0.08),transparent_72%)]"
       />
+      {current?.artwork && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-x-0 top-0 h-[55dvh] -z-10 opacity-20 blur-[90px] saturate-150 transition-opacity duration-700"
+          style={{
+            backgroundImage: `url(${current.artwork})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+      )}
 
       {/* Top Header - Responsive for Mobile & Desktop */}
-      <header className="h-14 sm:h-16 shrink-0 border-b border-white/[0.08] bg-[#090b09]/95 px-2.5 sm:px-6 lg:px-8 flex items-center justify-between gap-1.5 sm:gap-2">
+      <header className="h-14 sm:h-16 shrink-0 border-b border-white/[0.08] bg-[#090b09]/85 backdrop-blur-md px-2.5 sm:px-6 lg:px-8 flex items-center justify-between gap-1.5 sm:gap-2">
         {/* Left Side: Back action */}
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Link
             href="/home"
-            className="flex h-8 w-8 sm:h-9 sm:w-auto shrink-0 items-center justify-center sm:justify-start gap-1.5 rounded-full sm:rounded-lg border border-white/[0.08] bg-white/[0.03] sm:px-3 text-xs font-medium text-[#9ba39d] transition hover:bg-white/[0.07] hover:text-white"
+            className="flex h-9 w-9 sm:w-auto shrink-0 items-center justify-center sm:justify-start gap-1.5 rounded-full sm:rounded-lg border border-white/[0.08] bg-white/[0.03] sm:px-3 text-xs font-medium text-[#9ba39d] transition hover:bg-white/[0.07] hover:text-white"
             aria-label="Back to home"
           >
             <ChevronDown className="h-4 w-4 sm:hidden" />
@@ -214,8 +225,11 @@ export default function NowPlayingPage() {
 
         {/* Right Header Extras */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <EqualizerMenu className="h-8 sm:h-9 border border-white/[0.08] bg-white/[0.03] px-2 sm:px-2.5" />
           <SleepTimerMenu className="h-8 sm:h-9 border border-white/[0.08] bg-white/[0.03] px-2 sm:px-2.5" />
-          <ConnectedDevices variant="header" placement="top" />
+          <div className="hidden sm:block">
+            <ConnectedDevices variant="header" placement="top" />
+          </div>
 
           {current && (
             <>
@@ -276,41 +290,67 @@ export default function NowPlayingPage() {
       </header>
 
       {/* Main Content Area - Strictly Viewport Height Constrained */}
-      <main className="flex-1 min-h-0 overflow-hidden p-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] sm:p-5 lg:p-6">
+      <main className="flex-1 min-h-0 overflow-hidden p-2.5 sm:p-5 lg:p-6">
         {current ? (
           <div className="h-full grid items-stretch gap-4 sm:gap-5 lg:grid-cols-[minmax(320px,390px)_1fr] overflow-hidden">
             {/* Left Column: Player Deck (Never scrolls away!) */}
             <div
-              className={`h-full flex flex-col justify-between rounded-2xl sm:rounded-3xl border border-white/[0.08] bg-[#111412] p-3.5 sm:p-5 shadow-2xl overflow-hidden ${
+              className={`relative h-full flex flex-col justify-between rounded-2xl sm:rounded-3xl border border-white/[0.08] bg-[#111412]/90 p-4 sm:p-5 shadow-2xl overflow-hidden ${
                 mobileMode !== "player" ? "hidden lg:flex" : "flex"
               }`}
             >
-              {/* Artwork Box */}
-              <div className="flex min-h-0 flex-col items-center">
-                <div className="relative aspect-square w-[min(68vw,32dvh,260px)] sm:w-[min(100%,38dvh,310px)] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#161a17] shadow-2xl shrink-0">
-                  <Artwork
-                    key={current.id}
-                    src={current.artwork}
-                    alt={`${current.title} cover`}
-                    priority
-                    className="h-full w-full object-cover"
-                  />
+              {/* Subtle deck-level ambient glow */}
+              {current.artwork && (
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -top-12 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full opacity-25 blur-3xl saturate-150 transition-opacity duration-700"
+                  style={{
+                    backgroundImage: `url(${current.artwork})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                />
+              )}
+
+              {/* Artwork Box + Dynamic Ambient Glow */}
+              <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center">
+                <div className="relative flex items-center justify-center">
+                  {current.artwork && (
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute -inset-5 rounded-3xl opacity-50 blur-2xl saturate-150 transition-all duration-700"
+                      style={{
+                        backgroundImage: `url(${current.artwork})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    />
+                  )}
+                  <div className="relative aspect-square w-[min(74vw,34dvh,288px)] sm:w-[min(100%,38dvh,310px)] overflow-hidden rounded-2xl border border-white/[0.12] bg-[#161a17] shadow-[0_20px_50px_rgba(0,0,0,0.65)] shrink-0">
+                    <Artwork
+                      key={current.id}
+                      src={current.artwork}
+                      alt={`${current.title} cover`}
+                      priority
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
                 </div>
 
-                {/* Song Meta */}
-                <div className="mt-3 sm:mt-4 flex w-full items-start justify-between gap-2.5 sm:gap-3 shrink-0">
+                {/* Song Meta + Like Button Row */}
+                <div className="mt-4 sm:mt-5 flex w-full items-center justify-between gap-3 shrink-0">
                   <div className="min-w-0 flex-1">
-                    <h1 className="truncate font-display text-base font-bold tracking-tight text-white sm:text-xl">
+                    <h1 className="truncate font-display text-lg font-bold tracking-tight text-white sm:text-xl">
                       {current.title}
                     </h1>
                     <Link
                       href={artist ? `/artist/${artist.id}` : "/explore"}
-                      className="mt-0.5 block truncate text-xs font-medium text-[#9ba39d] transition hover:text-white hover:underline"
+                      className="mt-0.5 block truncate text-sm sm:text-xs font-medium text-[#b3bab4] transition hover:text-white hover:underline"
                     >
                       {artist?.name ?? "Unknown artist"}
                     </Link>
                     {album && (
-                      <p className="mt-0.5 truncate text-[11px] text-[#636c65]">
+                      <p className="mt-0.5 truncate text-[11px] text-[#7c857e]">
                         {album.title}
                         {album.year ? ` · ${album.year}` : ""}
                       </p>
@@ -318,41 +358,68 @@ export default function NowPlayingPage() {
                   </div>
                   <LikeButton
                     trackId={current.id}
-                    size="sm"
-                    className="h-9 w-9 shrink-0 rounded-full border border-white/[0.08] bg-white/[0.03] text-[#9ba39d] hover:text-white"
+                    size="md"
+                    className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-11 w-11 sm:h-9 sm:w-9 shrink-0 rounded-full border border-white/[0.08] bg-white/[0.04] text-[#b3bab4] hover:bg-white/[0.08] hover:text-white"
                   />
                 </div>
               </div>
 
-              {/* Mobile Lyrics Teaser / Drawer Peek */}
-              <button
-                type="button"
-                onClick={() => setMobileMode("lyrics")}
-                className="my-1.5 flex shrink-0 items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-left text-xs transition hover:bg-white/[0.06] lg:hidden"
-              >
-                <div className="flex items-center gap-2 text-[#1ed760]">
-                  <Mic2 className="h-3.5 w-3.5 shrink-0" />
-                  <span className="font-semibold text-white">View Synced Lyrics</span>
-                </div>
-                <span className="text-[11px] text-[#9ba39d]">Tap to open →</span>
-              </button>
-
               {/* Controls Deck */}
-              <div className="mt-1.5 sm:mt-3 space-y-2 sm:space-y-3 pt-2.5 sm:pt-3 border-t border-white/[0.06] shrink-0">
+              <div className="relative z-10 mt-2 sm:mt-3 space-y-3 sm:space-y-3.5 pt-3 border-t border-white/[0.06] shrink-0">
                 <ProgressBar
                   className="w-full"
-                  timeClassName="w-9 shrink-0 text-center font-mono text-[10px] text-[#636c65]"
+                  timeClassName="w-9 shrink-0 text-center font-mono text-[11px] tabular-nums text-[#9ba39d]"
                 />
 
                 <div className="flex items-center justify-center">
-                  <PlaybackControls size="large" className="gap-2.5 sm:gap-4" />
+                  <PlaybackControls
+                    size="large"
+                    className="w-full justify-between sm:w-auto sm:justify-center sm:gap-5"
+                  />
                 </div>
 
-                <div className="flex items-center justify-between pt-0.5 sm:pt-1">
+                {/* Mobile Spotify-style Quick Bottom Bar: Lyrics / Queue / Devices / Share */}
+                <div className="flex items-center justify-between pt-1 lg:hidden">
+                  <button
+                    type="button"
+                    onClick={() => setMobileMode("lyrics")}
+                    aria-label="Open synced lyrics"
+                    className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-medium text-[#9ba39d] transition hover:bg-white/[0.06] hover:text-[#1ed760] active:scale-95"
+                  >
+                    <Mic2 className="h-4 w-4" />
+                    <span>Lyrics</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setMobileMode("queue")}
+                    aria-label="Open playback queue"
+                    className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-medium text-[#9ba39d] transition hover:bg-white/[0.06] hover:text-white active:scale-95"
+                  >
+                    <ListMusic className="h-4 w-4" />
+                    <span>Queue</span>
+                  </button>
+
+                  <div className="flex min-h-[44px] min-w-[44px] items-center justify-center">
+                    <ConnectedDevices variant="bottom-bar" placement="bottom" />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => void copyLink()}
+                    aria-label="Share song link"
+                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[#9ba39d] transition hover:bg-white/[0.06] hover:text-white active:scale-95"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Desktop Footer Row */}
+                <div className="hidden lg:flex items-center justify-between pt-1">
                   <span className="font-mono text-[9px] text-[#636c65] uppercase tracking-wider">
                     Lossless · 320 kbps
                   </span>
-                  <div className="hidden sm:block w-32">
+                  <div className="w-32">
                     <VolumeControl />
                   </div>
                 </div>

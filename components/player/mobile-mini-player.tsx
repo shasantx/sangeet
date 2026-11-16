@@ -38,26 +38,26 @@ export function MobileMiniPlayer() {
 
   return (
     <aside
-      className="mobile-mini-player fixed inset-x-2.5 sm:inset-x-4 z-40 overflow-hidden rounded-2xl border border-white/[0.12] bg-surface/95 shadow-[0_14px_36px_rgba(0,0,0,0.65)] backdrop-blur-2xl md:hidden pointer-events-auto transition-all duration-300"
+      className="mobile-mini-player fixed inset-x-2.5 sm:inset-x-4 z-40 overflow-hidden rounded-xl border border-white/[0.12] bg-[#16161d]/95 shadow-[0_14px_36px_rgba(0,0,0,0.7)] backdrop-blur-2xl md:hidden pointer-events-auto transition-all duration-300"
       style={{ bottom: "calc(62px + env(safe-area-inset-bottom))" }}
       aria-label="Mini music player"
     >
-      {/* Top Hairline Progress Bar */}
-      <div className="absolute inset-x-0 top-0 h-[2.5px] bg-white/[0.08]">
+      {/* Bottom Hairline Progress Bar (Spotify mobile style) */}
+      <div className="absolute inset-x-2.5 bottom-0 h-[2px] overflow-hidden rounded-full bg-white/[0.1]">
         <div
-          className="h-full bg-gradient-to-r from-[#1ed760] to-[#34d399] transition-[width] duration-300 ease-linear shadow-[0_0_8px_#1ed760]"
+          className="h-full bg-[#1ed760] transition-[width] duration-300 ease-linear shadow-[0_0_8px_#1ed760]"
           style={{ width: `${progress}%` }}
         />
       </div>
 
-      <div className="flex h-[60px] items-center gap-2.5 px-2.5 py-1.5 sm:gap-3 sm:px-3">
+      <div className="flex h-[58px] items-center gap-2.5 px-2.5 py-1.5 sm:gap-3 sm:px-3">
         {/* Artwork & Track Info (Tappable to expand now playing) */}
         <Link
           href="/now-playing"
           className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3 outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760] rounded-lg"
           aria-label={`Open now playing: ${current.title} by ${artist?.name ?? "Sangeet artist"}`}
         >
-          <div className="relative aspect-square h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#161a17] shadow-md">
+          <div className="relative aspect-square h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#161a17] shadow-md">
             <Artwork
               src={current.artwork}
               alt=""
@@ -69,7 +69,7 @@ export function MobileMiniPlayer() {
             <p className="truncate font-display text-[13px] font-bold tracking-tight text-white leading-snug">
               {current.title}
             </p>
-            <div className="flex items-center gap-1.5 text-[11px] font-medium text-white/65">
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-white/75">
               {isPlaying && (
                 <span className="flex items-end gap-0.5 h-2.5 shrink-0" aria-hidden="true">
                   <span className="w-0.5 h-full rounded-full bg-[#1ed760] animate-pulse" />
@@ -89,11 +89,11 @@ export function MobileMiniPlayer() {
             type="button"
             onClick={handleToggleLike}
             aria-label={isLiked ? "Unlike" : "Like"}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-white/60 hover:text-white transition active:scale-90"
+            className="double-tap-none flex h-9 w-9 items-center justify-center rounded-full text-white/75 hover:text-white transition active:scale-90"
           >
             <Heart
               className={`h-4 w-4 transition ${
-                isLiked ? "fill-[#1ed760] text-[#1ed760]" : "text-white/60"
+                isLiked ? "fill-[#1ed760] text-[#1ed760]" : "text-white/75"
               }`}
             />
           </button>
@@ -103,7 +103,7 @@ export function MobileMiniPlayer() {
             type="button"
             onClick={togglePlay}
             aria-label={isPlaying ? "Pause" : "Play"}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-black shadow-md hover:scale-105 active:scale-95 transition"
+            className="double-tap-none flex h-9 w-9 items-center justify-center rounded-full bg-white text-black shadow-md hover:scale-105 active:scale-95 transition"
           >
             {isPlaying ? (
               <Pause className="h-4 w-4 fill-current" strokeWidth={0} />
@@ -117,7 +117,7 @@ export function MobileMiniPlayer() {
             type="button"
             onClick={() => next()}
             aria-label="Next track"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-[#9ba39d] hover:text-white transition active:scale-90"
+            className="double-tap-none flex h-9 w-9 items-center justify-center rounded-full text-white/75 hover:text-white transition active:scale-90"
           >
             <SkipForward className="h-4 w-4 fill-current" strokeWidth={1} />
           </button>

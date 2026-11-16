@@ -10,6 +10,8 @@ import okhttp3.ResponseBody;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,7 +40,13 @@ public final class YouTubeInnerTubeExtractor {
 
     @Nullable
     public static StreamResult extract(String videoId) {
+        List<StreamResult> all = extractAll(videoId);
+        return all.isEmpty() ? null : all.get(0);
+    }
+
+    public static List<StreamResult> extractAll(String videoId) {
         String visitorData = getVisitorData();
+        List<StreamResult> results = new ArrayList<>();
 
         StreamResult vr = tryClient(
                 videoId,
@@ -46,7 +54,7 @@ public final class YouTubeInnerTubeExtractor {
                 buildAndroidVrContext(visitorData),
                 visitorData
         );
-        if (vr != null) return vr;
+        if (vr != null) results.add(vr);
 
         StreamResult ios = tryClient(
                 videoId,
@@ -54,7 +62,7 @@ public final class YouTubeInnerTubeExtractor {
                 buildIosContext(visitorData),
                 visitorData
         );
-        if (ios != null) return ios;
+        if (ios != null) results.add(ios);
 
         StreamResult android = tryClient(
                 videoId,
@@ -62,14 +70,25 @@ public final class YouTubeInnerTubeExtractor {
                 buildAndroidContext(visitorData),
                 visitorData
         );
-        if (android != null) return android;
+        if (android != null) results.add(android);
 
-        return tryClient(
+        StreamResult mweb = tryClient(
+                videoId,
+                "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36",
+                buildMwebContext(visitorData),
+                visitorData
+        );
+        if (mweb != null) results.add(mweb);
+
+        StreamResult tv = tryClient(
                 videoId,
                 "Mozilla/5.0 (SMART-TV; LINUX; Tizen 6.5) AppleWebKit/537.36 (KHTML, like Gecko) 85.0.4183.93/6.5 TV Safari/537.36",
                 buildTvEmbeddedContext(visitorData),
                 visitorData
         );
+        if (tv != null) results.add(tv);
+
+        return results;
     }
 
     @Nullable
@@ -201,6 +220,24 @@ public final class YouTubeInnerTubeExtractor {
             client.put("androidSdkVersion", 34);
             client.put("osName", "Android");
             client.put("osVersion", "14");
+            client.put("hl", "en");
+            client.put("gl", "US");
+            if (visitorData != null && !visitorData.isEmpty()) {
+                client.put("visitorData", visitorData);
+            }
+            JSONObject ctx = new JSONObject();
+            ctx.put("client", client);
+            return ctx;
+        } catch (Exception e) {
+            return new JSONObject();
+        }
+    }
+
+    private static JSONObject buildMwebContext(@Nullable String visitorData) {
+        try {
+            JSONObject client = new JSONObject();
+            client.put("clientName", "MWEB");
+            client.put("clientVersion", "2.20241114.01.00");
             client.put("hl", "en");
             client.put("gl", "US");
             if (visitorData != null && !visitorData.isEmpty()) {

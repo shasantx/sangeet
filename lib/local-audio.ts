@@ -1,3 +1,4 @@
+import type { LocalScannedTrack } from "@/lib/android-bridge";
 import type { Album, Artist, Track } from "@/lib/types";
 import { registerLocalAudioTrack } from "@/lib/dynamic-tracks";
 
@@ -77,4 +78,76 @@ export async function removeLocalAudio(id: string): Promise<void> {
     tx.onerror = () => reject(tx.error);
   });
   db.close();
+}
+
+function slugifyMeta(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+/**
+ * Register Android MediaStore audio tracks (`content://` URIs) in the dynamic
+ * track registry while preserving each track's artist and album metadata.
+ */
+export function registerScannedAndroidTracks(items: LocalScannedTrack[]): Track[] {
+  const artwork = "/art/album/blue-hour-cinema.svg";
+  const year = new Date().getFullYear();
+  const releaseDate = new Date().toISOString().slice(0, 10);
+  const albumTrackIds = new Map<string, string[]>();
+
+  return items.map((item, index) => {
+    const trackId = `local-android-${item.id}`;
+    const artistName = item.artist?.trim() || "Unknown artist";
+    const albumName = item.album?.trim() || "Device audio";
+    const resolvedArtistId = `local-artist-${slugifyMeta(artistName) || "unknown"}`;
+    const resolvedAlbumId = `local-album-${slugifyMeta(albumName) || "unknown"}`;
+
+    const existingIds = albumTrackIds.get(resolvedAlbumId) ?? [];
+    if (!existingIds.includes(trackId)) existingIds.push(trackId);
+    albumTrackIds.set(resolvedAlbumId, existingIds);
+
+    const track: Track = {
+      id: trackId,
+      title: (item.title?.trim() || "Untitled audio").slice(0, 140),
+      artistId: resolvedArtistId,
+      albumId: resolvedAlbumId,
+      duration: Number.isFinite(item.duration) && item.duration > 0 ? item.duration : 0,
+      audioUrl: item.uri,
+      artwork,
+      genreIds: [],
+      mood: "On this device",
+      trackNumber: index + 1,
+      source: "local",
+    };
+
+    const artist: Artist = {
+      id: resolvedArtistId,
+      name: artistName,
+      bio: `${artistName} from your device library.`,
+      shortBio: "Local audio on this device.",
+      image: artwork,
+      location: "Device",
+      genreIds: [],
+      relatedArtistIds: [],
+    };
+
+    const album: Album = {
+      id: resolvedAlbumId,
+      title: albumName,
+      artistId: resolvedArtistId,
+      year,
+      releaseDate,
+      type: "Album",
+      artwork,
+      genreIds: [],
+      description: "Audio files stored on this device.",
+      trackIds: [...existingIds],
+    };
+
+    return registerLocalAudioTrack(track, artist, album);
+  });
 }

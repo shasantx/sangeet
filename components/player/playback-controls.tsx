@@ -29,10 +29,15 @@ export function PlaybackControls({
   const cycleRepeat = usePlayerStore((state) => state.cycleRepeat);
 
   const large = size === "large";
-  const playSize = large ? "h-[68px] w-[68px]" : "h-10 w-10";
+  const playSize = large
+    ? "h-16 w-16 sm:h-[68px] sm:w-[68px]"
+    : "min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-10 w-10";
   const iconSize = large ? "h-7 w-7" : "h-4 w-4";
-  const sideSize = large ? "h-11 w-11" : "h-8 w-8";
-  const sideIcon = large ? "h-5 w-5" : "h-[17px] w-[17px]";
+  const sideSize = large
+    ? "min-h-[44px] min-w-[44px] h-11 w-11 sm:h-12 sm:w-12"
+    : "min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 h-8 w-8";
+  const sideIcon = large ? "h-5 w-5 sm:h-[22px] sm:w-[22px]" : "h-[17px] w-[17px]";
+  const skipIcon = large ? "h-6 w-6" : "h-[17px] w-[17px]";
 
   const shuffleButton = (
     <button
@@ -41,14 +46,20 @@ export function PlaybackControls({
       aria-pressed={shuffle}
       onClick={toggleShuffle}
       className={cn(
-        "relative flex items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+        "relative flex items-center justify-center rounded-full transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
         sideSize,
         shuffle ? "text-[#1ED760]" : "text-muted-foreground hover:text-foreground",
       )}
     >
-      <Shuffle className={sideIcon} strokeWidth={1.8} />
+      <Shuffle className={sideIcon} strokeWidth={1.85} />
       {shuffle && (
-        <span className="absolute bottom-0.5 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#1ED760]" />
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute left-1/2 -translate-x-1/2 rounded-full bg-[#1ED760]",
+            large ? "bottom-1 h-1 w-1" : "bottom-1.5 sm:bottom-0.5 h-1 w-1 sm:h-[3px] sm:w-[3px]",
+          )}
+        />
       )}
     </button>
   );
@@ -60,24 +71,30 @@ export function PlaybackControls({
       aria-pressed={repeat !== "off"}
       onClick={cycleRepeat}
       className={cn(
-        "relative flex items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+        "relative flex items-center justify-center rounded-full transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
         sideSize,
         repeat !== "off" ? "text-[#1ED760]" : "text-muted-foreground hover:text-foreground",
       )}
     >
       {repeat === "one" ? (
-        <Repeat1 className={sideIcon} strokeWidth={1.8} />
+        <Repeat1 className={sideIcon} strokeWidth={1.85} />
       ) : (
-        <Repeat className={sideIcon} strokeWidth={1.8} />
+        <Repeat className={sideIcon} strokeWidth={1.85} />
       )}
       {repeat !== "off" && (
-        <span className="absolute bottom-0.5 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-[#1ED760]" />
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute left-1/2 -translate-x-1/2 rounded-full bg-[#1ED760]",
+            large ? "bottom-1 h-1 w-1" : "bottom-1.5 sm:bottom-0.5 h-1 w-1 sm:h-[3px] sm:w-[3px]",
+          )}
+        />
       )}
     </button>
   );
 
   return (
-    <div className={cn("flex items-center justify-center gap-1.5 sm:gap-2.5", className)}>
+    <div className={cn("flex items-center justify-center gap-1 sm:gap-2.5", className)}>
       {showExtras &&
         (large ? (
           <Tooltip>
@@ -93,11 +110,12 @@ export function PlaybackControls({
         onClick={previous}
         disabled={!currentTrackId && queueLength === 0}
         className={cn(
-          "flex items-center justify-center rounded-full text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-35",
+          "flex items-center justify-center rounded-full transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-35",
+          large ? "text-white/90 hover:text-white" : "text-muted-foreground hover:text-foreground",
           sideSize,
         )}
       >
-        <SkipBack className={sideIcon} fill="currentColor" strokeWidth={1.2} />
+        <SkipBack className={skipIcon} fill="currentColor" strokeWidth={1.2} />
       </button>
       <button
         type="button"
@@ -105,7 +123,7 @@ export function PlaybackControls({
         onClick={togglePlay}
         className={cn(
           "flex items-center justify-center rounded-full shadow-lg transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95",
-          large ? "bg-foreground text-background" : "bg-primary text-primary-foreground shadow-[0_4px_18px_hsl(var(--primary)/.22)]",
+          large ? "bg-white text-black hover:bg-white/95" : "bg-primary text-primary-foreground shadow-[0_4px_18px_hsl(var(--primary)/.22)]",
           playSize,
         )}
       >
@@ -123,11 +141,12 @@ export function PlaybackControls({
         onClick={() => next()}
         disabled={!currentTrackId && queueLength === 0}
         className={cn(
-          "flex items-center justify-center rounded-full text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-35",
+          "flex items-center justify-center rounded-full transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-35",
+          large ? "text-white/90 hover:text-white" : "text-muted-foreground hover:text-foreground",
           sideSize,
         )}
       >
-        <SkipForward className={sideIcon} fill="currentColor" strokeWidth={1.2} />
+        <SkipForward className={skipIcon} fill="currentColor" strokeWidth={1.2} />
       </button>
       {showExtras &&
         (large ? (

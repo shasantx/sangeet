@@ -69,15 +69,16 @@ export function TopBar() {
   const avatarColor = session?.avatarColor || profile.avatarColor;
 
   return (
-    <header className="sticky top-0 z-30 flex h-[60px] items-center gap-1.5 border-b border-white/[.04] bg-background/95 px-2.5 backdrop-blur-xl sm:h-[70px] sm:gap-3 sm:px-6 lg:px-8">
-      <button type="button" onClick={toggleMobileSidebar} aria-label={mobileSidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={mobileSidebarOpen} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.055] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:hidden">
-        <Menu className="h-5 w-5" />
-      </button>
-      {/* Mobile Logo */}
-      <Link href="/home" className="flex shrink-0 items-center gap-1.5 md:hidden" aria-label="Sangeet home">
-        <SangeetMark size={26} />
-        <span className="mobile-brand-name font-display text-[15px] font-bold tracking-tight text-white">Sangeet</span>
-      </Link>
+    <header className="sticky top-0 z-30 border-b border-white/[.05] bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur-xl sm:px-6 lg:px-8">
+      <div className="flex min-h-[60px] w-full items-center gap-1.5 sm:min-h-[70px] sm:gap-3">
+        <button type="button" onClick={toggleMobileSidebar} aria-label={mobileSidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={mobileSidebarOpen} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.055] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:hidden">
+          <Menu className="h-5 w-5" />
+        </button>
+        {/* Mobile Logo */}
+        <Link href="/home" className="flex shrink-0 items-center gap-1.5 md:hidden" aria-label="Sangeet home">
+          <SangeetMark size={26} />
+          <span className="mobile-brand-name font-display text-[15px] font-bold tracking-tight text-white">Sangeet</span>
+        </Link>
 
       {/* Search Input (Sangeet / YT Music pill style) */}
       <Link
@@ -193,6 +194,8 @@ export function TopBar() {
             </Link>
           </div>
         )}
+      </div>
+
       </div>
 
       <span className="sr-only" aria-live="polite">

@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -27,6 +28,10 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.session.MediaSession;
 import androidx.media3.session.MediaSessionService;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -64,9 +69,15 @@ public final class SangeetAudioService extends MediaSessionService {
     private ExoPlayer player;
     private DefaultHttpDataSource.Factory httpFactory;
     private MediaSession mediaSession;
+    private PowerManager.WakeLock wakeLock;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private volatile long activeRequestToken = 0;
+    private List<YouTubeInnerTubeExtractor.StreamResult> pendingCandidates = Collections.emptyList();
+    private int pendingCandidateIndex = 0;
+    private String pendingTitle;
+    private String pendingArtist;
+    private String pendingArtwork;
 
     public static void setEventListener(@Nullable EventListener l) {
         listener = l;
@@ -90,6 +101,7 @@ public final class SangeetAudioService extends MediaSessionService {
     @Override
     public void onCreate() {
         super.onCreate();
+        initWakeLock();
         createPlaybackNotificationChannel();
         httpFactory = new DefaultHttpDataSource.Factory()
                 .setAllowCrossProtocolRedirects(true)
@@ -113,6 +125,11 @@ public final class SangeetAudioService extends MediaSessionService {
         player.addListener(new Player.Listener() {
             @Override
             public void onIsPlayingChanged(boolean isPlaying) {
+                if (isPlaying) {
+                    acquireWakeLock();
+                } else {
+                    releaseWakeLock();
+                }
                 EventListener l = listener;
                 if (l != null) {
                     l.onState(isPlaying ? "playing" : "paused");
@@ -137,6 +154,13 @@ public final class SangeetAudioService extends MediaSessionService {
 
             @Override
             public void onPlayerError(@NonNull PlaybackException error) {
+                if (pendingCandidates != null && pendingCandidateIndex + 1 < pendingCandidates.size()) {
+                    pendingCandidateIndex++;
+                    YouTubeInnerTubeExtractor.StreamResult next = pendingCandidates.get(pendingCandidateIndex);
+                    playDirectUrl(next.url, next.userAgent, true, pendingTitle, pendingArtist, pendingArtwork);
+                    return;
+                }
+                releaseWakeLock();
                 EventListener l = listener;
                 if (l != null) {
                     l.onError("fallback_iframe");
@@ -210,16 +234,20 @@ public final class SangeetAudioService extends MediaSessionService {
                 String artist = intent.getStringExtra(EXTRA_ARTIST);
                 String artwork = intent.getStringExtra(EXTRA_ARTWORK);
                 if (url != null && !url.isEmpty()) {
+                    pendingCandidates = Collections.emptyList();
+                    pendingCandidateIndex = 0;
                     ensureForegroundNotification(title, artist);
-                    playDirectUrl(url, null, title, artist, artwork);
+                    playDirectUrl(url, null, false, title, artist, artwork);
                 }
                 break;
             }
             case ACTION_PAUSE:
+                releaseWakeLock();
                 if (player != null) player.pause();
                 break;
             case ACTION_RESUME:
                 ensureForegroundNotification(null, null);
+                acquireWakeLock();
                 if (player != null) player.play();
                 break;
             case ACTION_SEEK: {
@@ -239,6 +267,9 @@ public final class SangeetAudioService extends MediaSessionService {
             }
             case ACTION_STOP:
                 activeRequestToken++;
+                pendingCandidates = Collections.emptyList();
+                pendingCandidateIndex = 0;
+                releaseWakeLock();
                 if (player != null) {
                     player.stop();
                     player.clearMediaItems();
@@ -297,21 +328,30 @@ public final class SangeetAudioService extends MediaSessionService {
 
     private void playYouTubeVideo(String videoId, @Nullable String title, @Nullable String artist, @Nullable String artwork) {
         final long token = ++activeRequestToken;
+        pendingCandidates = Collections.emptyList();
+        pendingCandidateIndex = 0;
         EventListener l = listener;
         if (l != null) l.onState("buffering");
 
         executor.execute(() -> {
-            YouTubeInnerTubeExtractor.StreamResult result = YouTubeInnerTubeExtractor.extract(videoId);
+            List<YouTubeInnerTubeExtractor.StreamResult> results = YouTubeInnerTubeExtractor.extractAll(videoId);
             mainHandler.post(() -> {
                 if (token != activeRequestToken) return;
-                if (result == null) {
+                if (results == null || results.isEmpty()) {
+                    releaseWakeLock();
                     EventListener errListener = listener;
                     if (errListener != null) {
                         errListener.onError("fallback_iframe");
                     }
                     return;
                 }
-                playDirectUrl(result.url, result.userAgent, title, artist, artwork);
+                pendingCandidates = results;
+                pendingCandidateIndex = 0;
+                pendingTitle = title;
+                pendingArtist = artist;
+                pendingArtwork = artwork;
+                YouTubeInnerTubeExtractor.StreamResult first = pendingCandidates.get(0);
+                playDirectUrl(first.url, first.userAgent, true, title, artist, artwork);
             });
         });
     }
@@ -319,13 +359,22 @@ public final class SangeetAudioService extends MediaSessionService {
     private void playDirectUrl(
             String url,
             @Nullable String userAgent,
+            boolean isYouTube,
             @Nullable String title,
             @Nullable String artist,
             @Nullable String artwork
     ) {
         if (player == null) return;
-        if (httpFactory != null && userAgent != null) {
-            httpFactory.setUserAgent(userAgent);
+        if (httpFactory != null) {
+            if (userAgent != null && !userAgent.isEmpty()) {
+                httpFactory.setUserAgent(userAgent);
+            }
+            Map<String, String> headers = new HashMap<>();
+            if (isYouTube) {
+                headers.put("Origin", "https://www.youtube.com");
+                headers.put("Referer", "https://www.youtube.com/");
+            }
+            httpFactory.setDefaultRequestProperties(headers);
         }
         MediaMetadata.Builder meta = new MediaMetadata.Builder()
                 .setTitle(title != null && !title.isEmpty() ? title : "Sangeet")
@@ -337,12 +386,33 @@ public final class SangeetAudioService extends MediaSessionService {
             }
         }
         MediaItem item = new MediaItem.Builder()
-                .setUri(url)
+                .setUri(Uri.parse(url))
                 .setMediaMetadata(meta.build())
                 .build();
+        acquireWakeLock();
         player.setMediaItem(item);
         player.prepare();
         player.play();
+    }
+
+    private void initWakeLock() {
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        if (pm != null) {
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Sangeet::AudioPlaybackWakeLock");
+            wakeLock.setReferenceCounted(false);
+        }
+    }
+
+    private void acquireWakeLock() {
+        if (wakeLock != null && !wakeLock.isHeld()) {
+            wakeLock.acquire(4 * 60 * 60 * 1000L);
+        }
+    }
+
+    private void releaseWakeLock() {
+        if (wakeLock != null && wakeLock.isHeld()) {
+            wakeLock.release();
+        }
     }
 
     @Override
@@ -355,6 +425,7 @@ public final class SangeetAudioService extends MediaSessionService {
     @Override
     public void onDestroy() {
         mainHandler.removeCallbacks(progressRunnable);
+        releaseWakeLock();
         executor.shutdownNow();
         if (mediaSession != null) {
             mediaSession.release();

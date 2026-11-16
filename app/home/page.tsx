@@ -2,23 +2,22 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Download, Flame, Heart, History, Music, Search, Shuffle, Trophy } from "lucide-react";
+import { Download, Flame, FolderOpen, Heart, Pause, Play, Shuffle } from "lucide-react";
 import {
   albums,
-  artists,
   featuredPlaylists,
   getArtist,
   getTracks,
   tracks,
 } from "@/lib/catalog";
-import { getFirstName, getGreeting } from "@/lib/utils";
+import { cn, getFirstName, getGreeting } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { useAppStore } from "@/store/app-store";
 import { useLibraryStore } from "@/store/library-store";
 import { AlbumCard } from "@/components/music/album-card";
 import { ArtistCard } from "@/components/music/artist-card";
+import { Artwork } from "@/components/music/artwork";
 import { PlaylistCard } from "@/components/music/playlist-card";
-import { QuickTrackTile } from "@/components/music/quick-track-tile";
 import { SectionHeader } from "@/components/music/section-header";
 import { TrackList } from "@/components/music/track-list";
 import { registerYouTubeSearchResult, type YouTubeSearchResult } from "@/lib/dynamic-tracks";
@@ -37,6 +36,10 @@ export default function HomePage() {
   const [inNativeAndroid, setInNativeAndroid] = useState(false);
   const [artistTrackIds, setArtistTrackIds] = useState<string[]>([]);
   const [loadingArtistTracks, setLoadingArtistTracks] = useState(false);
+  const currentTrackId = usePlayerStore((state) => state.currentTrackId);
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const playTrack = usePlayerStore((state) => state.playTrack);
+  const togglePlay = usePlayerStore((state) => state.togglePlay);
   const displayName = session?.displayName;
 
   useEffect(() => {
@@ -115,75 +118,100 @@ export default function HomePage() {
   }, [preferredArtistIds]);
 
   return (
-    <div className="page-container max-w-[1480px] pt-8 sm:pt-10">
+    <div className="page-container max-w-[1480px] pt-4 sm:pt-8">
       <InstallPromptBanner />
-      <header className="mb-8 flex flex-col gap-5 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">
-            {greeting}{displayName ? `, ${getFirstName(displayName)}` : ""}
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">Pick up where you left off, or start a mix.</p>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => usePlayerStore.getState().playShuffled(tracks.map((t) => t.id), "Shuffle all")}
-              className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white text-black px-3.5 text-xs font-semibold transition hover:bg-white/90"
+      <header className="mb-5 sm:mb-7">
+        <h1 className="text-2xl font-bold tracking-[-0.04em] sm:text-4xl">
+          {greeting}{displayName ? `, ${getFirstName(displayName)}` : ""}
+        </h1>
+        <div className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5 sm:flex-wrap">
+          <button
+            type="button"
+            onClick={() => usePlayerStore.getState().playShuffled(tracks.map((t) => t.id), "Shuffle all")}
+            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-[#1ed760] px-3.5 text-xs font-semibold text-black transition hover:brightness-110 active:scale-95"
+          >
+            <Shuffle className="h-3.5 w-3.5" />
+            Shuffle all
+          </button>
+          <Link
+            href="/liked"
+            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-white/[0.08] px-3.5 text-xs font-medium text-white transition hover:bg-white/[0.14] active:scale-95"
+          >
+            <Heart className="h-3.5 w-3.5 text-[#1ed760]" />
+            Liked songs
+          </Link>
+          <Link
+            href="/library?tab=local"
+            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-white/[0.08] px-3.5 text-xs font-medium text-white transition hover:bg-white/[0.14] active:scale-95"
+          >
+            <FolderOpen className="h-3.5 w-3.5 text-white/75" />
+            Local files
+          </Link>
+          {!inNativeAndroid && (
+            <a
+              href="/api/download/android"
+              download="sangeet-android.apk"
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[#1ed760]/30 bg-[#1ed760]/10 px-3.5 text-xs font-semibold text-[#1ed760] transition hover:bg-[#1ed760]/20 active:scale-95"
             >
-              <Shuffle className="h-3.5 w-3.5" />
-              Shuffle all
-            </button>
-            <Link
-              href="/liked"
-              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 text-xs font-medium text-foreground transition hover:bg-white/[0.08]"
-            >
-              <Heart className="h-3.5 w-3.5 text-[#1ed760]" />
-              Liked songs
-            </Link>
-            <Link
-              href="/recently-played"
-              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 text-xs font-medium text-foreground transition hover:bg-white/[0.08]"
-            >
-              <History className="h-3.5 w-3.5 text-muted-foreground" />
-              History
-            </Link>
-            {!inNativeAndroid && (
-              <a
-                href="/api/download/android"
-                download="sangeet-android.apk"
-                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#1ed760]/30 bg-[#1ed760]/10 px-3.5 text-xs font-semibold text-[#1ed760] transition hover:bg-[#1ed760]/20"
-              >
-                <Download className="h-3.5 w-3.5" />
-                Download APK
-              </a>
-            )}
-          </div>
+              <Download className="h-3.5 w-3.5" />
+              Download APK
+            </a>
+          )}
         </div>
-        <Link
-          href="/search"
-          className="inline-flex h-11 items-center gap-2 self-start rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:brightness-110 sm:self-auto"
-        >
-          <Search className="h-4 w-4" /> Find music <ArrowRight className="h-4 w-4" />
-        </Link>
       </header>
 
-      {/* Quick Picks / Continue Listening */}
+      {/* Spotify-style 2-column compact Quick-Pick Grid */}
       {quickPicks.length > 0 && (
-        <section aria-label="Quick picks" className="mb-10">
+        <section aria-label="Quick picks" className="mb-8 sm:mb-10">
           <div className="mb-3 flex items-center gap-2">
-            <Flame className="h-4 w-4 text-primary" />
-            <h2 className="text-xl font-semibold tracking-[-.025em]">
-              {recentTracks.length >= 4 ? "Continue listening" : "Popular quick picks"}
+            <Flame className="h-4 w-4 text-[#1ed760]" />
+            <h2 className="text-lg font-bold tracking-[-0.025em] sm:text-xl">
+              {recentTracks.length >= 4 ? "Jump back in" : "Quick picks"}
             </h2>
           </div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 sm:gap-2.5">
-            {quickPicks.map((track) => (
-              <QuickTrackTile
-                key={track.id}
-                track={track}
-                contextIds={quickPicks.map((t) => t.id)}
-                contextLabel="Quick picks"
-              />
-            ))}
+          <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3">
+            {quickPicks.slice(0, 6).map((track) => {
+              const isCurrent = currentTrackId === track.id;
+              return (
+                <button
+                  key={track.id}
+                  type="button"
+                  onClick={() => {
+                    if (isCurrent) togglePlay();
+                    else playTrack(track.id, quickPicks.map((t) => t.id), "Quick picks");
+                  }}
+                  aria-label={`${isCurrent && isPlaying ? "Pause" : "Play"} ${track.title}`}
+                  className={cn(
+                    "group flex h-14 min-w-0 items-center gap-2.5 overflow-hidden rounded-lg bg-white/[0.06] pr-2.5 text-left transition hover:bg-white/[0.1] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    isCurrent && "bg-white/[0.12] ring-1 ring-[#1ed760]/35",
+                  )}
+                >
+                  <div className="relative h-14 w-14 shrink-0 overflow-hidden bg-[#18181c]">
+                    <Artwork src={track.artwork} alt="" priority className="h-full w-full object-cover" />
+                    <span
+                      className={cn(
+                        "absolute inset-0 flex items-center justify-center bg-black/45 transition-opacity",
+                        isCurrent ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+                      )}
+                    >
+                      {isCurrent && isPlaying ? (
+                        <Pause className="h-4 w-4 fill-white text-white" />
+                      ) : (
+                        <Play className="ml-0.5 h-4 w-4 fill-white text-white" />
+                      )}
+                    </span>
+                  </div>
+                  <span
+                    className={cn(
+                      "line-clamp-2 min-w-0 flex-1 text-[12px] font-semibold leading-tight sm:text-[13px]",
+                      isCurrent ? "text-[#1ed760]" : "text-white",
+                    )}
+                  >
+                    {track.title}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </section>
       )}
@@ -197,7 +225,7 @@ export default function HomePage() {
             description="The most played playlists on Sangeet and YouTube Music."
             href="/explore"
           />
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div className="-mx-3.5 flex gap-3 overflow-x-auto px-3.5 pb-2 no-scrollbar sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 [&>*]:w-[144px] [&>*]:shrink-0 sm:[&>*]:w-auto">
             {featuredPlaylists.slice(0, 6).map((playlist) => (
               <PlaylistCard key={playlist.id} playlist={playlist} />
             ))}
@@ -214,7 +242,7 @@ export default function HomePage() {
             description="Explore discography, albums, and top songs."
             href="/explore"
           />
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div className="-mx-3.5 flex gap-3 overflow-x-auto px-3.5 pb-2 no-scrollbar sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 [&>*]:w-[144px] [&>*]:shrink-0 sm:[&>*]:w-auto">
             {popularSingers.slice(0, 6).map((artist) => (
               <ArtistCard key={artist.id} artist={artist} />
             ))}
@@ -231,7 +259,7 @@ export default function HomePage() {
             description="Full-length records with original tracklists and high-res covers."
             href="/explore"
           />
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div className="-mx-3.5 flex gap-3 overflow-x-auto px-3.5 pb-2 no-scrollbar sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 [&>*]:w-[144px] [&>*]:shrink-0 sm:[&>*]:w-auto">
             {popularAlbumsList.map((album) => (
               <AlbumCard key={album.id} album={album} />
             ))}

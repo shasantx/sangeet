@@ -4,13 +4,16 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.DownloadManager;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.view.ViewGroup;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
@@ -35,11 +38,15 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public final class MainActivity extends AppCompatActivity {
     private static final String START_URL = "https://sangeet.shasant.xyz/home";
+    private static final int REQ_AUDIO_PERMISSION = 103;
     private WebView webView;
     private ValueCallback<Uri[]> fileUploadCallback;
     private ActivityResultLauncher<Intent> filePickerLauncher;
@@ -78,6 +85,16 @@ public final class MainActivity extends AppCompatActivity {
                 }
         );
 
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        getWindow().setStatusBarColor(0xFF080908);
+        getWindow().setNavigationBarColor(0xFF080908);
+        WindowInsetsControllerCompat insetsController =
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        if (insetsController != null) {
+            insetsController.setAppearanceLightStatusBars(false);
+            insetsController.setAppearanceLightNavigationBars(false);
+        }
+
         FrameLayout rootContainer = new FrameLayout(this);
         rootContainer.setBackgroundColor(0xFF080908);
         webView = new WebView(this);
@@ -90,7 +107,9 @@ public final class MainActivity extends AppCompatActivity {
 
         ViewCompat.setOnApplyWindowInsetsListener(rootContainer, (v, windowInsets) -> {
             Insets insets = windowInsets.getInsets(
-                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime()
+                    WindowInsetsCompat.Type.systemBars()
+                            | WindowInsetsCompat.Type.displayCutout()
+                            | WindowInsetsCompat.Type.ime()
             );
             v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
             return WindowInsetsCompat.CONSUMED;
@@ -230,6 +249,35 @@ public final class MainActivity extends AppCompatActivity {
         if (!handleAuthDeepLink(getIntent())) {
             webView.loadUrl(START_URL);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (webView != null) {
+            webView.resumeTimers();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(
+            int requestCode,
+            @NonNull String[] permissions,
+            @NonNull int[] grantResults
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_AUDIO_PERMISSION) {
+            boolean granted = grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            dispatchToWeb("audio_permission", granted ? "granted" : "denied");
+        }
+    }
+
+    private boolean hasAudioPermissionInternal() {
+        String perm = Build.VERSION.SDK_INT >= 33
+                ? Manifest.permission.READ_MEDIA_AUDIO
+                : Manifest.permission.READ_EXTERNAL_STORAGE;
+        return ContextCompat.checkSelfPermission(this, perm) == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override
@@ -380,6 +428,88 @@ public final class MainActivity extends AppCompatActivity {
             intent.setAction(SangeetAudioService.ACTION_SPEED);
             intent.putExtra(SangeetAudioService.EXTRA_SPEED, (float) rate);
             startService(intent);
+        }
+
+        @JavascriptInterface
+        public boolean hasAudioPermission() {
+            return hasAudioPermissionInternal();
+        }
+
+        @JavascriptInterface
+        public void requestAudioPermission() {
+            if (hasAudioPermissionInternal()) {
+                dispatchToWeb("audio_permission", "granted");
+                return;
+            }
+            String perm = Build.VERSION.SDK_INT >= 33
+                    ? Manifest.permission.READ_MEDIA_AUDIO
+                    : Manifest.permission.READ_EXTERNAL_STORAGE;
+            runOnUiThread(() -> ActivityCompat.requestPermissions(
+                    MainActivity.this,
+                    new String[]{perm},
+                    REQ_AUDIO_PERMISSION
+            ));
+        }
+
+        @JavascriptInterface
+        public String scanLocalAudio() {
+            if (!hasAudioPermissionInternal()) {
+                return "[]";
+            }
+            JSONArray results = new JSONArray();
+            String[] projection = new String[]{
+                    MediaStore.Audio.Media._ID,
+                    MediaStore.Audio.Media.TITLE,
+                    MediaStore.Audio.Media.ARTIST,
+                    MediaStore.Audio.Media.ALBUM,
+                    MediaStore.Audio.Media.DURATION,
+                    MediaStore.Audio.Media.DISPLAY_NAME
+            };
+            String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
+                    + " OR LOWER(" + MediaStore.Audio.Media.DISPLAY_NAME + ") LIKE '%.mp3'"
+                    + " OR LOWER(" + MediaStore.Audio.Media.DISPLAY_NAME + ") LIKE '%.m4a'"
+                    + " OR LOWER(" + MediaStore.Audio.Media.DISPLAY_NAME + ") LIKE '%.flac'"
+                    + " OR LOWER(" + MediaStore.Audio.Media.DISPLAY_NAME + ") LIKE '%.wav'"
+                    + " OR LOWER(" + MediaStore.Audio.Media.DISPLAY_NAME + ") LIKE '%.ogg'";
+            String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
+            try (Cursor cursor = getContentResolver().query(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    projection,
+                    selection,
+                    null,
+                    sortOrder
+            )) {
+                if (cursor != null) {
+                    int idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID);
+                    int titleCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE);
+                    int artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST);
+                    int albumCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM);
+                    int durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION);
+                    int count = 0;
+                    while (cursor.moveToNext() && count < 500) {
+                        long id = cursor.getLong(idCol);
+                        String title = cursor.getString(titleCol);
+                        String artist = cursor.getString(artistCol);
+                        String album = cursor.getString(albumCol);
+                        long durationMs = cursor.getLong(durationCol);
+                        Uri contentUri = ContentUris.withAppendedId(
+                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
+                        JSONObject item = new JSONObject();
+                        item.put("id", id);
+                        item.put("title", title != null && !title.isEmpty() ? title : "Unknown Title");
+                        item.put("artist", artist != null && !artist.isEmpty() && !"<unknown>".equals(artist)
+                                ? artist : "Unknown Artist");
+                        item.put("album", album != null && !album.isEmpty() && !"<unknown>".equals(album)
+                                ? album : "");
+                        item.put("duration", Math.max(0.0, durationMs / 1000.0));
+                        item.put("uri", contentUri.toString());
+                        results.put(item);
+                        count++;
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+            return results.toString();
         }
     }
 

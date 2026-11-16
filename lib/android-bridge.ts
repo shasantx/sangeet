@@ -1,5 +1,14 @@
 "use client";
 
+export interface LocalScannedTrack {
+  id: string;
+  title: string;
+  artist: string;
+  album: string;
+  duration: number;
+  uri: string;
+}
+
 export interface SangeetAndroidBridge {
   isNativeApp?: () => boolean;
   playYouTube?: (videoId: string, title: string, artist: string, artworkUrl: string) => void;
@@ -10,6 +19,9 @@ export interface SangeetAndroidBridge {
   stop?: () => void;
   setVolume?: (volume: number) => void;
   setPlaybackRate?: (rate: number) => void;
+  hasAudioPermission?: () => boolean;
+  requestAudioPermission?: () => void;
+  scanLocalAudio?: () => string;
 }
 
 declare global {
@@ -51,7 +63,9 @@ export function androidPlayAudioUrl(
 ): boolean {
   if (!isAndroidNativeApp()) return false;
   try {
-    const absoluteUrl = new URL(url, window.location.origin).href;
+    const absoluteUrl = url.startsWith("content://")
+      ? url
+      : new URL(url, window.location.origin).href;
     const absoluteArt = artworkUrl ? new URL(artworkUrl, window.location.origin).href : "";
     window.SangeetAndroid?.playAudioUrl?.(absoluteUrl, title, artist, absoluteArt);
     return true;
@@ -88,4 +102,41 @@ export function androidSetVolume(volume: number): void {
 export function androidSetPlaybackRate(rate: number): void {
   if (!isAndroidNativeApp()) return;
   try { window.SangeetAndroid?.setPlaybackRate?.(rate); } catch { /* ignore */ }
+}
+
+export function androidHasAudioPermission(): boolean {
+  if (!isAndroidNativeApp()) return false;
+  try {
+    return Boolean(window.SangeetAndroid?.hasAudioPermission?.());
+  } catch {
+    return false;
+  }
+}
+
+export function androidRequestAudioPermission(): void {
+  if (!isAndroidNativeApp()) return;
+  try {
+    window.SangeetAndroid?.requestAudioPermission?.();
+  } catch {
+    /* ignore */
+  }
+}
+
+export function androidScanLocalAudio(): LocalScannedTrack[] {
+  if (!isAndroidNativeApp()) return [];
+  try {
+    const raw = window.SangeetAndroid?.scanLocalAudio?.();
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (item): item is LocalScannedTrack =>
+        Boolean(item) &&
+        typeof item === "object" &&
+        typeof (item as LocalScannedTrack).id === "string" &&
+        typeof (item as LocalScannedTrack).uri === "string",
+    );
+  } catch {
+    return [];
+  }
 }

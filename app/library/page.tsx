@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
   Clock3,
@@ -25,9 +26,10 @@ import { EmptyState } from "@/components/music/empty-state";
 import { PlaylistCard } from "@/components/music/playlist-card";
 import { QuickTrackTile } from "@/components/music/quick-track-tile";
 import { SectionHeader } from "@/components/music/section-header";
+import { LocalFilesSection } from "@/components/library/local-files-section";
 import { Input } from "@/components/ui/input";
 
-type Filter = "all" | "playlists" | "albums" | "artists";
+type Filter = "all" | "playlists" | "albums" | "artists" | "local";
 
 const quickLinks = [
   {
@@ -54,8 +56,26 @@ const quickLinks = [
 ];
 
 export default function LibraryPage() {
-  const [filter, setFilter] = useState<Filter>("all");
+  return (
+    <Suspense fallback={<div className="page-container" />}>
+      <LibraryContent />
+    </Suspense>
+  );
+}
+
+function LibraryContent() {
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab") === "local" ? "local" : "all";
+  const [filter, setFilter] = useState<Filter>(initialTab);
   const [query, setQuery] = useState("");
+  const [localCount, setLocalCount] = useState(0);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "local" || tab === "playlists" || tab === "albums" || tab === "artists" || tab === "all") {
+      setFilter(tab);
+    }
+  }, [searchParams]);
   const likedTrackIds = useLibraryStore((state) => state.likedTrackIds);
   const savedAlbumIds = useLibraryStore((state) => state.savedAlbumIds);
   const followedArtistIds = useLibraryStore((state) => state.followedArtistIds);
@@ -95,12 +115,14 @@ export default function LibraryPage() {
   const showPlaylists = filter === "all" || filter === "playlists";
   const showAlbums = filter === "all" || filter === "albums";
   const showArtists = filter === "all" || filter === "artists";
+  const showLocal = filter === "all" || filter === "local";
 
   const filters: { id: Filter; label: string; count: number }[] = [
-    { id: "all", label: "All", count: userPlaylists.length + savedAlbums.length + followedArtists.length },
+    { id: "all", label: "All", count: userPlaylists.length + savedAlbums.length + followedArtists.length + localCount },
     { id: "playlists", label: "Playlists", count: userPlaylists.length },
     { id: "albums", label: "Albums", count: savedAlbums.length },
     { id: "artists", label: "Artists", count: followedArtists.length },
+    { id: "local", label: "Local Files", count: localCount },
   ];
 
   return (
@@ -197,6 +219,10 @@ export default function LibraryPage() {
           />
         </div>
       </div>
+
+      {showLocal && (
+        <LocalFilesSection searchQuery={query} onCountChange={setLocalCount} />
+      )}
 
       {showPlaylists && (
         <section className="mt-9">

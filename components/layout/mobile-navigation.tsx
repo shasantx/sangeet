@@ -18,7 +18,7 @@ export function MobileNavigation() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-[#09090d]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl md:hidden"
       aria-label="Mobile navigation"
     >
       <div className="flex h-14 items-center justify-around px-1.5 sm:px-2">
@@ -31,16 +31,21 @@ export function MobileNavigation() {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 py-1.5 transition-colors",
-                active ? "text-[#1ed760]" : "text-white/60 hover:text-white/90",
+                "double-tap-none flex min-w-0 flex-1 flex-col items-center justify-center gap-1 py-1.5 transition-all active:scale-95",
+                active ? "text-[#1ed760]" : "text-white/65 hover:text-white",
               )}
             >
               <Icon
                 aria-hidden="true"
                 className="h-5 w-5 shrink-0"
-                strokeWidth={active ? 2.2 : 1.75}
+                strokeWidth={active ? 2.4 : 1.75}
               />
-              <span className="max-w-full truncate text-[10px] font-medium leading-none tracking-tight">
+              <span
+                className={cn(
+                  "max-w-full truncate text-[10px] leading-none tracking-tight",
+                  active ? "font-semibold" : "font-medium",
+                )}
+              >
                 {item.label}
               </span>
             </Link>
