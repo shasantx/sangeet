@@ -409,6 +409,10 @@ export const usePlayerStore = create<PlayerState>()(
           const state = get();
           if (state.repeat === "one" && automatic) {
             const current = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+            if (isAndroidNativeApp() && !state.videoMode && current && !current.audioUrl.startsWith("blob:")) {
+              startTrack(current.id, true);
+              return;
+            }
             if (current?.youtubeId) {
               seekYouTube(0);
               set({ currentTime: 0 });

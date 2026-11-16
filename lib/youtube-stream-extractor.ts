@@ -18,11 +18,15 @@ interface CacheEntry {
   data: ExtractedAudioStream;
 }
 
-const STREAM_CACHE_TTL_MS = 45 * 60 * 1000; // 45 min (YouTube URLs typically live ~6h)
+const STREAM_CACHE_TTL_MS = 45 * 60 * 1000;
 const streamCache = new Map<string, CacheEntry>();
 
+let cachedVisitorData: { value: string; at: number } | null = null;
+
+const VISIONOS_UA =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15";
 const ANDROID_VR_UA =
-  "com.google.android.apps.youtube.vr.oculus/1.60.19 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip";
+  "com.google.android.apps.youtube.vr.oculus/1.65.10 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip";
 
 export function isAllowedStreamUrl(candidate: unknown): candidate is string {
   if (typeof candidate !== "string") return false;
@@ -60,31 +64,63 @@ interface InnerTubeFormat {
   url?: string;
   mimeType?: string;
   bitrate?: number;
-  audioQuality?: string;
 }
 
-async function extractViaInnerTube(videoId: string): Promise<ExtractedAudioStream | null> {
+async function getVisitorData(): Promise<string> {
+  if (process.env.YOUTUBE_VISITOR_DATA) {
+    return process.env.YOUTUBE_VISITOR_DATA;
+  }
+  if (cachedVisitorData && Date.now() - cachedVisitorData.at < 30 * 60 * 1000) {
+    return cachedVisitorData.value;
+  }
+  try {
+    const sw = await fetch("https://www.youtube.com/sw.js_data", {
+      headers: { "User-Agent": VISIONOS_UA },
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (sw.ok) {
+      const text = await sw.text();
+      const match = text.match(/"(Cg[A-Za-z0-9_\-=%+/]{10,})"/);
+      if (match?.[1]) {
+        cachedVisitorData = { value: match[1], at: Date.now() };
+        return match[1];
+      }
+    }
+  } catch {
+    // Ignore visitorData fetch failures.
+  }
+  return "";
+}
+
+async function tryInnerTubeClient(
+  videoId: string,
+  userAgent: string,
+  clientContext: Record<string, unknown>,
+  visitorData: string,
+): Promise<ExtractedAudioStream | null> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "User-Agent": userAgent,
+  };
+  if (visitorData) {
+    headers["X-Goog-Visitor-Id"] = visitorData;
+  }
+
   const response = await fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "User-Agent": ANDROID_VR_UA,
-    },
+    headers,
     body: JSON.stringify({
       context: {
         client: {
-          clientName: "ANDROID_VR",
-          clientVersion: "1.60.19",
-          deviceMake: "Oculus",
-          deviceModel: "Quest 3",
-          androidSdkVersion: 32,
-          osName: "Android",
-          osVersion: "12L",
+          ...clientContext,
           hl: "en",
           gl: "US",
+          ...(visitorData ? { visitorData } : {}),
         },
       },
       videoId,
+      contentCheckOk: true,
+      racyCheckOk: true,
     }),
     signal: AbortSignal.timeout(10_000),
   });
@@ -93,7 +129,7 @@ async function extractViaInnerTube(videoId: string): Promise<ExtractedAudioStrea
   const payload = (await response.json()) as {
     playabilityStatus?: { status?: string };
     videoDetails?: { lengthSeconds?: string; title?: string };
-    streamingData?: { adaptiveFormats?: InnerTubeFormat[]; formats?: InnerTubeFormat[] };
+    streamingData?: { adaptiveFormats?: InnerTubeFormat[] };
   };
 
   if (payload.playabilityStatus?.status !== "OK") return null;
@@ -103,7 +139,6 @@ async function extractViaInnerTube(videoId: string): Promise<ExtractedAudioStrea
     (fmt) => fmt.mimeType?.startsWith("audio/") && isAllowedStreamUrl(fmt.url),
   );
 
-  // Prefer AAC/MP4 (works universally on iOS Safari, Android Chrome, Desktop)
   const mp4Formats = audioFormats
     .filter((fmt) => fmt.mimeType?.includes("audio/mp4"))
     .sort((a, b) => (b.bitrate ?? 0) - (a.bitrate ?? 0));
@@ -116,19 +151,53 @@ async function extractViaInnerTube(videoId: string): Promise<ExtractedAudioStrea
   if (!chosen || !isAllowedStreamUrl(chosen.url)) return null;
 
   const rawDuration = Number(payload.videoDetails?.lengthSeconds);
-  const duration = Number.isFinite(rawDuration) && rawDuration > 0
-    ? Math.min(86400, rawDuration)
-    : undefined;
+  const duration =
+    Number.isFinite(rawDuration) && rawDuration > 0 ? Math.min(86400, rawDuration) : undefined;
 
   return {
     streamUrl: chosen.url,
     mimeType: chosen.mimeType?.split(";")[0]?.trim() || "audio/mp4",
     duration,
-    title: typeof payload.videoDetails?.title === "string"
-      ? payload.videoDetails.title.slice(0, 180)
-      : undefined,
-    userAgent: ANDROID_VR_UA,
+    title:
+      typeof payload.videoDetails?.title === "string"
+        ? payload.videoDetails.title.slice(0, 180)
+        : undefined,
+    userAgent,
   };
+}
+
+async function extractViaInnerTube(videoId: string): Promise<ExtractedAudioStream | null> {
+  const visitorData = await getVisitorData();
+
+  const visionOs = await tryInnerTubeClient(
+    videoId,
+    VISIONOS_UA,
+    {
+      clientName: "VISIONOS",
+      clientVersion: "1.02",
+      deviceMake: "Apple",
+      deviceModel: "RealityDevice17,1",
+      osName: "visionOS",
+      osVersion: "26.5.23O471",
+    },
+    visitorData,
+  ).catch(() => null);
+  if (visionOs) return visionOs;
+
+  return tryInnerTubeClient(
+    videoId,
+    ANDROID_VR_UA,
+    {
+      clientName: "ANDROID_VR",
+      clientVersion: "1.65.10",
+      deviceMake: "Oculus",
+      deviceModel: "Quest 3",
+      androidSdkVersion: 32,
+      osName: "Android",
+      osVersion: "12L",
+    },
+    visitorData,
+  ).catch(() => null);
 }
 
 async function extractViaYtDlp(videoId: string): Promise<ExtractedAudioStream | null> {

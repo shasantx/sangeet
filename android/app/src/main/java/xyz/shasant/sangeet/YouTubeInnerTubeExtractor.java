@@ -23,7 +23,7 @@ public final class YouTubeInnerTubeExtractor {
             .readTimeout(15, TimeUnit.SECONDS)
             .build();
 
-    private static final Pattern VISITOR_DATA_PATTERN = Pattern.compile("\"(Cg[A-Za-z0-9_\\-=%]{10,})\"");
+    private static final Pattern VISITOR_DATA_PATTERN = Pattern.compile("\"(Cg[A-Za-z0-9_\\-=%+/]{10,})\"");
     private static final long VISITOR_TTL_MS = 30L * 60L * 1000L;
     private static volatile String cachedVisitorData;
     private static volatile long cachedVisitorAtMs;
@@ -48,9 +48,17 @@ public final class YouTubeInnerTubeExtractor {
         String visitorData = getVisitorData();
         List<StreamResult> results = new ArrayList<>();
 
+        StreamResult visionOs = tryClient(
+                videoId,
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15",
+                buildVisionOsContext(visitorData),
+                visitorData
+        );
+        if (visionOs != null) results.add(visionOs);
+
         StreamResult vr = tryClient(
                 videoId,
-                "com.google.android.apps.youtube.vr.oculus/1.60.19 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip",
+                "com.google.android.apps.youtube.vr.oculus/1.65.10 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip",
                 buildAndroidVrContext(visitorData),
                 visitorData
         );
@@ -66,7 +74,7 @@ public final class YouTubeInnerTubeExtractor {
 
         StreamResult android = tryClient(
                 videoId,
-                "com.google.android.youtube/19.29.37 (Linux; U; Android 14) gzip",
+                "com.google.android.youtube/21.26.364 (Linux; U; Android 14) gzip",
                 buildAndroidContext(visitorData),
                 visitorData
         );
@@ -167,11 +175,33 @@ public final class YouTubeInnerTubeExtractor {
         return null;
     }
 
+    private static JSONObject buildVisionOsContext(@Nullable String visitorData) {
+        try {
+            JSONObject client = new JSONObject();
+            client.put("clientName", "VISIONOS");
+            client.put("clientVersion", "1.02");
+            client.put("deviceMake", "Apple");
+            client.put("deviceModel", "RealityDevice17,1");
+            client.put("osName", "visionOS");
+            client.put("osVersion", "26.5.23O471");
+            client.put("hl", "en");
+            client.put("gl", "US");
+            if (visitorData != null && !visitorData.isEmpty()) {
+                client.put("visitorData", visitorData);
+            }
+            JSONObject ctx = new JSONObject();
+            ctx.put("client", client);
+            return ctx;
+        } catch (Exception e) {
+            return new JSONObject();
+        }
+    }
+
     private static JSONObject buildAndroidVrContext(@Nullable String visitorData) {
         try {
             JSONObject client = new JSONObject();
             client.put("clientName", "ANDROID_VR");
-            client.put("clientVersion", "1.60.19");
+            client.put("clientVersion", "1.65.10");
             client.put("deviceMake", "Oculus");
             client.put("deviceModel", "Quest 3");
             client.put("androidSdkVersion", 32);
@@ -216,7 +246,7 @@ public final class YouTubeInnerTubeExtractor {
         try {
             JSONObject client = new JSONObject();
             client.put("clientName", "ANDROID");
-            client.put("clientVersion", "19.29.37");
+            client.put("clientVersion", "21.26.364");
             client.put("androidSdkVersion", 34);
             client.put("osName", "Android");
             client.put("osVersion", "14");
@@ -307,35 +337,44 @@ public final class YouTubeInnerTubeExtractor {
                 JSONObject streaming = json.optJSONObject("streamingData");
                 if (streaming == null) return null;
                 JSONArray adaptive = streaming.optJSONArray("adaptiveFormats");
-                if (adaptive == null) return null;
 
                 String bestMp4 = null;
                 int bestMp4Bitrate = -1;
                 String bestWebm = null;
                 int bestWebmBitrate = -1;
 
-                for (int i = 0; i < adaptive.length(); i++) {
-                    JSONObject fmt = adaptive.optJSONObject(i);
-                    if (fmt == null) continue;
-                    String mime = fmt.optString("mimeType", "");
-                    String url = fmt.optString("url", "");
-                    if (url.isEmpty() || !mime.startsWith("audio/")) continue;
-                    int bitrate = fmt.optInt("bitrate", 0);
-                    if (mime.contains("audio/mp4")) {
-                        if (bitrate > bestMp4Bitrate) {
-                            bestMp4Bitrate = bitrate;
-                            bestMp4 = url;
-                        }
-                    } else if (mime.contains("audio/webm")) {
-                        if (bitrate > bestWebmBitrate) {
-                            bestWebmBitrate = bitrate;
-                            bestWebm = url;
+                if (adaptive != null) {
+                    for (int i = 0; i < adaptive.length(); i++) {
+                        JSONObject fmt = adaptive.optJSONObject(i);
+                        if (fmt == null) continue;
+                        String mime = fmt.optString("mimeType", "");
+                        String url = fmt.optString("url", "");
+                        if (url.isEmpty() || !mime.startsWith("audio/")) continue;
+                        int bitrate = fmt.optInt("bitrate", 0);
+                        if (mime.contains("audio/mp4")) {
+                            if (bitrate > bestMp4Bitrate) {
+                                bestMp4Bitrate = bitrate;
+                                bestMp4 = url;
+                            }
+                        } else if (mime.contains("audio/webm")) {
+                            if (bitrate > bestWebmBitrate) {
+                                bestWebmBitrate = bitrate;
+                                bestWebm = url;
+                            }
                         }
                     }
                 }
 
                 String chosen = bestMp4 != null ? bestMp4 : bestWebm;
-                return chosen != null ? new StreamResult(chosen, userAgent) : null;
+                if (chosen != null && !chosen.isEmpty()) {
+                    return new StreamResult(chosen, userAgent);
+                }
+
+                String hlsManifestUrl = streaming.optString("hlsManifestUrl", "");
+                if (!hlsManifestUrl.isEmpty()) {
+                    return new StreamResult(hlsManifestUrl, userAgent);
+                }
+                return null;
             }
         } catch (Exception e) {
             return null;

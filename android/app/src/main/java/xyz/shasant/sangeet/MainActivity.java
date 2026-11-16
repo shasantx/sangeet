@@ -85,7 +85,7 @@ public final class MainActivity extends AppCompatActivity {
                 }
         );
 
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         getWindow().setStatusBarColor(0xFF080908);
         getWindow().setNavigationBarColor(0xFF080908);
         WindowInsetsControllerCompat insetsController =
@@ -339,10 +339,23 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void sendServiceAction(Intent intent) {
+        if (SangeetAudioService.dispatchToRunningService(intent)) {
+            return;
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             ContextCompat.startForegroundService(this, intent);
         } else {
             startService(intent);
+        }
+    }
+
+    private void sendControlAction(Intent intent) {
+        if (SangeetAudioService.dispatchToRunningService(intent)) {
+            return;
+        }
+        try {
+            startService(intent);
+        } catch (Exception ignored) {
         }
     }
 
@@ -389,7 +402,7 @@ public final class MainActivity extends AppCompatActivity {
         public void pause() {
             Intent intent = new Intent(MainActivity.this, SangeetAudioService.class);
             intent.setAction(SangeetAudioService.ACTION_PAUSE);
-            startService(intent);
+            sendControlAction(intent);
         }
 
         @JavascriptInterface
@@ -404,14 +417,14 @@ public final class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, SangeetAudioService.class);
             intent.setAction(SangeetAudioService.ACTION_SEEK);
             intent.putExtra(SangeetAudioService.EXTRA_SEEK_MS, (long) (seconds * 1000));
-            startService(intent);
+            sendControlAction(intent);
         }
 
         @JavascriptInterface
         public void stop() {
             Intent intent = new Intent(MainActivity.this, SangeetAudioService.class);
             intent.setAction(SangeetAudioService.ACTION_STOP);
-            startService(intent);
+            sendControlAction(intent);
         }
 
         @JavascriptInterface
@@ -419,7 +432,7 @@ public final class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, SangeetAudioService.class);
             intent.setAction(SangeetAudioService.ACTION_VOLUME);
             intent.putExtra(SangeetAudioService.EXTRA_VOLUME, (float) volume);
-            startService(intent);
+            sendControlAction(intent);
         }
 
         @JavascriptInterface
@@ -427,7 +440,7 @@ public final class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, SangeetAudioService.class);
             intent.setAction(SangeetAudioService.ACTION_SPEED);
             intent.putExtra(SangeetAudioService.EXTRA_SPEED, (float) rate);
-            startService(intent);
+            sendControlAction(intent);
         }
 
         @JavascriptInterface

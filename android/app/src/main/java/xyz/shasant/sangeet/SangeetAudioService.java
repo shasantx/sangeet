@@ -19,6 +19,7 @@ import androidx.media3.common.C;
 import androidx.media3.common.ForwardingPlayer;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
+import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.datasource.DefaultDataSource;
@@ -65,6 +66,7 @@ public final class SangeetAudioService extends MediaSessionService {
     }
 
     private static volatile EventListener listener;
+    private static volatile SangeetAudioService activeService;
 
     private ExoPlayer player;
     private DefaultHttpDataSource.Factory httpFactory;
@@ -73,14 +75,32 @@ public final class SangeetAudioService extends MediaSessionService {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private volatile long activeRequestToken = 0;
+    private volatile boolean isForeground = false;
+    private volatile boolean isStopping = false;
     private List<YouTubeInnerTubeExtractor.StreamResult> pendingCandidates = Collections.emptyList();
     private int pendingCandidateIndex = 0;
     private String pendingTitle;
     private String pendingArtist;
     private String pendingArtwork;
+    @Nullable private String currentTitle;
+    @Nullable private String currentArtist;
 
     public static void setEventListener(@Nullable EventListener l) {
         listener = l;
+    }
+
+    public static boolean dispatchToRunningService(@Nullable Intent intent) {
+        SangeetAudioService service = activeService;
+        if (service == null || service.isStopping || intent == null) {
+            return false;
+        }
+        final Intent copy = new Intent(intent);
+        service.mainHandler.post(() -> {
+            if (activeService == service && !service.isStopping) {
+                service.handleIntentCommand(copy);
+            }
+        });
+        return true;
     }
 
     private final Runnable progressRunnable = new Runnable() {
@@ -101,6 +121,8 @@ public final class SangeetAudioService extends MediaSessionService {
     @Override
     public void onCreate() {
         super.onCreate();
+        activeService = this;
+        isStopping = false;
         initWakeLock();
         createPlaybackNotificationChannel();
         httpFactory = new DefaultHttpDataSource.Factory()
@@ -212,9 +234,15 @@ public final class SangeetAudioService extends MediaSessionService {
     @Override
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+        handleIntentCommand(intent);
+        return START_STICKY;
+    }
+
+    private void handleIntentCommand(@Nullable Intent intent) {
         if (intent == null || intent.getAction() == null) {
-            return START_STICKY;
+            return;
         }
+        isStopping = false;
         String action = intent.getAction();
         switch (action) {
             case ACTION_PLAY_YOUTUBE: {
@@ -223,6 +251,8 @@ public final class SangeetAudioService extends MediaSessionService {
                 String artist = intent.getStringExtra(EXTRA_ARTIST);
                 String artwork = intent.getStringExtra(EXTRA_ARTWORK);
                 if (videoId != null && !videoId.isEmpty()) {
+                    currentTitle = title;
+                    currentArtist = artist;
                     ensureForegroundNotification(title, artist);
                     playYouTubeVideo(videoId, title, artist, artwork);
                 }
@@ -236,6 +266,8 @@ public final class SangeetAudioService extends MediaSessionService {
                 if (url != null && !url.isEmpty()) {
                     pendingCandidates = Collections.emptyList();
                     pendingCandidateIndex = 0;
+                    currentTitle = title;
+                    currentArtist = artist;
                     ensureForegroundNotification(title, artist);
                     playDirectUrl(url, null, false, title, artist, artwork);
                 }
@@ -246,7 +278,7 @@ public final class SangeetAudioService extends MediaSessionService {
                 if (player != null) player.pause();
                 break;
             case ACTION_RESUME:
-                ensureForegroundNotification(null, null);
+                ensureForegroundNotification(currentTitle, currentArtist);
                 acquireWakeLock();
                 if (player != null) player.play();
                 break;
@@ -266,6 +298,7 @@ public final class SangeetAudioService extends MediaSessionService {
                 break;
             }
             case ACTION_STOP:
+                isStopping = true;
                 activeRequestToken++;
                 pendingCandidates = Collections.emptyList();
                 pendingCandidateIndex = 0;
@@ -274,11 +307,11 @@ public final class SangeetAudioService extends MediaSessionService {
                     player.stop();
                     player.clearMediaItems();
                 }
+                isForeground = false;
                 stopForeground(STOP_FOREGROUND_REMOVE);
                 stopSelf();
                 break;
         }
-        return START_STICKY;
     }
 
     private void createPlaybackNotificationChannel() {
@@ -296,7 +329,7 @@ public final class SangeetAudioService extends MediaSessionService {
         }
     }
 
-    private void ensureForegroundNotification(@Nullable String title, @Nullable String artist) {
+    private Notification buildNotification(@Nullable String title, @Nullable String artist) {
         Intent openIntent = new Intent(this, MainActivity.class);
         openIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         int piFlags = PendingIntent.FLAG_UPDATE_CURRENT;
@@ -308,7 +341,7 @@ public final class SangeetAudioService extends MediaSessionService {
         String safeTitle = (title != null && !title.isEmpty()) ? title : "Sangeet";
         String safeArtist = (artist != null && !artist.isEmpty()) ? artist : "Playing audio";
 
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+        return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.sangeet_icon)
                 .setContentTitle(safeTitle)
                 .setContentText(safeArtist)
@@ -318,11 +351,22 @@ public final class SangeetAudioService extends MediaSessionService {
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .build();
+    }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+    private void ensureForegroundNotification(@Nullable String title, @Nullable String artist) {
+        Notification notification = buildNotification(title, artist);
+        if (!isForeground) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+            } else {
+                startForeground(NOTIFICATION_ID, notification);
+            }
+            isForeground = true;
         } else {
-            startForeground(NOTIFICATION_ID, notification);
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            if (nm != null) {
+                nm.notify(NOTIFICATION_ID, notification);
+            }
         }
     }
 
@@ -385,10 +429,13 @@ public final class SangeetAudioService extends MediaSessionService {
             } catch (Exception ignored) {
             }
         }
-        MediaItem item = new MediaItem.Builder()
+        MediaItem.Builder itemBuilder = new MediaItem.Builder()
                 .setUri(Uri.parse(url))
-                .setMediaMetadata(meta.build())
-                .build();
+                .setMediaMetadata(meta.build());
+        if (url.contains(".m3u8") || url.contains("hls_variant") || url.contains("hls_playlist")) {
+            itemBuilder.setMimeType(MimeTypes.APPLICATION_M3U8);
+        }
+        MediaItem item = itemBuilder.build();
         acquireWakeLock();
         player.setMediaItem(item);
         player.prepare();
@@ -424,6 +471,11 @@ public final class SangeetAudioService extends MediaSessionService {
 
     @Override
     public void onDestroy() {
+        isForeground = false;
+        isStopping = true;
+        if (activeService == this) {
+            activeService = null;
+        }
         mainHandler.removeCallbacks(progressRunnable);
         releaseWakeLock();
         executor.shutdownNow();
