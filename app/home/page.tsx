@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Flame, Heart, History, Music, Search, Shuffle, Trophy } from "lucide-react";
+import { ArrowRight, Download, Flame, Heart, History, Music, Search, Shuffle, Trophy } from "lucide-react";
 import {
   albums,
   artists,
@@ -141,6 +141,14 @@ export default function HomePage() {
               <History className="h-3.5 w-3.5 text-muted-foreground" />
               History
             </Link>
+            <a
+              href="/api/download/android"
+              download="sangeet-android.apk"
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#1ed760]/30 bg-[#1ed760]/10 px-3.5 text-xs font-semibold text-[#1ed760] transition hover:bg-[#1ed760]/20"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Download APK
+            </a>
           </div>
         </div>
         <Link

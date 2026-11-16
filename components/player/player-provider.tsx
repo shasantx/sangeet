@@ -353,6 +353,49 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   // Desktop native app integration (Windows media keys, tray status, presence)
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.__sangeetAndroidEvent = (type, payload) => {
+      const state = usePlayerStore.getState();
+      if (type === "time" && payload) {
+        const [posStr, durStr] = payload.split(":");
+        const currentTime = Number(posStr);
+        const duration = Number(durStr);
+        if (Number.isFinite(currentTime) && currentTime >= 0) {
+          state.syncFromAudio({
+            currentTime,
+            ...(Number.isFinite(duration) && duration > 0 ? { duration } : {}),
+          });
+        }
+      } else if (type === "state") {
+        if (payload === "playing") {
+          state.syncFromAudio({ isPlaying: true, isLoading: false, error: null });
+        } else if (payload === "paused") {
+          state.syncFromAudio({ isPlaying: false, isLoading: false });
+        } else if (payload === "buffering") {
+          state.syncFromAudio({ isLoading: true });
+        } else if (payload === "ended") {
+          state.handleEnded();
+        }
+      } else if (type === "error") {
+        state.syncFromAudio({
+          isPlaying: false,
+          isLoading: false,
+          error: payload || "Could not play this track.",
+        });
+        toast.error("Playback error", payload || "Could not play this track.");
+      } else if (type === "next") {
+        state.next();
+      } else if (type === "previous") {
+        state.previous();
+      }
+    };
+    return () => {
+      delete window.__sangeetAndroidEvent;
+    };
+  }, []);
+
+  // Desktop native app integration (Windows media keys, tray status, presence)
+  useEffect(() => {
     if (typeof window === "undefined" || !window.sangeetDesktop) return;
     const desktop = window.sangeetDesktop;
 

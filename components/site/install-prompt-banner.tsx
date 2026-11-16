@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Download, Smartphone, X } from "lucide-react";
+import { isAndroidNativeApp } from "@/lib/android-bridge";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -9,7 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const DISMISS_KEY = "sangeet-install-banner-dismissed";
-const APK_URL = "https://github.com/shasantx/sangeet/releases/latest/download/sangeet-android.apk";
+const APK_URL = "/api/download/android";
 
 export function InstallPromptBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -18,6 +19,7 @@ export function InstallPromptBanner() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (isAndroidNativeApp()) return;
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
@@ -100,6 +102,7 @@ export function InstallPromptBanner() {
         {!isIos && !deferredPrompt && (
           <a
             href={APK_URL}
+            download="sangeet-android.apk"
             className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#1ed760] px-3.5 text-[11px] font-bold text-black transition hover:bg-[#1db954]"
           >
             <Download className="h-3.5 w-3.5" />

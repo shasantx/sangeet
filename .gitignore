@@ -19,4 +19,11 @@ __pycache__
 *.pyc
 release
 dist
+*.jks
+*.keystore
+*.p12
+local.properties
+android/.gradle
+android/build
+android/app/build
 

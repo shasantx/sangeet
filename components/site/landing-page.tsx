@@ -27,7 +27,7 @@ import { useLibraryStore } from "@/store/library-store";
 import { usePlayerStore } from "@/store/player-store";
 import { toast } from "@/store/ui-store";
 
-const APK_URL = "https://github.com/shasantx/sangeet/releases/latest/download/sangeet-android.apk";
+const APK_URL = "/api/download/android";
 const EXE_URL = "https://github.com/shasantx/sangeet/releases/latest/download/Sangeet.exe";
 
 const GENRE_LINKS = [
@@ -212,6 +212,7 @@ export function LandingPage() {
                 </Link>
                 <a
                   href={APK_URL}
+                  download="sangeet-android.apk"
                   className="inline-flex h-10 items-center gap-2 rounded-full border border-white/12 bg-[#111311] px-4 text-xs font-medium text-white transition hover:border-white/25"
                 >
                   <Smartphone className="h-3.5 w-3.5 text-[#8e9690]" />
@@ -495,6 +496,7 @@ export function LandingPage() {
                 <div className="mt-5 flex flex-wrap gap-3">
                   <a
                     href={APK_URL}
+                    download="sangeet-android.apk"
                     className="inline-flex h-9 items-center gap-2 rounded-full bg-[#1ed760] px-4 text-xs font-bold text-black transition hover:bg-[#1db954]"
                   >
                     Download Android APK

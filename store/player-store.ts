@@ -3,7 +3,18 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { getAudioElement } from "@/lib/audio-engine";
-import { getTrack, tracks } from "@/lib/catalog";
+import { getArtist, getTrack, tracks } from "@/lib/catalog";
+import {
+  androidPause,
+  androidPlayAudioUrl,
+  androidPlayYouTube,
+  androidResume,
+  androidSeek,
+  androidSetPlaybackRate,
+  androidSetVolume,
+  androidStop,
+  isAndroidNativeApp,
+} from "@/lib/android-bridge";
 import {
   loadYouTubeVideo,
   muteYouTube,
@@ -169,6 +180,20 @@ export const usePlayerStore = create<PlayerState>()(
           error: null,
         });
 
+        if (isAndroidNativeApp() && !get().videoMode) {
+          audio?.pause();
+          stopYouTube();
+          const artistName = getArtist(track.artistId)?.name ?? "Sangeet";
+          if (shouldPlay) {
+            if (track.youtubeId) {
+              androidPlayYouTube(track.youtubeId, track.title, artistName, track.artwork);
+            } else {
+              androidPlayAudioUrl(track.audioUrl, track.title, artistName, track.artwork);
+            }
+          }
+          return;
+        }
+
         if (track.youtubeId) {
           if (audio && !get().videoMode) {
             try {
@@ -235,6 +260,16 @@ export const usePlayerStore = create<PlayerState>()(
           const current = get();
           const sameTrack = current.currentTrackId === trackId;
           if (sameTrack) {
+            if (isAndroidNativeApp() && !current.videoMode) {
+              if (current.isPlaying) {
+                androidPause();
+                set({ isPlaying: false, isLoading: false });
+              } else {
+                set({ isPlaying: true, isLoading: false, error: null });
+                androidResume();
+              }
+              return;
+            }
             const audio = getAudioElement();
             if (audio && isAudioElementActive(audio)) {
               if (current.isPlaying) {
@@ -310,11 +345,24 @@ export const usePlayerStore = create<PlayerState>()(
           const hasAudioStream = isAudioElementActive(audio);
 
           if (state.isPlaying) {
+            if (isAndroidNativeApp() && !state.videoMode) {
+              androidPause();
+            }
             if (hasAudioStream && audio) {
               audio.pause();
             }
             pauseYouTube();
             set({ isPlaying: false, isLoading: false });
+            return;
+          }
+
+          if (isAndroidNativeApp() && !state.videoMode) {
+            set({ isPlaying: true, isLoading: false, error: null });
+            if (state.currentTime === 0) {
+              startTrack(state.currentTrackId, true);
+            } else {
+              androidResume();
+            }
             return;
           }
 
@@ -339,6 +387,10 @@ export const usePlayerStore = create<PlayerState>()(
           const state = get();
           const target = Math.max(0, Math.min(timeSeconds, state.duration || timeSeconds));
           set({ currentTime: target });
+          if (isAndroidNativeApp() && !state.videoMode) {
+            androidSeek(target);
+            return;
+          }
           const audio = getAudioElement();
           const hasAudioStream = Boolean(audio && audio.src && audio.src !== window.location.href && !audio.error);
           if (hasAudioStream && audio) {
@@ -465,6 +517,7 @@ export const usePlayerStore = create<PlayerState>()(
             audio.volume = next;
             audio.muted = next === 0 ? true : false;
           }
+          androidSetVolume(next);
           setYouTubeVolume(next);
           muteYouTube(next === 0);
           set({ volume: next, muted: next === 0 });
@@ -474,6 +527,7 @@ export const usePlayerStore = create<PlayerState>()(
           const audio = getAudioElement();
           const next = !get().muted;
           if (audio) audio.muted = next;
+          androidSetVolume(next ? 0 : get().volume);
           muteYouTube(next);
           set({ muted: next });
         },
@@ -514,6 +568,7 @@ export const usePlayerStore = create<PlayerState>()(
           const nextRate = clamp(rate, 0.5, 2);
           const audio = getAudioElement();
           if (audio) audio.playbackRate = nextRate;
+          androidSetPlaybackRate(nextRate);
           set({ playbackRate: nextRate });
         },
 
@@ -721,6 +776,7 @@ export const usePlayerStore = create<PlayerState>()(
         resetPlayer: () => {
           const audio = getAudioElement();
           audio?.pause();
+          androidStop();
           stopYouTube();
           if (audio) {
             audio.removeAttribute("src");
