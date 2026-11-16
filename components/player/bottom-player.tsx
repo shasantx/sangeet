@@ -28,7 +28,7 @@ export function BottomPlayer() {
 
   return (
     <footer
-      className="fixed inset-x-0 bottom-0 z-50 hidden h-[92px] border-t border-white/[.07] bg-[#0c0e0c]/95 shadow-[0_-18px_48px_rgba(0,0,0,.22)] backdrop-blur-2xl md:flex before:absolute before:inset-x-[4%] before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/45 before:to-transparent"
+      className="fixed inset-x-0 bottom-0 z-50 hidden h-[92px] border-t border-white/[.07] bg-sidebar/95 shadow-[0_-18px_48px_rgba(0,0,0,.22)] backdrop-blur-2xl md:flex before:absolute before:inset-x-[4%] before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/45 before:to-transparent"
       aria-label="Music player"
     >
       {error && (

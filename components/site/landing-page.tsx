@@ -120,9 +120,9 @@ export function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080908] text-[#f2f4f2] antialiased selection:bg-[#1ed760]/30 selection:text-white">
+    <div className="min-h-screen bg-background text-foreground antialiased selection:bg-[#1ed760]/30 selection:text-white transition-colors duration-300">
       {/* Navigation */}
-      <header className="sticky top-0 z-40 border-b border-white/[0.07] bg-[#080908]/90 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-white/[0.07] bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-8">
           <Link href="/" className="flex items-center gap-2.5" aria-label="Sangeet home">
             <SangeetMark size={26} />
@@ -183,7 +183,7 @@ export function LandingPage() {
 
               <form
                 onSubmit={handleSearchSubmit}
-                className="mt-7 flex max-w-md items-center rounded-full border border-white/12 bg-[#111311] p-1.5 focus-within:border-[#1ed760]/70 transition"
+                className="mt-7 flex max-w-md items-center rounded-full border border-white/12 bg-card p-1.5 focus-within:border-[#1ed760]/70 transition"
               >
                 <div className="flex flex-1 items-center gap-2.5 px-3.5">
                   <Search className="h-4 w-4 shrink-0 text-[#666e68]" />

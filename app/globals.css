@@ -30,25 +30,25 @@
   }
 
   html[data-theme="midnight"] {
-    --background: 240 24% 3%;
-    --sidebar: 240 20% 4.5%;
-    --surface: 240 16% 7%;
-    --elevated: 240 14% 11%;
-    --card: 240 16% 7%;
-    --border: 240 11% 15%;
-    --muted: 240 12% 11%;
+    --background: 228 38% 4%;
+    --sidebar: 228 36% 6%;
+    --surface: 228 30% 9%;
+    --elevated: 228 26% 13%;
+    --card: 228 30% 9%;
+    --border: 228 22% 17%;
+    --muted: 228 24% 12%;
   }
 
   html[data-theme="dusk"] {
-    --background: 18 8% 5%;
-    --sidebar: 15 10% 7%;
-    --surface: 18 9% 10%;
-    --elevated: 20 9% 15%;
-    --card: 18 9% 10%;
-    --border: 20 10% 19%;
-    --muted: 20 9% 14%;
+    --background: 14 22% 6%;
+    --sidebar: 14 20% 8%;
+    --surface: 14 18% 11%;
+    --elevated: 14 16% 16%;
+    --card: 14 18% 11%;
+    --border: 14 16% 20%;
+    --muted: 14 16% 15%;
     --foreground: 28 34% 96%;
-    --muted-foreground: 24 8% 62%;
+    --muted-foreground: 24 12% 65%;
   }
 
   html[data-accent="red"] { --primary: 2 78% 57%; --secondary: 5 82% 65%; --accent: 2 78% 57%; --ring: 2 78% 57%; }

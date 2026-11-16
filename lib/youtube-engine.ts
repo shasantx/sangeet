@@ -172,6 +172,13 @@ export function initYouTubePlayer(containerId: string, nextHandlers: YouTubeHand
             else if (event.data === 2) handlers.onPause?.();
             else if (event.data === 3) handlers.onBuffering?.();
             else if (event.data === 0) handlers.onEnded?.();
+            else if (event.data === 5 && pending?.shouldPlay) {
+              try {
+                player?.playVideo();
+              } catch {
+                // Ignore race condition
+              }
+            }
           },
           onError: (event) => {
             handlers.onError?.(

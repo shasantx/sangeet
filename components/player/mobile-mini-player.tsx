@@ -38,7 +38,7 @@ export function MobileMiniPlayer() {
 
   return (
     <aside
-      className="mobile-mini-player fixed inset-x-2.5 sm:inset-x-4 z-40 overflow-hidden rounded-2xl border border-white/[0.12] bg-[#121613]/95 shadow-[0_14px_36px_rgba(0,0,0,0.65)] backdrop-blur-2xl md:hidden pointer-events-auto transition-all duration-300"
+      className="mobile-mini-player fixed inset-x-2.5 sm:inset-x-4 z-40 overflow-hidden rounded-2xl border border-white/[0.12] bg-surface/95 shadow-[0_14px_36px_rgba(0,0,0,0.65)] backdrop-blur-2xl md:hidden pointer-events-auto transition-all duration-300"
       style={{ bottom: "calc(62px + env(safe-area-inset-bottom))" }}
       aria-label="Mini music player"
     >

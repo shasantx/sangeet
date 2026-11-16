@@ -19,7 +19,7 @@ if (process.platform === "win32") {
 }
 
 const isDev = process.env.NODE_ENV === "development" || process.argv.includes("--dev");
-const APP_URL = process.env.SANGEET_APP_URL || (isDev ? "http://localhost:3000" : "https://sangeet.shasant.xyz");
+const APP_URL = process.env.SANGEET_APP_URL || (isDev ? "http://localhost:3000/home" : "https://sangeet.shasant.xyz/home");
 
 const ALLOWED_WINDOW_ORIGINS = new Set([
   "https://sangeet.shasant.xyz",
@@ -70,10 +70,26 @@ function getAppIcon() {
 function lockDownSessionPermissions() {
   try {
     const targetSession = session.fromPartition("persist:sangeet_desktop_session");
-    targetSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
+    targetSession.setPermissionRequestHandler((webContents, permission, callback) => {
+      try {
+        const origin = new URL(webContents.getURL()).origin;
+        if (ALLOWED_WINDOW_ORIGINS.has(origin) && (permission === "media" || permission === "fullscreen")) {
+          callback(true);
+          return;
+        }
+      } catch {
+        // Deny invalid origins
+      }
       callback(false);
     });
-    targetSession.setPermissionCheckHandler(() => false);
+    targetSession.setPermissionCheckHandler((webContents, permission) => {
+      try {
+        const origin = new URL(webContents.getURL()).origin;
+        return ALLOWED_WINDOW_ORIGINS.has(origin) && (permission === "media" || permission === "fullscreen");
+      } catch {
+        return false;
+      }
+    });
   } catch {
     // Ignore if session not initialized yet
   }
@@ -132,6 +148,13 @@ function createMainWindow() {
       shell.openExternal(url);
     }
     return { action: "deny" };
+  });
+
+  mainWindow.on("close", (event) => {
+    if (!app.isQuitting && tray) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
   });
 
   mainWindow.on("closed", () => {

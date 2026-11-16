@@ -29,12 +29,12 @@ const nextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
           { key: "X-DNS-Prefetch-Control", value: "off" },
-          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-          { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+          { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
           {
             key: "Permissions-Policy",
             value:
-              'accelerometer=(), autoplay=(self "https://www.youtube.com" "https://www.youtube-nocookie.com"), camera=(), cross-origin-isolated=(), display-capture=(), encrypted-media=(self "https://www.youtube.com" "https://www.youtube-nocookie.com"), fullscreen=(self "https://www.youtube.com"), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(self "https://www.youtube.com" "https://www.youtube-nocookie.com"), publickey-credentials-get=(), screen-wake-lock=(self), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), browsing-topics=()',
+              'accelerometer=(), autoplay=(self "https://www.youtube.com" "https://www.youtube-nocookie.com"), camera=(self), cross-origin-isolated=(), display-capture=(), encrypted-media=(self "https://www.youtube.com" "https://www.youtube-nocookie.com"), fullscreen=(self "https://www.youtube.com"), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(self "https://www.youtube.com" "https://www.youtube-nocookie.com"), publickey-credentials-get=(), screen-wake-lock=(self), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), browsing-topics=()',
           },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
         ],

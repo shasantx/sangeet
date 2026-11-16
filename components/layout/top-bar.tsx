@@ -69,7 +69,7 @@ export function TopBar() {
   const avatarColor = session?.avatarColor || profile.avatarColor;
 
   return (
-    <header className="sticky top-0 z-30 flex h-[60px] items-center gap-1.5 border-b border-white/[.04] bg-[#101014]/95 px-2.5 backdrop-blur-xl sm:h-[70px] sm:gap-3 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-[60px] items-center gap-1.5 border-b border-white/[.04] bg-background/95 px-2.5 backdrop-blur-xl sm:h-[70px] sm:gap-3 sm:px-6 lg:px-8">
       <button type="button" onClick={toggleMobileSidebar} aria-label={mobileSidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={mobileSidebarOpen} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.055] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:hidden">
         <Menu className="h-5 w-5" />
       </button>

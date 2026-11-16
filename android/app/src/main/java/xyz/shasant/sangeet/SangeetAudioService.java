@@ -3,7 +3,6 @@ package xyz.shasant.sangeet;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,15 +13,13 @@ import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
+import androidx.media3.datasource.DefaultDataSource;
+import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.session.MediaSession;
 import androidx.media3.session.MediaSessionService;
-import org.schabi.newpipe.extractor.NewPipe;
-import org.schabi.newpipe.extractor.ServiceList;
-import org.schabi.newpipe.extractor.stream.AudioStream;
-import org.schabi.newpipe.extractor.stream.StreamExtractor;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -53,9 +50,9 @@ public final class SangeetAudioService extends MediaSessionService {
     }
 
     private static volatile EventListener listener;
-    private static volatile boolean newPipeInitialized = false;
 
     private ExoPlayer player;
+    private DefaultHttpDataSource.Factory httpFactory;
     private MediaSession mediaSession;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -83,10 +80,12 @@ public final class SangeetAudioService extends MediaSessionService {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (!newPipeInitialized) {
-            NewPipe.init(SangeetDownloader.getInstance());
-            newPipeInitialized = true;
-        }
+        httpFactory = new DefaultHttpDataSource.Factory()
+                .setAllowCrossProtocolRedirects(true)
+                .setConnectTimeoutMs(12000)
+                .setReadTimeoutMs(15000);
+
+        DefaultDataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(this, httpFactory);
 
         AudioAttributes attrs = new AudioAttributes.Builder()
                 .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
@@ -94,6 +93,7 @@ public final class SangeetAudioService extends MediaSessionService {
                 .build();
 
         player = new ExoPlayer.Builder(this)
+                .setMediaSourceFactory(new DefaultMediaSourceFactory(dataSourceFactory))
                 .setAudioAttributes(attrs, true)
                 .setHandleAudioBecomingNoisy(true)
                 .build();
@@ -127,7 +127,7 @@ public final class SangeetAudioService extends MediaSessionService {
             public void onPlayerError(@NonNull PlaybackException error) {
                 EventListener l = listener;
                 if (l != null) {
-                    l.onError("Audio playback error: " + error.getMessage());
+                    l.onError("fallback_iframe");
                 }
             }
         });
@@ -196,7 +196,7 @@ public final class SangeetAudioService extends MediaSessionService {
                 String artist = intent.getStringExtra(EXTRA_ARTIST);
                 String artwork = intent.getStringExtra(EXTRA_ARTWORK);
                 if (url != null && !url.isEmpty()) {
-                    playDirectUrl(url, title, artist, artwork);
+                    playDirectUrl(url, null, title, artist, artwork);
                 }
                 break;
             }
@@ -240,49 +240,32 @@ public final class SangeetAudioService extends MediaSessionService {
         if (l != null) l.onState("buffering");
 
         executor.execute(() -> {
-            try {
-                StreamExtractor extractor = ServiceList.YouTube.getStreamExtractor(
-                        "https://www.youtube.com/watch?v=" + videoId
-                );
-                extractor.fetchPage();
-                List<AudioStream> audioStreams = extractor.getAudioStreams();
-                AudioStream best = null;
-                for (AudioStream stream : audioStreams) {
-                    if (stream.getContent() == null || stream.getContent().isEmpty()) continue;
-                    if (best == null) {
-                        best = stream;
-                    } else {
-                        boolean isM4a = stream.getFormat() != null && "M4A".equalsIgnoreCase(stream.getFormat().name());
-                        boolean bestIsM4a = best.getFormat() != null && "M4A".equalsIgnoreCase(best.getFormat().name());
-                        if (isM4a && !bestIsM4a) {
-                            best = stream;
-                        } else if (isM4a == bestIsM4a && stream.getAverageBitrate() > best.getAverageBitrate()) {
-                            best = stream;
-                        }
-                    }
-                }
-                if (best == null) {
-                    throw new IllegalStateException("No playable audio stream found");
-                }
-                final String streamUrl = best.getContent();
-                mainHandler.post(() -> {
-                    if (token != activeRequestToken) return;
-                    playDirectUrl(streamUrl, title, artist, artwork);
-                });
-            } catch (Exception e) {
-                mainHandler.post(() -> {
-                    if (token != activeRequestToken) return;
+            YouTubeInnerTubeExtractor.StreamResult result = YouTubeInnerTubeExtractor.extract(videoId);
+            mainHandler.post(() -> {
+                if (token != activeRequestToken) return;
+                if (result == null) {
                     EventListener errListener = listener;
                     if (errListener != null) {
-                        errListener.onError("Could not load track audio.");
+                        errListener.onError("fallback_iframe");
                     }
-                });
-            }
+                    return;
+                }
+                playDirectUrl(result.url, result.userAgent, title, artist, artwork);
+            });
         });
     }
 
-    private void playDirectUrl(String url, @Nullable String title, @Nullable String artist, @Nullable String artwork) {
+    private void playDirectUrl(
+            String url,
+            @Nullable String userAgent,
+            @Nullable String title,
+            @Nullable String artist,
+            @Nullable String artwork
+    ) {
         if (player == null) return;
+        if (httpFactory != null && userAgent != null) {
+            httpFactory.setUserAgent(userAgent);
+        }
         MediaMetadata.Builder meta = new MediaMetadata.Builder()
                 .setTitle(title != null && !title.isEmpty() ? title : "Sangeet")
                 .setArtist(artist != null && !artist.isEmpty() ? artist : "Sangeet");
@@ -303,7 +286,6 @@ public final class SangeetAudioService extends MediaSessionService {
 
     @Override
     public void onTaskRemoved(@Nullable Intent rootIntent) {
-        // Keep playing in background if actively playing; stop only if paused/idle.
         if (player == null || !player.isPlaying()) {
             stopSelf();
         }

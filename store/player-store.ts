@@ -180,7 +180,7 @@ export const usePlayerStore = create<PlayerState>()(
           error: null,
         });
 
-        if (isAndroidNativeApp() && !get().videoMode) {
+        if (isAndroidNativeApp() && !get().videoMode && !track.audioUrl.startsWith("blob:")) {
           audio?.pause();
           stopYouTube();
           const artistName = getArtist(track.artistId)?.name ?? "Sangeet";

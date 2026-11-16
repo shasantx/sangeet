@@ -30,17 +30,27 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const track = currentTrackId ? getTrack(currentTrackId) : undefined;
     if (!track?.youtubeId || !isPlaying || !isLoading) return;
+    const retryTimer = window.setTimeout(() => {
+      const state = usePlayerStore.getState();
+      if (state.currentTrackId !== currentTrackId || !state.isLoading) return;
+      const audio = getAudioElement();
+      if (!audio?.src) {
+        loadYouTubeVideo(track.youtubeId!, true, state.currentTime);
+      }
+    }, 3500);
     const timer = window.setTimeout(() => {
       const state = usePlayerStore.getState();
       if (state.currentTrackId !== currentTrackId || !state.isLoading) return;
       state.syncFromAudio({
         isPlaying: false,
         isLoading: false,
-        error: "This song did not start. Check your connection or try another video.",
+        error: "Tap Play to start this track.",
       });
-      toast.error("Playback could not start", "YouTube did not respond in time. Try another song or reload the player.");
-    }, 15000);
-    return () => window.clearTimeout(timer);
+    }, 10000);
+    return () => {
+      window.clearTimeout(retryTimer);
+      window.clearTimeout(timer);
+    };
   }, [currentTrackId, isPlaying, isLoading]);
 
   useEffect(() => {
@@ -377,6 +387,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           state.handleEnded();
         }
       } else if (type === "error") {
+        if (payload === "fallback_iframe") {
+          const track = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+          if (track?.youtubeId) {
+            loadYouTubeVideo(track.youtubeId, true);
+            return;
+          }
+        }
         state.syncFromAudio({
           isPlaying: false,
           isLoading: false,

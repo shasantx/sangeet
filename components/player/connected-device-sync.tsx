@@ -9,6 +9,21 @@ import { usePlayerStore } from "@/store/player-store";
 export const DEVICE_KEY = "sangeet-device-id-v1";
 export const GUEST_SYNC_KEY = "sangeet-sync-session-id-v1";
 export const CUSTOM_DEVICE_NAME_KEY = "sangeet-custom-device-name-v1";
+export const GROUP_LISTEN_KEY = "sangeet-group-listen-v1";
+
+export function isGroupListenEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(GROUP_LISTEN_KEY) === "1";
+}
+
+export function setGroupListenEnabled(enabled: boolean): void {
+  if (typeof window === "undefined") return;
+  if (enabled) {
+    window.localStorage.setItem(GROUP_LISTEN_KEY, "1");
+  } else {
+    window.localStorage.removeItem(GROUP_LISTEN_KEY);
+  }
+}
 
 export function getCustomDeviceName(): string {
   if (typeof window === "undefined") return "";
@@ -111,8 +126,13 @@ export function ConnectedDeviceSync() {
       try {
         const url = new URL(window.location.href);
         const urlSyncId = url.searchParams.get("syncId");
+        const urlGroup = url.searchParams.get("group");
         if (urlSyncId && setGuestSyncId(urlSyncId)) {
+          if (urlGroup === "1") {
+            setGroupListenEnabled(true);
+          }
           url.searchParams.delete("syncId");
+          url.searchParams.delete("group");
           window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
         }
       } catch {
@@ -226,6 +246,31 @@ export function ConnectedDeviceSync() {
 
         if (!response.ok) return;
         const data = (await response.json()) as {
+          devices?: Array<{
+            deviceId: string;
+            isPlaying: boolean;
+            currentTime: number;
+            track:
+              | {
+                  source: "youtube";
+                  videoId: string;
+                  title: string;
+                  artist: string;
+                  album: string;
+                  artwork: string;
+                  duration: number;
+                }
+              | {
+                  source: "audius";
+                  trackId: string;
+                  title: string;
+                  artist: string;
+                  album: string;
+                  artwork: string;
+                  duration: number;
+                }
+              | null;
+          }>;
           command?: {
             id?: string;
             value?: {
@@ -257,58 +302,108 @@ export function ConnectedDeviceSync() {
         };
 
         const command = data.command;
-        if (!command?.id || window.localStorage.getItem(`sangeet-cmd-${deviceId}`) === command.id) {
+        if (command?.id && window.localStorage.getItem(`sangeet-cmd-${deviceId}`) !== command.id) {
+          window.localStorage.setItem(`sangeet-cmd-${deviceId}`, command.id);
+          lastAckRef.current = command.id;
+
+          const value = command.value;
+          if (!value?.sentAt || Date.now() - Date.parse(value.sentAt) <= 60_000) {
+            const action = value?.action;
+            const player = usePlayerStore.getState();
+
+            if (action === "pause") {
+              if (player.isPlaying) player.togglePlay();
+            } else if (action === "next") {
+              player.next();
+            } else if (action === "previous") {
+              player.previous();
+            } else if (action === "seek" && Number.isFinite(value?.currentTime)) {
+              player.seek(Number(value?.currentTime));
+            } else if (action === "volume" && Number.isFinite(value?.volume)) {
+              player.setVolume(Number(value?.volume));
+            } else if (action === "play") {
+              if (value?.track) {
+                const metadata = value.track;
+                const restored =
+                  metadata.source === "youtube"
+                    ? restoreYouTubeTrack({
+                        videoId: metadata.videoId,
+                        title: metadata.title,
+                        artist: metadata.artist,
+                        album: metadata.album,
+                        thumbnail: metadata.artwork,
+                        durationSeconds: metadata.duration,
+                      })
+                    : restoreAudiusTrack({
+                        id: metadata.trackId,
+                        title: metadata.title,
+                        artist: metadata.artist,
+                        album: metadata.album,
+                        artwork: metadata.artwork,
+                        durationSeconds: metadata.duration,
+                      });
+                if (restored) {
+                  player.playTrack(restored.id, [restored.id], "Playing on this device");
+                  if ((value.currentTime ?? 0) > 0) {
+                    const targetSec = value.currentTime ?? 0;
+                    window.setTimeout(() => usePlayerStore.getState().seek(targetSec), 1500);
+                  }
+                }
+              } else if (!player.isPlaying) {
+                player.togglePlay();
+              }
+            }
+          }
           return;
         }
 
-        window.localStorage.setItem(`sangeet-cmd-${deviceId}`, command.id);
-        lastAckRef.current = command.id;
+        // Group Listen (Jam Together): mirror active host device if enabled
+        if (isGroupListenEnabled() && Array.isArray(data.devices)) {
+          const host = data.devices.find(
+            (d) => d.deviceId !== deviceId && d.isPlaying && d.track,
+          );
+          if (host?.track) {
+            const player = usePlayerStore.getState();
+            const current = player.currentTrackId ? getTrack(player.currentTrackId) : undefined;
+            const sameTrack =
+              host.track.source === "youtube"
+                ? current?.youtubeId === host.track.videoId
+                : current?.id === `aud-${host.track.trackId}`;
 
-        const value = command.value;
-        if (value?.sentAt && Date.now() - Date.parse(value.sentAt) > 60_000) return;
-
-        const action = value?.action;
-        const player = usePlayerStore.getState();
-
-        if (action === "pause") {
-          if (player.isPlaying) player.togglePlay();
-        } else if (action === "next") {
-          player.next();
-        } else if (action === "previous") {
-          player.previous();
-        } else if (action === "seek" && Number.isFinite(value?.currentTime)) {
-          player.seek(Number(value?.currentTime));
-        } else if (action === "volume" && Number.isFinite(value?.volume)) {
-          player.setVolume(Number(value?.volume));
-        } else if (action === "play") {
-          if (value?.track) {
-            const metadata = value.track;
-            const restored =
-              metadata.source === "youtube"
-                ? restoreYouTubeTrack({
-                    videoId: metadata.videoId,
-                    title: metadata.title,
-                    artist: metadata.artist,
-                    album: metadata.album,
-                    thumbnail: metadata.artwork,
-                    durationSeconds: metadata.duration,
-                  })
-                : restoreAudiusTrack({
-                    id: metadata.trackId,
-                    title: metadata.title,
-                    artist: metadata.artist,
-                    album: metadata.album,
-                    artwork: metadata.artwork,
-                    durationSeconds: metadata.duration,
-                  });
-            if (restored) {
-              player.playTrack(restored.id, [restored.id], "Playing on this device");
-              if ((value.currentTime ?? 0) > 0) {
-                window.setTimeout(() => usePlayerStore.getState().seek(value.currentTime ?? 0), 1200);
+            if (!sameTrack) {
+              const restored =
+                host.track.source === "youtube"
+                  ? restoreYouTubeTrack({
+                      videoId: host.track.videoId,
+                      title: host.track.title,
+                      artist: host.track.artist,
+                      album: host.track.album,
+                      thumbnail: host.track.artwork,
+                      durationSeconds: host.track.duration,
+                    })
+                  : restoreAudiusTrack({
+                      id: host.track.trackId,
+                      title: host.track.title,
+                      artist: host.track.artist,
+                      album: host.track.album,
+                      artwork: host.track.artwork,
+                      durationSeconds: host.track.duration,
+                    });
+              if (restored) {
+                player.playTrack(restored.id, [restored.id], "Group Listen");
+                if (host.currentTime > 2) {
+                  const targetSec = host.currentTime;
+                  window.setTimeout(() => usePlayerStore.getState().seek(targetSec), 1600);
+                }
+              }
+            } else {
+              if (!player.isPlaying) {
+                player.togglePlay();
+              }
+              if (Math.abs(player.currentTime - host.currentTime) > 5) {
+                player.seek(host.currentTime);
               }
             }
-          } else if (!player.isPlaying) {
-            player.togglePlay();
           }
         }
       } catch {

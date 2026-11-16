@@ -2,6 +2,7 @@ package xyz.shasant.sangeet;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +13,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
 import android.webkit.URLUtil;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -20,6 +23,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.app.ActivityCompat;
@@ -29,6 +34,8 @@ import org.json.JSONObject;
 public final class MainActivity extends AppCompatActivity {
     private static final String START_URL = "https://sangeet.shasant.xyz/home";
     private WebView webView;
+    private ValueCallback<Uri[]> fileUploadCallback;
+    private ActivityResultLauncher<Intent> filePickerLauncher;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -42,6 +49,28 @@ public final class MainActivity extends AppCompatActivity {
             }
         }
 
+        filePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (fileUploadCallback == null) return;
+                    Uri[] uris = null;
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Intent data = result.getData();
+                        if (data.getClipData() != null) {
+                            int count = data.getClipData().getItemCount();
+                            uris = new Uri[count];
+                            for (int i = 0; i < count; i++) {
+                                uris[i] = data.getClipData().getItemAt(i).getUri();
+                            }
+                        } else if (data.getData() != null) {
+                            uris = new Uri[]{data.getData()};
+                        }
+                    }
+                    fileUploadCallback.onReceiveValue(uris);
+                    fileUploadCallback = null;
+                }
+        );
+
         webView = new WebView(this);
         webView.setBackgroundColor(0xFF080908);
         setContentView(webView);
@@ -50,6 +79,8 @@ public final class MainActivity extends AppCompatActivity {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
+        settings.setAllowFileAccess(true);
+        settings.setAllowContentAccess(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
@@ -58,7 +89,48 @@ public final class MainActivity extends AppCompatActivity {
 
         webView.addJavascriptInterface(new SangeetJsBridge(), "SangeetAndroid");
 
-        webView.setWebChromeClient(new WebChromeClient());
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(
+                    WebView view,
+                    ValueCallback<Uri[]> filePathCallback,
+                    FileChooserParams fileChooserParams
+            ) {
+                if (fileUploadCallback != null) {
+                    fileUploadCallback.onReceiveValue(null);
+                }
+                fileUploadCallback = filePathCallback;
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("audio/*");
+                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                try {
+                    filePickerLauncher.launch(Intent.createChooser(intent, "Select audio files"));
+                } catch (Exception e) {
+                    fileUploadCallback = null;
+                    return false;
+                }
+                return true;
+            }
+
+            @Override
+            public void onPermissionRequest(PermissionRequest request) {
+                runOnUiThread(() -> {
+                    for (String res : request.getResources()) {
+                        if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(res)) {
+                            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
+                                    != PackageManager.PERMISSION_GRANTED) {
+                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 102);
+                            }
+                            request.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+                            return;
+                        }
+                    }
+                    request.deny();
+                });
+            }
+        });
+
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
@@ -67,7 +139,6 @@ public final class MainActivity extends AppCompatActivity {
                 if (host.endsWith("sangeet.shasant.xyz")) {
                     return false;
                 }
-                // Open Google OAuth & external links in Custom Tabs so Google sign-in isn't blocked by WebView policy.
                 try {
                     new CustomTabsIntent.Builder().build().launchUrl(MainActivity.this, uri);
                 } catch (Exception e) {

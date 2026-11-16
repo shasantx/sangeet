@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Camera,
   Cast,
   Check,
   Copy,
@@ -21,6 +22,7 @@ import {
   Speaker,
   Tablet,
   Tv,
+  Users,
   Volume2,
   X,
 } from "lucide-react";
@@ -33,9 +35,12 @@ import {
   getDeviceId,
   getDeviceName,
   getGuestSyncId,
+  isGroupListenEnabled,
   setCustomDeviceName,
+  setGroupListenEnabled,
   setGuestSyncId,
 } from "./connected-device-sync";
+import { QrCodePreview, QrScannerView } from "./qr-connect";
 
 export type Device = {
   deviceId: string;
@@ -84,6 +89,8 @@ export function ConnectedDevices({
   const [deviceNameInput, setDeviceNameInput] = useState("");
   const [pairCodeInput, setPairCodeInput] = useState("");
   const [showPairDrawer, setShowPairDrawer] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [groupListen, setGroupListen] = useState(() => isGroupListenEnabled());
   const [copied, setCopied] = useState(false);
   const [remoteVolumeInput, setRemoteVolumeInput] = useState<number | null>(null);
 
@@ -253,7 +260,7 @@ export function ConnectedDevices({
   };
 
   const copySyncLink = async () => {
-    const url = `${window.location.origin}/home?syncId=${encodeURIComponent(guestSyncId)}`;
+    const url = `${window.location.origin}/home?syncId=${encodeURIComponent(guestSyncId)}${groupListen ? "&group=1" : ""}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -262,6 +269,43 @@ export function ConnectedDevices({
     } catch {
       toast.info("Pair Room Code", guestSyncId);
     }
+  };
+
+  const handleToggleGroupListen = () => {
+    const next = !groupListen;
+    setGroupListen(next);
+    setGroupListenEnabled(next);
+    toast.success(
+      next ? "Group Listen enabled" : "Group Listen turned off",
+      next
+        ? "This device will sync playback with others in this room."
+        : "Switched back to independent playback.",
+    );
+  };
+
+  const handleQrDetected = (raw: string) => {
+    let code = raw.trim();
+    let enableGroup = false;
+    try {
+      const parsed = new URL(raw);
+      const syncParam = parsed.searchParams.get("syncId");
+      if (syncParam) code = syncParam.trim();
+      if (parsed.searchParams.get("group") === "1") enableGroup = true;
+    } catch {
+      // Raw room code string
+    }
+    if (!setGuestSyncId(code)) {
+      toast.error("Invalid QR code", "This QR code is not a valid Sangeet room.");
+      return;
+    }
+    if (enableGroup) {
+      setGroupListen(true);
+      setGroupListenEnabled(true);
+    }
+    setShowScanner(false);
+    setShowPairDrawer(false);
+    toast.success("Connected via QR", enableGroup ? "Joined Group Listen session." : "Paired with room.");
+    void refresh();
   };
 
   const handlePairSubmit = (e: React.FormEvent) => {
@@ -682,23 +726,74 @@ export function ConnectedDevices({
                   className="flex items-center gap-1 text-[#9ba39d] hover:text-white transition"
                 >
                   <QrCode className="h-3.5 w-3.5" />
-                  <span>{showPairDrawer ? "Close Pair Key" : "Room Pair Key"}</span>
+                  <span>{showPairDrawer ? "Close QR & Pair" : "QR & Group"}</span>
+                </button>
+              </div>
+
+              {/* Group Listen Toggle */}
+              <div className="mt-3 flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Users className={cn("h-4 w-4 shrink-0", groupListen ? "text-[#1ed760]" : "text-[#9ba39d]")} />
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold text-white">Listen Together (Group)</p>
+                    <p className="truncate text-[10px] text-[#9ba39d]">
+                      Sync playback across paired devices
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={groupListen}
+                  onClick={handleToggleGroupListen}
+                  className={cn(
+                    "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition",
+                    groupListen ? "bg-[#1ed760]" : "bg-white/15",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "inline-block h-3.5 w-3.5 transform rounded-full bg-black transition",
+                      groupListen ? "translate-x-4.5" : "translate-x-1",
+                    )}
+                  />
                 </button>
               </div>
 
               {showPairDrawer && (
                 <div className="mt-3.5 rounded-2xl border border-white/10 bg-black/50 p-4 text-center transition animate-in fade-in duration-200">
-                  <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-[#1ed760]/15 text-[#1ed760]">
-                    <KeyRound className="h-4 w-4" />
-                  </div>
-                  <p className="text-xs font-bold text-white">Private Room Pair Code</p>
+                  <p className="text-xs font-bold text-white">Scan QR to Connect or Jam</p>
                   <p className="mt-0.5 text-[10px] text-[#9ba39d]">
-                    Enter this 128-bit key on another device or share your Connect Link
+                    Scan from another phone or tap Scan QR below
                   </p>
 
-                  <div className="mt-3 rounded-xl border border-white/10 bg-[#141815] px-3 py-2.5">
+                  <div className="mt-3">
+                    <QrCodePreview
+                      value={`${typeof window !== "undefined" ? window.location.origin : "https://sangeet.shasant.xyz"}/home?syncId=${encodeURIComponent(guestSyncId)}${groupListen ? "&group=1" : ""}`}
+                    />
+                  </div>
+
+                  <div className="mt-3 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowScanner((s) => !s)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#1ed760]/40 bg-[#1ed760]/10 px-3.5 py-1.5 text-[11px] font-semibold text-[#1ed760] transition hover:bg-[#1ed760]/20"
+                    >
+                      <Camera className="h-3.5 w-3.5" />
+                      {showScanner ? "Close Scanner" : "Scan QR Code"}
+                    </button>
+                  </div>
+
+                  {showScanner && (
+                    <QrScannerView
+                      onDetected={handleQrDetected}
+                      onClose={() => setShowScanner(false)}
+                    />
+                  )}
+
+                  <div className="mt-3 rounded-xl border border-white/10 bg-[#141815] px-3 py-2">
                     <span className="block font-mono text-[10px] text-[#636c65]">Room Pair Code</span>
-                    <p className="mt-0.5 break-all font-mono text-xs font-bold tracking-wider text-[#1ed760]">
+                    <p className="mt-0.5 break-all font-mono text-[11px] font-bold tracking-wider text-[#1ed760]">
                       {guestSyncId}
                     </p>
                   </div>
