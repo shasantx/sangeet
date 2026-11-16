@@ -7,7 +7,9 @@ import {
   getYouTubeDuration,
   getYouTubeTime,
   initYouTubePlayer,
+  loadYouTubeVideo,
   muteYouTube,
+  pauseYouTube,
   setYouTubeVolume,
 } from "@/lib/youtube-engine";
 import { isTypingTarget } from "@/lib/utils";
@@ -114,7 +116,18 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       const source = audio.currentSrc || audio.src;
       if (errorReportedFor.current === source) return;
       errorReportedFor.current = source;
-      usePlayerStore.getState().syncFromAudio({
+
+      const state = usePlayerStore.getState();
+      const track = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+      if (track?.youtubeId && source.includes("/api/youtube/audio")) {
+        // Fallback to YouTube IFrame if direct audio stream extraction failed for this video.
+        audio.removeAttribute("src");
+        audio.load();
+        loadYouTubeVideo(track.youtubeId, state.isPlaying);
+        return;
+      }
+
+      state.syncFromAudio({
         isPlaying: false,
         isLoading: false,
         error:
@@ -310,16 +323,34 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         // Media Session support is a progressive enhancement.
       }
     }
-    return () => {
-      if ("mediaSession" in navigator) {
-        try {
-          navigator.mediaSession.metadata = null;
-        } catch {
-          // Ignore cleanup failures.
-        }
-      }
-    };
+    // Keep MediaSession metadata alive across track transitions so Android/iOS background audio doesn't drop.
   }, [currentTrackId, addRecentlyPlayed]);
+
+  // Sleep timer countdown enforcement
+  const sleepTimerEndsAt = usePlayerStore((state) => state.sleepTimerEndsAt);
+  useEffect(() => {
+    if (!sleepTimerEndsAt) return;
+    const remaining = sleepTimerEndsAt - Date.now();
+    const triggerPause = () => {
+      const state = usePlayerStore.getState();
+      const audio = getAudioElement();
+      audio?.pause();
+      pauseYouTube();
+      state.syncFromAudio({
+        isPlaying: false,
+        isLoading: false,
+        sleepTimerEndsAt: null,
+        sleepAfterTrack: false,
+      });
+      toast.show("Sleep timer finished", "Playback paused.");
+    };
+    if (remaining <= 0) {
+      triggerPause();
+      return;
+    }
+    const timer = window.setTimeout(triggerPause, remaining);
+    return () => window.clearTimeout(timer);
+  }, [sleepTimerEndsAt]);
 
   // Desktop native app integration (Windows media keys, tray status, presence)
   useEffect(() => {

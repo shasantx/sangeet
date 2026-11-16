@@ -30,6 +30,7 @@ import { ProgressBar } from "@/components/player/progress-bar";
 import { VolumeControl } from "@/components/player/volume-control";
 import { ConnectedDevices } from "@/components/player/connected-devices";
 import { LyricsView } from "@/components/player/lyrics-view";
+import { SleepTimerMenu } from "@/components/player/sleep-timer-menu";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -213,6 +214,7 @@ export default function NowPlayingPage() {
 
         {/* Right Header Extras */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <SleepTimerMenu className="h-9 border border-white/[0.08] bg-white/[0.03] px-2.5" />
           <ConnectedDevices variant="header" placement="top" />
 
           {current && (

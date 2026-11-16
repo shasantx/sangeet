@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Flame, Music, Search, Sparkles, Trophy } from "lucide-react";
+import { ArrowRight, Flame, Heart, History, Music, Search, Shuffle, Trophy } from "lucide-react";
 import {
   albums,
   artists,
@@ -24,6 +24,8 @@ import { TrackList } from "@/components/music/track-list";
 import { registerYouTubeSearchResult, type YouTubeSearchResult } from "@/lib/dynamic-tracks";
 import { LiveMusicHome } from "@/components/search/live-music-discovery";
 import { OpenMusicHome } from "@/components/search/open-music-results";
+import { InstallPromptBanner } from "@/components/site/install-prompt-banner";
+import { usePlayerStore } from "@/store/player-store";
 
 export default function HomePage() {
   const session = useAuthStore((state) => state.session);
@@ -109,13 +111,37 @@ export default function HomePage() {
 
   return (
     <div className="page-container max-w-[1480px] pt-8 sm:pt-10">
+      <InstallPromptBanner />
       <header className="mb-8 flex flex-col gap-5 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="eyebrow mb-2">Your listening space</p>
           <h1 className="text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">
             {greeting}{displayName ? `, ${getFirstName(displayName)}` : ""}
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">Pick up where you left off, or find something new.</p>
+          <p className="mt-1.5 text-sm text-muted-foreground">Pick up where you left off, or start a mix.</p>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => usePlayerStore.getState().playShuffled(tracks.map((t) => t.id), "Shuffle all")}
+              className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white text-black px-3.5 text-xs font-semibold transition hover:bg-white/90"
+            >
+              <Shuffle className="h-3.5 w-3.5" />
+              Shuffle all
+            </button>
+            <Link
+              href="/liked"
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 text-xs font-medium text-foreground transition hover:bg-white/[0.08]"
+            >
+              <Heart className="h-3.5 w-3.5 text-[#1ed760]" />
+              Liked songs
+            </Link>
+            <Link
+              href="/recently-played"
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 text-xs font-medium text-foreground transition hover:bg-white/[0.08]"
+            >
+              <History className="h-3.5 w-3.5 text-muted-foreground" />
+              History
+            </Link>
+          </div>
         </div>
         <Link
           href="/search"

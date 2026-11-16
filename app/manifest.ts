@@ -2,13 +2,15 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Sangeet — Music for every mood",
+    name: "Sangeet — Music Player",
     short_name: "Sangeet",
-    description: "Discover music and build a library that feels like yours.",
-    start_url: "/",
+    description: "Ad-free music player with background playback, synced lyrics, and offline library.",
+    start_url: "/home",
+    scope: "/",
     display: "standalone",
-    background_color: "#0b0c0b",
-    theme_color: "#0b0c0b",
+    background_color: "#080908",
+    theme_color: "#080908",
+    categories: ["music", "entertainment"],
     icons: [
       { src: "/brand/sangeet-icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/brand/sangeet-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },

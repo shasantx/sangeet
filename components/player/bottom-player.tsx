@@ -13,6 +13,7 @@ import { PlaybackControls } from "./playback-controls";
 import { ProgressBar } from "./progress-bar";
 import { VolumeControl } from "./volume-control";
 import { ConnectedDevices } from "./connected-devices";
+import { SleepTimerMenu } from "./sleep-timer-menu";
 
 export function BottomPlayer() {
   const currentTrackId = usePlayerStore((state) => state.currentTrackId);
@@ -99,6 +100,7 @@ export function BottomPlayer() {
 
         <div className="flex items-center justify-end gap-2.5">
           <ConnectedDevices />
+          <SleepTimerMenu />
           <Tooltip>
             <TooltipTrigger asChild>
               <Link

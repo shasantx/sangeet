@@ -17,7 +17,6 @@ import { safeStorage } from "@/lib/storage";
 import { clamp } from "@/lib/utils";
 import type { Track } from "@/lib/types";
 import { useAppStore } from "./app-store";
-import { useAuthStore } from "./auth-store";
 import { toast } from "./ui-store";
 
 export type RepeatMode = "off" | "all" | "one";
@@ -37,12 +36,17 @@ interface PlayerState {
   repeat: RepeatMode;
   error: string | null;
   videoMode: boolean;
+  playbackRate: number;
+  sleepTimerEndsAt: number | null;
+  sleepAfterTrack: boolean;
 
   playTrack: (trackId: string, contextIds?: string[], contextLabel?: string) => void;
   playShuffled: (trackIds: string[], contextLabel?: string) => void;
   togglePlay: () => void;
   setVideoMode: (mode: boolean) => void;
   toggleVideoMode: () => void;
+  setPlaybackRate: (rate: number) => void;
+  setSleepTimer: (mode: number | "track" | null) => void;
   next: (automatic?: boolean) => void;
   previous: () => void;
   seek: (seconds: number) => void;
@@ -77,6 +81,9 @@ const initialPlayer = {
   repeat: "off" as RepeatMode,
   error: null,
   videoMode: false,
+  playbackRate: 1,
+  sleepTimerEndsAt: null as number | null,
+  sleepAfterTrack: false,
 };
 
 function uniqueValid(ids: string[]): string[] {
@@ -97,19 +104,13 @@ function playableError() {
   return "This track could not start playing. Check your connection and try another track.";
 }
 
-function requireListenerAccount(): boolean {
-  const auth = useAuthStore.getState();
-  if (auth.isAuthenticated) {
-    return true;
-  }
-  toast.error("Login Required", "You must be signed in to play songs on Sangeet.");
-  if (typeof window !== "undefined") {
-    const currentPath = window.location.pathname + window.location.search;
-    if (!window.location.pathname.startsWith("/auth") && !window.location.pathname.startsWith("/login")) {
-      window.location.assign(`/auth?reason=play_required&returnTo=${encodeURIComponent(currentPath)}`);
-    }
-  }
-  return false;
+function isAudioElementActive(audio: HTMLAudioElement | null): boolean {
+  if (typeof window === "undefined" || !audio) return false;
+  return Boolean(audio.src && audio.src !== window.location.href && !audio.error);
+}
+
+function youtubeAudioProxyUrl(videoId: string): string {
+  return `/api/youtube/audio?videoId=${encodeURIComponent(videoId)}`;
 }
 
 function resumeAudio(audio: HTMLAudioElement) {
@@ -143,7 +144,6 @@ export const usePlayerStore = create<PlayerState>()(
   persist(
     (set, get) => {
       const startTrack = (trackId: string, shouldPlay: boolean) => {
-        if (shouldPlay && !requireListenerAccount()) return;
         const track = getTrack(trackId);
         if (!track) {
           set({ error: "That track is no longer available." });
@@ -160,28 +160,28 @@ export const usePlayerStore = create<PlayerState>()(
         });
 
         if (track.youtubeId) {
-          if (!audio) {
-            loadYouTubeVideo(track.youtubeId, shouldPlay);
-            return;
-          }
-          fetch(`/api/youtube/stream?videoId=${encodeURIComponent(track.youtubeId)}`)
-            .then((res) => res.json())
-            .then((data) => {
-              if (data.ok && data.streamUrl && audio) {
-                stopYouTube();
-                audio.src = data.streamUrl;
-                audio.volume = get().volume;
-                audio.muted = get().muted;
-                if (shouldPlay) resumeAudio(audio);
-                return;
+          if (audio && !get().videoMode) {
+            try {
+              stopYouTube();
+              const streamPath = youtubeAudioProxyUrl(track.youtubeId);
+              const expectedUrl = new URL(streamPath, window.location.href).href;
+              if (audio.src !== expectedUrl) {
+                audio.src = streamPath;
+                audio.load();
+              } else {
+                audio.currentTime = 0;
               }
-              audio.pause();
-              loadYouTubeVideo(track.youtubeId!, shouldPlay);
-            })
-            .catch(() => {
-              audio.pause();
-              loadYouTubeVideo(track.youtubeId!, shouldPlay);
-            });
+              audio.volume = get().volume;
+              audio.muted = get().muted;
+              audio.playbackRate = get().playbackRate;
+              if (shouldPlay) resumeAudio(audio);
+              return;
+            } catch {
+              // Fall back to YouTube IFrame if audio element setup fails.
+            }
+          }
+          audio?.pause();
+          loadYouTubeVideo(track.youtubeId, shouldPlay);
           return;
         }
 
@@ -205,6 +205,7 @@ export const usePlayerStore = create<PlayerState>()(
           }
           audio.volume = get().volume;
           audio.muted = get().muted;
+          audio.playbackRate = get().playbackRate;
           if (shouldPlay) resumeAudio(audio);
         } catch {
           set({ isPlaying: false, isLoading: false, error: playableError() });
@@ -216,15 +217,25 @@ export const usePlayerStore = create<PlayerState>()(
         ...initialPlayer,
 
         playTrack: (trackId, contextIds, contextLabel) => {
-          if (!requireListenerAccount()) return;
           const track = getTrack(trackId);
           if (!track) {
-            toast.error("Track unavailable", "This track is no longer in the AURA catalogue.");
+            toast.error("Track unavailable", "This track is no longer in the Sangeet catalogue.");
             return;
           }
           const current = get();
           const sameTrack = current.currentTrackId === trackId;
           if (sameTrack) {
+            const audio = getAudioElement();
+            if (audio && isAudioElementActive(audio)) {
+              if (current.isPlaying) {
+                audio.pause();
+                set({ isPlaying: false, isLoading: false });
+              } else {
+                set({ isPlaying: true, isLoading: true, error: null });
+                resumeAudio(audio);
+              }
+              return;
+            }
             if (track.youtubeId) {
               if (current.isPlaying) {
                 pauseYouTube();
@@ -235,7 +246,6 @@ export const usePlayerStore = create<PlayerState>()(
               }
               return;
             }
-            const audio = getAudioElement();
             if (current.isPlaying) {
               audio?.pause();
               set({ isPlaying: false, isLoading: false });
@@ -264,7 +274,6 @@ export const usePlayerStore = create<PlayerState>()(
         },
 
         playShuffled: (trackIds, contextLabel) => {
-          if (!requireListenerAccount()) return;
           const valid = uniqueValid(trackIds);
           if (valid.length === 0) return;
           const shuffled = [...valid].sort(() => Math.random() - 0.5);
@@ -279,17 +288,16 @@ export const usePlayerStore = create<PlayerState>()(
 
         togglePlay: () => {
           const state = get();
-          if (!state.isPlaying && !requireListenerAccount()) return;
           const audio = getAudioElement();
           if (!state.currentTrackId) {
             const fallback = tracks[15] ?? tracks[0];
             if (fallback) {
-              state.playTrack(fallback.id, [fallback.id], "AURA selection");
+              state.playTrack(fallback.id, [fallback.id], "Sangeet selection");
             }
             return;
           }
 
-          const hasAudioStream = Boolean(audio && audio.src && audio.src !== window.location.href && !audio.error);
+          const hasAudioStream = isAudioElementActive(audio);
 
           if (state.isPlaying) {
             if (hasAudioStream && audio) {
@@ -307,6 +315,10 @@ export const usePlayerStore = create<PlayerState>()(
           }
           const track = getTrack(state.currentTrackId);
           if (track?.youtubeId) {
+            if (audio && !state.videoMode) {
+              startTrack(track.id, true);
+              return;
+            }
             playYouTube();
           } else if (audio) {
             resumeAudio(audio);
@@ -396,9 +408,10 @@ export const usePlayerStore = create<PlayerState>()(
         previous: () => {
           const state = get();
           const audio = getAudioElement();
+          const hasAudioStream = isAudioElementActive(audio);
           const current = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
-          const isYouTube = Boolean(current?.youtubeId);
-          const elapsed = isYouTube ? state.currentTime : audio?.currentTime ?? 0;
+          const isYouTube = !hasAudioStream && Boolean(current?.youtubeId);
+          const elapsed = isYouTube ? state.currentTime : audio?.currentTime ?? state.currentTime;
           if (elapsed > 3.5) {
             if (isYouTube) seekYouTube(0);
             else if (audio) audio.currentTime = 0;
@@ -457,8 +470,58 @@ export const usePlayerStore = create<PlayerState>()(
 
         toggleShuffle: () => set((state) => ({ shuffle: !state.shuffle })),
 
-        setVideoMode: (mode) => set({ videoMode: mode }),
-        toggleVideoMode: () => set((state) => ({ videoMode: !state.videoMode })),
+        setVideoMode: (mode) => {
+          const state = get();
+          set({ videoMode: mode });
+          const track = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+          if (!track?.youtubeId) return;
+          const audio = getAudioElement();
+          if (mode) {
+            // Switching to Theater video mode: pause audio element and hand off to YouTube embed
+            const pos = audio && isAudioElementActive(audio) ? audio.currentTime : state.currentTime;
+            audio?.pause();
+            if (audio) {
+              audio.removeAttribute("src");
+              audio.load();
+            }
+            loadYouTubeVideo(track.youtubeId, state.isPlaying, pos);
+          } else if (audio) {
+            // Switching back to Compact audio mode: resume via <audio> for background support
+            const pos = state.currentTime;
+            stopYouTube();
+            audio.src = youtubeAudioProxyUrl(track.youtubeId);
+            audio.load();
+            audio.currentTime = pos;
+            audio.volume = state.volume;
+            audio.muted = state.muted;
+            audio.playbackRate = state.playbackRate;
+            if (state.isPlaying) resumeAudio(audio);
+          }
+        },
+        toggleVideoMode: () => get().setVideoMode(!get().videoMode),
+
+        setPlaybackRate: (rate) => {
+          const nextRate = clamp(rate, 0.5, 2);
+          const audio = getAudioElement();
+          if (audio) audio.playbackRate = nextRate;
+          set({ playbackRate: nextRate });
+        },
+
+        setSleepTimer: (mode) => {
+          if (mode === null) {
+            set({ sleepTimerEndsAt: null, sleepAfterTrack: false });
+            toast.show("Sleep timer cleared", "Playback will continue normally.");
+            return;
+          }
+          if (mode === "track") {
+            set({ sleepTimerEndsAt: null, sleepAfterTrack: true });
+            toast.success("Sleep timer set", "Playback will pause after this track finishes.");
+            return;
+          }
+          const endsAt = Date.now() + mode * 60_000;
+          set({ sleepTimerEndsAt: endsAt, sleepAfterTrack: false });
+          toast.success("Sleep timer set", `Playback will pause in ${mode} minutes.`);
+        },
 
         cycleRepeat: () =>
           set((state) => ({
@@ -570,7 +633,19 @@ export const usePlayerStore = create<PlayerState>()(
 
         handleEnded: () => {
           const state = get();
+          if (state.sleepAfterTrack) {
+            set({ isPlaying: false, isLoading: false, sleepAfterTrack: false, sleepTimerEndsAt: null });
+            toast.show("Sleep timer finished", "Playback paused at the end of the track.");
+            return;
+          }
           if (state.repeat === "one") {
+            const audio = getAudioElement();
+            if (audio && isAudioElementActive(audio)) {
+              audio.currentTime = 0;
+              set({ currentTime: 0 });
+              resumeAudio(audio);
+              return;
+            }
             const current = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
             if (current?.youtubeId) {
               seekYouTube(0);
@@ -578,7 +653,6 @@ export const usePlayerStore = create<PlayerState>()(
               playYouTube();
               return;
             }
-            const audio = getAudioElement();
             if (audio) {
               audio.currentTime = 0;
               set({ currentTime: 0 });
@@ -596,6 +670,21 @@ export const usePlayerStore = create<PlayerState>()(
           const audio = getAudioElement();
           if (!track) return;
           if (track.youtubeId) {
+            if (audio && !state.videoMode) {
+              try {
+                if (!audio.src) {
+                  audio.src = youtubeAudioProxyUrl(track.youtubeId);
+                  audio.load();
+                }
+                audio.volume = state.volume;
+                audio.muted = state.muted;
+                audio.playbackRate = state.playbackRate;
+                if (!state.duration) set({ duration: track.duration });
+                return;
+              } catch {
+                // Fall back to YouTube iframe priming below.
+              }
+            }
             loadYouTubeVideo(track.youtubeId, state.isPlaying);
             setYouTubeVolume(state.volume);
             muteYouTube(state.muted);
@@ -610,6 +699,7 @@ export const usePlayerStore = create<PlayerState>()(
             }
             audio.volume = state.volume;
             audio.muted = state.muted;
+            audio.playbackRate = state.playbackRate;
             if (!state.duration) set({ duration: track.duration });
           } catch {
             // The next explicit play attempt will surface a useful error.
