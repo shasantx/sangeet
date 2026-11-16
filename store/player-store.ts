@@ -122,6 +122,16 @@ function resumeAudio(audio: HTMLAudioElement) {
     promise.catch((error: DOMException) => {
       const state = usePlayerStore.getState();
       if (error.name === "AbortError") return;
+
+      const track = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+      const source = audio.currentSrc || audio.src || "";
+      if (error.name !== "NotAllowedError" && track?.youtubeId && (source.includes("/api/youtube/audio") || source === "")) {
+        // Proxy audio unavailable (e.g. YouTube bot-check on server IP): seamlessly fall back to YouTube IFrame.
+        if (source) audio.removeAttribute("src");
+        loadYouTubeVideo(track.youtubeId, true);
+        return;
+      }
+
       state.syncFromAudio({
         isPlaying: false,
         isLoading: false,

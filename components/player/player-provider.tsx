@@ -122,7 +122,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       if (track?.youtubeId && source.includes("/api/youtube/audio")) {
         // Fallback to YouTube IFrame if direct audio stream extraction failed for this video.
         audio.removeAttribute("src");
-        audio.load();
         loadYouTubeVideo(track.youtubeId, state.isPlaying);
         return;
       }

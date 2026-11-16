@@ -65,7 +65,7 @@ export function LandingPage() {
   const previous = usePlayerStore((state) => state.previous);
   const seek = usePlayerStore((state) => state.seek);
 
-  const isLiked = useLibraryStore((state) => (targetId: string) => state.isLiked(targetId));
+  const likedTrackIds = useLibraryStore((state) => state.likedTrackIds);
   const toggleLike = useLibraryStore((state) => state.toggleLike);
 
   // Pick 6 real tracks with artwork for the live landing player & quick crate
@@ -91,7 +91,7 @@ export function LandingPage() {
   const activeTime = currentTrackId === activeTrack?.id ? currentTime : 0;
   const progressPct = activeDuration > 0 ? Math.min(100, (activeTime / activeDuration) * 100) : 0;
   const isCurrentActive = Boolean(activeTrack && currentTrackId === activeTrack.id);
-  const liked = activeTrack ? isLiked(activeTrack.id) : false;
+  const liked = activeTrack ? likedTrackIds.includes(activeTrack.id) : false;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
