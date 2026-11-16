@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.ViewGroup;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
@@ -21,14 +22,20 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import org.json.JSONObject;
 
 public final class MainActivity extends AppCompatActivity {
@@ -71,9 +78,24 @@ public final class MainActivity extends AppCompatActivity {
                 }
         );
 
+        FrameLayout rootContainer = new FrameLayout(this);
+        rootContainer.setBackgroundColor(0xFF080908);
         webView = new WebView(this);
         webView.setBackgroundColor(0xFF080908);
-        setContentView(webView);
+        rootContainer.addView(webView, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+        setContentView(rootContainer);
+
+        ViewCompat.setOnApplyWindowInsetsListener(rootContainer, (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime()
+            );
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
+        ViewCompat.requestApplyInsets(rootContainer);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -136,14 +158,19 @@ public final class MainActivity extends AppCompatActivity {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 String host = uri.getHost() != null ? uri.getHost() : "";
+                String path = uri.getPath() != null ? uri.getPath() : "";
                 if (host.endsWith("sangeet.shasant.xyz")) {
+                    if (path.startsWith("/api/auth/google")) {
+                        Uri targetUri = uri;
+                        if (uri.getQueryParameter("app") == null) {
+                            targetUri = uri.buildUpon().appendQueryParameter("app", "android").build();
+                        }
+                        openExternalUri(targetUri);
+                        return true;
+                    }
                     return false;
                 }
-                try {
-                    new CustomTabsIntent.Builder().build().launchUrl(MainActivity.this, uri);
-                } catch (Exception e) {
-                    startActivity(new Intent(Intent.ACTION_VIEW, uri));
-                }
+                openExternalUri(uri);
                 return true;
             }
         });
@@ -200,7 +227,55 @@ public final class MainActivity extends AppCompatActivity {
             }
         });
 
-        webView.loadUrl(START_URL);
+        if (!handleAuthDeepLink(getIntent())) {
+            webView.loadUrl(START_URL);
+        }
+    }
+
+    @Override
+    protected void onNewIntent(@NonNull Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleAuthDeepLink(intent);
+    }
+
+    private void openExternalUri(Uri uri) {
+        try {
+            new CustomTabsIntent.Builder().build().launchUrl(MainActivity.this, uri);
+        } catch (Exception e) {
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, uri));
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    private boolean handleAuthDeepLink(@Nullable Intent intent) {
+        if (intent == null) return false;
+        Uri data = intent.getData();
+        if (data == null) return false;
+        if (!"sangeet".equalsIgnoreCase(data.getScheme()) || !"auth".equalsIgnoreCase(data.getHost())) {
+            return false;
+        }
+        String session = data.getQueryParameter("session");
+        if (session == null || session.isEmpty()) {
+            return false;
+        }
+        String returnTo = data.getQueryParameter("returnTo");
+        if (returnTo == null || returnTo.isEmpty() || !returnTo.startsWith("/") || returnTo.startsWith("//")) {
+            returnTo = "/home?google=success";
+        }
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        cookieManager.setCookie(
+                "https://sangeet.shasant.xyz",
+                "aura_session=" + session + "; Path=/; Secure; HttpOnly; SameSite=Lax"
+        );
+        cookieManager.flush();
+        if (webView != null) {
+            webView.loadUrl("https://sangeet.shasant.xyz" + returnTo);
+        }
+        return true;
     }
 
     private void dispatchToWeb(String type, String payload) {
@@ -248,6 +323,17 @@ public final class MainActivity extends AppCompatActivity {
             intent.putExtra(SangeetAudioService.EXTRA_TITLE, title);
             intent.putExtra(SangeetAudioService.EXTRA_ARTIST, artist);
             intent.putExtra(SangeetAudioService.EXTRA_ARTWORK, artworkUrl);
+            sendServiceAction(intent);
+        }
+
+        @JavascriptInterface
+        public void playLocalContent(String contentUri, String title, String artist) {
+            if (contentUri == null || contentUri.isEmpty()) return;
+            Intent intent = new Intent(MainActivity.this, SangeetAudioService.class);
+            intent.setAction(SangeetAudioService.ACTION_PLAY_URL);
+            intent.putExtra(SangeetAudioService.EXTRA_URL, contentUri);
+            intent.putExtra(SangeetAudioService.EXTRA_TITLE, title);
+            intent.putExtra(SangeetAudioService.EXTRA_ARTIST, artist);
             sendServiceAction(intent);
         }
 

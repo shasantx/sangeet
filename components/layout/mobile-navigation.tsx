@@ -21,7 +21,7 @@ export function MobileNavigation() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl md:hidden"
       aria-label="Mobile navigation"
     >
-      <div className="flex h-14 items-center justify-around px-2">
+      <div className="flex h-14 items-center justify-around px-1.5 sm:px-2">
         {items.map((item) => {
           const active = item.match(pathname);
           const Icon = item.icon;
@@ -31,16 +31,16 @@ export function MobileNavigation() {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex flex-1 flex-col items-center justify-center gap-1 py-1 transition-colors",
-                active ? "text-[#1ed760]" : "text-white/50 hover:text-white/80",
+                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 py-1.5 transition-colors",
+                active ? "text-[#1ed760]" : "text-white/60 hover:text-white/90",
               )}
             >
               <Icon
                 aria-hidden="true"
-                className="h-5 w-5"
-                strokeWidth={active ? 2.2 : 1.7}
+                className="h-5 w-5 shrink-0"
+                strokeWidth={active ? 2.2 : 1.75}
               />
-              <span className="text-[10px] font-medium leading-none tracking-tight">
+              <span className="max-w-full truncate text-[10px] font-medium leading-none tracking-tight">
                 {item.label}
               </span>
             </Link>

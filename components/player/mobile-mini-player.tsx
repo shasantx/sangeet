@@ -50,11 +50,11 @@ export function MobileMiniPlayer() {
         />
       </div>
 
-      <div className="flex h-[60px] items-center gap-3 px-3 py-1.5">
+      <div className="flex h-[60px] items-center gap-2.5 px-2.5 py-1.5 sm:gap-3 sm:px-3">
         {/* Artwork & Track Info (Tappable to expand now playing) */}
         <Link
           href="/now-playing"
-          className="flex min-w-0 flex-1 items-center gap-3 outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760] rounded-lg"
+          className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3 outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760] rounded-lg"
           aria-label={`Open now playing: ${current.title} by ${artist?.name ?? "Sangeet artist"}`}
         >
           <div className="relative aspect-square h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#161a17] shadow-md">
@@ -69,7 +69,7 @@ export function MobileMiniPlayer() {
             <p className="truncate font-display text-[13px] font-bold tracking-tight text-white leading-snug">
               {current.title}
             </p>
-            <div className="flex items-center gap-1.5 text-[11px] text-[#9ba39d]">
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-white/65">
               {isPlaying && (
                 <span className="flex items-end gap-0.5 h-2.5 shrink-0" aria-hidden="true">
                   <span className="w-0.5 h-full rounded-full bg-[#1ed760] animate-pulse" />
@@ -83,7 +83,7 @@ export function MobileMiniPlayer() {
         </Link>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
           {/* Like / Favorite Button */}
           <button
             type="button"

@@ -1,11 +1,18 @@
 package xyz.shasant.sangeet;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
 import androidx.media3.common.ForwardingPlayer;
@@ -41,6 +48,9 @@ public final class SangeetAudioService extends MediaSessionService {
     public static final String EXTRA_SEEK_MS = "seekMs";
     public static final String EXTRA_VOLUME = "volume";
     public static final String EXTRA_SPEED = "speed";
+
+    private static final String CHANNEL_ID = "sangeet_playback";
+    private static final int NOTIFICATION_ID = 1001;
 
     public interface EventListener {
         void onState(String state);
@@ -80,6 +90,7 @@ public final class SangeetAudioService extends MediaSessionService {
     @Override
     public void onCreate() {
         super.onCreate();
+        createPlaybackNotificationChannel();
         httpFactory = new DefaultHttpDataSource.Factory()
                 .setAllowCrossProtocolRedirects(true)
                 .setConnectTimeoutMs(12000)
@@ -97,6 +108,7 @@ public final class SangeetAudioService extends MediaSessionService {
                 .setAudioAttributes(attrs, true)
                 .setHandleAudioBecomingNoisy(true)
                 .build();
+        player.setWakeMode(C.WAKE_MODE_NETWORK);
 
         player.addListener(new Player.Listener() {
             @Override
@@ -187,6 +199,7 @@ public final class SangeetAudioService extends MediaSessionService {
                 String artist = intent.getStringExtra(EXTRA_ARTIST);
                 String artwork = intent.getStringExtra(EXTRA_ARTWORK);
                 if (videoId != null && !videoId.isEmpty()) {
+                    ensureForegroundNotification(title, artist);
                     playYouTubeVideo(videoId, title, artist, artwork);
                 }
                 break;
@@ -197,6 +210,7 @@ public final class SangeetAudioService extends MediaSessionService {
                 String artist = intent.getStringExtra(EXTRA_ARTIST);
                 String artwork = intent.getStringExtra(EXTRA_ARTWORK);
                 if (url != null && !url.isEmpty()) {
+                    ensureForegroundNotification(title, artist);
                     playDirectUrl(url, null, title, artist, artwork);
                 }
                 break;
@@ -205,6 +219,7 @@ public final class SangeetAudioService extends MediaSessionService {
                 if (player != null) player.pause();
                 break;
             case ACTION_RESUME:
+                ensureForegroundNotification(null, null);
                 if (player != null) player.play();
                 break;
             case ACTION_SEEK: {
@@ -233,6 +248,51 @@ public final class SangeetAudioService extends MediaSessionService {
                 break;
         }
         return START_STICKY;
+    }
+
+    private void createPlaybackNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Sangeet Playback",
+                    NotificationManager.IMPORTANCE_LOW
+            );
+            channel.setDescription("Background audio playback controls");
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            if (nm != null) {
+                nm.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    private void ensureForegroundNotification(@Nullable String title, @Nullable String artist) {
+        Intent openIntent = new Intent(this, MainActivity.class);
+        openIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        int piFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            piFlags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, openIntent, piFlags);
+
+        String safeTitle = (title != null && !title.isEmpty()) ? title : "Sangeet";
+        String safeArtist = (artist != null && !artist.isEmpty()) ? artist : "Playing audio";
+
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.sangeet_icon)
+                .setContentTitle(safeTitle)
+                .setContentText(safeArtist)
+                .setContentIntent(contentIntent)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .build();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+        } else {
+            startForeground(NOTIFICATION_ID, notification);
+        }
     }
 
     private void playYouTubeVideo(String videoId, @Nullable String title, @Nullable String artist, @Nullable String artwork) {

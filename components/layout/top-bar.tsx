@@ -75,8 +75,8 @@ export function TopBar() {
       </button>
       {/* Mobile Logo */}
       <Link href="/home" className="flex shrink-0 items-center gap-1.5 md:hidden" aria-label="Sangeet home">
-        <SangeetMark size={29} />
-        <span className="mobile-brand-name font-display text-[16px] font-bold tracking-tight text-white">Sangeet</span>
+        <SangeetMark size={26} />
+        <span className="mobile-brand-name font-display text-[15px] font-bold tracking-tight text-white">Sangeet</span>
       </Link>
 
       {/* Search Input (Sangeet / YT Music pill style) */}
@@ -92,7 +92,7 @@ export function TopBar() {
         </kbd>
       </Link>
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
         <Link
           href="/search"
           aria-label="Search"
@@ -135,7 +135,7 @@ export function TopBar() {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="ml-1.5 flex items-center gap-2 rounded-full p-1 transition hover:bg-white/[.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="ml-0.5 flex items-center gap-1.5 rounded-full p-0.5 transition hover:bg-white/[.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:ml-1.5 sm:gap-2 sm:p-1"
                 aria-label="User account menu"
               >
                 <span
@@ -177,17 +177,17 @@ export function TopBar() {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <div className="ml-0.5 flex shrink-0 items-center gap-0.5 sm:ml-2 sm:gap-2">
+          <div className="ml-0.5 flex shrink-0 items-center gap-1 sm:ml-2 sm:gap-2">
             <Link
               href={`/auth?tab=signin&returnTo=${encodeURIComponent(pathname)}`}
-              className="inline-flex min-h-9 items-center whitespace-nowrap rounded-full px-2 py-1.5 text-[11px] font-semibold text-white/80 transition hover:bg-white/[.06] hover:text-white sm:px-3.5 sm:text-xs"
+              className="inline-flex min-h-8 items-center whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-semibold text-white/85 transition hover:bg-white/[.06] hover:text-white sm:min-h-9 sm:px-3.5 sm:py-1.5 sm:text-xs"
             >
               Sign in
             </Link>
             <Link
               href={`/auth?tab=signup&returnTo=${encodeURIComponent(pathname)}`}
               aria-label="Create account"
-              className="inline-flex min-h-9 items-center whitespace-nowrap rounded-full bg-white px-2.5 py-1.5 text-[11px] font-semibold text-black shadow-md transition hover:bg-white/90 active:scale-95 sm:px-4 sm:text-xs"
+              className="inline-flex min-h-8 items-center whitespace-nowrap rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-black shadow-md transition hover:bg-white/90 active:scale-95 sm:min-h-9 sm:px-4 sm:py-1.5 sm:text-xs"
             >
               <span className="sm:hidden">Sign up</span><span className="hidden sm:inline">Create account</span>
             </Link>

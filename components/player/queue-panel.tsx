@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, ListMusic, X } from "lucide-react";
+import { ChevronDown, ListMusic, Play, X } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { getArtist, getTrack } from "@/lib/catalog";
 import { formatDuration } from "@/lib/utils";
@@ -43,25 +43,36 @@ export function QueuePanel() {
           aria-describedby={undefined}
         >
           <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-white/[.055] px-5">
-            <div>
-              <DialogPrimitive.Title className="font-display text-xl font-medium tracking-[-0.03em]">
-                Queue
-              </DialogPrimitive.Title>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
-                {queue.length} {queue.length === 1 ? "track" : "tracks"} in session
-              </p>
+            <div className="flex items-center gap-2.5">
+              <div>
+                <div className="flex items-center gap-2">
+                  <DialogPrimitive.Title className="font-display text-xl font-medium tracking-[-0.03em]">
+                    Queue
+                  </DialogPrimitive.Title>
+                  <span className="rounded-full bg-white/[.06] px-2 py-0.5 font-mono text-[10px] font-medium tabular-nums text-muted-foreground">
+                    {queue.length}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  {upcoming.length > 0
+                    ? `${upcoming.length} ${upcoming.length === 1 ? "track" : "tracks"} up next`
+                    : queue.length > 0
+                      ? "1 track in session"
+                      : "No tracks queued"}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-1">
-              {queue.length > 1 && (
+              {upcoming.length > 0 && (
                 <button
                   type="button"
                   onClick={() => {
                     clearQueue();
-                    toast.show("Queue cleared", "Only the current track remains.", "info");
+                    toast.show("Upcoming cleared", "Only the current track remains.", "info");
                   }}
                   className="rounded-full px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:bg-white/[.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
-                  Clear
+                  Clear upcoming
                 </button>
               )}
               <DialogPrimitive.Close className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
@@ -96,7 +107,14 @@ export function QueuePanel() {
                 </div>
 
                 <div className="mb-3 mt-7 flex items-center justify-between">
-                  <p className="eyebrow">Next up</p>
+                  <div className="flex items-center gap-2">
+                    <p className="eyebrow">Next up</p>
+                    {upcoming.length > 0 && (
+                      <span className="rounded-full bg-white/[.05] px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground">
+                        {upcoming.length}
+                      </span>
+                    )}
+                  </div>
                   <Link
                     href="/queue"
                     onClick={() => setOpen(false)}
@@ -128,6 +146,9 @@ export function QueuePanel() {
                             aria-label={`Play ${track.title}`}
                           >
                             <Artwork src={track.artwork} alt="" className="h-full w-full rounded-md" />
+                            <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition group-hover:opacity-100">
+                              <Play className="h-3.5 w-3.5 fill-white text-white" />
+                            </span>
                           </button>
                           <button
                             type="button"
@@ -141,6 +162,9 @@ export function QueuePanel() {
                               {getArtist(track.artistId)?.name ?? "Unknown artist"}
                             </p>
                           </button>
+                          <span className="hidden font-mono text-[11px] tabular-nums text-muted-foreground/70 sm:inline">
+                            {formatDuration(track.duration)}
+                          </span>
                           <button
                             type="button"
                             aria-label={`Remove ${track.title} from queue`}

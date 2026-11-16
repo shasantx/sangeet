@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth?google=error&reason=configuration", request.url));
   }
   const returnTo = safeReturnTo(request.nextUrl.searchParams.get("returnTo"), base);
+  const appTarget = request.nextUrl.searchParams.get("app") === "android" ? "android" : "";
   if (!isGoogleOAuthConfigured() || !process.env.AUTH_SECRET || process.env.AUTH_SECRET.length < 32) {
     const target = new URL(returnTo, base);
     target.searchParams.set("google", "error");
@@ -63,6 +64,9 @@ export async function GET(request: NextRequest) {
     response.cookies.set("aura_google_nonce", nonce, common);
     response.cookies.set("aura_google_verifier", verifier, common);
     response.cookies.set("aura_google_return", returnTo, common);
+    if (appTarget === "android") {
+      response.cookies.set("aura_google_app", "android", common);
+    }
     return response;
   } catch {
     const target = new URL(returnTo, base);

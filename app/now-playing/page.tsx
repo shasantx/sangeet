@@ -152,12 +152,12 @@ export default function NowPlayingPage() {
       />
 
       {/* Top Header - Responsive for Mobile & Desktop */}
-      <header className="h-14 sm:h-16 shrink-0 border-b border-white/[0.08] bg-[#090b09]/95 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2">
+      <header className="h-14 sm:h-16 shrink-0 border-b border-white/[0.08] bg-[#090b09]/95 px-2.5 sm:px-6 lg:px-8 flex items-center justify-between gap-1.5 sm:gap-2">
         {/* Left Side: Back action */}
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Link
             href="/home"
-            className="flex h-9 w-9 sm:w-auto shrink-0 items-center justify-center sm:justify-start gap-1.5 rounded-full sm:rounded-lg border border-white/[0.08] bg-white/[0.03] sm:px-3 text-xs font-medium text-[#9ba39d] transition hover:bg-white/[0.07] hover:text-white"
+            className="flex h-8 w-8 sm:h-9 sm:w-auto shrink-0 items-center justify-center sm:justify-start gap-1.5 rounded-full sm:rounded-lg border border-white/[0.08] bg-white/[0.03] sm:px-3 text-xs font-medium text-[#9ba39d] transition hover:bg-white/[0.07] hover:text-white"
             aria-label="Back to home"
           >
             <ChevronDown className="h-4 w-4 sm:hidden" />
@@ -176,11 +176,11 @@ export default function NowPlayingPage() {
         </div>
 
         {/* Center: Mobile 3-Way Mode Switcher (visible on < lg) */}
-        <div className="flex items-center rounded-xl border border-white/[0.08] bg-white/[0.03] p-0.5 lg:hidden">
+        <div className="flex shrink-0 items-center rounded-xl border border-white/[0.08] bg-white/[0.03] p-0.5 lg:hidden">
           <button
             type="button"
             onClick={() => setMobileMode("player")}
-            className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+            className={`rounded-lg px-2 py-1 text-[11px] font-semibold transition sm:px-2.5 ${
               mobileMode === "player"
                 ? "bg-white/[0.12] text-white"
                 : "text-[#9ba39d] hover:text-white"
@@ -191,7 +191,7 @@ export default function NowPlayingPage() {
           <button
             type="button"
             onClick={() => setMobileMode("lyrics")}
-            className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+            className={`rounded-lg px-2 py-1 text-[11px] font-semibold transition sm:px-2.5 ${
               mobileMode === "lyrics"
                 ? "bg-[#1ed760] text-black"
                 : "text-[#9ba39d] hover:text-white"
@@ -202,7 +202,7 @@ export default function NowPlayingPage() {
           <button
             type="button"
             onClick={() => setMobileMode("queue")}
-            className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+            className={`rounded-lg px-2 py-1 text-[11px] font-semibold transition sm:px-2.5 ${
               mobileMode === "queue"
                 ? "bg-white/[0.12] text-white"
                 : "text-[#9ba39d] hover:text-white"
@@ -213,8 +213,8 @@ export default function NowPlayingPage() {
         </div>
 
         {/* Right Header Extras */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <SleepTimerMenu className="h-9 border border-white/[0.08] bg-white/[0.03] px-2.5" />
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <SleepTimerMenu className="h-8 sm:h-9 border border-white/[0.08] bg-white/[0.03] px-2 sm:px-2.5" />
           <ConnectedDevices variant="header" placement="top" />
 
           {current && (
@@ -233,7 +233,7 @@ export default function NowPlayingPage() {
                   <button
                     type="button"
                     aria-label="More options"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-[#9ba39d] transition hover:text-white"
+                    className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-[#9ba39d] transition hover:text-white"
                   >
                     <MoreHorizontal className="h-4 w-4" />
                   </button>
@@ -276,18 +276,18 @@ export default function NowPlayingPage() {
       </header>
 
       {/* Main Content Area - Strictly Viewport Height Constrained */}
-      <main className="flex-1 min-h-0 overflow-hidden p-2.5 sm:p-5 lg:p-6">
+      <main className="flex-1 min-h-0 overflow-hidden p-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] sm:p-5 lg:p-6">
         {current ? (
           <div className="h-full grid items-stretch gap-4 sm:gap-5 lg:grid-cols-[minmax(320px,390px)_1fr] overflow-hidden">
             {/* Left Column: Player Deck (Never scrolls away!) */}
             <div
-              className={`h-full flex flex-col justify-between rounded-2xl sm:rounded-3xl border border-white/[0.08] bg-[#111412] p-4 sm:p-5 shadow-2xl overflow-hidden ${
+              className={`h-full flex flex-col justify-between rounded-2xl sm:rounded-3xl border border-white/[0.08] bg-[#111412] p-3.5 sm:p-5 shadow-2xl overflow-hidden ${
                 mobileMode !== "player" ? "hidden lg:flex" : "flex"
               }`}
             >
               {/* Artwork Box */}
-              <div className="flex flex-col items-center">
-                <div className="relative aspect-square w-full max-w-[240px] sm:max-w-[310px] max-h-[32vh] sm:max-h-[38vh] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#161a17] shadow-2xl shrink-0">
+              <div className="flex min-h-0 flex-col items-center">
+                <div className="relative aspect-square w-[min(68vw,32dvh,260px)] sm:w-[min(100%,38dvh,310px)] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#161a17] shadow-2xl shrink-0">
                   <Artwork
                     key={current.id}
                     src={current.artwork}
@@ -298,7 +298,7 @@ export default function NowPlayingPage() {
                 </div>
 
                 {/* Song Meta */}
-                <div className="mt-3 sm:mt-4 flex w-full items-start justify-between gap-3 shrink-0">
+                <div className="mt-3 sm:mt-4 flex w-full items-start justify-between gap-2.5 sm:gap-3 shrink-0">
                   <div className="min-w-0 flex-1">
                     <h1 className="truncate font-display text-base font-bold tracking-tight text-white sm:text-xl">
                       {current.title}
@@ -328,7 +328,7 @@ export default function NowPlayingPage() {
               <button
                 type="button"
                 onClick={() => setMobileMode("lyrics")}
-                className="my-1 flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] p-2.5 text-left text-xs transition hover:bg-white/[0.06] lg:hidden"
+                className="my-1.5 flex shrink-0 items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-left text-xs transition hover:bg-white/[0.06] lg:hidden"
               >
                 <div className="flex items-center gap-2 text-[#1ed760]">
                   <Mic2 className="h-3.5 w-3.5 shrink-0" />
@@ -338,17 +338,17 @@ export default function NowPlayingPage() {
               </button>
 
               {/* Controls Deck */}
-              <div className="mt-2 sm:mt-3 space-y-2.5 sm:space-y-3 pt-2.5 sm:pt-3 border-t border-white/[0.06] shrink-0">
+              <div className="mt-1.5 sm:mt-3 space-y-2 sm:space-y-3 pt-2.5 sm:pt-3 border-t border-white/[0.06] shrink-0">
                 <ProgressBar
                   className="w-full"
                   timeClassName="w-9 shrink-0 text-center font-mono text-[10px] text-[#636c65]"
                 />
 
                 <div className="flex items-center justify-center">
-                  <PlaybackControls size="large" className="gap-3 sm:gap-4" />
+                  <PlaybackControls size="large" className="gap-2.5 sm:gap-4" />
                 </div>
 
-                <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center justify-between pt-0.5 sm:pt-1">
                   <span className="font-mono text-[9px] text-[#636c65] uppercase tracking-wider">
                     Lossless · 320 kbps
                   </span>
@@ -445,7 +445,7 @@ export default function NowPlayingPage() {
 
                 {/* 2. Queue Panel */}
                 {(activeTab === "queue" || mobileMode === "queue") && (
-                  <div className="flex-1 min-h-0 overflow-y-auto pr-2 space-y-4">
+                  <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2 space-y-4 pb-2">
                     <div>
                       <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[#1ed760]">
                         Currently Playing

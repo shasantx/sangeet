@@ -25,6 +25,7 @@ import { registerYouTubeSearchResult, type YouTubeSearchResult } from "@/lib/dyn
 import { LiveMusicHome } from "@/components/search/live-music-discovery";
 import { OpenMusicHome } from "@/components/search/open-music-results";
 import { InstallPromptBanner } from "@/components/site/install-prompt-banner";
+import { isAndroidNativeApp } from "@/lib/android-bridge";
 import { usePlayerStore } from "@/store/player-store";
 
 export default function HomePage() {
@@ -33,11 +34,15 @@ export default function HomePage() {
   const recentlyPlayed = useLibraryStore((state) => state.recentlyPlayed);
   const likedTrackIds = useLibraryStore((state) => state.likedTrackIds);
   const [greeting, setGreeting] = useState("Good evening");
+  const [inNativeAndroid, setInNativeAndroid] = useState(false);
   const [artistTrackIds, setArtistTrackIds] = useState<string[]>([]);
   const [loadingArtistTracks, setLoadingArtistTracks] = useState(false);
   const displayName = session?.displayName;
 
-  useEffect(() => setGreeting(getGreeting()), []);
+  useEffect(() => {
+    setGreeting(getGreeting());
+    setInNativeAndroid(isAndroidNativeApp());
+  }, []);
 
   const recentIds = useMemo(() => {
     const ids = recentlyPlayed.length ? recentlyPlayed : likedTrackIds;
@@ -141,14 +146,16 @@ export default function HomePage() {
               <History className="h-3.5 w-3.5 text-muted-foreground" />
               History
             </Link>
-            <a
-              href="/api/download/android"
-              download="sangeet-android.apk"
-              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#1ed760]/30 bg-[#1ed760]/10 px-3.5 text-xs font-semibold text-[#1ed760] transition hover:bg-[#1ed760]/20"
-            >
-              <Download className="h-3.5 w-3.5" />
-              Download APK
-            </a>
+            {!inNativeAndroid && (
+              <a
+                href="/api/download/android"
+                download="sangeet-android.apk"
+                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#1ed760]/30 bg-[#1ed760]/10 px-3.5 text-xs font-semibold text-[#1ed760] transition hover:bg-[#1ed760]/20"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download APK
+              </a>
+            )}
           </div>
         </div>
         <Link

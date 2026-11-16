@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 
 function clearOAuthCookies(response: NextResponse, secure: boolean) {
   const options = { httpOnly: true, secure, sameSite: "lax" as const, path: "/api/auth/google/callback", maxAge: 0 };
-  for (const name of ["aura_google_state", "aura_google_nonce", "aura_google_verifier", "aura_google_return"]) {
+  for (const name of ["aura_google_state", "aura_google_nonce", "aura_google_verifier", "aura_google_return", "aura_google_app"]) {
     response.cookies.set(name, "", options);
   }
 }
@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
   }
   const secure = secureCookies(base);
   const returnTo = safeReturnTo(request.cookies.get("aura_google_return")?.value ?? null, base);
+  const appTarget = request.cookies.get("aura_google_app")?.value;
   const state = request.nextUrl.searchParams.get("state");
   const expectedState = request.cookies.get("aura_google_state")?.value;
   if (!safeCompare(state, expectedState)) return failureRedirect(base, returnTo, "state", secure);
@@ -81,6 +82,13 @@ export async function GET(request: NextRequest) {
       }
     }
     const sessionCookie = signSession({ ...identity, exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60 });
+    if (appTarget === "android") {
+      const deepLink = `sangeet://auth?session=${encodeURIComponent(sessionCookie)}&returnTo=${encodeURIComponent(returnTo)}`;
+      const response = NextResponse.redirect(deepLink);
+      response.headers.set("cache-control", "no-store");
+      clearOAuthCookies(response, secure);
+      return response;
+    }
     const target = new URL(returnTo, base);
     target.searchParams.set("google", "success");
     const response = NextResponse.redirect(target);

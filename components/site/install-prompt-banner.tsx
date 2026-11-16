@@ -73,14 +73,14 @@ export function InstallPromptBanner() {
   };
 
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#121513] px-4 py-3 text-xs">
-      <div className="flex items-center gap-3 min-w-0">
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#121513] px-3.5 py-3 text-xs sm:px-4">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1ed760]/15 text-[#1ed760]">
           <Smartphone className="h-4 w-4" />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="font-semibold text-white">Listen in the background on mobile</p>
-          <p className="text-muted-foreground truncate">
+          <p className="text-muted-foreground line-clamp-2 sm:truncate">
             {isIos
               ? "Tap Share → Add to Home Screen for lock-screen controls and background audio."
               : "Install Sangeet to your home screen or get the Android APK for background playback."}
