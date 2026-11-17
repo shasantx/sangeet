@@ -76,11 +76,16 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     let lastReportedTime = -1;
 
     const currentIsYouTube = () => {
+      const state = usePlayerStore.getState();
+      const activeTrack = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+      // On Android the native Media3 service owns YouTube playback. The hidden
+      // HTML audio element is stopped during handoff; its pause/time events are
+      // unrelated and must not overwrite native play state or lyric position.
+      if (isAndroidNativeApp() && activeTrack?.youtubeId && !state.videoMode) return true;
       if (audio.src && audio.src !== window.location.href && !audio.error) {
         return false;
       }
-      const id = usePlayerStore.getState().currentTrackId;
-      return Boolean(id && getTrack(id)?.youtubeId);
+      return Boolean(activeTrack?.youtubeId);
     };
 
     const syncAudioElementSettings = () => {
