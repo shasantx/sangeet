@@ -44,7 +44,6 @@ export function Sidebar() {
   const openCreate = useUIStore((state) => state.openCreatePlaylist);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const session = useAuthStore((state) => state.session);
-  const openAuthModal = useAuthStore((state) => state.openAuthModal);
 
   const displayName = session?.displayName || profile.name;
   const initials = session?.initials || profile.initials;
@@ -56,25 +55,30 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 hidden h-[calc(100dvh-88px)] flex-col border-r border-white/[.045] bg-sidebar/95 transition-[width] duration-300 ease-out md:flex",
+        "fixed left-0 top-0 z-40 hidden h-[calc(100dvh-92px)] flex-col border-r border-border bg-sidebar transition-[width] duration-200 ease-out md:flex",
         collapsed ? "w-[80px]" : "w-[240px]",
       )}
       aria-label="Main navigation"
     >
-      <div className={cn("flex h-[78px] shrink-0 items-center px-5", collapsed && "justify-center px-0")}>
+      <div
+        className={cn(
+          "flex h-[74px] shrink-0 items-center px-5",
+          collapsed && "justify-center px-0",
+        )}
+      >
         <Link
           href="/home"
-          className="flex min-w-0 items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[#1ED760]"
+          className="flex min-w-0 items-center gap-2.5 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label="Sangeet Music home"
         >
           <SangeetMark size={34} />
           {!collapsed && (
             <span className="min-w-0">
-              <span className="block font-display text-[18px] font-bold leading-none tracking-tight text-white flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 font-display text-[18px] font-bold leading-none tracking-tight text-foreground">
                 Sangeet
               </span>
-              <span className="mt-1 block text-[9px] font-medium tracking-wide text-neutral-400">
-                Your music, your way
+              <span className="mt-1 block text-[9.5px] font-medium tracking-wide text-muted-foreground">
+                Studio Audio
               </span>
             </span>
           )}
@@ -82,7 +86,7 @@ export function Sidebar() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 pb-3">
-        <nav className="space-y-0.5" aria-label="Discover">
+        <nav className="space-y-1" aria-label="Discover">
           {primaryNav.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -93,20 +97,25 @@ export function Sidebar() {
                 aria-current={active ? "page" : undefined}
                 title={collapsed ? item.label : undefined}
                 className={cn(
-                  "group relative flex h-10 items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                  "group relative flex h-10 items-center gap-3 rounded-xl border px-3 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                   collapsed && "justify-center px-0",
-                  active ? "bg-white/[.06] text-foreground" : "text-muted-foreground hover:bg-white/[.035] hover:text-foreground",
+                  active
+                    ? "border-border bg-elevated text-foreground"
+                    : "border-transparent text-muted-foreground hover:bg-elevated/60 hover:text-foreground",
                 )}
               >
-                {active && (
-                  <span className="absolute left-0 h-4 w-[2px] rounded-full bg-[#1ED760]" aria-hidden="true" />
+                {active && !collapsed && (
+                  <span
+                    className="absolute left-1 h-4 w-[2.5px] rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.45)]"
+                    aria-hidden="true"
+                  />
                 )}
                 <Icon
                   className={cn(
                     "h-[18px] w-[18px] shrink-0 transition-colors",
-                    active ? "text-[#1ED760]" : "text-muted-foreground group-hover:text-foreground",
+                    active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
                   )}
-                  strokeWidth={active ? 2.2 : 1.7}
+                  strokeWidth={active ? 2.2 : 1.75}
                 />
                 {!collapsed && <span>{item.label}</span>}
               </Link>
@@ -114,9 +123,9 @@ export function Sidebar() {
           })}
         </nav>
 
-        <div className="mx-3 my-5 h-px bg-white/[.055]" />
+        <div className="mx-2 my-4 h-px bg-border" />
 
-        <nav className="space-y-0.5" aria-label="Your library">
+        <nav className="space-y-1" aria-label="Your library">
           {libraryNav.map((item) => {
             const Icon = item.icon;
             const active =
@@ -130,20 +139,25 @@ export function Sidebar() {
                 aria-current={active ? "page" : undefined}
                 title={collapsed ? item.label : undefined}
                 className={cn(
-                  "group relative flex h-10 items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                  "group relative flex h-10 items-center gap-3 rounded-xl border px-3 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                   collapsed && "justify-center px-0",
-                  active ? "bg-white/[.06] text-foreground" : "text-muted-foreground hover:bg-white/[.035] hover:text-foreground",
+                  active
+                    ? "border-border bg-elevated text-foreground"
+                    : "border-transparent text-muted-foreground hover:bg-elevated/60 hover:text-foreground",
                 )}
               >
-                {active && (
-                  <span className="absolute left-0 h-4 w-[2px] rounded-full bg-[#1ED760]" aria-hidden="true" />
+                {active && !collapsed && (
+                  <span
+                    className="absolute left-1 h-4 w-[2.5px] rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.45)]"
+                    aria-hidden="true"
+                  />
                 )}
                 <Icon
                   className={cn(
                     "h-[18px] w-[18px] shrink-0",
-                    active ? "text-[#1ED760]" : "text-muted-foreground group-hover:text-foreground",
+                    active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
                   )}
-                  strokeWidth={active ? 2.2 : 1.7}
+                  strokeWidth={active ? 2.2 : 1.75}
                 />
                 {!collapsed && <span>{item.label}</span>}
               </Link>
@@ -152,14 +166,14 @@ export function Sidebar() {
         </nav>
 
         {!collapsed && (
-          <div className="mt-7">
+          <div className="mt-6">
             <div className="mb-2 flex items-center justify-between px-3">
               <span className="eyebrow">Playlists</span>
               <button
                 type="button"
                 onClick={() => openCreate()}
                 aria-label="Create playlist"
-                className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <Plus className="h-3.5 w-3.5" />
               </button>
@@ -172,14 +186,17 @@ export function Sidebar() {
                     key={playlist.id}
                     href={`/playlist/${playlist.id}`}
                     className={cn(
-                      "group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                      active ? "bg-white/[.06] text-foreground" : "text-muted-foreground hover:bg-white/[.035] hover:text-foreground",
+                      "group flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                      active
+                        ? "bg-elevated text-foreground"
+                        : "text-muted-foreground hover:bg-elevated/60 hover:text-foreground",
                     )}
                   >
                     <Artwork
                       src={playlist.artwork}
                       alt=""
-                      className="h-8 w-8 shrink-0 rounded-[5px]"
+                      res="sm"
+                      className="h-8 w-8 shrink-0 rounded-lg border border-border"
                     />
                     <span className="min-w-0 truncate">{playlist.title}</span>
                   </Link>
@@ -188,9 +205,9 @@ export function Sidebar() {
               <button
                 type="button"
                 onClick={() => openCreate()}
-                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12px] text-muted-foreground transition hover:bg-white/[.035] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12px] text-muted-foreground transition hover:bg-elevated/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[5px] border border-dashed border-white/[.13]">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-dashed border-border bg-card">
                   <Plus className="h-3.5 w-3.5" />
                 </span>
                 Create playlist
@@ -198,30 +215,33 @@ export function Sidebar() {
             </div>
           </div>
         )}
-
       </div>
 
-      <div className={cn("shrink-0 border-t border-white/[.055] p-3", collapsed && "px-2")}>
+      <div className={cn("shrink-0 border-t border-border p-3", collapsed && "px-2")}>
         {isAuthenticated && session ? (
-          <div className={cn("flex items-center gap-2", collapsed && "flex-col")}>
+          <div className={cn("flex items-center gap-1.5", collapsed && "flex-col")}>
             <Link
               href="/profile"
               title={collapsed ? displayName : undefined}
               className={cn(
-                "flex min-w-0 flex-1 items-center gap-2.5 rounded-lg p-1.5 transition hover:bg-white/[.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                "flex min-w-0 flex-1 items-center gap-2.5 rounded-xl p-1.5 transition hover:bg-elevated/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                 collapsed && "justify-center",
               )}
             >
               <span
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ring-1 ring-white/10"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ring-1 ring-border"
                 style={{ background: avatarColor }}
               >
                 {initials}
               </span>
               {!collapsed && (
                 <span className="min-w-0">
-                  <span className="block truncate text-[12px] font-medium text-foreground">{displayName}</span>
-                  <span className="mt-0.5 block text-[9.5px] text-muted-foreground">Free to listen</span>
+                  <span className="block truncate text-[12px] font-medium text-foreground">
+                    {displayName}
+                  </span>
+                  <span className="mt-0.5 block text-[9.5px] text-muted-foreground">
+                    Listener profile
+                  </span>
                 </span>
               )}
             </Link>
@@ -232,7 +252,7 @@ export function Sidebar() {
                     href="/admin"
                     aria-label="Admin Console"
                     title="Admin Console"
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#1ED760] transition hover:bg-[#1ED760]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-primary transition hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <ShieldCheck className="h-4 w-4" />
                   </Link>
@@ -240,7 +260,7 @@ export function Sidebar() {
                 <Link
                   href="/settings"
                   aria-label="Settings"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   <Settings2 className="h-4 w-4" />
                 </Link>
@@ -248,7 +268,7 @@ export function Sidebar() {
                   type="button"
                   aria-label="Collapse sidebar"
                   onClick={toggleSidebar}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground/60 transition hover:bg-white/[.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground/70 transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   <PanelLeftClose className="h-4 w-4" />
                 </button>
@@ -259,29 +279,49 @@ export function Sidebar() {
                 type="button"
                 aria-label="Expand sidebar"
                 onClick={toggleSidebar}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <PanelLeftOpen className="h-4 w-4" />
               </button>
             )}
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
             {!collapsed ? (
-              <Link
-                href="/auth"
-                className="w-full py-2 px-3 rounded-lg bg-white/[.06] hover:bg-white/[.12] text-xs font-semibold text-foreground transition text-center"
-              >
-                Sign In
-              </Link>
+              <>
+                <Link
+                  href="/auth"
+                  className="flex-1 rounded-full border border-border bg-card py-2 px-3 text-center text-xs font-semibold text-foreground transition hover:bg-elevated"
+                >
+                  Sign In
+                </Link>
+                <button
+                  type="button"
+                  aria-label="Collapse sidebar"
+                  onClick={toggleSidebar}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground/70 transition hover:bg-elevated hover:text-foreground"
+                >
+                  <PanelLeftClose className="h-4 w-4" />
+                </button>
+              </>
             ) : (
-              <Link
-                href="/auth"
-                title="Sign In"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[.06] text-xs font-semibold text-foreground transition"
-              >
-                in
-              </Link>
+              <div className="flex w-full flex-col items-center gap-2">
+                <Link
+                  href="/auth"
+                  title="Sign In"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-xs font-semibold text-foreground transition hover:bg-elevated"
+                >
+                  In
+                </Link>
+                <button
+                  type="button"
+                  aria-label="Expand sidebar"
+                  onClick={toggleSidebar}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-elevated hover:text-foreground"
+                >
+                  <PanelLeftOpen className="h-4 w-4" />
+                </button>
+              </div>
             )}
           </div>
         )}

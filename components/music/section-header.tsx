@@ -17,30 +17,36 @@ export function SectionHeader({
   eyebrow,
   description,
   href,
-  linkLabel = "View all",
+  linkLabel = "See all",
   className,
   action,
 }: SectionHeaderProps) {
   return (
-    <div className={cn("mb-5 flex items-end justify-between gap-5 lg:mb-6", className)}>
+    <div className={cn("mb-4 flex items-end justify-between gap-4 sm:mb-5", className)}>
       <div className="min-w-0">
-        {eyebrow && <p className="eyebrow mb-2">{eyebrow}</p>}
-        <h2 className="text-[22px] font-medium leading-tight tracking-[-0.03em] text-foreground sm:text-2xl lg:text-[28px]">
+        {eyebrow && (
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">
+            {eyebrow}
+          </p>
+        )}
+        <h2 className="font-display text-[20px] font-bold leading-tight tracking-[-0.03em] text-white sm:text-2xl lg:text-[26px]">
           {title}
         </h2>
         {description && (
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">{description}</p>
+          <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground sm:text-sm">
+            {description}
+          </p>
         )}
       </div>
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex shrink-0 items-center gap-2.5">
         {action}
         {href && (
           <Link
             href={href}
-            className="group hidden items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground sm:flex"
+            className="liquid-pill group inline-flex h-7 items-center gap-1 rounded-full px-3 text-[11px] font-semibold text-white/80 transition hover:bg-white/[0.14] hover:text-white"
           >
-            {linkLabel}
-            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+            <span>{linkLabel}</span>
+            <ArrowRight className="h-3 w-3 transition-transform duration-150 group-hover:translate-x-0.5" />
           </Link>
         )}
       </div>

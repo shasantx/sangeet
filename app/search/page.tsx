@@ -2,10 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Clock3, SearchX, Sparkles, X } from "lucide-react";
-import { artists, genres, getArtist, getArtistTracks } from "@/lib/catalog";
-import { getSearchSuggestions, searchCatalog, type SearchSuggestion } from "@/lib/search";
+import { ArrowUpRight, Clock3, Flame, Pause, Play, SearchX, Sparkles, X } from "lucide-react";
+import { artists, genres, getArtist, getArtistTracks, getTrack } from "@/lib/catalog";
+import {
+  registerAudiusSearchResult,
+  registerYouTubeSearchResult,
+} from "@/lib/dynamic-tracks";
+import { getSearchSuggestions, getSuggestionHref, searchCatalog } from "@/lib/search";
 import { useAppStore } from "@/store/app-store";
+import { usePlayerStore } from "@/store/player-store";
 import { Artwork } from "@/components/music/artwork";
 import { AlbumCard } from "@/components/music/album-card";
 import { ArtistCard } from "@/components/music/artist-card";
@@ -14,12 +19,12 @@ import { GenreCard } from "@/components/music/genre-card";
 import { PlayButton } from "@/components/music/play-button";
 import { PlaylistCard } from "@/components/music/playlist-card";
 import { TrackList } from "@/components/music/track-list";
-import { SearchInput } from "@/components/search/search-input";
+import { SearchInput, type LiveSearchSuggestion } from "@/components/search/search-input";
 import { SearchResultsSkeleton } from "@/components/search/search-results-skeleton";
 import { YouTubeSearchResults, type YouTubeSearchStatus } from "@/components/search/youtube-search-results";
 import { LiveMusicDiscovery } from "@/components/search/live-music-discovery";
 import { OpenMusicSearchResults } from "@/components/search/open-music-results";
-import { cn } from "@/lib/utils";
+import { cn, formatDuration } from "@/lib/utils";
 
 interface TopResult {
   kind: "artist" | "album" | "playlist";
@@ -30,6 +35,19 @@ interface TopResult {
   href: string;
   trackIds: string[];
   round?: boolean;
+}
+
+interface TrendingItem {
+  videoId?: string;
+  id: string;
+  title: string;
+  artist: string;
+  album?: string;
+  durationSeconds: number;
+  thumbnail: string;
+  views?: string;
+  source: "youtube" | "audius" | "catalog";
+  audioUrl?: string;
 }
 
 const searchSuggestionsPool = [
@@ -43,23 +61,193 @@ const searchSuggestionsPool = [
   "A.R. Rahman",
 ];
 
+const suggestCache = new Map<string, LiveSearchSuggestion[]>();
+let trendingCache: TrendingItem[] | null = null;
+
+function mapTrendingItemToTrackId(item: TrendingItem): string | null {
+  if (item.source === "youtube" || item.videoId) {
+    const videoId = item.videoId || item.id.replace(/^yt-/, "");
+    if (!videoId) return null;
+    return registerYouTubeSearchResult({
+      videoId,
+      title: item.title,
+      artist: item.artist,
+      album: item.album,
+      durationSeconds: item.durationSeconds,
+      thumbnail: item.thumbnail,
+      views: item.views,
+    }).id;
+  }
+  if (item.source === "audius") {
+    const cleanId = item.id.replace(/^aud-/, "");
+    if (!cleanId) return null;
+    return registerAudiusSearchResult({
+      id: cleanId,
+      title: item.title,
+      artist: item.artist,
+      album: item.album,
+      durationSeconds: item.durationSeconds,
+      artwork: item.thumbnail,
+      audioUrl: item.audioUrl,
+    }).id;
+  }
+  return getTrack(item.id)?.id ?? null;
+}
+
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [remoteSuggestions, setRemoteSuggestions] = useState<LiveSearchSuggestion[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [trending, setTrending] = useState<TrendingItem[]>(() => trendingCache ?? []);
+  const [loadingTrending, setLoadingTrending] = useState(() => trendingCache === null);
   const [catalogStatus, setCatalogStatus] = useState<YouTubeSearchStatus>({
     count: 0,
     loading: false,
     unavailable: false,
   });
+
   const recentSearches = useAppStore((state) => state.recentSearches);
   const addRecentSearch = useAppStore((state) => state.addRecentSearch);
   const clearRecentSearches = useAppStore((state) => state.clearRecentSearches);
 
+  const currentTrackId = usePlayerStore((state) => state.currentTrackId);
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const playTrack = usePlayerStore((state) => state.playTrack);
+  const togglePlay = usePlayerStore((state) => state.togglePlay);
+
   const results = useMemo(() => searchCatalog(query), [query]);
-  const suggestions = useMemo(() => getSearchSuggestions(query), [query]);
-  const hasQuery = query.trim().length > 0;
+  const localSuggestions = useMemo(() => {
+    if (!query.trim()) return [];
+    return getSearchSuggestions(query).map((item): LiveSearchSuggestion => ({
+      query: item.label,
+      type:
+        item.type === "artist" || item.type === "album" || item.type === "track"
+          ? item.type
+          : "youtube",
+      subtitle: item.detail,
+      artwork: item.artwork,
+      href: getSuggestionHref(item) ?? undefined,
+    }));
+  }, [query]);
+
+  const trimmedQuery = query.trim();
+  const hasQuery = trimmedQuery.length > 0;
   const onCatalogStatusChange = useCallback((status: YouTubeSearchStatus) => {
     setCatalogStatus(status);
+  }, []);
+
+  // Debounced YouTube-style live suggestions
+  useEffect(() => {
+    if (!trimmedQuery) {
+      setRemoteSuggestions([]);
+      setLoadingSuggestions(false);
+      return;
+    }
+
+    const cacheKey = trimmedQuery.toLowerCase();
+    const cached = suggestCache.get(cacheKey);
+    if (cached) {
+      setRemoteSuggestions(cached);
+      setLoadingSuggestions(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+    setLoadingSuggestions(true);
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/youtube/suggest?q=${encodeURIComponent(trimmedQuery)}`,
+          { signal: controller.signal },
+        );
+        if (!response.ok) throw new Error("Suggest failed");
+        const payload = (await response.json()) as {
+          suggestions?: Array<{
+            query: string;
+            type: "youtube" | "artist" | "album" | "track";
+            subtitle?: string;
+            artwork?: string;
+            href?: string;
+          }>;
+        };
+        if (!active) return;
+        const next: LiveSearchSuggestion[] = (payload.suggestions ?? [])
+          .filter((item) => item && typeof item.query === "string" && item.query.trim())
+          .map((item) => ({
+            query: item.query.trim(),
+            type: item.type ?? "youtube",
+            subtitle: item.subtitle,
+            artwork: item.artwork,
+            href: item.href,
+          }));
+        suggestCache.set(cacheKey, next);
+        setRemoteSuggestions(next);
+      } catch {
+        if (active && !controller.signal.aborted) {
+          setRemoteSuggestions([]);
+        }
+      } finally {
+        if (active) setLoadingSuggestions(false);
+      }
+    }, 160);
+
+    return () => {
+      active = false;
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [trimmedQuery]);
+
+  // Merge remote + local suggestions cleanly without duplicates
+  const mergedSuggestions = useMemo(() => {
+    const merged: LiveSearchSuggestion[] = [];
+    const seen = new Set<string>();
+    for (const item of [...localSuggestions, ...remoteSuggestions]) {
+      const key = item.query.trim().toLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      merged.push(item);
+      if (merged.length >= 10) break;
+    }
+    return merged;
+  }, [localSuggestions, remoteSuggestions]);
+
+  // Fetch Trending on Sangeet when viewing empty search page
+  useEffect(() => {
+    if (trendingCache !== null) {
+      setTrending(trendingCache);
+      setLoadingTrending(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+    setLoadingTrending(true);
+
+    fetch("/api/youtube/trending?limit=12", { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("Trending unavailable"))))
+      .then((payload: { results?: TrendingItem[] }) => {
+        if (!active) return;
+        const rows = Array.isArray(payload.results) ? payload.results.slice(0, 12) : [];
+        trendingCache = rows;
+        setTrending(rows);
+      })
+      .catch(() => {
+        if (active && !controller.signal.aborted) {
+          setTrending([]);
+        }
+      })
+      .finally(() => {
+        if (active) setLoadingTrending(false);
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
   }, []);
 
   useEffect(() => {
@@ -128,10 +316,40 @@ export default function SearchPage() {
     return null;
   }, [results]);
 
-  const chooseSuggestion = (suggestion: SearchSuggestion) => {
-    setQuery(suggestion.label);
-    addRecentSearch(suggestion.label);
-  };
+  const handleSelectSuggestion = useCallback(
+    (suggestion: LiveSearchSuggestion) => {
+      setQuery(suggestion.query);
+      addRecentSearch(suggestion.query);
+    },
+    [addRecentSearch],
+  );
+
+  const handleFillSuggestion = useCallback((value: string) => {
+    setQuery(value);
+  }, []);
+
+  const handleRemoveRecentSearch = useCallback((item: string) => {
+    const next = useAppStore
+      .getState()
+      .recentSearches.filter((entry) => entry.toLowerCase() !== item.toLowerCase());
+    useAppStore.setState({ recentSearches: next });
+  }, []);
+
+  const playTrendingAt = useCallback(
+    (index: number) => {
+      const queueIds = trending
+        .map(mapTrendingItemToTrackId)
+        .filter((id): id is string => Boolean(id));
+      const targetId = queueIds[index];
+      if (!targetId) return;
+      if (currentTrackId === targetId) {
+        togglePlay();
+      } else {
+        playTrack(targetId, queueIds, "Trending on Sangeet");
+      }
+    },
+    [trending, currentTrackId, togglePlay, playTrack],
+  );
 
   return (
     <div className="page-container">
@@ -142,31 +360,19 @@ export default function SearchPage() {
         </h1>
       </div>
 
-      <div className="relative max-w-[760px]">
+      <div className="relative z-30 max-w-[760px]">
         <SearchInput
           value={query}
           onChange={setQuery}
           onSubmit={() => addRecentSearch(query)}
+          suggestions={mergedSuggestions}
+          onSelectSuggestion={handleSelectSuggestion}
+          onFillSuggestion={handleFillSuggestion}
+          recentSearches={recentSearches}
+          onRemoveRecentSearch={handleRemoveRecentSearch}
+          isLoadingSuggestions={loadingSuggestions}
           autoFocus
         />
-        {hasQuery && suggestions.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {suggestions.slice(0, 5).map((suggestion) => (
-              <button
-                key={`${suggestion.type}-${suggestion.label}`}
-                type="button"
-                onClick={() => chooseSuggestion(suggestion)}
-                className="flex items-center gap-2 rounded-full border border-white/[.065] bg-white/[.025] py-1 pl-1 pr-3 text-[11px] text-muted-foreground transition hover:border-white/[.12] hover:bg-white/[.05] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <Artwork src={suggestion.artwork} alt="" className="h-6 w-6 rounded-full" />
-                <span className="font-medium">{suggestion.label}</span>
-                <span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground/50">
-                  {suggestion.type}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {!hasQuery ? (
@@ -191,7 +397,7 @@ export default function SearchPage() {
                     key={item}
                     type="button"
                     onClick={() => setQuery(item)}
-                    className="group flex items-center gap-2 rounded-full border border-white/[.07] bg-white/[.025] px-3.5 py-2 text-xs text-muted-foreground transition hover:border-white/[.13] hover:bg-white/[.05] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    className="group flex items-center gap-2 rounded-full border border-white/[.08] bg-card px-3.5 py-2 text-xs text-muted-foreground transition hover:border-white/[.16] hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <Clock3 className="h-3.5 w-3.5 text-muted-foreground/65" />
                     {item}
@@ -199,8 +405,7 @@ export default function SearchPage() {
                       className="h-3 w-3 opacity-0 transition group-hover:opacity-60"
                       onClick={(event) => {
                         event.stopPropagation();
-                        const next = recentSearches.filter((entry) => entry !== item);
-                        useAppStore.setState({ recentSearches: next });
+                        handleRemoveRecentSearch(item);
                       }}
                     />
                   </button>
@@ -222,13 +427,127 @@ export default function SearchPage() {
                   key={term}
                   type="button"
                   onClick={() => setQuery(term)}
-                  className="rounded-full border border-white/[.065] bg-white/[.025] px-4 py-2 text-xs text-muted-foreground transition hover:border-primary/30 hover:bg-primary/[.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="rounded-full border border-white/[.08] bg-card px-4 py-2 text-xs text-muted-foreground transition hover:border-primary/35 hover:bg-primary/[.08] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   {term}
                 </button>
               ))}
             </div>
           </section>
+
+          {(loadingTrending || trending.length > 0) && (
+            <section className="mt-12" aria-label="Trending on Sangeet">
+              <div className="mb-5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Flame className="h-4 w-4 text-primary" />
+                  <h2 className="text-xl font-medium tracking-[-0.025em]">Trending on Sangeet</h2>
+                </div>
+                {trending.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => playTrendingAt(0)}
+                    className="rounded-full border border-white/[.08] bg-card px-3.5 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:border-white/[.16] hover:bg-elevated hover:text-foreground"
+                  >
+                    Play all
+                  </button>
+                )}
+              </div>
+
+              {loadingTrending ? (
+                <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="flex animate-pulse items-center gap-3 rounded-xl border border-white/[.08] bg-card p-2.5"
+                    >
+                      <div className="h-5 w-7 rounded bg-white/[.06]" />
+                      <div className="h-12 w-12 shrink-0 rounded-md bg-white/[.06]" />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="h-3 w-2/3 rounded bg-white/[.06]" />
+                        <div className="h-2.5 w-1/2 rounded bg-white/[.04]" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                  {trending.map((item, index) => {
+                    const expectedTrackId =
+                      item.source === "youtube" || item.videoId
+                        ? `yt-${item.videoId || item.id.replace(/^yt-/, "")}`
+                        : item.source === "audius"
+                          ? `aud-${item.id.replace(/^aud-/, "")}`
+                          : item.id;
+                    const isCurrent = currentTrackId === expectedTrackId;
+
+                    return (
+                      <button
+                        key={`${item.id}-${index}`}
+                        type="button"
+                        onClick={() => playTrendingAt(index)}
+                        className={cn(
+                          "group flex min-w-0 items-center gap-3 rounded-xl border border-white/[.08] bg-card p-2.5 text-left transition hover:border-white/[.16] hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                          isCurrent && "border-primary/35 bg-primary/[0.08]",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "w-7 shrink-0 text-center font-mono text-xs font-semibold tabular-nums",
+                            index < 3 ? "text-primary" : "text-muted-foreground/75",
+                          )}
+                        >
+                          #{index + 1}
+                        </span>
+
+                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md">
+                          <Artwork
+                            src={item.thumbnail}
+                            alt={item.title}
+                            res="sm"
+                            className="h-full w-full rounded-md"
+                          />
+                          <span
+                            className={cn(
+                              "absolute inset-0 flex items-center justify-center bg-black/45 text-white transition-opacity",
+                              isCurrent ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+                            )}
+                          >
+                            {isCurrent && isPlaying ? (
+                              <Pause className="h-4 w-4 fill-current" />
+                            ) : (
+                              <Play className="ml-0.5 h-4 w-4 fill-current" />
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={cn(
+                              "truncate text-[13px] font-semibold",
+                              isCurrent ? "text-primary" : "text-foreground",
+                            )}
+                          >
+                            {item.title}
+                          </p>
+                          <p className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] text-muted-foreground">
+                            <span className="truncate">{item.artist}</span>
+                            {item.durationSeconds > 0 && (
+                              <>
+                                <span className="text-muted-foreground/40">·</span>
+                                <span className="shrink-0 tabular-nums">
+                                  {formatDuration(item.durationSeconds)}
+                                </span>
+                              </>
+                            )}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          )}
 
           <section className="mt-12">
             <h2 className="mb-5 text-xl font-medium tracking-[-0.025em]">Browse everything</h2>
@@ -293,7 +612,7 @@ export default function SearchPage() {
             {top && (
               <section>
                 <h2 className="mb-3 text-xl font-medium tracking-[-0.025em]">Top result</h2>
-                <div className="group relative rounded-xl border border-white/[.06] bg-white/[.025] p-4 transition-colors hover:bg-white/[.04]">
+                <div className="group relative rounded-xl border border-white/[.08] bg-card p-4 transition-colors hover:border-white/[.16] hover:bg-elevated">
                   <Link
                     href={top.href}
                     className="block outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -302,6 +621,7 @@ export default function SearchPage() {
                     <Artwork
                       src={top.image}
                       alt={`${top.title} artwork`}
+                      res="md"
                       className={cn("h-[96px] w-[96px] shadow-lg", top.round ? "rounded-full" : "rounded-lg")}
                     />
                     <h3 className="mt-5 line-clamp-2 font-display text-2xl font-medium leading-tight tracking-[-0.04em]">
@@ -325,7 +645,7 @@ export default function SearchPage() {
                   <h2 className="text-xl font-medium tracking-[-0.025em]">Tracks</h2>
                   <span className="text-[10px] text-muted-foreground">{results.tracks.length}</span>
                 </div>
-                <div className="rounded-xl border border-white/[.045] bg-white/[.012] px-2 py-2">
+                <div className="rounded-xl border border-white/[.08] bg-card px-2 py-2">
                   <TrackList
                     trackIds={results.tracks.slice(0, 5).map((track) => track.id)}
                     label={`Search results for ${query}`}
@@ -386,7 +706,7 @@ export default function SearchPage() {
                   <Link
                     key={genre.id}
                     href={`/genre/${genre.id}`}
-                    className="flex items-center gap-2 rounded-full border border-white/[.07] bg-white/[.025] px-4 py-2 text-xs text-muted-foreground transition hover:border-white/[.15] hover:text-foreground"
+                    className="flex items-center gap-2 rounded-full border border-white/[.08] bg-card px-4 py-2 text-xs text-muted-foreground transition hover:border-white/[.16] hover:bg-elevated hover:text-foreground"
                   >
                     {genre.name}
                     <ArrowUpRight className="h-3 w-3" />
@@ -395,7 +715,6 @@ export default function SearchPage() {
               </div>
             </section>
           )}
-
         </div>
       )}
 
@@ -404,7 +723,6 @@ export default function SearchPage() {
       )}
       {hasQuery && <LiveMusicDiscovery query={query} />}
       {hasQuery && <OpenMusicSearchResults query={query} />}
-
     </div>
   );
 }

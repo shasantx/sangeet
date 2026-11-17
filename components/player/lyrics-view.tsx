@@ -117,8 +117,8 @@ export function LyricsView({ trackTitle, artistName, videoId, duration }: Lyrics
 
   if (!data || (!data.syncedLines.length && !data.plainLyrics)) {
     return (
-      <div className="rounded-2xl border border-white/[.07] bg-white/[.015] px-6 py-16 text-center sm:py-20">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/[.04] text-muted-foreground/60">
+      <div className="rounded-2xl border border-border bg-card px-6 py-16 text-center sm:py-20">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-elevated text-muted-foreground/60">
           <Music2 className="h-6 w-6" />
         </div>
         <h3 className="mt-4 text-lg font-semibold text-foreground">Lyrics aren’t available for this track yet</h3>
@@ -130,23 +130,23 @@ export function LyricsView({ trackTitle, artistName, videoId, duration }: Lyrics
   }
 
   return (
-    <div className="flex h-full min-h-[380px] flex-col rounded-xl border border-white/[0.06] bg-[#0b0d0c] p-4 sm:p-6">
+    <div className="flex h-full min-h-[380px] flex-col rounded-xl border border-border bg-card p-4 sm:p-6">
       {/* Header controls */}
-      <div className="mb-4 flex items-center justify-between border-b border-white/[0.06] pb-3">
+      <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
         <div className="flex items-center gap-2 text-xs">
-          <Mic2 className="h-3.5 w-3.5 text-[#1ed760]" />
-          <span className="font-semibold text-white">
+          <Mic2 className="h-3.5 w-3.5 text-primary" />
+          <span className="font-semibold text-foreground">
             {data.hasTimestamps ? "Synchronized Lyrics" : "Plain Lyrics"}
           </span>
-          <span className="font-mono text-[11px] text-[#636c65]">· {data.source}</span>
+          <span className="font-mono text-[11px] text-muted-foreground/75">· {data.source}</span>
         </div>
         <button
           type="button"
           onClick={handleCopy}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-[#9ba39d] transition hover:bg-white/[0.07] hover:text-white"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-elevated px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
           aria-label="Copy lyrics text"
         >
-          {copied ? <Check className="h-3 w-3 text-[#1ed760]" /> : <Copy className="h-3 w-3" />}
+          {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
           <span>{copied ? "Copied" : "Copy"}</span>
         </button>
       </div>
@@ -167,10 +167,10 @@ export function LyricsView({ trackTitle, artistName, videoId, duration }: Lyrics
                 onClick={() => seek(line.timeSec)}
                 className={`cursor-pointer transition-all duration-200 select-none ${
                   isActive
-                    ? "text-xl sm:text-2xl font-bold text-[#1ed760]"
+                    ? "text-xl sm:text-2xl font-bold text-primary"
                     : isPast
-                    ? "text-sm sm:text-base font-normal text-[#9ba39d] hover:text-white"
-                    : "text-sm sm:text-base font-normal text-[#636c65] hover:text-[#9ba39d]"
+                    ? "text-sm sm:text-base font-normal text-foreground/75 hover:text-foreground"
+                    : "text-sm sm:text-base font-normal text-muted-foreground/70 hover:text-muted-foreground"
                 }`}
               >
                 {line.text}
@@ -180,13 +180,13 @@ export function LyricsView({ trackTitle, artistName, videoId, duration }: Lyrics
         </div>
       ) : (
         /* Plain text lyrics formatted in stanzas */
-        <div className="flex-1 overflow-y-auto pr-2 whitespace-pre-line text-sm sm:text-base leading-relaxed text-[#9ba39d]">
+        <div className="flex-1 overflow-y-auto pr-2 whitespace-pre-line text-sm sm:text-base leading-relaxed text-muted-foreground">
           {data.plainLyrics}
         </div>
       )}
 
       {data.hasTimestamps && (
-        <p className="mt-3 border-t border-white/[0.06] pt-2 font-mono text-[10px] text-[#636c65]">
+        <p className="mt-3 border-t border-border pt-2 font-mono text-[10px] text-muted-foreground/75">
           Click any lyric line to jump directly to that point in the song.
         </p>
       )}

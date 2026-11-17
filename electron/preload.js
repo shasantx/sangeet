@@ -33,6 +33,11 @@ contextBridge.exposeInMainWorld("sangeetDesktop", {
       // ignore
     }
   },
+  getMusicFolders: () => ipcRenderer.invoke("music:get-folders"),
+  pickMusicFolder: () => ipcRenderer.invoke("music:pick-folder"),
+  removeMusicFolder: (folder) => ipcRenderer.invoke("music:remove-folder", folder),
+  scanMusicLibrary: () => ipcRenderer.invoke("music:scan-library"),
+  reconnectOnline: () => ipcRenderer.invoke("app:reconnect-online"),
   minimize: () => ipcRenderer.send("window-minimize"),
   maximize: () => ipcRenderer.send("window-maximize"),
   close: () => ipcRenderer.send("window-close"),

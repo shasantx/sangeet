@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  FolderPlus,
   FolderUp,
   HardDrive,
+  Laptop,
   Music2,
   Pause,
   Play,
@@ -12,8 +14,10 @@ import {
   Smartphone,
   Trash2,
   Upload,
+  X,
 } from "lucide-react";
 import {
+  addAndroidEventListener,
   androidHasAudioPermission,
   androidRequestAudioPermission,
   androidScanLocalAudio,
@@ -24,13 +28,46 @@ import { removeDynamicLocalTrack } from "@/lib/dynamic-tracks";
 import {
   importLocalAudio,
   registerScannedAndroidTracks,
+  registerScannedDesktopTracks,
   removeLocalAudio,
   restoreLocalAudio,
+  scanDesktopAudioLibrary,
 } from "@/lib/local-audio";
+import { isDesktopNativeApp } from "@/lib/offline-audio";
 import type { Track } from "@/lib/types";
 import { cn, formatDuration, pluralize } from "@/lib/utils";
 import { usePlayerStore } from "@/store/player-store";
+import { toast } from "@/store/ui-store";
 import { Equalizer } from "@/components/music/equalizer";
+
+const AUDIO_ACCEPT = ".mp3,.m4a,.aac,.wav,.flac,.ogg,.opus,.wma,.webm,audio/*";
+
+interface FileHandleLike {
+  kind: "file";
+  getFile: () => Promise<File>;
+}
+
+interface DirectoryHandleLike {
+  kind: "directory";
+  values: () => AsyncIterable<FileHandleLike | DirectoryHandleLike>;
+}
+
+interface DirectoryPickerWindow extends Window {
+  showDirectoryPicker?: (options?: { mode?: "read" | "readwrite" }) => Promise<DirectoryHandleLike>;
+}
+
+async function collectFilesFromDirectory(dir: DirectoryHandleLike): Promise<File[]> {
+  const files: File[] = [];
+  for await (const entry of dir.values()) {
+    if (entry.kind === "file") {
+      files.push(await entry.getFile());
+    } else if (entry.kind === "directory") {
+      const nested = await collectFilesFromDirectory(entry);
+      files.push(...nested);
+    }
+  }
+  return files;
+}
 
 interface LocalFilesSectionProps {
   searchQuery?: string;
@@ -44,6 +81,8 @@ export function LocalFilesSection({
   className,
 }: LocalFilesSectionProps) {
   const [isNativeAndroid, setIsNativeAndroid] = useState(false);
+  const [isNativeDesktop, setIsNativeDesktop] = useState(false);
+  const [desktopFolders, setDesktopFolders] = useState<string[]>([]);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isBusy, setIsBusy] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
@@ -72,14 +111,62 @@ export function LocalFilesSection({
     }
   }, []);
 
-  useEffect(() => {
-    const native = isAndroidNativeApp();
-    setIsNativeAndroid(native);
+  const runDesktopScan = useCallback(async () => {
+    setIsBusy(true);
+    try {
+      const res = await scanDesktopAudioLibrary();
+      setDesktopFolders(res.folders);
+      setTracks(res.tracks);
+      setHasScanned(true);
+    } catch {
+      toast.error("Could not scan music folders", "Check folder permissions and try again.");
+    } finally {
+      setIsBusy(false);
+    }
+  }, []);
 
-    if (native) {
+  const handleDesktopPickFolder = useCallback(async () => {
+    if (!window.sangeetDesktop?.pickMusicFolder) return;
+    setIsBusy(true);
+    try {
+      const res = await window.sangeetDesktop.pickMusicFolder();
+      setDesktopFolders(Array.isArray(res?.folders) ? res.folders : []);
+      setTracks(registerScannedDesktopTracks(Array.isArray(res?.tracks) ? res.tracks : []));
+      setHasScanned(true);
+    } catch {
+      toast.error("Could not open folder", "Try again or choose another music folder.");
+    } finally {
+      setIsBusy(false);
+    }
+  }, []);
+
+  const handleDesktopRemoveFolder = useCallback(async (folder: string) => {
+    if (!window.sangeetDesktop?.removeMusicFolder) return;
+    setIsBusy(true);
+    try {
+      const res = await window.sangeetDesktop.removeMusicFolder(folder);
+      setDesktopFolders(Array.isArray(res?.folders) ? res.folders : []);
+      setTracks(registerScannedDesktopTracks(Array.isArray(res?.tracks) ? res.tracks : []));
+    } finally {
+      setIsBusy(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const nativeAndroid = isAndroidNativeApp();
+    const nativeDesktop = isDesktopNativeApp();
+    setIsNativeAndroid(nativeAndroid);
+    setIsNativeDesktop(nativeDesktop);
+
+    if (nativeAndroid) {
       if (androidHasAudioPermission()) {
         runAndroidScan();
       }
+      return;
+    }
+
+    if (nativeDesktop) {
+      void runDesktopScan();
       return;
     }
 
@@ -97,14 +184,12 @@ export function LocalFilesSection({
     return () => {
       cancelled = true;
     };
-  }, [runAndroidScan]);
+  }, [runAndroidScan, runDesktopScan]);
 
   useEffect(() => {
     if (!isNativeAndroid || typeof window === "undefined") return;
 
-    const prevHandler = window.__sangeetAndroidEvent;
-    const wrappedHandler = (type: string, payload?: string) => {
-      prevHandler?.(type, payload);
+    const unsubscribe = addAndroidEventListener((type, payload) => {
       if (type === "audio_permission") {
         awaitingPermissionRef.current = false;
         const granted =
@@ -120,9 +205,7 @@ export function LocalFilesSection({
           );
         }
       }
-    };
-
-    window.__sangeetAndroidEvent = wrappedHandler;
+    });
 
     const handleResume = () => {
       if (awaitingPermissionRef.current && androidHasAudioPermission()) {
@@ -134,10 +217,7 @@ export function LocalFilesSection({
 
     return () => {
       window.removeEventListener("focus", handleResume);
-      if (window.__sangeetAndroidEvent === wrappedHandler) {
-        if (prevHandler) window.__sangeetAndroidEvent = prevHandler;
-        else delete window.__sangeetAndroidEvent;
-      }
+      unsubscribe();
     };
   }, [isNativeAndroid, runAndroidScan]);
 
@@ -156,17 +236,68 @@ export function LocalFilesSection({
     androidRequestAudioPermission();
   };
 
-  const handleWebImport = async (fileList: FileList | null) => {
-    if (!fileList || fileList.length === 0) return;
+  const importFiles = async (files: File[]) => {
+    if (files.length === 0) return;
     setIsBusy(true);
     try {
-      const imported = await importLocalAudio(Array.from(fileList));
-      if (imported.length > 0) {
-        setTracks((prev) => [...prev, ...imported]);
+      const { added, skipped } = await importLocalAudio(files);
+      if (added.length > 0) {
+        setTracks((prev) => [...prev, ...added]);
+        toast.success(
+          `Imported ${pluralize(added.length, "audio file")}`,
+          skipped > 0
+            ? `${pluralize(skipped, "file")} skipped (unsupported format or over 100 MB).`
+            : "Saved privately on this device for offline playback.",
+        );
+      } else if (skipped > 0) {
+        toast.info(
+          "No audio files imported",
+          `${pluralize(skipped, "file")} skipped. Choose MP3, M4A, AAC, WAV, FLAC, OGG, OPUS, WMA, or WEBM files under 100 MB.`,
+        );
       }
+    } catch {
+      toast.error(
+        "Could not import local audio",
+        "Check browser storage permissions and available disk space.",
+      );
     } finally {
       setIsBusy(false);
     }
+  };
+
+  const handleWebImport = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    await importFiles(Array.from(fileList));
+  };
+
+  const handleFolderImport = async () => {
+    const picker =
+      typeof window !== "undefined"
+        ? (window as DirectoryPickerWindow).showDirectoryPicker
+        : undefined;
+
+    if (typeof picker === "function") {
+      try {
+        const dirHandle = await picker({ mode: "read" });
+        setIsBusy(true);
+        const collected = await collectFilesFromDirectory(dirHandle);
+        if (collected.length === 0) {
+          setIsBusy(false);
+          toast.info("Folder is empty", "No files were found in the selected folder.");
+          return;
+        }
+        await importFiles(collected);
+        return;
+      } catch (error) {
+        setIsBusy(false);
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        // Fall back to standard webkitdirectory input if showDirectoryPicker fails.
+      }
+    }
+
+    folderInputRef.current?.click();
   };
 
   const handleRemoveTrack = async (id: string) => {
@@ -199,12 +330,14 @@ export function LocalFilesSection({
 
   return (
     <section className={cn("mt-9", className)}>
-      <div className="relative overflow-hidden rounded-2xl border border-white/[.07] bg-gradient-to-b from-white/[.045] to-white/[.015] p-5 sm:p-6">
+      <div className="relative overflow-hidden rounded-2xl border border-white/[.08] bg-card p-5 sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#1ED760]/15 text-[#1ED760] ring-1 ring-[#1ED760]/25">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25">
               {isNativeAndroid ? (
                 <Smartphone className="h-5 w-5" />
+              ) : isNativeDesktop ? (
+                <Laptop className="h-5 w-5" />
               ) : (
                 <HardDrive className="h-5 w-5" />
               )}
@@ -219,7 +352,9 @@ export function LocalFilesSection({
                   ? `${pluralize(tracks.length, "song")} ready to play offline`
                   : isNativeAndroid
                     ? "Scan your Android MediaStore library to play audio stored on your phone."
-                    : "Import MP3, FLAC, WAV, AAC, or OGG files from your computer."}
+                    : isNativeDesktop
+                      ? "Automatically reads MP3, FLAC, M4A, WAV & OGG songs from your Windows Music folders."
+                      : "Import MP3, M4A, FLAC, WAV, AAC, OGG, or OPUS files from your computer."}
               </p>
             </div>
           </div>
@@ -234,7 +369,7 @@ export function LocalFilesSection({
                     if (isCollectionActive) togglePlay();
                     else if (trackIds[0]) playTrack(trackIds[0], trackIds, "Local Files");
                   }}
-                  className="inline-flex h-10 items-center gap-2 rounded-full bg-[#1ED760] px-5 text-xs font-bold text-black shadow-[0_12px_28px_-14px_rgba(30,215,96,.8)] transition hover:scale-[1.02] hover:bg-[#46E982] active:scale-[0.98] disabled:opacity-40"
+                  className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
                 >
                   {isCollectionActive && isPlaying ? (
                     <Pause className="h-3.5 w-3.5 fill-current" strokeWidth={0} />
@@ -247,7 +382,7 @@ export function LocalFilesSection({
                   type="button"
                   disabled={trackIds.length === 0}
                   onClick={() => playShuffled(trackIds, "Local Files")}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.12] bg-white/[.03] px-4 text-xs font-medium text-foreground transition hover:border-white/[.2] hover:bg-white/[.07] disabled:opacity-40"
+                  className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.12] bg-elevated px-4 text-xs font-medium text-foreground transition hover:border-white/[.2] disabled:opacity-40"
                 >
                   <Shuffle className="h-3.5 w-3.5" />
                   Shuffle
@@ -260,17 +395,38 @@ export function LocalFilesSection({
                 type="button"
                 disabled={isBusy}
                 onClick={handleAndroidScanClick}
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.12] bg-white/[.05] px-4 text-xs font-medium text-foreground transition hover:border-white/[.22] hover:bg-white/[.09] disabled:opacity-50"
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.12] bg-elevated px-4 text-xs font-medium text-foreground transition hover:border-white/[.22] disabled:opacity-50"
               >
                 <RefreshCw className={cn("h-3.5 w-3.5", isBusy && "animate-spin")} />
                 {hasScanned ? "Rescan device audio" : "Scan device audio"}
               </button>
+            ) : isNativeDesktop ? (
+              <>
+                <button
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => void runDesktopScan()}
+                  className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.12] bg-elevated px-4 text-xs font-medium text-foreground transition hover:border-white/[.22] disabled:opacity-50"
+                >
+                  <RefreshCw className={cn("h-3.5 w-3.5", isBusy && "animate-spin")} />
+                  Rescan PC music
+                </button>
+                <button
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => void handleDesktopPickFolder()}
+                  className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.12] bg-transparent px-4 text-xs font-medium text-foreground transition hover:border-white/[.2] hover:bg-elevated disabled:opacity-50"
+                >
+                  <FolderPlus className="h-3.5 w-3.5" />
+                  Add music folder
+                </button>
+              </>
             ) : (
               <>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="audio/*"
+                  accept={AUDIO_ACCEPT}
                   multiple
                   className="hidden"
                   onChange={(event) => {
@@ -281,7 +437,7 @@ export function LocalFilesSection({
                 <input
                   ref={folderInputRef}
                   type="file"
-                  accept="audio/*"
+                  accept={AUDIO_ACCEPT}
                   multiple
                   {...({ webkitdirectory: "" } as Record<string, string>)}
                   className="hidden"
@@ -302,7 +458,7 @@ export function LocalFilesSection({
                 <button
                   type="button"
                   disabled={isBusy}
-                  onClick={() => folderInputRef.current?.click()}
+                  onClick={() => void handleFolderImport()}
                   className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.1] bg-transparent px-4 text-xs font-medium text-muted-foreground transition hover:border-white/[.2] hover:bg-white/[.05] hover:text-foreground disabled:opacity-50"
                 >
                   <FolderUp className="h-3.5 w-3.5" />
@@ -312,6 +468,29 @@ export function LocalFilesSection({
             )}
           </div>
         </div>
+
+        {isNativeDesktop && desktopFolders.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-1.5">
+            {desktopFolders.map((folder) => (
+              <span
+                key={folder}
+                className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/[.09] bg-elevated px-2.5 py-1 text-[11px] text-muted-foreground"
+              >
+                <span className="truncate">{folder}</span>
+                {desktopFolders.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => void handleDesktopRemoveFolder(folder)}
+                    aria-label={`Remove folder ${folder}`}
+                    className="rounded-full p-0.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
 
         {permissionMessage && (
           <p className="mt-4 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3.5 py-2.5 text-xs text-amber-200">
@@ -329,14 +508,20 @@ export function LocalFilesSection({
                   ? hasScanned
                     ? "No audio files found on this device"
                     : "Tap “Scan device audio” to load your music"
-                  : "No local audio files imported yet"}
+                  : isNativeDesktop
+                    ? hasScanned
+                      ? "No audio files found in your Music folders"
+                      : "Scanning your PC Music library..."
+                    : "No local audio files imported yet"}
             </p>
             <p className="mt-1 max-w-md text-xs text-muted-foreground">
               {tracks.length > 0 && normalizedQuery
                 ? "Try clearing the search box to see all local files."
                 : isNativeAndroid
                   ? "Sangeet reads audio metadata directly from your Android MediaStore."
-                  : "Imported files are saved privately in this browser using IndexedDB."}
+                  : isNativeDesktop
+                    ? "Click “Add music folder” to include additional folders containing MP3, FLAC, M4A, or WAV songs."
+                    : "Imported files are saved privately in this browser using IndexedDB."}
             </p>
           </div>
         ) : (
@@ -351,7 +536,7 @@ export function LocalFilesSection({
                   key={track.id}
                   className={cn(
                     "group flex items-center gap-3 px-3 py-2.5 transition hover:bg-white/[.045] sm:px-4",
-                    isCurrent && "bg-[#1ED760]/[0.07]",
+                    isCurrent && "bg-primary/[0.08]",
                   )}
                 >
                   <button
@@ -364,9 +549,9 @@ export function LocalFilesSection({
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs text-muted-foreground transition hover:bg-white/[.08] hover:text-foreground"
                   >
                     {isCurrent && isPlaying ? (
-                      <Equalizer playing className="text-[#1ED760]" />
+                      <Equalizer playing className="text-primary" />
                     ) : isCurrent ? (
-                      <Play className="h-3.5 w-3.5 fill-current text-[#1ED760]" />
+                      <Play className="h-3.5 w-3.5 fill-current text-primary" />
                     ) : (
                       <>
                         <span className="tabular-nums group-hover:hidden">
@@ -388,7 +573,7 @@ export function LocalFilesSection({
                     <p
                       className={cn(
                         "truncate text-sm font-medium",
-                        isCurrent ? "text-[#1ED760]" : "text-foreground",
+                        isCurrent ? "text-primary" : "text-foreground",
                       )}
                     >
                       {track.title}
@@ -404,7 +589,7 @@ export function LocalFilesSection({
                     </span>
                   )}
 
-                  {!isNativeAndroid && (
+                  {!isNativeAndroid && !isNativeDesktop && (
                     <button
                       type="button"
                       onClick={() => void handleRemoveTrack(track.id)}

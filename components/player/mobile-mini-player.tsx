@@ -1,29 +1,95 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Heart, Pause, Play, SkipForward } from "lucide-react";
 import { getArtist, getTrack } from "@/lib/catalog";
+import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/store/player-store";
 import { useLibraryStore } from "@/store/library-store";
 import { Artwork } from "@/components/music/artwork";
+import { Equalizer } from "@/components/music/equalizer";
 import { toast } from "@/store/ui-store";
 
-export function MobileMiniPlayer() {
-  const currentTrackId = usePlayerStore((state) => state.currentTrackId);
-  const isPlaying = usePlayerStore((state) => state.isPlaying);
+function MiniPlayerProgress() {
   const currentTime = usePlayerStore((state) => state.currentTime);
   const duration = usePlayerStore((state) => state.duration);
+  const progress = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
+
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[2.5px] overflow-hidden bg-border">
+      <div
+        className="h-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.45)] transition-[width] duration-300 ease-linear"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  );
+}
+
+export function MobileMiniPlayer() {
+  const router = useRouter();
+  const currentTrackId = usePlayerStore((state) => state.currentTrackId);
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
   const togglePlay = usePlayerStore((state) => state.togglePlay);
   const next = usePlayerStore((state) => state.next);
+  const previous = usePlayerStore((state) => state.previous);
 
-  const isLiked = useLibraryStore((state) => (currentTrackId ? state.isLiked(currentTrackId) : false));
+  const isLiked = useLibraryStore((state) =>
+    currentTrackId ? state.isLiked(currentTrackId) : false,
+  );
   const toggleLike = useLibraryStore((state) => state.toggleLike);
+
+  const [dragX, setDragX] = useState(0);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const swipedRef = useRef(false);
 
   const current = currentTrackId ? getTrack(currentTrackId) : undefined;
   const artist = current ? getArtist(current.artistId) : undefined;
-  const progress = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
   if (!current) return null;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    swipedRef.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const start = touchStartRef.current;
+    const touch = e.touches[0];
+    if (!start || !touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.15) {
+      swipedRef.current = true;
+      setDragX(Math.max(-96, Math.min(96, dx)));
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const start = touchStartRef.current;
+    const touch = e.changedTouches[0];
+    if (start && touch) {
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      if (dy < -42 && Math.abs(dy) > Math.abs(dx) * 1.2) {
+        swipedRef.current = true;
+        setDragX(0);
+        touchStartRef.current = null;
+        router.push("/now-playing");
+        return;
+      }
+      if (dx < -54 && Math.abs(dx) > Math.abs(dy)) {
+        next();
+      } else if (dx > 54 && Math.abs(dx) > Math.abs(dy)) {
+        previous();
+      }
+    }
+    setDragX(0);
+    touchStartRef.current = null;
+  };
 
   const handleToggleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -38,88 +104,92 @@ export function MobileMiniPlayer() {
 
   return (
     <aside
-      className="mobile-mini-player fixed inset-x-2.5 sm:inset-x-4 z-40 overflow-hidden rounded-xl border border-white/[0.12] bg-[#16161d]/95 shadow-[0_14px_36px_rgba(0,0,0,0.7)] backdrop-blur-2xl md:hidden pointer-events-auto transition-all duration-300"
-      style={{ bottom: "calc(62px + env(safe-area-inset-bottom))" }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      className="mobile-mini-player pointer-events-auto fixed inset-x-2 z-40 overflow-hidden rounded-xl border border-border bg-elevated transition-transform duration-200 ease-out md:hidden"
+      style={{
+        bottom: "calc(74px + env(safe-area-inset-bottom))",
+        ...(dragX !== 0 ? { transform: `translateX(${dragX}px)`, transitionDuration: "0ms" } : {}),
+      }}
       aria-label="Mini music player"
     >
-      {/* Bottom Hairline Progress Bar (Spotify mobile style) */}
-      <div className="absolute inset-x-2.5 bottom-0 h-[2px] overflow-hidden rounded-full bg-white/[0.1]">
-        <div
-          className="h-full bg-[#1ed760] transition-[width] duration-300 ease-linear shadow-[0_0_8px_#1ed760]"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+      <MiniPlayerProgress />
 
-      <div className="flex h-[58px] items-center gap-2.5 px-2.5 py-1.5 sm:gap-3 sm:px-3">
-        {/* Artwork & Track Info (Tappable to expand now playing) */}
+      <div className="flex h-[62px] items-center gap-2 p-0 pr-2">
         <Link
           href="/now-playing"
-          className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3 outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760] rounded-lg"
+          onClick={(e) => {
+            if (swipedRef.current) {
+              e.preventDefault();
+              swipedRef.current = false;
+            }
+          }}
+          className="flex h-full min-w-0 flex-1 items-center gap-3 rounded-l-xl outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
           aria-label={`Open now playing: ${current.title} by ${artist?.name ?? "Sangeet artist"}`}
         >
-          <div className="relative aspect-square h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#161a17] shadow-md">
+          <div className="relative h-[62px] w-[62px] shrink-0 overflow-hidden rounded-none border-r border-border bg-card">
             <Artwork
               src={current.artwork}
               alt=""
-              className="h-full w-full object-cover"
+              res="sm"
+              priority
+              className="h-full w-full rounded-none object-cover"
             />
           </div>
 
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-display text-[13px] font-bold tracking-tight text-white leading-snug">
+          <div className="min-w-0 flex-1 pr-1">
+            <p className="truncate font-display text-[13.5px] font-bold leading-snug tracking-tight text-foreground">
               {current.title}
             </p>
-            <div className="flex items-center gap-1.5 text-[11px] font-medium text-white/75">
-              {isPlaying && (
-                <span className="flex items-end gap-0.5 h-2.5 shrink-0" aria-hidden="true">
-                  <span className="w-0.5 h-full rounded-full bg-[#1ed760] animate-pulse" />
-                  <span className="w-0.5 h-1.5 rounded-full bg-[#1ed760] animate-pulse delay-75" />
-                  <span className="w-0.5 h-2 rounded-full bg-[#1ed760] animate-pulse delay-150" />
+            <div className="mt-0.5 flex items-center gap-1.5 text-[11.5px] font-medium text-muted-foreground">
+              {isPlaying ? (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/15 px-1.5 py-[1px] text-[9.5px] font-semibold text-primary">
+                  <Equalizer playing className="h-2.5 w-2.5" />
                 </span>
+              ) : (
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/45" />
               )}
               <span className="truncate">{artist?.name ?? "Sangeet artist"}</span>
             </div>
           </div>
         </Link>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-          {/* Like / Favorite Button */}
+        <div className="flex shrink-0 items-center gap-0.5">
           <button
             type="button"
             onClick={handleToggleLike}
             aria-label={isLiked ? "Unlike" : "Like"}
-            className="double-tap-none flex h-9 w-9 items-center justify-center rounded-full text-white/75 hover:text-white transition active:scale-90"
+            className="double-tap-none flex h-11 w-11 items-center justify-center rounded-full text-foreground/80 transition hover:bg-card hover:text-foreground active:scale-90"
           >
             <Heart
-              className={`h-4 w-4 transition ${
-                isLiked ? "fill-[#1ed760] text-[#1ed760]" : "text-white/75"
-              }`}
+              className={cn(
+                "h-[18px] w-[18px] transition",
+                isLiked ? "fill-primary text-primary" : "text-foreground/80",
+              )}
             />
           </button>
 
-          {/* Clean White Circular Play/Pause Button */}
           <button
             type="button"
             onClick={togglePlay}
             aria-label={isPlaying ? "Pause" : "Play"}
-            className="double-tap-none flex h-9 w-9 items-center justify-center rounded-full bg-white text-black shadow-md hover:scale-105 active:scale-95 transition"
+            className="double-tap-none flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_4px_14px_hsl(var(--primary)/0.25)] transition hover:scale-105 active:scale-95"
           >
             {isPlaying ? (
-              <Pause className="h-4 w-4 fill-current" strokeWidth={0} />
+              <Pause className="h-[18px] w-[18px] fill-current" strokeWidth={0} />
             ) : (
-              <Play className="ml-0.5 h-4 w-4 fill-current" strokeWidth={0} />
+              <Play className="ml-0.5 h-[18px] w-[18px] fill-current" strokeWidth={0} />
             )}
           </button>
 
-          {/* Next Button */}
           <button
             type="button"
             onClick={() => next()}
             aria-label="Next track"
-            className="double-tap-none flex h-9 w-9 items-center justify-center rounded-full text-white/75 hover:text-white transition active:scale-90"
+            className="double-tap-none flex h-11 w-11 items-center justify-center rounded-full text-foreground/80 transition hover:bg-card hover:text-foreground active:scale-90"
           >
-            <SkipForward className="h-4 w-4 fill-current" strokeWidth={1} />
+            <SkipForward className="h-[18px] w-[18px] fill-current" strokeWidth={1} />
           </button>
         </div>
       </div>

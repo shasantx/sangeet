@@ -5,9 +5,9 @@ const cspHeader = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "media-src 'self' blob: data: https://*.audius.co https://api.audius.co https://*.googlevideo.com https://*.youtube.com",
+  "media-src 'self' blob: data: sangeet-local: https://*.audius.co https://api.audius.co https://*.googlevideo.com https://*.youtube.com",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://accounts.google.com",
-  "connect-src 'self' https://*.audius.co https://api.audius.co https://lrclib.net https://*.youtube.com https://*.googlevideo.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com",
+  "connect-src 'self' sangeet-local: https://*.audius.co https://api.audius.co https://lrclib.net https://*.youtube.com https://*.googlevideo.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
@@ -16,8 +16,13 @@ const cspHeader = [
 ].join("; ");
 
 const nextConfig = {
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   reactStrictMode: true,
   poweredByHeader: false,
+  outputFileTracingExcludes: {
+    "/api/download/windows": ["./release/**", "./public/downloads/**"],
+    "/api/download/android": ["./android/**", "./public/downloads/**"],
+  },
   async headers() {
     return [
       {

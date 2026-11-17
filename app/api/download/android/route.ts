@@ -1,42 +1,204 @@
-import { NextResponse } from "next/server";
+import fs from "node:fs";
+import path from "node:path";
+import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const FALLBACK_APK_URL =
-  "https://github.com/shasantx/sangeet/releases/latest/download/sangeet-android.apk";
+const CANDIDATE_APK_PATHS = [
+  path.join(process.cwd(), "public", "downloads", "sangeet-android.apk"),
+  path.join(
+    process.cwd(),
+    "android",
+    "app",
+    "build",
+    "outputs",
+    "apk",
+    "release",
+    "app-release.apk",
+  ),
+  path.join(
+    process.cwd(),
+    "android",
+    "app",
+    "build",
+    "outputs",
+    "apk",
+    "debug",
+    "app-debug.apk",
+  ),
+];
 
-export async function GET() {
-  try {
-    const res = await fetch(
-      "https://api.github.com/repos/shasantx/sangeet/releases/latest",
-      {
-        headers: {
-          Accept: "application/vnd.github+json",
-          "User-Agent": "Sangeet-App",
-        },
-        next: { revalidate: 300 },
-        signal: AbortSignal.timeout(5000),
-      },
-    );
+const CONTENT_TYPE = "application/vnd.android.package-archive";
+const CONTENT_DISPOSITION = 'attachment; filename="sangeet-android.apk"';
+const CACHE_CONTROL = "public, max-age=3600";
 
-    if (res.ok) {
-      const release = (await res.json()) as {
-        assets?: Array<{ name?: string; browser_download_url?: string }>;
-      };
-      const apkAsset = release.assets?.find(
-        (asset) =>
-          typeof asset.name === "string" &&
-          asset.name.endsWith(".apk") &&
-          typeof asset.browser_download_url === "string",
-      );
-      if (apkAsset?.browser_download_url) {
-        return NextResponse.redirect(apkAsset.browser_download_url, 302);
+async function findLocalApk(): Promise<{ filePath: string; size: number } | null> {
+  for (const filePath of CANDIDATE_APK_PATHS) {
+    try {
+      const stats = await fs.promises.stat(filePath);
+      if (stats.isFile() && stats.size > 0) {
+        return { filePath, size: stats.size };
       }
+    } catch {
+      // Candidate path does not exist; try next location.
     }
+  }
+  return null;
+}
+
+function getSafeEnvDownloadUrl(): string | null {
+  const raw = process.env.ANDROID_APK_DOWNLOAD_URL?.trim();
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw);
+    const host = parsed.hostname.toLowerCase();
+    if (parsed.protocol !== "https:") return null;
+    if (
+      host === "github.com" ||
+      host.endsWith(".github.com") ||
+      host === "githubusercontent.com" ||
+      host.endsWith(".githubusercontent.com")
+    ) {
+      return null;
+    }
+    return parsed.toString();
   } catch {
-    // Fall back to canonical GitHub latest download URL.
+    return null;
+  }
+}
+
+function parseRangeHeader(
+  rangeHeader: string,
+  totalSize: number,
+): { start: number; end: number } | "invalid" {
+  const match = /^bytes=(\d*)-(\d*)$/i.exec(rangeHeader.trim());
+  if (!match) return "invalid";
+  const [, startStr, endStr] = match;
+  if (!startStr && !endStr) return "invalid";
+
+  let start: number;
+  let end: number;
+
+  if (!startStr) {
+    const suffixLength = Number(endStr);
+    if (!Number.isFinite(suffixLength) || suffixLength <= 0) return "invalid";
+    start = Math.max(0, totalSize - suffixLength);
+    end = totalSize - 1;
+  } else {
+    start = Number(startStr);
+    end = endStr ? Math.min(totalSize - 1, Number(endStr)) : totalSize - 1;
   }
 
-  return NextResponse.redirect(FALLBACK_APK_URL, 302);
+  if (
+    !Number.isInteger(start) ||
+    !Number.isInteger(end) ||
+    start < 0 ||
+    start > end ||
+    start >= totalSize
+  ) {
+    return "invalid";
+  }
+
+  return { start, end };
+}
+
+function nodeStreamToWeb(stream: fs.ReadStream): ReadableStream<Uint8Array> {
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      stream.on("data", (chunk: Buffer | string) => {
+        controller.enqueue(
+          typeof chunk === "string" ? Buffer.from(chunk) : new Uint8Array(chunk),
+        );
+      });
+      stream.on("end", () => controller.close());
+      stream.on("error", (err) => controller.error(err));
+    },
+    cancel() {
+      stream.destroy();
+    },
+  });
+}
+
+async function handleDownload(req: NextRequest, headOnly: boolean): Promise<Response> {
+  const local = await findLocalApk();
+
+  if (local) {
+    const { filePath, size } = local;
+    const rangeHeader = req.headers.get("range");
+
+    if (rangeHeader) {
+      const parsedRange = parseRangeHeader(rangeHeader, size);
+      if (parsedRange === "invalid") {
+        return new NextResponse(null, {
+          status: 416,
+          headers: {
+            "Accept-Ranges": "bytes",
+            "Content-Range": `bytes */${size}`,
+          },
+        });
+      }
+
+      const { start, end } = parsedRange;
+      const chunkLength = end - start + 1;
+      const headers = new Headers({
+        "Content-Type": CONTENT_TYPE,
+        "Content-Disposition": CONTENT_DISPOSITION,
+        "Accept-Ranges": "bytes",
+        "Content-Range": `bytes ${start}-${end}/${size}`,
+        "Content-Length": String(chunkLength),
+        "Cache-Control": CACHE_CONTROL,
+      });
+
+      if (headOnly) {
+        return new NextResponse(null, { status: 206, headers });
+      }
+
+      const stream = fs.createReadStream(filePath, { start, end });
+      return new NextResponse(nodeStreamToWeb(stream), { status: 206, headers });
+    }
+
+    const headers = new Headers({
+      "Content-Type": CONTENT_TYPE,
+      "Content-Disposition": CONTENT_DISPOSITION,
+      "Accept-Ranges": "bytes",
+      "Content-Length": String(size),
+      "Cache-Control": CACHE_CONTROL,
+    });
+
+    if (headOnly) {
+      return new NextResponse(null, { status: 200, headers });
+    }
+
+    const stream = fs.createReadStream(filePath);
+    return new NextResponse(nodeStreamToWeb(stream), { status: 200, headers });
+  }
+
+  const externalUrl = getSafeEnvDownloadUrl();
+  if (externalUrl) {
+    return NextResponse.redirect(externalUrl, 302);
+  }
+
+  if (headOnly) {
+    return new NextResponse(null, {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  return NextResponse.json(
+    {
+      error: "android_apk_unavailable",
+      message: "The Android APK is not hosted on this server yet.",
+    },
+    { status: 503 },
+  );
+}
+
+export async function GET(req: NextRequest) {
+  return handleDownload(req, false);
+}
+
+export async function HEAD(req: NextRequest) {
+  return handleDownload(req, true);
 }

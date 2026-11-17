@@ -22,7 +22,13 @@ const TIMER_OPTIONS: Array<{ label: string; value: number | "track" | null }> = 
   { label: "60 minutes", value: 60 },
 ];
 
-const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5];
+const SPEED_OPTIONS: Array<{ rate: number; label: string; title?: string }> = [
+  { rate: 0.75, label: "0.75x" },
+  { rate: 0.85, label: "0.85x", title: "Slowed (0.85x)" },
+  { rate: 1, label: "1x", title: "Normal speed" },
+  { rate: 1.25, label: "1.25x" },
+  { rate: 1.5, label: "1.5x" },
+];
 
 export function SleepTimerMenu({ className }: { className?: string }) {
   const sleepTimerEndsAt = usePlayerStore((state) => state.sleepTimerEndsAt);
@@ -55,8 +61,8 @@ export function SleepTimerMenu({ className }: { className?: string }) {
           type="button"
           aria-label="Sleep timer and playback speed"
           className={cn(
-            "relative flex h-8 items-center justify-center gap-1 rounded-full px-2 text-muted-foreground transition hover:bg-white/[.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-            timerActive && "text-[#1ed760]",
+            "relative flex h-8 items-center justify-center gap-1 rounded-full px-2 text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+            (timerActive || playbackRate !== 1) && "text-primary",
             className,
           )}
         >
@@ -76,9 +82,9 @@ export function SleepTimerMenu({ className }: { className?: string }) {
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
+      <DropdownMenuContent align="end" className="w-60 border-border bg-popover">
         <DropdownMenuLabel className="flex items-center gap-2 text-xs">
-          <Moon className="h-3.5 w-3.5 text-[#1ed760]" />
+          <Moon className="h-3.5 w-3.5 text-primary" />
           Sleep timer
         </DropdownMenuLabel>
         {TIMER_OPTIONS.map((option) => {
@@ -90,32 +96,43 @@ export function SleepTimerMenu({ className }: { className?: string }) {
             <DropdownMenuItem
               key={String(option.value)}
               onClick={() => setSleepTimer(option.value)}
-              className={cn("justify-between text-xs", isSelected && "text-[#1ed760] font-semibold")}
+              className={cn("justify-between text-xs", isSelected && "text-primary font-semibold")}
             >
               <span>{option.label}</span>
-              {isSelected && <span className="h-1.5 w-1.5 rounded-full bg-[#1ed760]" />}
+              {isSelected && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
             </DropdownMenuItem>
           );
         })}
         <DropdownMenuSeparator />
-        <DropdownMenuLabel className="flex items-center gap-2 text-xs">
-          <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
-          Playback speed
+        <DropdownMenuLabel className="flex items-center justify-between text-xs">
+          <span className="flex items-center gap-2">
+            <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
+            Playback speed
+          </span>
+          {playbackRate === 0.85 && (
+            <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9.5px] font-medium text-primary">
+              Slowed
+            </span>
+          )}
         </DropdownMenuLabel>
-        <div className="grid grid-cols-4 gap-1 px-2 py-1.5">
-          {SPEED_OPTIONS.map((rate) => (
+        <div
+          className="grid grid-cols-5 gap-1 px-2 py-1.5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {SPEED_OPTIONS.map((option) => (
             <button
-              key={rate}
+              key={option.rate}
               type="button"
-              onClick={() => setPlaybackRate(rate)}
+              title={option.title ?? `${option.rate}x speed`}
+              onClick={() => setPlaybackRate(option.rate)}
               className={cn(
-                "rounded-md py-1 font-mono text-[11px] font-medium transition",
-                playbackRate === rate
-                  ? "bg-[#1ed760] text-black font-bold"
-                  : "bg-white/[0.05] text-muted-foreground hover:bg-white/[0.1] hover:text-foreground",
+                "rounded-md py-1 font-mono text-[10.5px] font-medium transition",
+                playbackRate === option.rate
+                  ? "bg-primary text-primary-foreground font-bold"
+                  : "bg-card text-muted-foreground hover:bg-elevated hover:text-foreground",
               )}
             >
-              {rate}x
+              {option.label}
             </button>
           ))}
         </div>

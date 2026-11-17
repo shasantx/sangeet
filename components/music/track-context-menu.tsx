@@ -3,17 +3,17 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  CloudOff,
   Disc3,
   Download,
+  FileDown,
   Heart,
   HeartOff,
   ListEnd,
   ListPlus,
+  LoaderCircle,
   MoreHorizontal,
   Play,
   PlusCircle,
-  LoaderCircle,
   Trash2,
   UserRound,
 } from "lucide-react";
@@ -23,8 +23,14 @@ import { getAlbum, getArtist } from "@/lib/catalog";
 import { useLibraryStore } from "@/store/library-store";
 import { usePlayerStore } from "@/store/player-store";
 import { useUIStore, toast } from "@/store/ui-store";
-import { useAuthStore } from "@/store/auth-store";
-import { canDownloadOffline, isOfflineAvailable, removeOfflineTrack, saveTrackOffline } from "@/lib/offline-audio";
+import {
+  canDownloadOffline,
+  exportTrackAudioFile,
+  isOfflineAvailable,
+  removeOfflineTrack,
+  saveTrackOffline,
+  subscribeOfflineChanges,
+} from "@/lib/offline-audio";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,7 +68,11 @@ export function TrackContextMenu({
   const album = getAlbum(track.albumId);
   const artist = getArtist(track.artistId);
   const isCurrent = currentTrackId === track.id;
-  const canSaveOffline = canDownloadOffline(track);
+  const [canSaveOffline, setCanSaveOffline] = useState(false);
+
+  useEffect(() => {
+    setCanSaveOffline(canDownloadOffline(track));
+  }, [track]);
 
   return (
     <DropdownMenu>
@@ -78,7 +88,7 @@ export function TrackContextMenu({
           <MoreHorizontal className="h-4 w-4" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={align} className="w-[225px]">
+      <DropdownMenuContent align={align} className="w-[235px]">
         <DropdownMenuItem onSelect={() => playTrack(track.id, [track.id], track.title)}>
           <Play className="h-3.5 w-3.5" />
           {isCurrent && isPlaying ? "Restart track" : "Play now"}
@@ -118,7 +128,12 @@ export function TrackContextMenu({
           <PlusCircle className="h-3.5 w-3.5" />
           Add to playlist
         </DropdownMenuItem>
-        {canSaveOffline ? <OfflineDownloadItem track={track} /> : <DropdownMenuItem disabled><CloudOff className="h-3.5 w-3.5" />Offline copy unavailable for this source</DropdownMenuItem>}
+        {canSaveOffline && (
+          <>
+            <OfflineDownloadItem track={track} />
+            <ExportAudioItem track={track} artistName={artist?.name ?? "Sangeet"} />
+          </>
+        )}
         {includeNavigation && (
           <>
             <DropdownMenuSeparator />
@@ -154,34 +169,97 @@ function OfflineDownloadItem({ track }: { track: Track }) {
   const artist = getArtist(track.artistId);
   const [downloaded, setDownloaded] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
 
   useEffect(() => {
     let active = true;
-    void isOfflineAvailable(track).then((available) => { if (active) setDownloaded(available); }).catch(() => undefined);
-    return () => { active = false; };
+    const syncAvailability = () => {
+      void isOfflineAvailable(track)
+        .then((available) => {
+          if (active) setDownloaded(available);
+        })
+        .catch(() => undefined);
+    };
+    syncAvailability();
+    const unsubscribe = subscribeOfflineChanges(syncAvailability);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, [track]);
 
   const toggleDownload = async () => {
     setBusy(true);
+    setProgress(null);
     try {
       if (downloaded) {
         await removeOfflineTrack(track);
         setDownloaded(false);
         toast.success("Removed offline copy", track.title);
       } else {
-        await saveTrackOffline(track, artist?.name ?? "Sangeet");
+        await saveTrackOffline(track, artist?.name ?? "Sangeet", (pct) => {
+          setProgress(Math.max(0, Math.min(100, Math.round(pct))));
+        });
         setDownloaded(true);
         toast.success("Saved for offline listening", track.title);
       }
     } catch (error) {
-      toast.error("Offline save failed", error instanceof Error ? error.message : "Try again when you’re online.");
+      toast.error(
+        "Offline save failed",
+        error instanceof Error ? error.message : "Try again when you’re online.",
+      );
     } finally {
       setBusy(false);
+      setProgress(null);
     }
   };
 
-  return <DropdownMenuItem disabled={busy} onSelect={() => void toggleDownload()}>
-    {busy ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : downloaded ? <Trash2 className="h-3.5 w-3.5" /> : <Download className="h-3.5 w-3.5" />}
-    {busy ? "Saving offline…" : downloaded ? "Remove offline copy" : "Download for offline"}
-  </DropdownMenuItem>;
+  return (
+    <DropdownMenuItem disabled={busy} onSelect={() => void toggleDownload()}>
+      {busy ? (
+        <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+      ) : downloaded ? (
+        <Trash2 className="h-3.5 w-3.5" />
+      ) : (
+        <Download className="h-3.5 w-3.5" />
+      )}
+      {busy
+        ? progress !== null && progress > 0
+          ? `Saving offline… ${progress}%`
+          : "Saving offline…"
+        : downloaded
+          ? "Remove offline copy"
+          : "Download for offline"}
+    </DropdownMenuItem>
+  );
+}
+
+function ExportAudioItem({ track, artistName }: { track: Track; artistName: string }) {
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportTrackAudioFile(track, artistName);
+      toast.success("Exported audio file", `${track.title} saved to Downloads.`);
+    } catch (error) {
+      toast.error(
+        "Export failed",
+        error instanceof Error ? error.message : "Could not export this audio file.",
+      );
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  return (
+    <DropdownMenuItem disabled={exporting} onSelect={() => void handleExport()}>
+      {exporting ? (
+        <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <FileDown className="h-3.5 w-3.5" />
+      )}
+      {exporting ? "Exporting audio…" : "Export audio file"}
+    </DropdownMenuItem>
+  );
 }

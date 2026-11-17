@@ -39,9 +39,9 @@ export function PlayButton({
   };
   const variants = {
     primary:
-      "bg-[#1ED760] text-black font-bold shadow-[0_12px_30px_-10px_rgba(29,185,84,.75)] hover:scale-105 hover:bg-[#46E982]",
-    ghost: "bg-white/[.08] text-foreground backdrop-blur hover:bg-white/[.14]",
-    glass: "bg-black/35 text-white backdrop-blur-md border border-white/10 hover:bg-black/55",
+      "bg-primary text-primary-foreground font-bold shadow-[0_12px_28px_-10px_hsl(var(--primary)/0.55)] hover:scale-105 hover:brightness-110",
+    ghost: "border border-white/[0.08] bg-elevated text-foreground hover:bg-elevated/85",
+    glass: "border border-white/[0.12] bg-black/65 text-white hover:bg-black/80",
   };
 
   return (

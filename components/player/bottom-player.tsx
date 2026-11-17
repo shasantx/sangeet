@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Expand, ListMusic, Mic2, RotateCcw } from "lucide-react";
 import { albumMap, artistMap, getArtist, getTrack } from "@/lib/catalog";
-import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/store/player-store";
 import { useUIStore } from "@/store/ui-store";
 import { Artwork } from "@/components/music/artwork";
@@ -29,11 +28,11 @@ export function BottomPlayer() {
 
   return (
     <footer
-      className="fixed inset-x-0 bottom-0 z-50 hidden h-[92px] border-t border-white/[.07] bg-sidebar/95 shadow-[0_-18px_48px_rgba(0,0,0,.22)] backdrop-blur-2xl md:flex before:absolute before:inset-x-[4%] before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/45 before:to-transparent"
+      className="fixed inset-x-0 bottom-0 z-50 hidden h-[92px] border-t border-border bg-surface shadow-[0_-16px_40px_-12px_rgba(0,0,0,0.65)] md:flex before:pointer-events-none before:absolute before:inset-x-[6%] before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/45 before:to-transparent"
       aria-label="Music player"
     >
       {error && (
-        <div className="absolute inset-x-0 -top-[38px] flex items-center justify-center gap-3 border-t border-[#c44d58]/20 bg-[#2a171b]/95 px-4 py-2 text-[11px] text-[#f0b6ba] backdrop-blur-md">
+        <div className="absolute inset-x-0 -top-[38px] flex items-center justify-center gap-3 border-t border-destructive/35 bg-[#2a171b] px-4 py-2 text-[11px] text-[#f0b6ba]">
           <span className="line-clamp-1">{error}</span>
           <button
             type="button"
@@ -45,21 +44,22 @@ export function BottomPlayer() {
         </div>
       )}
 
-      <div className="grid h-full w-full grid-cols-[minmax(0,.8fr)_minmax(250px,1.4fr)_minmax(84px,.7fr)] items-center gap-2 px-3 lg:gap-4 lg:px-5 xl:px-7">
+      <div className="grid h-full w-full grid-cols-[minmax(0,.82fr)_minmax(260px,1.4fr)_minmax(90px,.75fr)] items-center gap-2 px-3 lg:gap-4 lg:px-5 xl:px-7">
         <div className="flex min-w-0 items-center gap-3">
           {current ? (
             <>
               <Link
                 href="/now-playing"
-                className="group relative shrink-0 overflow-hidden rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="group relative shrink-0 overflow-hidden rounded-xl border border-border shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 aria-label="Open now playing"
               >
                 <Artwork
                   src={current.artwork}
                   alt={`${current.title} artwork`}
-                  className="h-[54px] w-[54px] rounded-md"
+                  res="sm"
+                  className="h-[54px] w-[54px] rounded-xl"
                 />
-                <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
+                <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/35 group-hover:opacity-100">
                   <Expand className="h-4 w-4 text-white" />
                 </span>
               </Link>
@@ -67,14 +67,14 @@ export function BottomPlayer() {
                 <span className="flex min-w-0 items-center gap-1.5">
                   <Link
                     href={albumHref}
-                    className="block truncate text-[13px] font-medium text-foreground transition hover:underline"
+                    className="block truncate text-[13px] font-semibold text-foreground transition hover:underline"
                   >
                     {current.title}
                   </Link>
                 </span>
                 <Link
                   href={artistHref}
-                  className="mt-0.5 block truncate text-[11px] text-muted-foreground transition hover:text-foreground hover:underline"
+                  className="mt-0.5 block truncate text-[11.5px] text-muted-foreground transition hover:text-foreground hover:underline"
                 >
                   {artist?.name ?? "Unknown artist"}
                 </Link>
@@ -83,11 +83,11 @@ export function BottomPlayer() {
             </>
           ) : (
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-md border border-white/[.06] bg-white/[.025]">
+              <div className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-xl border border-border bg-card">
                 <RotateCcw className="h-5 w-5 text-muted-foreground/50" />
               </div>
               <div className="min-w-0">
-                <p className="text-[13px] font-medium text-foreground">Nothing playing</p>
+                <p className="text-[13px] font-semibold text-foreground">Nothing playing</p>
                 <p className="mt-0.5 text-[11px] text-muted-foreground">Choose a track to begin</p>
               </div>
             </div>
@@ -96,10 +96,13 @@ export function BottomPlayer() {
 
         <div className="flex w-full flex-col items-center gap-1.5">
           <PlaybackControls />
-          <ProgressBar className="w-full max-w-[660px]" timeClassName="w-9 shrink-0 text-center text-[10px] tabular-nums text-muted-foreground" />
+          <ProgressBar
+            className="w-full max-w-[660px]"
+            timeClassName="w-9 shrink-0 text-center text-[10px] tabular-nums text-muted-foreground"
+          />
         </div>
 
-        <div className="flex items-center justify-end gap-2.5">
+        <div className="flex items-center justify-end gap-2">
           <ConnectedDevices />
           <EqualizerMenu />
           <SleepTimerMenu />
@@ -108,7 +111,7 @@ export function BottomPlayer() {
               <Link
                 href="/now-playing"
                 aria-label="View synchronized lyrics"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <Mic2 className="h-[16px] w-[16px]" strokeWidth={1.7} />
               </Link>
@@ -121,20 +124,20 @@ export function BottomPlayer() {
                 type="button"
                 onClick={toggleQueue}
                 aria-label="Open queue"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <ListMusic className="h-[17px] w-[17px]" strokeWidth={1.7} />
               </button>
             </TooltipTrigger>
             <TooltipContent>Queue</TooltipContent>
           </Tooltip>
-          <VolumeControl className="hidden lg:flex w-28 xl:w-36" />
+          <VolumeControl className="hidden w-28 lg:flex xl:w-36" />
           <Tooltip>
             <TooltipTrigger asChild>
               <Link
                 href="/now-playing"
                 aria-label="Open full-screen player"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <Expand className="h-[16px] w-[16px]" strokeWidth={1.7} />
               </Link>

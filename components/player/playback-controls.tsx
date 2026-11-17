@@ -48,7 +48,7 @@ export function PlaybackControls({
       className={cn(
         "relative flex items-center justify-center rounded-full transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
         sideSize,
-        shuffle ? "text-[#1ED760]" : "text-muted-foreground hover:text-foreground",
+        shuffle ? "text-primary" : "text-muted-foreground hover:text-foreground",
       )}
     >
       <Shuffle className={sideIcon} strokeWidth={1.85} />
@@ -56,7 +56,7 @@ export function PlaybackControls({
         <span
           aria-hidden="true"
           className={cn(
-            "absolute left-1/2 -translate-x-1/2 rounded-full bg-[#1ED760]",
+            "absolute left-1/2 -translate-x-1/2 rounded-full bg-primary",
             large ? "bottom-1 h-1 w-1" : "bottom-1.5 sm:bottom-0.5 h-1 w-1 sm:h-[3px] sm:w-[3px]",
           )}
         />
@@ -73,7 +73,7 @@ export function PlaybackControls({
       className={cn(
         "relative flex items-center justify-center rounded-full transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
         sideSize,
-        repeat !== "off" ? "text-[#1ED760]" : "text-muted-foreground hover:text-foreground",
+        repeat !== "off" ? "text-primary" : "text-muted-foreground hover:text-foreground",
       )}
     >
       {repeat === "one" ? (
@@ -85,7 +85,7 @@ export function PlaybackControls({
         <span
           aria-hidden="true"
           className={cn(
-            "absolute left-1/2 -translate-x-1/2 rounded-full bg-[#1ED760]",
+            "absolute left-1/2 -translate-x-1/2 rounded-full bg-primary",
             large ? "bottom-1 h-1 w-1" : "bottom-1.5 sm:bottom-0.5 h-1 w-1 sm:h-[3px] sm:w-[3px]",
           )}
         />
@@ -111,7 +111,7 @@ export function PlaybackControls({
         disabled={!currentTrackId && queueLength === 0}
         className={cn(
           "flex items-center justify-center rounded-full transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-35",
-          large ? "text-white/90 hover:text-white" : "text-muted-foreground hover:text-foreground",
+          large ? "text-foreground/90 hover:text-foreground" : "text-muted-foreground hover:text-foreground",
           sideSize,
         )}
       >
@@ -123,7 +123,7 @@ export function PlaybackControls({
         onClick={togglePlay}
         className={cn(
           "flex items-center justify-center rounded-full shadow-lg transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95",
-          large ? "bg-white text-black hover:bg-white/95" : "bg-primary text-primary-foreground shadow-[0_4px_18px_hsl(var(--primary)/.22)]",
+          large ? "bg-foreground text-background hover:bg-foreground/90" : "bg-primary text-primary-foreground shadow-[0_4px_18px_hsl(var(--primary)/.22)]",
           playSize,
         )}
       >
@@ -142,7 +142,7 @@ export function PlaybackControls({
         disabled={!currentTrackId && queueLength === 0}
         className={cn(
           "flex items-center justify-center rounded-full transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-35",
-          large ? "text-white/90 hover:text-white" : "text-muted-foreground hover:text-foreground",
+          large ? "text-foreground/90 hover:text-foreground" : "text-muted-foreground hover:text-foreground",
           sideSize,
         )}
       >

@@ -3,31 +3,667 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#090c0a" />
-  <title>Offline listening · Sangeet</title>
+  <meta name="theme-color" content="#09090b" />
+  <title>Sangeet · Offline &amp; Local Player</title>
   <style>
-    :root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;background:#090c0a;color:#f5f7f5}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 78% 0%,#173322 0,transparent 42%),#090c0a}.wrap{width:min(100% - 32px,880px);margin:auto;padding:36px 0 48px}.brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:700;letter-spacing:-.04em}.mark{display:block;width:38px;height:38px;object-fit:contain}.eyebrow{margin:56px 0 10px;color:#1ed760;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}h1{margin:0;font-size:clamp(36px,8vw,64px);line-height:.98;letter-spacing:-.065em}.sub{max-width:520px;margin:16px 0 28px;color:#a9b0aa;line-height:1.65}.panel{overflow:hidden;border:1px solid #ffffff19;border-radius:22px;background:#111612}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px 19px;border-bottom:1px solid #ffffff12}.panel-head h2{margin:0;font-size:15px}.count{color:#929b94;font-size:12px}.list{padding:6px 12px}.item{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid #ffffff0d}.item:last-child{border:0}.cover{width:46px;height:46px;display:grid;place-items:center;border-radius:10px;background:linear-gradient(145deg,#1c6d49,#183222);color:#caffd9;font-size:11px;font-weight:700}.details{min-width:0}.title{overflow:hidden;color:#f2f6f2;font-size:13px;font-weight:650;text-overflow:ellipsis;white-space:nowrap}.artist{overflow:hidden;margin-top:4px;color:#8d9890;font-size:11px;text-overflow:ellipsis;white-space:nowrap}.play{min-height:36px;padding:0 14px;border:0;border-radius:999px;background:#1ed760;color:#07110a;font-weight:700;cursor:pointer}.empty{padding:30px 18px;text-align:center;color:#a9b0aa;font-size:13px;line-height:1.7}.player{position:sticky;bottom:12px;margin-top:14px;padding:12px;border:1px solid #ffffff1c;border-radius:16px;background:#151b16eF;backdrop-filter:blur(18px)}audio{display:block;width:100%;height:40px}.foot{display:flex;justify-content:space-between;gap:10px;margin-top:20px;color:#737e75;font-size:11px}.foot a{color:#aab5ac;text-decoration:none}@media(max-width:520px){.wrap{padding-top:22px}.eyebrow{margin-top:42px}.panel-head{padding:14px}.list{padding:4px 9px}.item{grid-template-columns:42px minmax(0,1fr) auto;gap:9px}.cover{width:42px;height:42px}.play{min-height:34px;padding:0 11px;font-size:11px}.foot{flex-direction:column}}
+    :root {
+      color-scheme: dark;
+      --bg: #09090b;
+      --sidebar: #0e0e11;
+      --card: #141418;
+      --elevated: #1c1c22;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f4f4f6;
+      --muted: #9898a6;
+      --primary: #1ed760;
+      --primary-fg: #051208;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body { padding-bottom: 132px; -webkit-tap-highlight-color: transparent; }
+    button, input { font: inherit; color: inherit; }
+    button { cursor: pointer; border: 0; background: none; }
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+      background: rgba(9, 9, 11, 0.96); border-bottom: 1px solid var(--border);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.03em; font-size: 16px; }
+    .brand-dot {
+      width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center;
+      background: var(--primary); color: var(--primary-fg); font-weight: 800; font-size: 14px;
+    }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
+      background: var(--elevated); border: 1px solid var(--border); font-size: 11px; color: var(--muted);
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 999px; background: #f59e0b; }
+    .status-dot.online { background: var(--primary); }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 20px 16px 28px; }
+    .hero {
+      display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;
+      padding: 20px; border-radius: 16px; background: var(--card); border: 1px solid var(--border);
+    }
+    .eyebrow {
+      margin: 0 0 6px; color: var(--primary); font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.16em;
+    }
+    h1 { margin: 0; font-size: clamp(22px, 4vw, 32px); letter-spacing: -0.035em; line-height: 1.1; }
+    .sub { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      background: var(--elevated); border: 1px solid var(--border); transition: filter 120ms ease, background-color 120ms ease;
+    }
+    .btn:hover { background: #26262f; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--primary); color: var(--primary-fg); border-color: transparent; font-weight: 700; }
+    .btn-primary:hover { filter: brightness(1.08); background: var(--primary); }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+      margin: 18px 0 12px;
+    }
+    .search {
+      flex: 1 1 240px; max-width: 420px; min-height: 40px; padding: 0 14px; border-radius: 10px;
+      background: var(--card); border: 1px solid var(--border); font-size: 13px; outline: none;
+    }
+    .search:focus { border-color: var(--primary); }
+    .count { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .list {
+      border-radius: 16px; background: var(--card); border: 1px solid var(--border); overflow: hidden;
+    }
+    .row {
+      display: grid; grid-template-columns: 32px 44px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+      padding: 10px 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); text-align: left; width: 100%;
+    }
+    .row:last-child { border-bottom: 0; }
+    .row:hover { background: rgba(255, 255, 255, 0.04); }
+    .row.active { background: rgba(30, 215, 96, 0.1); }
+    .idx { text-align: center; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .row.active .idx { color: var(--primary); font-weight: 700; }
+    .art {
+      width: 44px; height: 44px; border-radius: 8px; display: grid; place-items: center; overflow: hidden;
+      background: linear-gradient(135deg, #1b2d22, #17171f); border: 1px solid var(--border);
+      font-size: 12px; font-weight: 700; color: var(--primary); flex-shrink: 0;
+    }
+    .meta { min-width: 0; }
+    .title { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row.active .title { color: var(--primary); }
+    .artist { margin-top: 2px; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .badge {
+      padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 600;
+      background: var(--elevated); border: 1px solid var(--border); color: var(--muted);
+    }
+    .empty { padding: 44px 20px; text-align: center; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .dock {
+      position: fixed; inset: auto 0 0; z-index: 30;
+      background: #101014; border-top: 1px solid var(--border);
+      padding: 10px 16px max(12px, env(safe-area-inset-bottom));
+    }
+    .dock-inner { max-width: 1100px; margin: 0 auto; display: grid; gap: 10px; }
+    .seek-row { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none; flex: 1; height: 4px; border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16); outline: none; cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 13px; height: 13px; border-radius: 999px; background: var(--primary); border: 0;
+    }
+    .dock-main { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .now { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+    .now-title { font-size: 13px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .now-sub { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .controls { display: flex; align-items: center; gap: 6px; }
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: 999px; display: grid; place-items: center;
+      color: var(--muted); font-size: 13px; font-weight: 700;
+    }
+    .icon-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.08); }
+    .icon-btn.on { color: var(--primary); }
+    .play-btn {
+      width: 42px; height: 42px; border-radius: 999px; display: grid; place-items: center;
+      background: var(--primary); color: var(--primary-fg); font-weight: 800; font-size: 15px;
+    }
+    .fx-group { display: flex; align-items: center; gap: 8px; }
+    @media (max-width: 680px) {
+      .fx-group .vol-wrap { display: none; }
+      .row { grid-template-columns: 24px 40px minmax(0, 1fr); }
+      .badge { display: none; }
+    }
   </style>
 </head>
 <body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot">S</span>
+      <span>Sangeet Offline Player</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span id="netPill" class="status-pill"><span id="netDot" class="status-dot"></span><span id="netLabel">Offline mode</span></span>
+      <button id="reconnectBtn" type="button" class="btn">Reconnect</button>
+    </div>
+  </header>
+
   <main class="wrap">
-    <a class="brand" href="/"><img class="mark" src="/brand/sangeet-logo.png" alt="" aria-hidden="true" /><span>Sangeet</span></a>
-    <p class="eyebrow">Your saved music</p>
-    <h1>Still here<br>when you’re offline.</h1>
-    <p class="sub">Your downloaded tracks are ready. Choose a song and keep listening. Connect again to return to the full Sangeet experience.</p>
-    <section class="panel" aria-labelledby="saved-title">
-      <div class="panel-head"><h2 id="saved-title">Offline downloads</h2><span id="count" class="count">Loading…</span></div>
-      <div id="list" class="list" aria-live="polite"></div>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Standalone Native Player</p>
+        <h1>Local &amp; Offline Library</h1>
+        <p id="heroSub" class="sub">Play saved downloads and audio stored on your device — complete with queue, shuffle, loop, speed &amp; audio FX.</p>
+      </div>
+      <div class="actions">
+        <button id="playAllBtn" type="button" class="btn btn-primary" disabled>Play all</button>
+        <button id="shuffleAllBtn" type="button" class="btn" disabled>Shuffle</button>
+        <button id="scanBtn" type="button" class="btn">Scan device</button>
+        <button id="folderBtn" type="button" class="btn" style="display:none;">Add folder</button>
+      </div>
     </section>
-    <div class="player"><audio id="audio" controls preload="none" playsinline aria-label="Offline music player"></audio></div>
-    <div class="foot"><span>Saved audio stays on this device.</span><a href="/">Back to Sangeet ↗</a></div>
+
+    <div class="toolbar">
+      <input id="searchInput" class="search" type="search" placeholder="Filter offline & local songs by title or artist..." aria-label="Filter songs" />
+      <span id="countLabel" class="count">Loading library...</span>
+    </div>
+
+    <section class="list" id="trackList" aria-live="polite"></section>
   </main>
+
+  <footer class="dock">
+    <div class="dock-inner">
+      <div class="seek-row">
+        <span id="timeCur">0:00</span>
+        <input id="seekRange" type="range" min="0" max="100" step="0.5" value="0" aria-label="Seek track" />
+        <span id="timeDur">0:00</span>
+      </div>
+      <div class="dock-main">
+        <div class="now">
+          <div class="art" id="nowArt">♪</div>
+          <div class="meta">
+            <div class="now-title" id="nowTitle">No track selected</div>
+            <div class="now-sub" id="nowArtist">Tap any local or saved song</div>
+          </div>
+        </div>
+        <div class="controls">
+          <button id="shuffleBtn" type="button" class="icon-btn" title="Shuffle" aria-label="Toggle shuffle">⇄</button>
+          <button id="prevBtn" type="button" class="icon-btn" title="Previous" aria-label="Previous track">⏮</button>
+          <button id="playPauseBtn" type="button" class="play-btn" title="Play / Pause" aria-label="Play or pause">▶</button>
+          <button id="nextBtn" type="button" class="icon-btn" title="Next" aria-label="Next track">⏭</button>
+          <button id="repeatBtn" type="button" class="icon-btn" title="Repeat: Off" aria-label="Cycle repeat mode">↻</button>
+        </div>
+        <div class="fx-group">
+          <button id="speedBtn" type="button" class="btn" style="min-height:32px;padding:0 10px;font-size:11px;">1.0x</button>
+          <button id="bassBtn" type="button" class="btn" style="min-height:32px;padding:0 10px;font-size:11px;">Bass EQ</button>
+          <div class="vol-wrap" style="display:flex;align-items:center;gap:6px;width:96px;">
+            <span style="font-size:12px;color:var(--muted);">🔊</span>
+            <input id="volRange" type="range" min="0" max="1" step="0.02" value="0.9" aria-label="Volume" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <audio id="audio" preload="metadata" playsinline crossorigin="anonymous"></audio>
+
   <script>
-    const list=document.getElementById('list'),audio=document.getElementById('audio'),count=document.getElementById('count');
-    const safeText=(value,fallback)=>{try{return decodeURIComponent(value||'')||fallback}catch{return fallback}};
-    const play=(url,title,artist,artwork)=>{audio.src=url;audio.play().catch(()=>{});if('mediaSession'in navigator&&'MediaMetadata'in window){navigator.mediaSession.metadata=new MediaMetadata({title,artist,artwork:artwork?[{src:artwork,sizes:'512x512'}]:[]});navigator.mediaSession.setActionHandler('play',()=>audio.play());navigator.mediaSession.setActionHandler('pause',()=>audio.pause());}};
-    async function load(){try{const cache=await caches.open('sangeet-offline-audio-v1'),keys=await cache.keys();const requests=keys.filter(request=>new URL(request.url).pathname.startsWith('/audio/'));count.textContent=`${requests.length} ${requests.length===1?'track':'tracks'}`;if(!requests.length){list.innerHTML='<p class="empty">No tracks saved yet. Go online and use a track’s menu to save music for offline listening.</p>';return}for(const request of requests){const response=await cache.match(request),headers=response.headers,id=new URL(request.url).pathname.split('/').pop().replace(/\.mp3$/i,''),title=safeText(headers.get('x-sangeet-title'),id),artist=safeText(headers.get('x-sangeet-artist'),'Sangeet');const row=document.createElement('article');row.className='item';const cover=document.createElement('span');cover.className='cover';cover.textContent=title.split(/\s+/).slice(0,2).map(word=>word[0]||'').join('').toUpperCase();const details=document.createElement('span');details.className='details';const name=document.createElement('span');name.className='title';name.textContent=title;const by=document.createElement('span');by.className='artist';by.textContent=artist;details.append(name,by);const button=document.createElement('button');button.className='play';button.type='button';button.textContent='Play';button.setAttribute('aria-label',`Play ${title}`);button.addEventListener('click',()=>play(request.url,title,artist,''));row.append(cover,details,button);list.append(row)}}catch{count.textContent='Unavailable';list.innerHTML='<p class="empty">Offline storage is unavailable in this browser. Open Sangeet online to continue listening.</p>'}}
-    load();
+    (function () {
+      const audio = document.getElementById("audio");
+      const listEl = document.getElementById("trackList");
+      const countEl = document.getElementById("countLabel");
+      const searchEl = document.getElementById("searchInput");
+      const scanBtn = document.getElementById("scanBtn");
+      const folderBtn = document.getElementById("folderBtn");
+      const playAllBtn = document.getElementById("playAllBtn");
+      const shuffleAllBtn = document.getElementById("shuffleAllBtn");
+      const reconnectBtn = document.getElementById("reconnectBtn");
+      const netDot = document.getElementById("netDot");
+      const netLabel = document.getElementById("netLabel");
+      const seekEl = document.getElementById("seekRange");
+      const timeCurEl = document.getElementById("timeCur");
+      const timeDurEl = document.getElementById("timeDur");
+      const nowTitleEl = document.getElementById("nowTitle");
+      const nowArtistEl = document.getElementById("nowArtist");
+      const nowArtEl = document.getElementById("nowArt");
+      const playPauseBtn = document.getElementById("playPauseBtn");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const shuffleBtn = document.getElementById("shuffleBtn");
+      const repeatBtn = document.getElementById("repeatBtn");
+      const speedBtn = document.getElementById("speedBtn");
+      const bassBtn = document.getElementById("bassBtn");
+      const volRange = document.getElementById("volRange");
+
+      const isAndroid = Boolean(window.SangeetAndroid);
+      const isDesktop = Boolean(window.sangeetDesktop && window.sangeetDesktop.isDesktop);
+      if (isDesktop && window.sangeetDesktop.pickMusicFolder) folderBtn.style.display = "inline-flex";
+
+      let library = [];
+      let filtered = [];
+      let currentIdx = -1;
+      let isPlaying = false;
+      let shuffle = false;
+      let repeat = "all"; // off | all | one
+      const speeds = [1, 1.15, 0.85];
+      let speedIdx = 0;
+      let bassOn = false;
+      let audioCtx = null, bassFilter = null;
+      const objectUrls = [];
+
+      function fmt(sec) {
+        if (!Number.isFinite(sec) || sec <= 0) return "0:00";
+        const s = Math.floor(sec);
+        return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+      }
+
+      function updateNetworkPill() {
+        const online = navigator.onLine;
+        netDot.className = "status-dot" + (online ? " online" : "");
+        netLabel.textContent = online ? "Connection restored" : "Offline mode";
+      }
+      updateNetworkPill();
+      window.addEventListener("online", updateNetworkPill);
+      window.addEventListener("offline", updateNetworkPill);
+
+      reconnectBtn.addEventListener("click", function () {
+        if (isAndroid && window.SangeetAndroid.reloadOnline) {
+          window.SangeetAndroid.reloadOnline();
+        } else if (isDesktop && window.sangeetDesktop.reconnectOnline) {
+          window.sangeetDesktop.reconnectOnline();
+        } else {
+          window.location.href = "/home";
+        }
+      });
+
+      function ensureBassGraph() {
+        if (audioCtx || !window.AudioContext) return;
+        try {
+          audioCtx = new window.AudioContext();
+          const src = audioCtx.createMediaElementSource(audio);
+          bassFilter = audioCtx.createBiquadFilter();
+          bassFilter.type = "lowshelf";
+          bassFilter.frequency.value = 110;
+          bassFilter.gain.value = bassOn ? 7 : 0;
+          src.connect(bassFilter);
+          bassFilter.connect(audioCtx.destination);
+        } catch {}
+      }
+
+      function safeText(value, fb) {
+        try { return decodeURIComponent(value || "") || fb; } catch { return fb; }
+      }
+
+      function openDbRows(name, storeName) {
+        return new Promise((resolve) => {
+          if (typeof indexedDB === "undefined") return resolve([]);
+          const req = indexedDB.open(name);
+          req.onupgradeneeded = () => { try { req.result.createObjectStore(storeName, { keyPath: "id" }); } catch {} };
+          req.onsuccess = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(storeName)) { db.close(); return resolve([]); }
+            const tx = db.transaction(storeName, "readonly");
+            const getAll = tx.objectStore(storeName).getAll();
+            getAll.onsuccess = () => { db.close(); resolve(Array.isArray(getAll.result) ? getAll.result : []); };
+            getAll.onerror = () => { db.close(); resolve([]); };
+          };
+          req.onerror = () => resolve([]);
+        });
+      }
+
+      async function collectLibrary() {
+        while (objectUrls.length) { try { URL.revokeObjectURL(objectUrls.pop()); } catch {} }
+        const items = [];
+        const seen = new Set();
+
+        const pushItem = (item) => {
+          if (!item || !item.url || seen.has(item.id)) return;
+          seen.add(item.id);
+          items.push(item);
+        };
+
+        // 1. Native Desktop PC music folders
+        if (isDesktop && window.sangeetDesktop.scanMusicLibrary) {
+          try {
+            const res = await window.sangeetDesktop.scanMusicLibrary();
+            for (const t of (res && res.tracks) || []) {
+              pushItem({
+                id: "desk-" + t.id,
+                title: t.title || "Untitled",
+                artist: t.artist || "On this PC",
+                source: "PC Music",
+                url: t.uri,
+                duration: t.duration || 0,
+                nativeUri: false,
+              });
+            }
+          } catch {}
+        }
+
+        // 2. Native Android MediaStore
+        if (isAndroid && window.SangeetAndroid.hasAudioPermission && window.SangeetAndroid.hasAudioPermission()) {
+          try {
+            const raw = JSON.parse(window.SangeetAndroid.scanLocalAudio() || "[]");
+            for (const t of raw) {
+              pushItem({
+                id: "and-" + t.id,
+                title: t.title || "Untitled",
+                artist: t.artist || "On this phone",
+                source: "Phone Audio",
+                url: t.uri,
+                duration: t.duration || 0,
+                nativeUri: true,
+              });
+            }
+          } catch {}
+        }
+
+        // 3. Offline saved downloads (IndexedDB)
+        const offlineRows = await openDbRows("sangeet-offline-downloads-v1", "tracks");
+        for (const r of offlineRows) {
+          if (r && r.blob) {
+            const url = URL.createObjectURL(r.blob);
+            objectUrls.push(url);
+            pushItem({
+              id: "off-" + r.id,
+              title: (r.track && r.track.title) || "Saved song",
+              artist: r.artistName || "Offline download",
+              source: "Downloaded",
+              url,
+              duration: (r.track && r.track.duration) || 0,
+              nativeUri: false,
+            });
+          }
+        }
+
+        // 4. Imported local audio files (IndexedDB)
+        const localRows = await openDbRows("sangeet-local-audio", "files");
+        for (const r of localRows) {
+          if (r && r.blob) {
+            const url = URL.createObjectURL(r.blob);
+            objectUrls.push(url);
+            pushItem({
+              id: "loc-" + r.id,
+              title: String(r.name || "Local audio").replace(/\.[^.]+$/, ""),
+              artist: "Imported local file",
+              source: "Local File",
+              url,
+              duration: r.duration || 0,
+              nativeUri: false,
+            });
+          }
+        }
+
+        // 5. CacheStorage /audio fallback
+        if ("caches" in window) {
+          try {
+            const cache = await caches.open("sangeet-offline-audio-v1");
+            const keys = await cache.keys();
+            for (const req of keys) {
+              if (new URL(req.url).pathname.startsWith("/audio/")) {
+                const res = await cache.match(req);
+                const h = res ? res.headers : null;
+                const slug = new URL(req.url).pathname.split("/").pop().replace(/\.mp3$/i, "");
+                pushItem({
+                  id: "cache-" + slug,
+                  title: safeText(h && h.get("x-sangeet-title"), slug),
+                  artist: safeText(h && h.get("x-sangeet-artist"), "Sangeet"),
+                  source: "Cached",
+                  url: req.url,
+                  duration: 0,
+                  nativeUri: false,
+                });
+              }
+            }
+          } catch {}
+        }
+
+        library = items;
+        applyFilter();
+      }
+
+      function applyFilter() {
+        const q = (searchEl.value || "").trim().toLowerCase();
+        filtered = q
+          ? library.filter((t) => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q))
+          : library.slice();
+        playAllBtn.disabled = filtered.length === 0;
+        shuffleAllBtn.disabled = filtered.length === 0;
+        countEl.textContent = filtered.length + (filtered.length === 1 ? " track" : " tracks");
+        renderList();
+      }
+
+      function renderList() {
+        listEl.innerHTML = "";
+        if (filtered.length === 0) {
+          const msg = document.createElement("div");
+          msg.className = "empty";
+          if (isAndroid && window.SangeetAndroid.hasAudioPermission && !window.SangeetAndroid.hasAudioPermission()) {
+            msg.innerHTML = "Allow audio access to load songs saved on your phone.<br/><br/>";
+            const grant = document.createElement("button");
+            grant.className = "btn btn-primary";
+            grant.textContent = "Allow & Scan Device Songs";
+            grant.onclick = () => window.SangeetAndroid.requestAudioPermission();
+            msg.appendChild(grant);
+          } else {
+            msg.textContent = library.length > 0
+              ? "No offline or local tracks match your search."
+              : "No offline downloads or local audio files found yet. Scan device music or reconnect to download songs.";
+          }
+          listEl.appendChild(msg);
+          return;
+        }
+        const activeId = currentIdx >= 0 && library[currentIdx] ? library[currentIdx].id : null;
+        filtered.forEach((item, i) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "row" + (item.id === activeId ? " active" : "");
+          const initials = item.title.split(/\s+/).slice(0, 2).map((w) => w[0] || "").join("").toUpperCase() || "♪";
+          btn.innerHTML =
+            '<span class="idx">' + (item.id === activeId && isPlaying ? "❚❚" : (i + 1)) + "</span>" +
+            '<span class="art">' + initials.replace(/[<>&]/g, "") + "</span>" +
+            '<span class="meta"><div class="title"></div><div class="artist"></div></span>' +
+            '<span class="badge"></span>';
+          btn.querySelector(".title").textContent = item.title;
+          btn.querySelector(".artist").textContent = item.artist;
+          btn.querySelector(".badge").textContent = item.source;
+          btn.onclick = () => {
+            const realIdx = library.findIndex((x) => x.id === item.id);
+            if (realIdx === currentIdx) togglePlay();
+            else if (realIdx >= 0) playIndex(realIdx);
+          };
+          listEl.appendChild(btn);
+        });
+      }
+
+      function playIndex(idx) {
+        if (idx < 0 || idx >= library.length) return;
+        currentIdx = idx;
+        const track = library[idx];
+        nowTitleEl.textContent = track.title;
+        nowArtistEl.textContent = track.artist;
+        nowArtEl.textContent = track.title.slice(0, 2).toUpperCase();
+        isPlaying = true;
+        playPauseBtn.textContent = "❚❚";
+
+        if (track.nativeUri && isAndroid && window.SangeetAndroid.playLocalContent) {
+          try { audio.pause(); } catch {}
+          window.SangeetAndroid.playLocalContent(track.url, track.title, track.artist);
+          if (window.SangeetAndroid.setPlaybackRate) window.SangeetAndroid.setPlaybackRate(speeds[speedIdx]);
+        } else {
+          if (isAndroid && window.SangeetAndroid.stop) {
+            try { window.SangeetAndroid.stop(); } catch {}
+          }
+          audio.src = track.url;
+          audio.playbackRate = speeds[speedIdx];
+          audio.volume = Number(volRange.value);
+          audio.play().catch(() => {});
+        }
+
+        if (isDesktop && window.sangeetDesktop.sendPlaybackState) {
+          window.sangeetDesktop.sendPlaybackState({ isPlaying: true, track: { title: track.title, artist: track.artist } });
+        }
+        if ("mediaSession" in navigator && "MediaMetadata" in window) {
+          try {
+            navigator.mediaSession.metadata = new MediaMetadata({ title: track.title, artist: track.artist });
+            navigator.mediaSession.setActionHandler("play", togglePlay);
+            navigator.mediaSession.setActionHandler("pause", togglePlay);
+            navigator.mediaSession.setActionHandler("previoustrack", prevTrack);
+            navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
+          } catch {}
+        }
+        renderList();
+      }
+
+      function togglePlay() {
+        if (currentIdx < 0) { if (library.length) playIndex(0); return; }
+        const track = library[currentIdx];
+        if (track.nativeUri && isAndroid) {
+          if (isPlaying) window.SangeetAndroid.pause(); else window.SangeetAndroid.resume();
+          isPlaying = !isPlaying;
+        } else {
+          if (audio.paused) { audio.play().catch(() => {}); isPlaying = true; }
+          else { audio.pause(); isPlaying = false; }
+        }
+        playPauseBtn.textContent = isPlaying ? "❚❚" : "▶";
+        if (isDesktop && window.sangeetDesktop.sendPlaybackState) {
+          window.sangeetDesktop.sendPlaybackState({ isPlaying, track: { title: track.title, artist: track.artist } });
+        }
+        renderList();
+      }
+
+      function nextTrack() {
+        if (!library.length) return;
+        if (repeat === "one" && currentIdx >= 0) { playIndex(currentIdx); return; }
+        if (shuffle && library.length > 1) {
+          let n = currentIdx;
+          while (n === currentIdx) n = Math.floor(Math.random() * library.length);
+          playIndex(n);
+          return;
+        }
+        const next = currentIdx + 1;
+        if (next < library.length) playIndex(next);
+        else if (repeat === "all") playIndex(0);
+        else { isPlaying = false; playPauseBtn.textContent = "▶"; }
+      }
+
+      function prevTrack() {
+        if (!library.length) return;
+        if (audio.currentTime > 3 && !(library[currentIdx] && library[currentIdx].nativeUri)) {
+          audio.currentTime = 0; return;
+        }
+        const prev = currentIdx - 1 >= 0 ? currentIdx - 1 : library.length - 1;
+        playIndex(prev);
+      }
+
+      audio.addEventListener("timeupdate", () => {
+        const track = library[currentIdx];
+        if (track && track.nativeUri) return;
+        const dur = audio.duration || 0;
+        timeCurEl.textContent = fmt(audio.currentTime);
+        timeDurEl.textContent = fmt(dur);
+        if (dur > 0) seekEl.value = String((audio.currentTime / dur) * 100);
+      });
+      audio.addEventListener("ended", nextTrack);
+
+      seekEl.addEventListener("input", () => {
+        const track = library[currentIdx];
+        if (!track) return;
+        const dur = track.nativeUri ? (track.duration || 0) : (audio.duration || 0);
+        const sec = (Number(seekEl.value) / 100) * dur;
+        if (track.nativeUri && isAndroid && window.SangeetAndroid.seekTo) window.SangeetAndroid.seekTo(sec);
+        else if (dur > 0) audio.currentTime = sec;
+      });
+
+      volRange.addEventListener("input", () => {
+        const v = Number(volRange.value);
+        audio.volume = v;
+        if (isAndroid && window.SangeetAndroid.setVolume) window.SangeetAndroid.setVolume(v);
+      });
+
+      playPauseBtn.addEventListener("click", togglePlay);
+      nextBtn.addEventListener("click", nextTrack);
+      prevBtn.addEventListener("click", prevTrack);
+      playAllBtn.addEventListener("click", () => {
+        if (!filtered.length) return;
+        const idx = library.findIndex((x) => x.id === filtered[0].id);
+        playIndex(idx >= 0 ? idx : 0);
+      });
+      shuffleAllBtn.addEventListener("click", () => {
+        if (!filtered.length) return;
+        shuffle = true; shuffleBtn.classList.add("on");
+        const pick = filtered[Math.floor(Math.random() * filtered.length)];
+        const idx = library.findIndex((x) => x.id === pick.id);
+        playIndex(idx >= 0 ? idx : 0);
+      });
+      shuffleBtn.addEventListener("click", () => {
+        shuffle = !shuffle;
+        shuffleBtn.classList.toggle("on", shuffle);
+      });
+      repeatBtn.addEventListener("click", () => {
+        repeat = repeat === "off" ? "all" : repeat === "all" ? "one" : "off";
+        repeatBtn.textContent = repeat === "one" ? "↻1" : "↻";
+        repeatBtn.classList.toggle("on", repeat !== "off");
+        audio.loop = repeat === "one";
+      });
+      speedBtn.addEventListener("click", () => {
+        speedIdx = (speedIdx + 1) % speeds.length;
+        const rate = speeds[speedIdx];
+        speedBtn.textContent = rate.toFixed(rate === 1 ? 1 : 2).replace(/0$/, "") + "x";
+        audio.playbackRate = rate;
+        if (isAndroid && window.SangeetAndroid.setPlaybackRate) window.SangeetAndroid.setPlaybackRate(rate);
+      });
+      bassBtn.addEventListener("click", () => {
+        bassOn = !bassOn;
+        bassBtn.classList.toggle("btn-primary", bassOn);
+        ensureBassGraph();
+        if (bassFilter) bassFilter.gain.value = bassOn ? 7 : 0;
+      });
+      scanBtn.addEventListener("click", () => {
+        if (isAndroid && window.SangeetAndroid.hasAudioPermission && !window.SangeetAndroid.hasAudioPermission()) {
+          window.SangeetAndroid.requestAudioPermission();
+          return;
+        }
+        void collectLibrary();
+      });
+      folderBtn.addEventListener("click", async () => {
+        if (isDesktop && window.sangeetDesktop.pickMusicFolder) {
+          await window.sangeetDesktop.pickMusicFolder();
+          await collectLibrary();
+        }
+      });
+      searchEl.addEventListener("input", applyFilter);
+
+      if (isAndroid) {
+        const prevHandler = window.__sangeetAndroidEvent;
+        window.__sangeetAndroidEvent = (type, payload) => {
+          if (typeof prevHandler === "function") prevHandler(type, payload);
+          if (type === "audio_permission" && (payload === "granted" || payload === "true")) void collectLibrary();
+          else if (type === "next") nextTrack();
+          else if (type === "previous") prevTrack();
+          else if (type === "state") {
+            if (payload === "ended") nextTrack();
+            else if (payload === "playing") { isPlaying = true; playPauseBtn.textContent = "❚❚"; renderList(); }
+            else if (payload === "paused") { isPlaying = false; playPauseBtn.textContent = "▶"; renderList(); }
+          } else if (type === "time" && payload) {
+            const parts = String(payload).split(":");
+            const cur = Number(parts[0]), dur = Number(parts[1]);
+            if (library[currentIdx]) library[currentIdx].duration = dur || library[currentIdx].duration;
+            timeCurEl.textContent = fmt(cur);
+            timeDurEl.textContent = fmt(dur);
+            if (dur > 0) seekEl.value = String((cur / dur) * 100);
+          }
+        };
+      }
+      if (isDesktop && window.sangeetDesktop.onMediaAction) {
+        window.sangeetDesktop.onMediaAction((action) => {
+          if (action === "play-pause") togglePlay();
+          else if (action === "next") nextTrack();
+          else if (action === "previous") prevTrack();
+        });
+      }
+
+      void collectLibrary();
+    })();
   </script>
 </body>
 </html>

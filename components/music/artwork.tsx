@@ -3,7 +3,9 @@
 import * as React from "react";
 import { AudioLines } from "lucide-react";
 import { cn, hashString } from "@/lib/utils";
-import { toHighResArtwork } from "@/lib/artwork";
+import { toHighResArtwork, toMediumResArtwork } from "@/lib/artwork";
+
+export type ArtworkResolution = "sm" | "md" | "lg";
 
 interface ArtworkProps {
   src?: string | null;
@@ -11,8 +13,12 @@ interface ArtworkProps {
   className?: string;
   imgClassName?: string;
   priority?: boolean;
+  res?: ArtworkResolution;
   children?: React.ReactNode;
 }
+
+// Remember URLs that 404ed so we never re-request them across navigations.
+const failedUrls = new Set<string>();
 
 const fallbackPalettes = [
   ["#633F77", "#20182C", "#D59AFF"],
@@ -22,36 +28,85 @@ const fallbackPalettes = [
   ["#803D6E", "#311D3C", "#FFABD8"],
 ];
 
-export function Artwork({
+function getInitialCandidate(src: string | null | undefined, res: ArtworkResolution): string {
+  const preferred = res === "lg" ? toHighResArtwork(src) : toMediumResArtwork(src);
+  if (!preferred) return "";
+
+  const candidates: string[] = [preferred];
+  if (preferred.includes("maxresdefault.jpg")) {
+    candidates.push(preferred.replace("maxresdefault.jpg", "sddefault.jpg"));
+    candidates.push(preferred.replace("maxresdefault.jpg", "hqdefault.jpg"));
+  } else if (preferred.includes("sddefault.jpg")) {
+    candidates.push(preferred.replace("sddefault.jpg", "hqdefault.jpg"));
+  }
+  if (src && src !== preferred && !src.includes("maxresdefault.jpg")) {
+    const safeOrig = toMediumResArtwork(src);
+    if (safeOrig && !candidates.includes(safeOrig)) {
+      candidates.push(safeOrig);
+    }
+  }
+
+  for (const candidate of candidates) {
+    if (!failedUrls.has(candidate)) return candidate;
+  }
+  return "";
+}
+
+export const Artwork = React.memo(function Artwork({
   src,
   alt,
   className,
   imgClassName,
   priority = false,
+  res = "md",
   children,
 }: ArtworkProps) {
-  const [currentSrc, setCurrentSrc] = React.useState<string>(() => toHighResArtwork(src));
-  const [failed, setFailed] = React.useState(false);
+  const resolvedInitial = React.useMemo(() => getInitialCandidate(src, res), [src, res]);
+  const [currentSrc, setCurrentSrc] = React.useState<string>(resolvedInitial);
+  const [failed, setFailed] = React.useState<boolean>(() => !resolvedInitial);
 
   React.useEffect(() => {
-    setCurrentSrc(toHighResArtwork(src));
-    setFailed(false);
-  }, [src]);
+    setCurrentSrc(resolvedInitial);
+    setFailed(!resolvedInitial);
+  }, [resolvedInitial]);
 
   const handleError = () => {
-    // If maxres failed on ytimg, try sddefault or hqdefault fallback
+    if (currentSrc) {
+      failedUrls.add(currentSrc);
+    }
+
+    // Try YouTube thumbnail downgrade chain (maxres -> sd -> hq), skipping known 404s.
     if (currentSrc.includes("maxresdefault.jpg")) {
-      setCurrentSrc(currentSrc.replace("maxresdefault.jpg", "sddefault.jpg"));
-      return;
+      const sd = currentSrc.replace("maxresdefault.jpg", "sddefault.jpg");
+      if (!failedUrls.has(sd)) {
+        setCurrentSrc(sd);
+        return;
+      }
+      const hq = currentSrc.replace("maxresdefault.jpg", "hqdefault.jpg");
+      if (!failedUrls.has(hq)) {
+        setCurrentSrc(hq);
+        return;
+      }
     }
     if (currentSrc.includes("sddefault.jpg")) {
-      setCurrentSrc(currentSrc.replace("sddefault.jpg", "hqdefault.jpg"));
-      return;
+      const hq = currentSrc.replace("sddefault.jpg", "hqdefault.jpg");
+      if (!failedUrls.has(hq)) {
+        setCurrentSrc(hq);
+        return;
+      }
     }
-    // If upgraded googleusercontent failed, try original src
-    if (src && currentSrc !== src) {
-      setCurrentSrc(src);
-      return;
+    // If upgraded googleusercontent/CDN URL failed, try sanitized original src.
+    if (src) {
+      const fallback = res === "lg" ? toMediumResArtwork(src) : src;
+      if (
+        fallback &&
+        fallback !== currentSrc &&
+        !fallback.includes("maxresdefault.jpg") &&
+        !failedUrls.has(fallback)
+      ) {
+        setCurrentSrc(fallback);
+        return;
+      }
     }
     setFailed(true);
   };
@@ -89,4 +144,4 @@ export function Artwork({
       {children}
     </div>
   );
-}
+});

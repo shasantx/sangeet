@@ -112,7 +112,7 @@ export function getDynamicTracks(ids: string[]): Track[] {
  * Convert a ytmusicapi result into a first-class Sangeet track. Subsequent calls
  * for the same video are idempotent and return the cached entry.
  */
-export function registerYouTubeSearchResult(result: YouTubeSearchResult): Track {
+function registerYouTubeSingle(result: YouTubeSearchResult, shouldPersist: boolean): Track {
   hydrate();
 
   const trackId = `yt-${result.videoId}`;
@@ -170,15 +170,23 @@ export function registerYouTubeSearchResult(result: YouTubeSearchResult): Track 
   };
 
   trackRegistry.set(trackId, track);
-  persist();
+  if (shouldPersist) persist();
   return track;
 }
 
-export function registerYouTubeSearchResults(results: YouTubeSearchResult[]): Track[] {
-  return results.map(registerYouTubeSearchResult);
+export function registerYouTubeSearchResult(result: YouTubeSearchResult): Track {
+  return registerYouTubeSingle(result, true);
 }
 
-export function registerAudiusSearchResult(result: AudiusSearchResult): Track {
+export function registerYouTubeSearchResults(results: YouTubeSearchResult[]): Track[] {
+  hydrate();
+  const prevSize = trackRegistry.size;
+  const registered = results.map((result) => registerYouTubeSingle(result, false));
+  if (trackRegistry.size !== prevSize) persist();
+  return registered;
+}
+
+function registerAudiusSingle(result: AudiusSearchResult, shouldPersist: boolean): Track {
   hydrate();
   const id = result.id.trim();
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(id)) throw new Error("Invalid open music track");
@@ -189,13 +197,29 @@ export function registerAudiusSearchResult(result: AudiusSearchResult): Track {
   const artistId = `aud-artist-${slugify(artistName) || "unknown"}`;
   const albumName = result.album?.trim() || `${result.title} · Single`;
   const albumId = `aud-album-${id}`;
-  const artwork = result.artwork || "/art/album/blue-hour-cinema.svg";
+  const artwork = result.artwork || "/art/albums/blue-hour-cinema.svg";
   if (!artistRegistry.has(artistId)) artistRegistry.set(artistId, { id: artistId, name: artistName, bio: `${artistName} on the open music catalog.`, shortBio: `Independent music by ${artistName}.`, image: artwork, location: "Open music catalog", genreIds: [], relatedArtistIds: [] });
   if (!albumRegistry.has(albumId)) albumRegistry.set(albumId, { id: albumId, title: albumName, artistId, year: new Date().getFullYear(), releaseDate: `${new Date().getFullYear()}-01-01`, type: "Single", artwork, genreIds: [], description: result.genre || "Independent release", trackIds: [trackId] });
   const track: Track = { id: trackId, title: result.title, artistId, albumId, duration: result.durationSeconds ?? 0, audioUrl: result.audioUrl || `https://api.audius.co/v1/tracks/${encodeURIComponent(id)}/stream`, artwork, genreIds: [], mood: result.genre || "Music", trackNumber: 1, source: "audius" };
   trackRegistry.set(trackId, track);
-  persist();
+  if (shouldPersist) persist();
   return track;
+}
+
+export function registerAudiusSearchResult(result: AudiusSearchResult): Track {
+  return registerAudiusSingle(result, true);
+}
+
+export function registerAudiusSearchResults(results: AudiusSearchResult[]): Track[] {
+  hydrate();
+  const prevSize = trackRegistry.size;
+  const registered: Track[] = [];
+  for (const result of results) {
+    if (!result?.id || !/^[A-Za-z0-9_-]{1,100}$/.test(result.id.trim())) continue;
+    registered.push(registerAudiusSingle(result, false));
+  }
+  if (trackRegistry.size !== prevSize) persist();
+  return registered;
 }
 
 export function restoreAudiusTrack(result: AudiusSearchResult): Track | undefined {

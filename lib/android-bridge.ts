@@ -31,6 +31,65 @@ declare global {
   }
 }
 
+type AndroidEventListener = (type: string, payload?: string) => void;
+
+const androidEventListeners = new Set<AndroidEventListener>();
+let installedDispatcher: AndroidEventListener | null = null;
+let previousExternalHandler: AndroidEventListener | undefined;
+
+/**
+ * Subscribe to native Android bridge events without clobbering other listeners
+ * on `window.__sangeetAndroidEvent`. Returns an unsubscribe function.
+ */
+export function addAndroidEventListener(listener: AndroidEventListener): () => void {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  androidEventListeners.add(listener);
+
+  if (!installedDispatcher || window.__sangeetAndroidEvent !== installedDispatcher) {
+    const existing = window.__sangeetAndroidEvent;
+    if (existing && existing !== installedDispatcher) {
+      previousExternalHandler = existing;
+    }
+
+    installedDispatcher = (type: string, payload?: string) => {
+      try {
+        previousExternalHandler?.(type, payload);
+      } catch {
+        // Ignore external handler errors so remaining subscribers still receive events.
+      }
+      for (const subscriber of Array.from(androidEventListeners)) {
+        try {
+          subscriber(type, payload);
+        } catch {
+          // Isolate listener errors.
+        }
+      }
+    };
+
+    window.__sangeetAndroidEvent = installedDispatcher;
+  }
+
+  return () => {
+    androidEventListeners.delete(listener);
+    if (
+      androidEventListeners.size === 0 &&
+      typeof window !== "undefined" &&
+      window.__sangeetAndroidEvent === installedDispatcher
+    ) {
+      if (previousExternalHandler) {
+        window.__sangeetAndroidEvent = previousExternalHandler;
+      } else {
+        delete window.__sangeetAndroidEvent;
+      }
+      installedDispatcher = null;
+      previousExternalHandler = undefined;
+    }
+  };
+}
+
 export function isAndroidNativeApp(): boolean {
   if (typeof window === "undefined") return false;
   try {

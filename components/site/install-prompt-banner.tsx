@@ -1,29 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Smartphone, X } from "lucide-react";
-import { isAndroidNativeApp } from "@/lib/android-bridge";
+import { Download, Laptop, Smartphone, X } from "lucide-react";
+import { isNativeOfflineSupported } from "@/lib/offline-audio";
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
-const DISMISS_KEY = "sangeet-install-banner-dismissed";
+const DISMISS_KEY = "sangeet-native-app-banner-dismissed";
 const APK_URL = "/api/download/android";
+const EXE_URL = "/api/download/windows";
 
 export function InstallPromptBanner() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
-  const [isIos, setIsIos] = useState(false);
+  const [device, setDevice] = useState<"android" | "desktop">("desktop");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (isAndroidNativeApp()) return;
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-    if (isStandalone) return;
+    if (isNativeOfflineSupported()) return;
 
     try {
       if (localStorage.getItem(DISMISS_KEY) === "1") return;
@@ -32,22 +23,10 @@ export function InstallPromptBanner() {
     }
 
     const ua = window.navigator.userAgent;
-    const iosDevice = /iPad|iPhone|iPod/.test(ua);
-    const androidDevice = /Android/i.test(ua);
-    setIsIos(iosDevice);
+    if (/iPad|iPhone|iPod/.test(ua)) return;
 
-    if (iosDevice || androidDevice) {
-      setVisible(true);
-    }
-
-    const onBeforeInstall = (event: Event) => {
-      event.preventDefault();
-      setDeferredPrompt(event as BeforeInstallPromptEvent);
-      setVisible(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", onBeforeInstall);
-    return () => window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+    setDevice(/Android/i.test(ua) ? "android" : "desktop");
+    setVisible(true);
   }, []);
 
   if (!visible) return null;
@@ -61,59 +40,40 @@ export function InstallPromptBanner() {
     }
   };
 
-  const handleInstall = async () => {
-    if (deferredPrompt) {
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      if (choice.outcome === "accepted") {
-        setVisible(false);
-      }
-      setDeferredPrompt(null);
-    }
-  };
+  const isAndroid = device === "android";
 
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#121513] px-3.5 py-3 text-xs sm:px-4">
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-card px-3.5 py-3 text-xs sm:px-4">
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1ed760]/15 text-[#1ed760]">
-          <Smartphone className="h-4 w-4" />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+          {isAndroid ? <Smartphone className="h-4 w-4" /> : <Laptop className="h-4 w-4" />}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-white">Listen in the background on mobile</p>
-          <p className="text-muted-foreground line-clamp-2 sm:truncate">
-            {isIos
-              ? "Tap Share → Add to Home Screen for lock-screen controls and background audio."
-              : "Install Sangeet to your home screen or get the Android APK for background playback."}
+          <p className="font-semibold text-foreground">
+            {isAndroid ? "Get the Sangeet Android APK" : "Get the Sangeet Windows App (.exe)"}
+          </p>
+          <p className="line-clamp-2 text-muted-foreground sm:truncate">
+            {isAndroid
+              ? "Standalone Android app with background audio, device music scanner, and offline song downloads."
+              : "Standalone desktop application with media keys, local PC music folders, and offline playback."}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        {deferredPrompt && (
-          <button
-            type="button"
-            onClick={handleInstall}
-            className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#1ed760] px-3.5 text-[11px] font-bold text-black transition hover:bg-[#1db954]"
-          >
-            <Download className="h-3.5 w-3.5" />
-            Add to Home Screen
-          </button>
-        )}
-        {!isIos && !deferredPrompt && (
-          <a
-            href={APK_URL}
-            download="sangeet-android.apk"
-            className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#1ed760] px-3.5 text-[11px] font-bold text-black transition hover:bg-[#1db954]"
-          >
-            <Download className="h-3.5 w-3.5" />
-            Android APK
-          </a>
-        )}
+      <div className="flex shrink-0 items-center gap-2">
+        <a
+          href={isAndroid ? APK_URL : EXE_URL}
+          download={isAndroid ? "sangeet-android.apk" : "Sangeet.exe"}
+          className="inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-3.5 text-[11px] font-bold text-primary-foreground transition hover:brightness-110"
+        >
+          <Download className="h-3.5 w-3.5" />
+          {isAndroid ? "Download APK" : "Download .exe"}
+        </a>
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Dismiss install banner"
-          className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-white/10 hover:text-white"
+          aria-label="Dismiss app download banner"
+          className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition hover:bg-elevated hover:text-foreground"
         >
           <X className="h-3.5 w-3.5" />
         </button>

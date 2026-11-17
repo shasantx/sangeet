@@ -96,6 +96,22 @@ export interface DemoProfile {
   avatarColor: string;
 }
 
+export interface DesktopScannedTrack {
+  id: string;
+  title: string;
+  artist: string;
+  album: string;
+  duration: number;
+  uri: string;
+  sizeBytes?: number;
+  folder?: string;
+}
+
+export interface DesktopMusicScanResult {
+  folders: string[];
+  tracks: DesktopScannedTrack[];
+}
+
 declare global {
   interface Window {
     sangeetDesktop?: {
@@ -103,6 +119,11 @@ declare global {
       platform: string;
       onMediaAction: (callback: (action: string) => void) => () => void;
       sendPlaybackState: (data: { isPlaying: boolean; track?: { title: string; artist: string; artwork?: string } }) => void;
+      getMusicFolders?: () => Promise<string[]>;
+      pickMusicFolder?: () => Promise<DesktopMusicScanResult>;
+      removeMusicFolder?: (folder: string) => Promise<DesktopMusicScanResult>;
+      scanMusicLibrary?: () => Promise<DesktopMusicScanResult>;
+      reconnectOnline?: () => Promise<void>;
       minimize: () => void;
       maximize: () => void;
       close: () => void;

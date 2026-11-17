@@ -1,35 +1,62 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
   Clock3,
+  CloudDownload,
   Disc3,
+  FileDown,
   Heart,
   Library,
   ListMusic,
+  Monitor,
+  Pause,
+  Play,
   Plus,
   Search,
+  Shuffle,
+  Smartphone,
   Sparkles,
+  Trash2,
   UserRound,
 } from "lucide-react";
-import { albums, artists, getTracks, playlists } from "@/lib/catalog";
-import { formatTotalDuration } from "@/lib/utils";
+import { albums, artists, getTrack, getTracks, playlists } from "@/lib/catalog";
+import { restoreAudiusTrack, restoreYouTubeTrack } from "@/lib/dynamic-tracks";
+import {
+  exportTrackAudioFile,
+  isNativeOfflineSupported,
+  listOfflineTracks,
+  removeOfflineTrack,
+  subscribeOfflineChanges,
+} from "@/lib/offline-audio";
+import type { Track } from "@/lib/types";
+import { cn, formatDuration, formatTotalDuration, pluralize } from "@/lib/utils";
 import { useLibraryStore } from "@/store/library-store";
-import { useUIStore } from "@/store/ui-store";
+import { usePlayerStore } from "@/store/player-store";
+import { toast, useUIStore } from "@/store/ui-store";
 import { AlbumCard } from "@/components/music/album-card";
 import { ArtistCard } from "@/components/music/artist-card";
+import { Artwork } from "@/components/music/artwork";
 import { CollectionPlayButton } from "@/components/music/collection-actions";
 import { EmptyState } from "@/components/music/empty-state";
+import { Equalizer } from "@/components/music/equalizer";
 import { PlaylistCard } from "@/components/music/playlist-card";
 import { QuickTrackTile } from "@/components/music/quick-track-tile";
 import { SectionHeader } from "@/components/music/section-header";
 import { LocalFilesSection } from "@/components/library/local-files-section";
 import { Input } from "@/components/ui/input";
 
-type Filter = "all" | "playlists" | "albums" | "artists" | "local";
+type Filter = "all" | "playlists" | "albums" | "artists" | "local" | "offline";
+
+interface OfflineEntry {
+  track: Track;
+  artistName: string;
+  sizeBytes: number;
+  savedAt: number;
+}
 
 const quickLinks = [
   {
@@ -55,6 +82,40 @@ const quickLinks = [
   },
 ];
 
+function formatMb(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0.0 MB";
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function ensureRegisteredTrack(entry: OfflineEntry): Track {
+  const existing = getTrack(entry.track.id);
+  if (existing) return existing;
+  if (entry.track.youtubeId) {
+    return (
+      restoreYouTubeTrack({
+        videoId: entry.track.youtubeId,
+        title: entry.track.title,
+        artist: entry.artistName,
+        durationSeconds: entry.track.duration,
+        thumbnail: entry.track.artwork,
+      }) ?? entry.track
+    );
+  }
+  if (entry.track.source === "audius") {
+    return (
+      restoreAudiusTrack({
+        id: entry.track.id.replace(/^aud-/, ""),
+        title: entry.track.title,
+        artist: entry.artistName,
+        durationSeconds: entry.track.duration,
+        artwork: entry.track.artwork,
+        audioUrl: entry.track.audioUrl,
+      }) ?? entry.track
+    );
+  }
+  return entry.track;
+}
+
 export default function LibraryPage() {
   return (
     <Suspense fallback={<div className="page-container" />}>
@@ -65,17 +126,62 @@ export default function LibraryPage() {
 
 function LibraryContent() {
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get("tab") === "local" ? "local" : "all";
+  const rawTab = searchParams.get("tab");
+  const initialTab: Filter =
+    rawTab === "local" ||
+    rawTab === "offline" ||
+    rawTab === "playlists" ||
+    rawTab === "albums" ||
+    rawTab === "artists"
+      ? rawTab
+      : "all";
   const [filter, setFilter] = useState<Filter>(initialTab);
   const [query, setQuery] = useState("");
   const [localCount, setLocalCount] = useState(0);
+  const [nativeOffline, setNativeOffline] = useState(false);
+  const [offlineItems, setOfflineItems] = useState<OfflineEntry[]>([]);
+
+  useEffect(() => {
+    setNativeOffline(isNativeOfflineSupported());
+  }, []);
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab === "local" || tab === "playlists" || tab === "albums" || tab === "artists" || tab === "all") {
+    if (
+      tab === "local" ||
+      tab === "offline" ||
+      tab === "playlists" ||
+      tab === "albums" ||
+      tab === "artists" ||
+      tab === "all"
+    ) {
       setFilter(tab);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (!nativeOffline) {
+      setOfflineItems([]);
+      return;
+    }
+    let active = true;
+    const loadOffline = () => {
+      void listOfflineTracks()
+        .then((items) => {
+          if (active) setOfflineItems(items);
+        })
+        .catch(() => {
+          if (active) setOfflineItems([]);
+        });
+    };
+    loadOffline();
+    const unsubscribe = subscribeOfflineChanges(loadOffline);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [nativeOffline]);
+
   const likedTrackIds = useLibraryStore((state) => state.likedTrackIds);
   const savedAlbumIds = useLibraryStore((state) => state.savedAlbumIds);
   const followedArtistIds = useLibraryStore((state) => state.followedArtistIds);
@@ -83,15 +189,38 @@ function LibraryContent() {
   const recentlyPlayed = useLibraryStore((state) => state.recentlyPlayed);
   const openCreate = useUIStore((state) => state.openCreatePlaylist);
 
-  const savedAlbums = savedAlbumIds
-    .map((albumId) => albums.find((album) => album.id === albumId))
-    .filter((album): album is NonNullable<typeof album> => Boolean(album));
-  const followedArtists = followedArtistIds
-    .map((artistId) => artists.find((artist) => artist.id === artistId))
-    .filter((artist): artist is NonNullable<typeof artist> => Boolean(artist));
-  const recentTracks = getTracks(recentlyPlayed.slice(0, 6));
-  const likedTracks = getTracks(likedTrackIds);
-  const likedDuration = likedTracks.reduce((total, track) => total + track.duration, 0);
+  const currentTrackId = usePlayerStore((state) => state.currentTrackId);
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const playTrack = usePlayerStore((state) => state.playTrack);
+  const playShuffled = usePlayerStore((state) => state.playShuffled);
+  const togglePlay = usePlayerStore((state) => state.togglePlay);
+
+  const savedAlbums = useMemo(
+    () =>
+      savedAlbumIds
+        .map((albumId) => albums.find((album) => album.id === albumId))
+        .filter((album): album is NonNullable<typeof album> => Boolean(album)),
+    [savedAlbumIds],
+  );
+
+  const followedArtists = useMemo(
+    () =>
+      followedArtistIds
+        .map((artistId) => artists.find((artist) => artist.id === artistId))
+        .filter((artist): artist is NonNullable<typeof artist> => Boolean(artist)),
+    [followedArtistIds],
+  );
+
+  const recentTracks = useMemo(
+    () => getTracks(recentlyPlayed.slice(0, 6)),
+    [recentlyPlayed],
+  );
+
+  const likedTracks = useMemo(() => getTracks(likedTrackIds), [likedTrackIds]);
+  const likedDuration = useMemo(
+    () => likedTracks.reduce((total, track) => total + track.duration, 0),
+    [likedTracks],
+  );
 
   const normalizedQuery = query.trim().toLowerCase();
   const filteredPlaylists = useMemo(
@@ -111,14 +240,86 @@ function LibraryContent() {
       followedArtists.filter((artist) => artist.name.toLowerCase().includes(normalizedQuery)),
     [normalizedQuery, followedArtists],
   );
+  const filteredOffline = useMemo(
+    () =>
+      offlineItems.filter(
+        (item) =>
+          item.track.title.toLowerCase().includes(normalizedQuery) ||
+          item.artistName.toLowerCase().includes(normalizedQuery),
+      ),
+    [normalizedQuery, offlineItems],
+  );
 
-  const showPlaylists = filter === "all" || filter === "playlists";
-  const showAlbums = filter === "all" || filter === "albums";
-  const showArtists = filter === "all" || filter === "artists";
-  const showLocal = filter === "all" || filter === "local";
+  const totalOfflineBytes = useMemo(
+    () => offlineItems.reduce((sum, item) => sum + (item.sizeBytes || 0), 0),
+    [offlineItems],
+  );
+
+  const offlineTrackIds = useMemo(
+    () => filteredOffline.map((item) => item.track.id),
+    [filteredOffline],
+  );
+  const isOfflineCollectionActive = Boolean(
+    currentTrackId && offlineTrackIds.includes(currentTrackId),
+  );
+
+  const playOfflineEntry = useCallback(
+    (entry: OfflineEntry) => {
+      const registeredAll = filteredOffline.map(ensureRegisteredTrack);
+      const ids = registeredAll.map((t) => t.id);
+      if (currentTrackId === entry.track.id) {
+        togglePlay();
+      } else {
+        playTrack(entry.track.id, ids, "Offline Downloads");
+      }
+    },
+    [filteredOffline, currentTrackId, togglePlay, playTrack],
+  );
+
+  const handleRemoveOffline = useCallback(async (entry: OfflineEntry) => {
+    try {
+      await removeOfflineTrack(entry.track);
+      toast.success("Removed offline copy", entry.track.title);
+    } catch {
+      toast.error("Could not remove offline track", entry.track.title);
+    }
+  }, []);
+
+  const handleExportOffline = useCallback(async (entry: OfflineEntry) => {
+    try {
+      await exportTrackAudioFile(entry.track, entry.artistName);
+      toast.success("Exported audio file", `${entry.track.title} saved to Downloads.`);
+    } catch (error) {
+      toast.error(
+        "Export failed",
+        error instanceof Error ? error.message : "Could not export audio file.",
+      );
+    }
+  }, []);
+
+  const activeFilter: Filter = !nativeOffline && filter === "offline" ? "all" : filter;
+  const showPlaylists = activeFilter === "all" || activeFilter === "playlists";
+  const showAlbums = activeFilter === "all" || activeFilter === "albums";
+  const showArtists = activeFilter === "all" || activeFilter === "artists";
+  const showLocal = activeFilter === "all" || activeFilter === "local";
+  const showOffline =
+    nativeOffline &&
+    (activeFilter === "offline" || (activeFilter === "all" && offlineItems.length > 0));
 
   const filters: { id: Filter; label: string; count: number }[] = [
-    { id: "all", label: "All", count: userPlaylists.length + savedAlbums.length + followedArtists.length + localCount },
+    {
+      id: "all",
+      label: "All",
+      count:
+        userPlaylists.length +
+        savedAlbums.length +
+        followedArtists.length +
+        localCount +
+        (nativeOffline ? offlineItems.length : 0),
+    },
+    ...(nativeOffline
+      ? [{ id: "offline" as const, label: "Offline", count: offlineItems.length }]
+      : []),
     { id: "playlists", label: "Playlists", count: userPlaylists.length },
     { id: "albums", label: "Albums", count: savedAlbums.length },
     { id: "artists", label: "Artists", count: followedArtists.length },
@@ -134,13 +335,13 @@ function LibraryContent() {
             Your library
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            Everything you have kept close: albums, playlists, artists and the songs you return to.
+            Everything you have kept close: albums, playlists, artists, offline downloads and the songs you return to.
           </p>
         </div>
         <button
           type="button"
           onClick={() => openCreate()}
-          className="inline-flex h-11 w-fit items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground shadow-[0_12px_30px_-14px_rgba(30,215,96,.4)] transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="inline-flex h-11 w-fit items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground shadow-[0_12px_30px_-14px_hsl(var(--primary)/0.45)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <Plus className="h-4 w-4" />
           New playlist
@@ -150,9 +351,8 @@ function LibraryContent() {
       <div className="grid gap-3 sm:grid-cols-3">
         <Link
           href="/liked"
-          className="group relative isolate flex min-h-[132px] flex-col justify-between overflow-hidden rounded-xl border border-primary/20 bg-primary/[.075] p-5 transition hover:border-primary/35 hover:bg-primary/[.11]"
+          className="group relative isolate flex min-h-[132px] flex-col justify-between overflow-hidden rounded-xl border border-primary/25 bg-primary/[.08] p-5 transition hover:border-primary/40 hover:bg-primary/[.12]"
         >
-          <div className="absolute -right-10 -top-14 -z-10 h-40 w-40 rounded-full bg-primary/20 blur-[50px]" />
           <div className="flex items-start justify-between gap-3">
             <Heart className="h-4 w-4 text-primary" fill="currentColor" />
             <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/40 transition group-hover:text-foreground" />
@@ -170,12 +370,8 @@ function LibraryContent() {
             <Link
               key={item.href}
               href={item.href}
-              className="group relative isolate flex min-h-[132px] flex-col justify-between overflow-hidden rounded-xl border border-white/[.055] bg-white/[.018] p-5 transition hover:border-white/[.11] hover:bg-white/[.035]"
+              className="group relative isolate flex min-h-[132px] flex-col justify-between overflow-hidden rounded-xl border border-white/[.08] bg-card p-5 transition hover:border-white/[.15] hover:bg-elevated"
             >
-              <div
-                className="absolute -right-10 -top-14 -z-10 h-40 w-40 rounded-full opacity-14 blur-[50px] transition-opacity group-hover:opacity-25"
-                style={{ background: item.accent }}
-              />
               <div className="flex items-start justify-between gap-3">
                 <Icon className="h-4 w-4" style={{ color: item.accent }} />
                 <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/40 transition group-hover:text-foreground" />
@@ -189,22 +385,31 @@ function LibraryContent() {
         })}
       </div>
 
-      <div className="mt-10 flex flex-col gap-4 border-b border-white/[.055] pb-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="hide-scrollbar flex items-center gap-1.5 overflow-x-auto">
+      <div className="mt-10 flex flex-col gap-4 border-b border-white/[.06] pb-4 lg:flex-row lg:items-center lg:justify-between">
+        <div data-no-tab-swipe="true" className="hide-scrollbar flex items-center gap-1.5 overflow-x-auto">
           {filters.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setFilter(item.id)}
-              aria-pressed={filter === item.id}
+              aria-pressed={activeFilter === item.id}
               className={
-                filter === item.id
-                  ? "flex shrink-0 items-center gap-2 rounded-full bg-white/[.11] px-3.5 py-1.5 text-[11.5px] font-medium text-foreground"
-                  : "flex shrink-0 items-center gap-2 rounded-full px-3.5 py-1.5 text-[11.5px] font-medium text-muted-foreground transition hover:bg-white/[.045] hover:text-foreground"
+                activeFilter === item.id
+                  ? "flex shrink-0 items-center gap-2 rounded-full bg-primary px-3.5 py-1.5 text-[11.5px] font-semibold text-primary-foreground"
+                  : "flex shrink-0 items-center gap-2 rounded-full border border-white/[.08] bg-card px-3.5 py-1.5 text-[11.5px] font-medium text-muted-foreground transition hover:bg-elevated hover:text-foreground"
               }
             >
               {item.label}
-              <span className="text-[9px] tabular-nums text-muted-foreground/55">{item.count}</span>
+              <span
+                className={cn(
+                  "text-[9px] tabular-nums",
+                  activeFilter === item.id
+                    ? "text-primary-foreground/75"
+                    : "text-muted-foreground/60",
+                )}
+              >
+                {item.count}
+              </span>
             </button>
           ))}
         </div>
@@ -219,6 +424,173 @@ function LibraryContent() {
           />
         </div>
       </div>
+
+      {showOffline && (
+        <section className="mt-9" aria-label="Offline downloads">
+          <div className="relative overflow-hidden rounded-2xl border border-white/[.08] bg-card p-5 sm:p-6">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25">
+                  <CloudDownload className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="eyebrow mb-1">Saved on this device</p>
+                  <h2 className="font-display text-xl font-medium tracking-[-0.03em] sm:text-2xl">
+                    Offline Downloads
+                  </h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {offlineItems.length > 0
+                      ? `${pluralize(offlineItems.length, "track")} · ${formatMb(totalOfflineBytes)} cached offline`
+                      : "Download any track from the menu or track row to listen without an internet connection."}
+                  </p>
+                </div>
+              </div>
+
+              {offlineItems.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    type="button"
+                    disabled={offlineTrackIds.length === 0}
+                    onClick={() => {
+                      if (isOfflineCollectionActive) {
+                        togglePlay();
+                      } else if (filteredOffline[0]) {
+                        playOfflineEntry(filteredOffline[0]);
+                      }
+                    }}
+                    className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-primary-foreground shadow-[0_12px_28px_-14px_hsl(var(--primary)/0.6)] transition hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
+                  >
+                    {isOfflineCollectionActive && isPlaying ? (
+                      <Pause className="h-3.5 w-3.5 fill-current" strokeWidth={0} />
+                    ) : (
+                      <Play className="h-3.5 w-3.5 fill-current" strokeWidth={0} />
+                    )}
+                    Play all
+                  </button>
+                  <button
+                    type="button"
+                    disabled={offlineTrackIds.length === 0}
+                    onClick={() => {
+                      const registered = filteredOffline.map(ensureRegisteredTrack);
+                      playShuffled(
+                        registered.map((t) => t.id),
+                        "Offline Downloads",
+                      );
+                    }}
+                    className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.08] bg-elevated px-4 text-xs font-medium text-foreground transition hover:border-white/[.18] hover:bg-elevated/80 disabled:opacity-40"
+                  >
+                    <Shuffle className="h-3.5 w-3.5" />
+                    Shuffle
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {filteredOffline.length === 0 ? (
+              <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-white/[.08] bg-elevated/50 px-4 py-10 text-center">
+                <CloudDownload className="mb-3 h-7 w-7 text-muted-foreground/60" />
+                <p className="text-sm font-medium text-foreground">
+                  {offlineItems.length > 0 && normalizedQuery
+                    ? "No offline tracks match your filter"
+                    : "No offline downloads yet"}
+                </p>
+                <p className="mt-1 max-w-md text-xs text-muted-foreground">
+                  {offlineItems.length > 0 && normalizedQuery
+                    ? "Try clearing the filter to see all offline downloads."
+                    : "Tap the download button on any track to save it for offline listening."}
+                </p>
+              </div>
+            ) : (
+              <div className="mt-5 divide-y divide-white/[.05] rounded-xl border border-white/[.08] bg-elevated/50">
+                {filteredOffline.map((entry, index) => {
+                  const isCurrent = currentTrackId === entry.track.id;
+                  return (
+                    <div
+                      key={entry.track.id}
+                      className={cn(
+                        "group flex items-center gap-3 px-3 py-2.5 transition hover:bg-white/[.045] sm:px-4",
+                        isCurrent && "bg-primary/[0.08]",
+                      )}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => playOfflineEntry(entry)}
+                        aria-label={`${isCurrent && isPlaying ? "Pause" : "Play"} ${entry.track.title}`}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs text-muted-foreground transition hover:bg-white/[.08] hover:text-foreground"
+                      >
+                        {isCurrent && isPlaying ? (
+                          <Equalizer playing className="text-primary" />
+                        ) : isCurrent ? (
+                          <Play className="h-3.5 w-3.5 fill-current text-primary" />
+                        ) : (
+                          <>
+                            <span className="tabular-nums group-hover:hidden">
+                              {index + 1}
+                            </span>
+                            <Play className="hidden h-3.5 w-3.5 fill-current text-foreground group-hover:block" />
+                          </>
+                        )}
+                      </button>
+
+                      <Artwork
+                        src={entry.track.artwork}
+                        alt=""
+                        res="sm"
+                        className="h-10 w-10 shrink-0 rounded-md"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => playOfflineEntry(entry)}
+                        className="min-w-0 flex-1 text-left"
+                      >
+                        <p
+                          className={cn(
+                            "truncate text-sm font-medium",
+                            isCurrent ? "text-primary" : "text-foreground",
+                          )}
+                        >
+                          {entry.track.title}
+                        </p>
+                        <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
+                          {entry.artistName}
+                          {entry.sizeBytes > 0 ? ` · ${formatMb(entry.sizeBytes)}` : ""}
+                        </p>
+                      </button>
+
+                      {entry.track.duration > 0 && (
+                        <span className="hidden shrink-0 text-[11.5px] tabular-nums text-muted-foreground sm:block">
+                          {formatDuration(entry.track.duration)}
+                        </span>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => void handleExportOffline(entry)}
+                        aria-label={`Export ${entry.track.title}`}
+                        title="Export audio file"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground/65 opacity-100 transition hover:bg-white/[.08] hover:text-foreground sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100"
+                      >
+                        <FileDown className="h-3.5 w-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => void handleRemoveOffline(entry)}
+                        aria-label={`Remove ${entry.track.title} from offline`}
+                        title="Remove offline copy"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground/65 opacity-100 transition hover:bg-white/[.08] hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {showLocal && (
         <LocalFilesSection searchQuery={query} onCountChange={setLocalCount} />
@@ -411,7 +783,7 @@ function LibraryContent() {
           {playlists.slice(0, 2).map((playlist) => (
             <div
               key={playlist.id}
-              className="flex items-center gap-4 rounded-xl border border-white/[.055] bg-white/[.018] p-4"
+              className="flex items-center gap-4 rounded-xl border border-white/[.08] bg-card p-4"
             >
               <div className="min-w-0 flex-1">
                 <p className="eyebrow mb-2">From Sangeet</p>
@@ -435,6 +807,49 @@ function LibraryContent() {
           ))}
         </div>
       </section>
+
+      {!nativeOffline && (
+        <section className="section-space pb-2" aria-label="Offline listening in Sangeet apps">
+          <div className="relative overflow-hidden rounded-2xl border border-white/[.08] bg-card p-5 sm:p-6">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.1),transparent_55%)]" />
+            <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/15 text-primary">
+                  <CloudDownload className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="eyebrow mb-1">Native App Exclusive</p>
+                  <h2 className="font-display text-xl font-medium tracking-[-0.03em] sm:text-2xl">
+                    Offline Listening in Sangeet Apps
+                  </h2>
+                  <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
+                    Offline track downloads are exclusive to the Sangeet Android APK and Windows .exe desktop app. Install the native app directly from this website to save songs for offline playback.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <a
+                  href="/api/download/windows"
+                  download="Sangeet.exe"
+                  className="inline-flex min-h-[42px] items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground shadow-[0_12px_28px_-14px_hsl(var(--primary)/0.6)] transition hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]"
+                >
+                  <Monitor className="h-4 w-4" />
+                  Windows .exe
+                </a>
+                <a
+                  href="/api/download/android"
+                  download="sangeet-android.apk"
+                  className="inline-flex min-h-[42px] items-center gap-2 rounded-full border border-white/[.08] bg-elevated px-5 py-2.5 text-xs font-semibold text-foreground transition hover:border-white/[.18] hover:bg-elevated/80"
+                >
+                  <Smartphone className="h-4 w-4" />
+                  Android APK
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

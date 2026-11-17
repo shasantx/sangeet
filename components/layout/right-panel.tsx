@@ -40,16 +40,16 @@ export function RightPanel() {
 
   return (
     <aside
-      className="fixed right-0 top-0 z-30 hidden h-[calc(100dvh-88px)] w-[340px] flex-col border-l border-white/[.045] bg-[#0e0e13]/92 backdrop-blur-xl xl:flex"
+      className="fixed right-0 top-0 z-30 hidden h-[calc(100dvh-92px)] w-[340px] flex-col border-l border-border bg-sidebar xl:flex"
       aria-label="Now playing details"
     >
-      <div className="flex h-[70px] shrink-0 items-center justify-between px-5">
+      <div className="flex h-[68px] shrink-0 items-center justify-between px-5">
         <span className="eyebrow">Now playing</span>
         <button
           type="button"
           onClick={() => setOpen(false)}
           aria-label="Hide panel"
-          className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.055] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-elevated text-muted-foreground transition hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <PanelRightClose className="h-4 w-4" />
         </button>
@@ -61,13 +61,14 @@ export function RightPanel() {
             <div className="relative">
               <Link
                 href={albumHref}
-                className="block overflow-hidden rounded-xl shadow-[0_24px_50px_-20px_rgba(0,0,0,.85)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="block overflow-hidden rounded-2xl border border-border shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 aria-label={`Open ${album.title}`}
               >
                 <Artwork
                   src={current.artwork}
                   alt={`${album.title} artwork`}
-                  className="aspect-square w-full rounded-xl"
+                  res="md"
+                  className="aspect-square w-full rounded-2xl"
                 />
               </Link>
               <PlayButton
@@ -82,7 +83,7 @@ export function RightPanel() {
               <div className="min-w-0 flex-1">
                 <Link
                   href={albumHref}
-                  className="block font-display text-[22px] font-medium leading-tight tracking-[-0.03em] text-foreground transition hover:underline"
+                  className="block font-display text-[22px] font-semibold leading-tight tracking-[-0.03em] text-foreground transition hover:underline"
                 >
                   {current.title}
                 </Link>
@@ -97,7 +98,7 @@ export function RightPanel() {
             </div>
 
             <div className="mt-4 flex items-center gap-2 text-[10px] text-muted-foreground">
-              <span className="rounded-full border border-white/[.07] bg-white/[.025] px-2.5 py-1">
+              <span className="rounded-full border border-border bg-elevated px-2.5 py-1 text-foreground/85">
                 {current.mood}
               </span>
               <span>{formatDuration(current.duration)}</span>
@@ -105,35 +106,46 @@ export function RightPanel() {
               <span>{album.year}</span>
             </div>
 
-            <div className="mt-7 rounded-xl border border-white/[.06] bg-white/[.025] p-4">
+            <div className="mt-6 rounded-2xl border border-border bg-card p-4">
               <div className="flex items-center gap-3">
                 <Link href={artistHref} className="shrink-0">
                   <Artwork
                     src={artist.image}
                     alt={`${artist.name} portrait`}
-                    className="h-10 w-10 rounded-full"
+                    res="sm"
+                    className="h-10 w-10 rounded-full ring-1 ring-border"
                   />
                 </Link>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-medium text-foreground">About {artist.name}</p>
+                  <p className="truncate text-xs font-semibold text-foreground">
+                    About {artist.name}
+                  </p>
                   <p className="mt-0.5 text-[10px] text-muted-foreground">Artist profile</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => {
                     const next = toggleFollow(artist.id);
-                    toast.show(next ? "Following artist" : "Unfollowed artist", artist.name, next ? "success" : "default");
+                    toast.show(
+                      next ? "Following artist" : "Unfollowed artist",
+                      artist.name,
+                      next ? "success" : "default",
+                    );
                   }}
                   aria-pressed={followed}
                   className={cn(
                     "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                     followed
-                      ? "border-primary/30 bg-primary/10 text-primary"
-                      : "border-white/[.09] hover:border-white/20",
+                      ? "border-primary/40 bg-primary/15 text-primary"
+                      : "border-border bg-elevated hover:border-foreground/25",
                   )}
                   aria-label={followed ? `Unfollow ${artist.name}` : `Follow ${artist.name}`}
                 >
-                  {followed ? <ChevronRight className="h-3.5 w-3.5 rotate-45" /> : <UserPlus className="h-3.5 w-3.5" />}
+                  {followed ? (
+                    <ChevronRight className="h-3.5 w-3.5 rotate-45" />
+                  ) : (
+                    <UserPlus className="h-3.5 w-3.5" />
+                  )}
                 </button>
               </div>
               <p className="mt-3 line-clamp-3 text-[11px] leading-[1.65] text-muted-foreground">
@@ -141,20 +153,20 @@ export function RightPanel() {
               </p>
               <Link
                 href={artistHref}
-                className="mt-3 inline-flex items-center gap-1 text-[10px] font-medium text-foreground transition hover:text-primary"
+                className="mt-3 inline-flex items-center gap-1 text-[10px] font-semibold text-foreground transition hover:text-primary"
               >
                 View artist
                 <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
 
-            <div className="mt-7">
+            <div className="mt-6">
               <div className="mb-3 flex items-center justify-between">
                 <span className="eyebrow">Up next</span>
                 <button
                   type="button"
                   onClick={toggleQueue}
-                  className="text-[10px] text-muted-foreground transition hover:text-foreground"
+                  className="text-[10px] font-medium text-muted-foreground transition hover:text-foreground"
                 >
                   See queue
                 </button>
@@ -167,9 +179,14 @@ export function RightPanel() {
                         key={`${track.id}-${index}`}
                         type="button"
                         onClick={() => playQueueIndex(index)}
-                        className="group flex w-full items-center gap-2.5 rounded-lg p-1.5 text-left transition hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        className="group flex w-full items-center gap-2.5 rounded-xl p-1.5 text-left transition hover:bg-elevated/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       >
-                        <Artwork src={track.artwork} alt="" className="h-9 w-9 shrink-0 rounded-md" />
+                        <Artwork
+                          src={track.artwork}
+                          alt=""
+                          res="sm"
+                          className="h-9 w-9 shrink-0 rounded-lg border border-border"
+                        />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[11.5px] font-medium text-foreground">
                             {track.title}
@@ -178,13 +195,16 @@ export function RightPanel() {
                             {getArtist(track.artistId)?.name}
                           </span>
                         </span>
-                        <Play className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition group-hover:opacity-100" fill="currentColor" />
+                        <Play
+                          className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition group-hover:opacity-100"
+                          fill="currentColor"
+                        />
                       </button>
                     ) : null,
                   )}
                 </div>
               ) : (
-                <div className="rounded-lg border border-dashed border-white/[.075] px-3 py-5 text-center">
+                <div className="rounded-xl border border-dashed border-border bg-card/60 px-3 py-5 text-center">
                   <ListMusic className="mx-auto h-4 w-4 text-muted-foreground/45" />
                   <p className="mt-2 text-[10px] text-muted-foreground">Queue is clear</p>
                 </div>
@@ -193,8 +213,8 @@ export function RightPanel() {
           </>
         ) : (
           <div className="flex h-[60vh] flex-col items-center justify-center text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/[.07] bg-white/[.025]">
-              <ListMusic className="h-5 w-5 text-muted-foreground/50" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-card">
+              <ListMusic className="h-5 w-5 text-muted-foreground/60" />
             </div>
             <p className="mt-4 font-display text-lg text-foreground">Your listening room</p>
             <p className="mt-1.5 max-w-[210px] text-xs leading-relaxed text-muted-foreground">
@@ -202,7 +222,7 @@ export function RightPanel() {
             </p>
             <Link
               href="/home"
-              className="mt-5 rounded-full bg-primary px-5 py-2.5 text-xs font-medium text-primary-foreground transition hover:bg-secondary"
+              className="mt-5 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground transition hover:brightness-110"
             >
               Find something to play
             </Link>

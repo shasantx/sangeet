@@ -74,6 +74,8 @@ export function toMediumResArtwork(url?: string | null): string {
 
   if (trimmed.includes("ytimg.com/vi/") || trimmed.includes("img.youtube.com/vi/")) {
     return trimmed
+      .replace(/\/maxresdefault\.jpg(\?.*)?$/i, "/hqdefault.jpg$1")
+      .replace(/\/sddefault\.jpg(\?.*)?$/i, "/hqdefault.jpg$1")
       .replace(/\/default\.jpg(\?.*)?$/i, "/mqdefault.jpg$1");
   }
 

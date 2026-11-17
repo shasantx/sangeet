@@ -7,8 +7,20 @@ import { safeStorage } from "@/lib/storage";
 import { getInitials } from "@/lib/utils";
 import type { DemoProfile } from "@/lib/types";
 
-export type ThemePreference = "dark" | "midnight" | "dusk";
-export type AccentPreference = "green" | "red" | "yellow" | "blue" | "violet";
+export type ThemePreference =
+  | "dark"
+  | "midnight"
+  | "dusk"
+  | "emerald"
+  | "aurora"
+  | "crimson";
+export type AccentPreference =
+  | "green"
+  | "red"
+  | "yellow"
+  | "blue"
+  | "violet"
+  | "cyan";
 export type AudioQuality = "auto" | "high" | "lossless";
 
 export interface PreferenceState {
@@ -159,10 +171,14 @@ export const useAppStore = create<AppState>()(
           preferredArtistIds: Array.isArray(source.preferredArtistIds)
             ? Array.from(new Set(source.preferredArtistIds.filter((id): id is string => typeof id === "string"))).slice(0, 5)
             : current.preferredArtistIds,
-          theme: ["dark", "midnight", "dusk"].includes(source.theme as string)
+          theme: ["dark", "midnight", "dusk", "emerald", "aurora", "crimson"].includes(
+            source.theme as string,
+          )
             ? (source.theme as ThemePreference)
             : "dark",
-          accent: ["green", "red", "yellow", "blue", "violet"].includes(source.accent as string)
+          accent: ["green", "red", "yellow", "blue", "violet", "cyan"].includes(
+            source.accent as string,
+          )
             ? (source.accent as AccentPreference)
             : "green",
         };

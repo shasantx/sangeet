@@ -6,16 +6,46 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertCircle,
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
+  Download,
   Eye,
   EyeOff,
   Headphones,
+  Laptop,
+  Lock,
+  Mail,
   ShieldCheck,
+  Smartphone,
   Sparkles,
+  User,
 } from "lucide-react";
 import { SangeetMark } from "@/components/brand/sangeet-mark";
+import { Artwork } from "@/components/music/artwork";
+import { albums, getArtist, selectedAlbums } from "@/lib/catalog";
 import { useAuthStore } from "@/store/auth-store";
 import { toast } from "@/store/ui-store";
+
+const APK_URL = "/api/download/android";
+const EXE_URL = "/api/download/windows";
+
+const LYRIC_SNIPPETS = [
+  {
+    prev: "City lights blur into neon green",
+    active: "Lossless studio warmth in every frame",
+    next: "Synced word by word, zero interruptions",
+  },
+  {
+    prev: "Lossless studio warmth in every frame",
+    active: "Synced word by word, zero interruptions",
+    next: "Take your queue from browser to pocket",
+  },
+  {
+    prev: "Synced word by word, zero interruptions",
+    active: "Take your queue from browser to pocket",
+    next: "City lights blur into neon green",
+  },
+];
 
 function sanitizeClientReturnTo(value: string | null | undefined, fallback = "/home"): string {
   if (!value || typeof value !== "string") return fallback;
@@ -38,6 +68,43 @@ function sanitizeClientReturnTo(value: string | null | undefined, fallback = "/h
   }
 }
 
+function getPasswordStrength(password: string): {
+  label: "Weak" | "Good" | "Strong";
+  level: 1 | 2 | 3;
+  barColor: string;
+  textColor: string;
+} {
+  let score = 0;
+  if (password.length >= 8) score += 1;
+  if (password.length >= 12) score += 1;
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1;
+  if (/\d/.test(password)) score += 1;
+  if (/[^a-zA-Z0-9]/.test(password)) score += 1;
+
+  if (password.length < 6 || score <= 1) {
+    return {
+      label: "Weak",
+      level: 1,
+      barColor: "bg-rose-400",
+      textColor: "text-rose-300",
+    };
+  }
+  if (score <= 3) {
+    return {
+      label: "Good",
+      level: 2,
+      barColor: "bg-amber-400",
+      textColor: "text-amber-300",
+    };
+  }
+  return {
+    label: "Strong",
+    level: 3,
+    barColor: "bg-[#1ed760]",
+    textColor: "text-[#1ed760]",
+  };
+}
+
 function GoogleMark() {
   return (
     <svg aria-hidden="true" className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
@@ -58,6 +125,210 @@ function GoogleMark() {
         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
       />
     </svg>
+  );
+}
+
+function LiquidShowcasePanel() {
+  const [lyricIndex, setLyricIndex] = useState(0);
+  const [activeStackIndex, setActiveStackIndex] = useState<number | null>(null);
+
+  const stackAlbums = useMemo(() => {
+    const source = selectedAlbums.length >= 3 ? selectedAlbums : albums;
+    return source.slice(0, 3);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setLyricIndex((prev) => (prev + 1) % LYRIC_SNIPPETS.length);
+    }, 3400);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const currentLyric = LYRIC_SNIPPETS[lyricIndex];
+  const selectedMiniAlbum =
+    activeStackIndex !== null ? stackAlbums[activeStackIndex] : undefined;
+  const selectedMiniArtist = selectedMiniAlbum
+    ? getArtist(selectedMiniAlbum.artistId)
+    : undefined;
+
+  const heroArtSrc = selectedMiniAlbum?.artwork || "/art/albums/the-weeknd-sao-paulo.jpg";
+  const heroTitle = selectedMiniAlbum?.title || "São Paulo · Spatial Mix";
+  const heroSubtitle =
+    selectedMiniArtist?.name || "The Weeknd · 320 kbps Lossless Stream";
+
+  return (
+    <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden border-r border-white/[0.1] bg-[radial-gradient(circle_at_15%_12%,rgba(30,215,96,0.14),transparent_48%),radial-gradient(circle_at_88%_88%,rgba(99,102,241,0.14),transparent_48%),#0a0d0b] p-7 lg:p-8 md:flex">
+      <style>{`
+        @keyframes sangeetEqPulse {
+          0%, 100% { transform: scaleY(0.32); opacity: 0.72; }
+          50% { transform: scaleY(1); opacity: 1; }
+        }
+      `}</style>
+
+      {/* Specular ambient blooms */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-12 -top-12 h-72 w-72 rounded-full bg-[#1ed760]/18 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-14 -right-12 h-72 w-72 rounded-full bg-indigo-500/18 blur-3xl"
+      />
+
+      {/* Top Navigation */}
+      <div className="z-10 flex items-center justify-between gap-3">
+        <Link
+          href="/"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.14] bg-white/[0.06] px-4 text-xs font-medium text-[#b5bdb7] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl transition hover:border-white/25 hover:bg-white/[0.1] hover:text-white"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> Back to home
+        </Link>
+
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1ed760]/30 bg-[#1ed760]/12 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#1ed760] backdrop-blur-xl">
+          <Sparkles className="h-3 w-3" /> iOS 26 Glass
+        </span>
+      </div>
+
+      {/* Interactive Liquid Glass Now Streaming Preview Card */}
+      <div className="z-10 my-auto py-5">
+        <div className="relative overflow-hidden rounded-[28px] border border-white/[0.14] bg-gradient-to-br from-white/[0.09] via-white/[0.035] to-white/[0.06] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.22)] backdrop-blur-2xl">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent"
+          />
+
+          {/* Live Status + Animated Equalizer */}
+          <div className="mb-3.5 flex items-center justify-between gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.12] bg-black/40 px-3 py-1 text-[11px] font-semibold text-white">
+              <span className="h-2 w-2 rounded-full bg-[#1ed760] shadow-[0_0_10px_#1ed760]" />
+              <span>Now Streaming on Sangeet</span>
+            </div>
+
+            <div
+              aria-hidden="true"
+              className="flex h-5 items-end gap-1 rounded-full border border-white/[0.1] bg-black/35 px-2.5 py-1"
+            >
+              {[0, 140, 280, 90].map((delay, idx) => (
+                <span
+                  key={idx}
+                  className="h-3 w-0.5 origin-bottom rounded-full bg-[#1ed760]"
+                  style={{
+                    animation: `sangeetEqPulse ${0.85 + idx * 0.12}s ease-in-out ${delay}ms infinite`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Primary Artwork + Stacked Mini Catalog Albums */}
+          <div className="grid grid-cols-[1fr_72px] gap-3">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/[0.14] bg-black/40">
+              <img
+                src={heroArtSrc}
+                alt={heroTitle}
+                className="h-full w-full object-cover transition duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
+              <div className="absolute inset-x-3.5 bottom-3">
+                <p className="truncate font-display text-sm font-bold text-white">
+                  {heroTitle}
+                </p>
+                <p className="truncate text-[11px] text-white/75">{heroSubtitle}</p>
+              </div>
+            </div>
+
+            {/* Interactive Stacked Mini Album Cards from @/lib/catalog */}
+            <div className="flex flex-col justify-between gap-2">
+              {stackAlbums.map((album, idx) => {
+                const isSelected = activeStackIndex === idx;
+                return (
+                  <button
+                    key={album.id}
+                    type="button"
+                    onClick={() =>
+                      setActiveStackIndex((curr) => (curr === idx ? null : idx))
+                    }
+                    title={`Preview ${album.title}`}
+                    aria-label={`Preview ${album.title}`}
+                    className={`group relative aspect-square w-full overflow-hidden rounded-xl border transition ${
+                      isSelected
+                        ? "border-[#1ed760] ring-2 ring-[#1ed760]/40 scale-[1.03]"
+                        : "border-white/[0.15] opacity-85 hover:opacity-100 hover:border-white/30"
+                    }`}
+                  >
+                    <Artwork
+                      src={album.artwork}
+                      alt={album.title}
+                      className="h-full w-full"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Synchronized Lyrics Snippet Preview */}
+          <button
+            type="button"
+            onClick={() => setLyricIndex((prev) => (prev + 1) % LYRIC_SNIPPETS.length)}
+            className="mt-3.5 w-full rounded-2xl border border-white/[0.1] bg-black/45 px-3.5 py-2.5 text-left transition hover:border-white/20"
+            aria-label="Cycle synchronized lyrics preview"
+          >
+            <div className="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8e9690]">
+              <span>Live Synced Lyrics</span>
+              <span className="text-[#1ed760]">Tap to sync</span>
+            </div>
+            <p className="truncate text-[11px] text-white/40">{currentLyric.prev}</p>
+            <p className="truncate py-0.5 text-xs font-semibold text-white">
+              <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[#1ed760] align-middle" />
+              {currentLyric.active}
+            </p>
+            <p className="truncate text-[11px] text-white/40">{currentLyric.next}</p>
+          </button>
+
+          {/* Platform Badges */}
+          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.06] px-2.5 py-1 text-[10px] font-semibold text-white/85">
+              <CheckCircle2 className="h-3 w-3 text-[#1ed760]" /> Web
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.06] px-2.5 py-1 text-[10px] font-semibold text-white/85">
+              <Smartphone className="h-3 w-3 text-[#1ed760]" /> Android APK
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.06] px-2.5 py-1 text-[10px] font-semibold text-white/85">
+              <Laptop className="h-3 w-3 text-[#1ed760]" /> Windows .exe
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Quick-Download Bar (Website Routes Only) */}
+      <div className="z-10 space-y-2.5 border-t border-white/[0.08] pt-4">
+        <div className="flex items-center justify-between text-[11px] text-[#8e9690]">
+          <span>Direct native apps · Offline playback included</span>
+          <span className="text-[#1ed760] font-medium">Free &amp; Ad-free</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">
+          <a
+            href={APK_URL}
+            download="sangeet-android.apk"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border border-white/[0.14] bg-white/[0.06] px-3 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] backdrop-blur-xl transition hover:border-[#1ed760]/40 hover:bg-white/[0.1]"
+          >
+            <Smartphone className="h-3.5 w-3.5 text-[#1ed760]" />
+            <span>Android APK</span>
+            <Download className="h-3 w-3 text-white/55" />
+          </a>
+          <a
+            href={EXE_URL}
+            download="Sangeet.exe"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border border-white/[0.14] bg-white/[0.06] px-3 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] backdrop-blur-xl transition hover:border-white/30 hover:bg-white/[0.1]"
+          >
+            <Laptop className="h-3.5 w-3.5 text-indigo-300" />
+            <span>Windows .exe</span>
+            <Download className="h-3 w-3 text-white/55" />
+          </a>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -160,48 +431,50 @@ function AuthForm() {
     return "Could not connect to Google sign-in. You can log in with email below.";
   }, [googleState, reason]);
 
+  const passwordStrength = useMemo(() => getPasswordStrength(password), [password]);
+
   return (
-    <div className="flex w-full flex-col justify-center px-4 py-8 sm:px-10 sm:py-12 md:w-1/2 lg:px-14">
+    <div className="flex w-full flex-col justify-center px-5 py-7 sm:px-10 sm:py-11 md:w-1/2 lg:px-12">
       {/* Mobile Top Bar */}
-      <div className="flex items-center justify-between pb-6 md:hidden">
+      <div className="flex items-center justify-between pb-5 md:hidden">
         <Link
           href={returnTo === "/auth" ? "/" : returnTo}
-          className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-[#9ba39d] hover:text-white"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.14] bg-white/[0.06] px-4 text-xs font-medium text-[#b5bdb7] shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] backdrop-blur-xl transition hover:text-white"
         >
-          <ArrowLeft className="h-3.5 w-3.5" /> Back
+          <ArrowLeft className="h-4 w-4" /> Back
         </Link>
         <div className="flex items-center gap-2">
-          <SangeetMark size={24} />
+          <SangeetMark size={26} />
           <span className="font-display text-sm font-bold text-white">Sangeet</span>
         </div>
       </div>
 
       {/* Brand Header (Desktop) */}
       <div className="hidden items-center gap-2.5 md:flex">
-        <SangeetMark size={28} />
+        <SangeetMark size={30} />
         <span className="font-display text-lg font-bold tracking-tight text-white">Sangeet</span>
       </div>
 
-      <div className="mt-4 md:mt-6">
+      <div className="mt-3 md:mt-6">
         <h1 className="font-display text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
           {mode === "signup" ? "Create your account" : "Login to your account"}
         </h1>
-        <p className="mt-1.5 text-xs text-[#9ba39d] sm:text-sm">
+        <p className="mt-1.5 text-xs leading-relaxed text-[#9ba39d] sm:text-sm">
           {mode === "signup"
-            ? "Sign up to unlock ad-free streaming, personalized mixes, and synced lyrics"
-            : "Welcome back! Enter your details to start listening"}
+            ? "Sign up to unlock ad-free streaming, personalized mixes, and synced lyrics."
+            : "Welcome back! Enter your details to start listening."}
         </p>
       </div>
 
-      {/* Mode Switcher Tabs */}
-      <div className="mt-6 flex rounded-xl border border-white/10 bg-white/[0.04] p-1">
+      {/* Liquid Glass Segmented Switcher */}
+      <div className="mt-6 grid grid-cols-2 gap-1 rounded-2xl border border-white/[0.12] bg-white/[0.05] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-xl">
         <button
           type="button"
           onClick={() => setMode("signin")}
-          className={`flex-1 rounded-lg py-2 text-xs font-semibold transition ${
+          className={`min-h-[44px] rounded-xl text-xs font-semibold transition sm:text-sm ${
             mode === "signin"
-              ? "bg-[#1ed760] text-black shadow-md"
-              : "text-[#9ba39d] hover:text-white"
+              ? "bg-[#1ed760] text-black shadow-[0_6px_20px_rgba(30,215,96,0.3)]"
+              : "text-[#a4aca6] hover:bg-white/[0.05] hover:text-white"
           }`}
         >
           Sign In
@@ -209,10 +482,10 @@ function AuthForm() {
         <button
           type="button"
           onClick={() => setMode("signup")}
-          className={`flex-1 rounded-lg py-2 text-xs font-semibold transition ${
+          className={`min-h-[44px] rounded-xl text-xs font-semibold transition sm:text-sm ${
             mode === "signup"
-              ? "bg-[#1ed760] text-black shadow-md"
-              : "text-[#9ba39d] hover:text-white"
+              ? "bg-[#1ed760] text-black shadow-[0_6px_20px_rgba(30,215,96,0.3)]"
+              : "text-[#a4aca6] hover:bg-white/[0.05] hover:text-white"
           }`}
         >
           Create Account
@@ -221,8 +494,8 @@ function AuthForm() {
 
       {/* Play Required Alert Banner */}
       {playRequiredNotice && (
-        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-[#1ed760]/30 bg-[#1ed760]/10 p-3.5 text-xs text-[#a0f0bd]">
-          <Headphones className="h-4 w-4 shrink-0 mt-0.5 text-[#1ed760]" />
+        <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-[#1ed760]/30 bg-[#1ed760]/10 p-3.5 text-xs text-[#a0f0bd] backdrop-blur-md">
+          <Headphones className="mt-0.5 h-4 w-4 shrink-0 text-[#1ed760]" />
           <div>
             <p className="font-semibold text-white">Login required to play songs</p>
             <p className="mt-0.5 text-[#9ba39d]">
@@ -233,20 +506,24 @@ function AuthForm() {
       )}
 
       {errorMessage && (
-        <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
-          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-400" />
+        <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-amber-500/35 bg-amber-500/10 p-3.5 text-xs text-amber-200 backdrop-blur-md">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
           <p>{errorMessage}</p>
         </div>
       )}
 
       {/* Email / Password Form */}
-      <form onSubmit={handleFormLogin} className="mt-5 space-y-3.5">
+      <form onSubmit={handleFormLogin} className="mt-5 space-y-4">
         {mode === "signup" && (
           <div>
             <label className="block text-xs font-semibold text-[#c8cec9]" htmlFor="auth-name">
               Your Name
             </label>
             <div className="relative mt-1.5">
+              <User
+                aria-hidden="true"
+                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c857e]"
+              />
               <input
                 id="auth-name"
                 type="text"
@@ -254,7 +531,7 @@ function AuthForm() {
                 maxLength={80}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
-                className="h-11 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-4 text-xs text-white placeholder:text-[#636c65] transition focus:border-[#1ed760] focus:bg-black/40 focus:outline-none focus:ring-1 focus:ring-[#1ed760] sm:h-12 sm:text-sm"
+                className="h-12 w-full rounded-2xl border border-white/[0.14] bg-white/[0.05] pl-11 pr-4 text-sm text-white placeholder:text-[#636c65] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition focus:border-[#1ed760] focus:bg-black/45 focus:outline-none focus:ring-1 focus:ring-[#1ed760]"
               />
             </div>
           </div>
@@ -265,6 +542,10 @@ function AuthForm() {
             Email
           </label>
           <div className="relative mt-1.5">
+            <Mail
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c857e]"
+            />
             <input
               id="auth-email"
               type="email"
@@ -273,7 +554,7 @@ function AuthForm() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required
-              className="h-11 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-4 text-xs text-white placeholder:text-[#636c65] transition focus:border-[#1ed760] focus:bg-black/40 focus:outline-none focus:ring-1 focus:ring-[#1ed760] sm:h-12 sm:text-sm"
+              className="h-12 w-full rounded-2xl border border-white/[0.14] bg-white/[0.05] pl-11 pr-4 text-sm text-white placeholder:text-[#636c65] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition focus:border-[#1ed760] focus:bg-black/45 focus:outline-none focus:ring-1 focus:ring-[#1ed760]"
             />
           </div>
         </div>
@@ -283,6 +564,10 @@ function AuthForm() {
             Password
           </label>
           <div className="relative mt-1.5">
+            <Lock
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c857e]"
+            />
             <input
               id="auth-password"
               type={showPassword ? "text" : "password"}
@@ -290,38 +575,61 @@ function AuthForm() {
               maxLength={128}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              className="h-11 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-4 pr-11 text-xs text-white placeholder:text-[#636c65] transition focus:border-[#1ed760] focus:bg-black/40 focus:outline-none focus:ring-1 focus:ring-[#1ed760] sm:h-12 sm:text-sm"
+              className="h-12 w-full rounded-2xl border border-white/[0.14] bg-white/[0.05] pl-11 pr-12 text-sm text-white placeholder:text-[#636c65] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition focus:border-[#1ed760] focus:bg-black/45 focus:outline-none focus:ring-1 focus:ring-[#1ed760]"
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9ba39d] hover:text-white"
+              className="absolute right-1 top-1/2 flex h-11 min-h-[44px] w-11 -translate-y-1/2 items-center justify-center rounded-xl text-[#9ba39d] transition hover:bg-white/[0.08] hover:text-white"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+
+          {mode === "signup" && password.length > 0 && (
+            <div className="mt-2.5 space-y-1.5" aria-live="polite">
+              <div className="grid grid-cols-3 gap-1.5">
+                {[1, 2, 3].map((step) => (
+                  <span
+                    key={step}
+                    className={`h-1.5 rounded-full transition-colors ${
+                      passwordStrength.level >= step
+                        ? passwordStrength.barColor
+                        : "bg-white/[0.1]"
+                    }`}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-[#7c857e]">Password strength</span>
+                <span className={`font-semibold ${passwordStrength.textColor}`}>
+                  {passwordStrength.label}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Remember Login + Forgot Password */}
-        <div className="flex items-center justify-between text-xs pt-0.5">
-          <label className="flex items-center gap-2 cursor-pointer text-[#9ba39d] hover:text-white select-none">
+        {/* Remember Login */}
+        <div className="flex items-center justify-between text-xs">
+          <label className="flex min-h-[44px] cursor-pointer select-none items-center gap-2.5 text-[#9ba39d] hover:text-white">
             <input
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
-              className="h-3.5 w-3.5 rounded border-white/20 bg-white/10 text-[#1ed760] focus:ring-0 focus:ring-offset-0"
+              className="h-4 w-4 rounded border-white/25 bg-white/10 text-[#1ed760] focus:ring-0 focus:ring-offset-0"
             />
             <span>Remember login</span>
           </label>
-          <span className="text-xs text-[#636c65]">Instant session setup</span>
+          <span className="text-xs text-[#6d766f]">Instant session setup</span>
         </div>
 
         {/* Primary Submit Button */}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="h-12 w-full rounded-2xl bg-[#1ed760] text-xs font-bold text-black shadow-lg shadow-[#1ed760]/20 transition hover:bg-[#1db954] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760] sm:h-12.5 sm:text-sm"
+          className="h-12 w-full rounded-2xl bg-[#1ed760] text-sm font-bold text-black shadow-[0_12px_32px_rgba(30,215,96,0.28)] transition hover:scale-[1.01] hover:bg-[#1db954] active:scale-[0.99] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760]"
         >
           {isSubmitting
             ? "Signing in..."
@@ -332,27 +640,34 @@ function AuthForm() {
       </form>
 
       {/* Divider */}
-      <div className="relative my-5 text-center">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-white/[0.08]" />
-        </div>
-        <span className="relative bg-[#111412] px-3 text-[11px] font-medium text-[#636c65]">
-          Or continue with
-        </span>
+      <div className="my-5 flex items-center gap-3">
+        <div className="h-px flex-1 bg-white/[0.1]" />
+        <span className="text-[11px] font-medium text-[#757e77]">Or continue with</span>
+        <div className="h-px flex-1 bg-white/[0.1]" />
       </div>
 
       {/* Google Sign-In Button */}
       <button
         type="button"
         onClick={handleGoogleSignIn}
-        className="group flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-white/20 bg-white px-5 text-xs font-semibold text-[#1f2024] shadow-md transition hover:bg-[#f2f4f2] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760] sm:h-12.5 sm:text-sm"
+        className="group flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-white/25 bg-white px-5 text-sm font-semibold text-[#1f2024] shadow-md transition hover:scale-[1.01] hover:bg-[#f2f4f2] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760]"
       >
         <GoogleMark />
         <span>Continue with Google</span>
       </button>
 
-      <div className="mt-5 border-t border-white/[0.06] pt-4 text-center">
-        <p className="flex items-center justify-center gap-1.5 text-[11px] text-[#636c65]">
+      {/* Guest / Platform Footer */}
+      <div className="mt-5 space-y-2 border-t border-white/[0.08] pt-4 text-center">
+        {!isAdminReturn && (
+          <Link
+            href="/home"
+            className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-2xl border border-white/[0.1] bg-white/[0.04] px-4 text-xs font-semibold text-white/85 transition hover:border-white/25 hover:bg-white/[0.08] hover:text-white"
+          >
+            <span>Continue listening as guest</span>
+            <ArrowRight className="h-3.5 w-3.5 text-[#1ed760]" />
+          </Link>
+        )}
+        <p className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-[#757e77]">
           <ShieldCheck className="h-3.5 w-3.5 text-[#1ed760]" />
           <span>Stream anywhere across Web, Windows, and Android.</span>
         </p>
@@ -363,73 +678,25 @@ function AuthForm() {
 
 export default function AuthPage() {
   return (
-    <main className="relative flex min-h-dvh items-center justify-center bg-[#090b09] p-0 text-white sm:p-6 lg:p-10 select-none">
-      {/* Background ambient lighting */}
+    <main className="relative flex min-h-dvh select-none items-center justify-center overflow-hidden bg-[#080909] p-0 text-white sm:p-6 lg:p-10">
+      {/* Layered Obsidian, Emerald & Indigo Ambient Glows */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_70%_60%_at_50%_0%,rgba(30,215,96,0.12),transparent_70%)]"
+        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_75%_55%_at_18%_0%,rgba(30,215,96,0.16),transparent_62%),radial-gradient(ellipse_60%_50%_at_88%_100%,rgba(99,102,241,0.14),transparent_62%),radial-gradient(ellipse_55%_40%_at_50%_50%,rgba(255,255,255,0.025),transparent_70%)]"
       />
 
-      {/* Main Container */}
-      <div className="relative flex w-full min-h-dvh sm:min-h-[660px] max-w-5xl overflow-hidden rounded-none sm:rounded-[36px] border-0 sm:border border-white/[0.1] bg-[#111412] shadow-2xl">
-        {/* Left Side: Rich Visual / Soundscape Showcase */}
-        <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden border-r border-white/[0.08] bg-[#0c0f0d] p-8 md:flex">
-          {/* Subtle background art glow */}
-          <div className="pointer-events-none absolute -left-10 -top-10 h-72 w-72 rounded-full bg-[#1ed760]/15 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-10 -right-10 h-72 w-72 rounded-full bg-[#185330]/20 blur-3xl" />
+      {/* Main Liquid Glass Split Card */}
+      <div className="relative flex min-h-dvh w-full max-w-5xl overflow-hidden rounded-none border-0 border-white/[0.12] bg-[#0d110f]/88 backdrop-blur-2xl shadow-[0_32px_90px_rgba(0,0,0,0.75)] sm:min-h-[670px] sm:rounded-[32px] sm:border">
+        {/* Top Specular Rim Highlight */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"
+        />
 
-          {/* Top navigation */}
-          <Link
-            href="/"
-            className="z-10 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-xs font-medium text-[#9ba39d] backdrop-blur-md transition hover:bg-white/[0.08] hover:text-white"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to home
-          </Link>
+        {/* Left Side: Interactive Liquid Glass Showcase */}
+        <LiquidShowcasePanel />
 
-          {/* Full-Bleed Sound Art Frame with Weeknd cover */}
-          <div className="relative my-auto flex flex-col items-center justify-center py-6">
-            <div className="relative aspect-[4/5] w-full max-w-[340px] overflow-hidden rounded-[28px] border border-white/15 bg-gradient-to-b from-[#18211b] via-[#101512] to-[#090b09] p-3 shadow-2xl">
-              <img
-                src="/art/albums/the-weeknd-sao-paulo.jpg"
-                alt="Sangeet soundscapes"
-                className="h-full w-full rounded-2xl object-cover"
-              />
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-
-              {/* Floating Glass Badges on Artwork */}
-              <div className="absolute bottom-5 left-5 right-5 space-y-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1ed760]/40 bg-[#1ed760]/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#1ed760] backdrop-blur-md">
-                  <Sparkles className="h-3 w-3" /> Lossless 320 KBPS
-                </span>
-                <p className="font-display text-lg font-bold text-white leading-tight">
-                  High-Fidelity Studio Audio
-                </p>
-                <p className="text-[11px] text-white/70">
-                  Real-time synchronized lyrics & 100M+ songs with zero interruptions
-                </p>
-              </div>
-            </div>
-
-            {/* Feature Checklist */}
-            <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-[#9ba39d]">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-[#1ed760]" />
-                Cloud sync across devices
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-[#1ed760]" />
-                Zero intrusive audio ads
-              </span>
-            </div>
-          </div>
-
-          {/* Left Footer */}
-          <div className="z-10 text-[11px] text-[#636c65]">
-            <span>Sangeet Music · Free & Open-Source</span>
-          </div>
-        </div>
-
-        {/* Right Side: Clean Login Form */}
+        {/* Right Side: Auth Form */}
         <Suspense
           fallback={
             <div className="flex w-full flex-col justify-center p-8 text-center text-sm text-[#9ba39d] md:w-1/2">

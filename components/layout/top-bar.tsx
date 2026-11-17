@@ -6,22 +6,19 @@ import { SangeetMark } from "@/components/brand/sangeet-mark";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ListMusic,
-  Menu,
   LogOut,
+  Menu,
   PanelRightClose,
   Search,
   Settings,
   ShieldCheck,
-  Sparkles,
   User,
-  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 import { useAuthStore } from "@/store/auth-store";
 import { usePlayerStore } from "@/store/player-store";
 import { useUIStore, toast } from "@/store/ui-store";
-import { Artwork } from "@/components/music/artwork";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,7 +41,6 @@ export function TopBar() {
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const session = useAuthStore((state) => state.session);
-  const openAuthModal = useAuthStore((state) => state.openAuthModal);
   const signOut = useAuthStore((state) => state.signOut);
 
   useEffect(() => {
@@ -67,135 +63,161 @@ export function TopBar() {
   const displayName = session?.displayName || profile.name;
   const initials = session?.initials || profile.initials;
   const avatarColor = session?.avatarColor || profile.avatarColor;
+  const isMobileHome = pathname === "/home";
 
   return (
-    <header className="sticky top-0 z-30 border-b border-white/[.05] bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur-xl sm:px-6 lg:px-8">
-      <div className="flex min-h-[60px] w-full items-center gap-1.5 sm:min-h-[70px] sm:gap-3">
-        <button type="button" onClick={toggleMobileSidebar} aria-label={mobileSidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={mobileSidebarOpen} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.055] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:hidden">
-          <Menu className="h-5 w-5" />
+    <header
+      className={cn(
+        "sticky top-0 z-30 border-b border-border/80 bg-background/95 px-3 pt-[env(safe-area-inset-top)] sm:px-6 lg:px-8",
+        isMobileHome && "hidden md:block",
+      )}
+    >
+      <div className="flex min-h-[60px] w-full items-center gap-1.5 sm:min-h-[68px] sm:gap-3">
+        <button
+          type="button"
+          onClick={toggleMobileSidebar}
+          aria-label={mobileSidebarOpen ? "Close navigation" : "Open navigation"}
+          aria-expanded={mobileSidebarOpen}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/80 bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:hidden"
+        >
+          <Menu className="h-[18px] w-[18px]" />
         </button>
-        {/* Mobile Logo */}
-        <Link href="/home" className="flex shrink-0 items-center gap-1.5 md:hidden" aria-label="Sangeet home">
+
+        <Link
+          href="/home"
+          className="flex shrink-0 items-center gap-1.5 md:hidden"
+          aria-label="Sangeet home"
+        >
           <SangeetMark size={26} />
-          <span className="mobile-brand-name font-display text-[15px] font-bold tracking-tight text-white">Sangeet</span>
+          <span className="mobile-brand-name font-display text-[15px] font-bold tracking-tight text-foreground">
+            Sangeet
+          </span>
         </Link>
 
-      {/* Search Input (Sangeet / YT Music pill style) */}
-      <Link
-        href="/search"
-        className="group hidden h-10 w-full max-w-[420px] items-center gap-3 rounded-full border border-white/[.07] bg-white/[.035] px-4 text-xs text-muted-foreground transition hover:border-white/[.14] hover:bg-white/[.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:flex"
-        aria-label="Search Sangeet"
-      >
-        <Search className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors" />
-        <span className="truncate">Search artists, albums, tracks or songs…</span>
-        <kbd className="ml-auto hidden shrink-0 rounded border border-white/[.08] bg-black/30 px-1.5 py-0.5 font-sans text-[10px] text-muted-foreground/80 xl:block">
-          ⌘ K
-        </kbd>
-      </Link>
-
-      <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+        {/* Studio Search Bar */}
         <Link
           href="/search"
-          aria-label="Search"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.055] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:hidden"
+          className="group hidden h-10 w-full max-w-[440px] items-center gap-3 rounded-full border border-border bg-card px-4 text-xs text-muted-foreground transition hover:border-white/[0.16] hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:flex"
+          aria-label="Search Sangeet"
         >
-          <Search className="h-[18px] w-[18px]" />
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+          <span className="truncate">Search artists, albums, tracks or songs…</span>
+          <kbd className="ml-auto hidden shrink-0 rounded border border-border bg-background px-1.5 py-0.5 font-sans text-[10px] text-muted-foreground xl:block">
+            ⌘ K
+          </kbd>
         </Link>
 
-        {/* Queue button */}
-        <button
-          type="button"
-          onClick={toggleQueue}
-          aria-label={queueOpen ? "Close queue" : "Open queue"}
-          aria-pressed={queueOpen}
-          className={cn(
-            "relative hidden h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.055] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary min-[380px]:flex",
-            queueOpen && "bg-white/[.055] text-foreground",
-          )}
-        >
-          <ListMusic className="h-[18px] w-[18px]" />
-          {currentTrackId && (
-            <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary ring-2 ring-background" />
-          )}
-        </button>
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <Link
+            href="/search"
+            aria-label="Search"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:hidden"
+          >
+            <Search className="h-[17px] w-[17px]" />
+          </Link>
 
-        {/* Right now-playing panel toggle */}
-        <button
-          type="button"
-          onClick={toggleRightPanel}
-          aria-label={rightPanelOpen ? "Hide now playing panel" : "Show now playing panel"}
-          aria-pressed={rightPanelOpen}
-          className="hidden h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-white/[.055] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary xl:flex"
-        >
-          <PanelRightClose className={cn("h-[18px] w-[18px] transition-transform", !rightPanelOpen && "rotate-180")} />
-        </button>
+          <button
+            type="button"
+            onClick={toggleQueue}
+            aria-label={queueOpen ? "Close queue" : "Open queue"}
+            aria-pressed={queueOpen}
+            className={cn(
+              "relative hidden h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary min-[380px]:flex",
+              queueOpen && "border-primary/45 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
+            )}
+          >
+            <ListMusic className="h-[17px] w-[17px]" />
+            {currentTrackId && (
+              <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary ring-2 ring-background" />
+            )}
+          </button>
 
-        {/* Authentication area (Sangeet Music style) */}
-        {isAuthenticated && session ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="ml-0.5 flex items-center gap-1.5 rounded-full p-0.5 transition hover:bg-white/[.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:ml-1.5 sm:gap-2 sm:p-1"
-                aria-label="User account menu"
-              >
-                <span
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-semibold text-white shadow-md ring-1 ring-white/15"
-                  style={{ background: avatarColor }}
+          <button
+            type="button"
+            onClick={toggleRightPanel}
+            aria-label={rightPanelOpen ? "Hide now playing panel" : "Show now playing panel"}
+            aria-pressed={rightPanelOpen}
+            className="hidden h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary xl:flex"
+          >
+            <PanelRightClose
+              className={cn("h-[17px] w-[17px] transition-transform", !rightPanelOpen && "rotate-180")}
+            />
+          </button>
+
+          {isAuthenticated && session ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="ml-0.5 flex items-center gap-1.5 rounded-full border border-border/80 bg-card p-0.5 transition hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:ml-1.5 sm:gap-2 sm:p-1"
+                  aria-label="User account menu"
                 >
-                  {initials}
-                </span>
-                <span className="hidden sm:block text-xs font-medium text-foreground max-w-[110px] truncate pr-2">
-                  {displayName}
-                </span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[220px] bg-[#121218] border-white/[.1]">
-              <div className="px-3 py-2.5">
-                <p className="text-xs font-semibold text-foreground truncate">{displayName}</p>
-                <p className="text-[10px] text-muted-foreground truncate">{session.email}</p>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => router.push("/profile")}>
-                <User className="h-3.5 w-3.5 mr-2" />
-                Profile & Library
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => router.push("/settings")}>
-                <Settings className="h-3.5 w-3.5 mr-2" />
-                Settings
-              </DropdownMenuItem>
-              {session.isAdmin && (
-                <DropdownMenuItem onSelect={() => router.push("/admin")} className="text-[#1ed760] focus:text-[#8ff2ae]">
-                  <ShieldCheck className="h-3.5 w-3.5 mr-2" />
-                  Admin Console
+                  <span
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-semibold text-white ring-1 ring-white/15"
+                    style={{ background: avatarColor }}
+                  >
+                    {initials}
+                  </span>
+                  <span className="hidden max-w-[110px] truncate pr-2 text-xs font-medium text-foreground sm:block">
+                    {displayName}
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-[220px] rounded-xl border-border bg-popover shadow-lg"
+              >
+                <div className="px-3 py-2.5">
+                  <p className="truncate text-xs font-semibold text-foreground">{displayName}</p>
+                  <p className="truncate text-[10px] text-muted-foreground">{session.email}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => router.push("/profile")}>
+                  <User className="mr-2 h-3.5 w-3.5" />
+                  Profile & Library
                 </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={handleSignOut} className="text-red-400 focus:text-red-300">
-                <LogOut className="h-3.5 w-3.5 mr-2" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <div className="ml-0.5 flex shrink-0 items-center gap-1 sm:ml-2 sm:gap-2">
-            <Link
-              href={`/auth?tab=signin&returnTo=${encodeURIComponent(pathname)}`}
-              className="inline-flex min-h-8 items-center whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-semibold text-white/85 transition hover:bg-white/[.06] hover:text-white sm:min-h-9 sm:px-3.5 sm:py-1.5 sm:text-xs"
-            >
-              Sign in
-            </Link>
-            <Link
-              href={`/auth?tab=signup&returnTo=${encodeURIComponent(pathname)}`}
-              aria-label="Create account"
-              className="inline-flex min-h-8 items-center whitespace-nowrap rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-black shadow-md transition hover:bg-white/90 active:scale-95 sm:min-h-9 sm:px-4 sm:py-1.5 sm:text-xs"
-            >
-              <span className="sm:hidden">Sign up</span><span className="hidden sm:inline">Create account</span>
-            </Link>
-          </div>
-        )}
-      </div>
-
+                <DropdownMenuItem onSelect={() => router.push("/settings")}>
+                  <Settings className="mr-2 h-3.5 w-3.5" />
+                  Settings
+                </DropdownMenuItem>
+                {session.isAdmin && (
+                  <DropdownMenuItem
+                    onSelect={() => router.push("/admin")}
+                    className="text-primary focus:text-primary"
+                  >
+                    <ShieldCheck className="mr-2 h-3.5 w-3.5" />
+                    Admin Console
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={handleSignOut}
+                  className="text-red-400 focus:text-red-300"
+                >
+                  <LogOut className="mr-2 h-3.5 w-3.5" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="ml-0.5 flex shrink-0 items-center gap-1.5 sm:ml-2 sm:gap-2">
+              <Link
+                href={`/auth?tab=signin&returnTo=${encodeURIComponent(pathname)}`}
+                className="inline-flex min-h-8 items-center whitespace-nowrap rounded-full border border-border bg-card px-3 py-1 text-[11px] font-semibold text-foreground transition hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-9 sm:px-3.5 sm:py-1.5 sm:text-xs"
+              >
+                Sign in
+              </Link>
+              <Link
+                href={`/auth?tab=signup&returnTo=${encodeURIComponent(pathname)}`}
+                aria-label="Create account"
+                className="inline-flex min-h-8 items-center whitespace-nowrap rounded-full bg-primary px-3 py-1 text-[11px] font-semibold text-primary-foreground transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-9 sm:px-4 sm:py-1.5 sm:text-xs"
+              >
+                <span className="sm:hidden">Sign up</span>
+                <span className="hidden sm:inline">Create account</span>
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
 
       <span className="sr-only" aria-live="polite">

@@ -14,6 +14,7 @@ type YouTubePlayer = {
   mute: () => void;
   unMute: () => void;
   isMuted: () => boolean;
+  setPlaybackRate?: (suggestedRate: number) => void;
 };
 
 type YouTubeApi = {
@@ -59,6 +60,7 @@ let pending: { videoId: string; shouldPlay: boolean; startSeconds: number } | nu
 let lastVideoId = "";
 let desiredVolume = 0.78;
 let desiredMuted = false;
+let desiredPlaybackRate = 1;
 
 function loadApi(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
@@ -108,6 +110,11 @@ function applyVolume() {
   player.setVolume(Math.round(desiredVolume * 100));
   if (desiredMuted) player.mute();
   else player.unMute();
+  try {
+    player.setPlaybackRate?.(desiredPlaybackRate);
+  } catch {
+    // Ignore unsupported playback rates on embedded videos.
+  }
 }
 
 function applyPending() {
@@ -277,6 +284,40 @@ export function muteYouTube(muted: boolean): void {
   if (!player) return;
   if (muted) player.mute();
   else player.unMute();
+}
+
+export function setYouTubePlaybackRate(rate: number): void {
+  desiredPlaybackRate = rate;
+  if (!player) return;
+  try {
+    player.setPlaybackRate?.(rate);
+  } catch {
+    // Ignore player race conditions or unsupported rates.
+  }
+}
+
+export function replayYouTube(): void {
+  if (pending) {
+    pending.startSeconds = 0;
+    pending.shouldPlay = true;
+    return;
+  }
+  if (!ready || !player) {
+    if (lastVideoId) {
+      pending = {
+        videoId: lastVideoId,
+        shouldPlay: true,
+        startSeconds: 0,
+      };
+    }
+    return;
+  }
+  try {
+    player.seekTo(0, true);
+    player.playVideo();
+  } catch {
+    // Ignore player race conditions.
+  }
 }
 
 export function stopYouTube(): void {

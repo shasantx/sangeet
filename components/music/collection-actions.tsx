@@ -33,7 +33,7 @@ export function CollectionPlayButton({
         else playTrack(trackIds[0], trackIds, label);
       }}
       className={cn(
-        "inline-flex items-center justify-center gap-2.5 rounded-full bg-[#1ED760] text-black font-bold shadow-[0_14px_34px_-16px_rgba(29,185,84,.8)] transition hover:bg-[#46E982] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-40",
+        "inline-flex items-center justify-center gap-2.5 rounded-full bg-primary text-primary-foreground font-bold shadow-[0_14px_34px_-16px_hsl(var(--primary)/0.6)] transition hover:brightness-110 hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-40",
         size === "lg" ? "h-12 px-7 text-sm" : "h-10 px-5 text-xs",
         className,
       )}
@@ -61,7 +61,7 @@ export function CollectionShuffleButton({
       disabled={trackIds.length === 0}
       onClick={() => playShuffled(trackIds, label)}
       className={cn(
-        "inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/[.1] bg-white/[.025] px-6 text-sm font-medium text-foreground transition hover:border-white/[.18] hover:bg-white/[.055] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-40",
+        "inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/[.08] bg-elevated px-6 text-sm font-medium text-foreground transition hover:border-white/[.18] hover:bg-elevated/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-40",
         className,
       )}
     >

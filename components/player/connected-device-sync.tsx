@@ -116,10 +116,54 @@ function describeTrack() {
 export function ConnectedDeviceSync() {
   const authenticated = useAuthStore((state) => state.isAuthenticated);
   const lastAckRef = useRef<string | null>(null);
+  const knownDeviceCountRef = useRef<number>(1);
+  const lastPutAtRef = useRef<number>(0);
+  const lastPutStateRef = useRef<{
+    currentTrackId: string | null;
+    isPlaying: boolean;
+    volume: number;
+  }>({
+    currentTrackId: null,
+    isPlaying: false,
+    volume: -1,
+  });
 
   useEffect(() => {
     let active = true;
+    let timer: number | null = null;
+    let stateChangeTimer: number | null = null;
+    let inFlight = false;
     const deviceId = getDeviceId();
+
+    const clearScheduled = () => {
+      if (timer !== null) {
+        window.clearTimeout(timer);
+        timer = null;
+      }
+    };
+
+    const getPollIntervalMs = () => {
+      const state = usePlayerStore.getState();
+      const groupListen = isGroupListenEnabled();
+      const deviceCount = knownDeviceCountRef.current;
+
+      if ((state.isPlaying && deviceCount > 1) || groupListen) {
+        return 5_000;
+      }
+      if (!state.isPlaying && deviceCount <= 1 && !groupListen) {
+        return 18_000;
+      }
+      return 12_000;
+    };
+
+    const scheduleNext = () => {
+      clearScheduled();
+      if (!active) return;
+      if (typeof document !== "undefined" && document.hidden) return;
+      timer = window.setTimeout(() => {
+        void cycle();
+      }, getPollIntervalMs());
+    };
 
     // Check URL for ?syncId= pairing parameter and clean it from the address bar immediately
     if (typeof window !== "undefined") {
@@ -201,36 +245,61 @@ export function ConnectedDeviceSync() {
       // BroadcastChannel optional fallback
     }
 
-    // 2. Server polling heartbeat and command dispatcher
+    // 2. Adaptive server polling heartbeat and command dispatcher
     const cycle = async () => {
       if (!active) return;
+      if (typeof document !== "undefined" && document.hidden) {
+        clearScheduled();
+        return;
+      }
+      if (inFlight) return;
+      inFlight = true;
+      clearScheduled();
+
       const state = usePlayerStore.getState();
       const syncId = getGuestSyncId();
 
       try {
-        const track = describeTrack();
-        const type = getDeviceType();
-        const name = getDeviceName();
-
         const requestHeaders: Record<string, string> = {
           "content-type": "application/json",
           "x-sangeet-sync-id": syncId,
         };
 
-        // Send Heartbeat (PUT) - server authenticates via HttpOnly session cookie or x-sangeet-sync-id
-        await fetch("/api/devices", {
-          method: "PUT",
-          headers: requestHeaders,
-          body: JSON.stringify({
-            deviceId,
-            name,
-            type,
+        const prevPut = lastPutStateRef.current;
+        const stateChanged =
+          prevPut.currentTrackId !== state.currentTrackId ||
+          prevPut.isPlaying !== state.isPlaying ||
+          Math.abs(prevPut.volume - state.volume) > 0.005;
+        const now = Date.now();
+        const shouldPut = stateChanged || now - lastPutAtRef.current >= 15_000;
+
+        if (shouldPut) {
+          const track = describeTrack();
+          const type = getDeviceType();
+          const name = getDeviceName();
+
+          lastPutStateRef.current = {
+            currentTrackId: state.currentTrackId,
             isPlaying: state.isPlaying,
-            currentTime: state.currentTime,
             volume: state.volume,
-            track,
-          }),
-        });
+          };
+          lastPutAtRef.current = now;
+
+          // Send Heartbeat (PUT) - server authenticates via HttpOnly session cookie or x-sangeet-sync-id
+          await fetch("/api/devices", {
+            method: "PUT",
+            headers: requestHeaders,
+            body: JSON.stringify({
+              deviceId,
+              name,
+              type,
+              isPlaying: state.isPlaying,
+              currentTime: state.currentTime,
+              volume: state.volume,
+              track,
+            }),
+          });
+        }
 
         // Pull active commands (GET)
         const ackParam = lastAckRef.current ? `&ack=${encodeURIComponent(lastAckRef.current)}` : "";
@@ -300,6 +369,10 @@ export function ConnectedDeviceSync() {
             };
           } | null;
         };
+
+        if (Array.isArray(data.devices)) {
+          knownDeviceCountRef.current = data.devices.length;
+        }
 
         const command = data.command;
         if (command?.id && window.localStorage.getItem(`sangeet-cmd-${deviceId}`) !== command.id) {
@@ -408,15 +481,58 @@ export function ConnectedDeviceSync() {
         }
       } catch {
         // Best-effort network recovery
+      } finally {
+        inFlight = false;
+        scheduleNext();
       }
     };
 
-    void cycle();
-    const timer = window.setInterval(cycle, 2200);
+    const handleVisibilityChange = () => {
+      if (!active) return;
+      if (document.hidden) {
+        clearScheduled();
+      } else {
+        void cycle();
+      }
+    };
+
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    }
+
+    const unsubscribePlayer = usePlayerStore.subscribe((state, prevState) => {
+      if (!active || (typeof document !== "undefined" && document.hidden)) return;
+      const changed =
+        state.currentTrackId !== prevState.currentTrackId ||
+        state.isPlaying !== prevState.isPlaying ||
+        Math.abs(state.volume - prevState.volume) > 0.02;
+      if (!changed) return;
+
+      if (stateChangeTimer !== null) {
+        window.clearTimeout(stateChangeTimer);
+      }
+      stateChangeTimer = window.setTimeout(() => {
+        stateChangeTimer = null;
+        if (active && !document.hidden) {
+          void cycle();
+        }
+      }, 200);
+    });
+
+    if (typeof document === "undefined" || !document.hidden) {
+      void cycle();
+    }
 
     return () => {
       active = false;
-      window.clearInterval(timer);
+      clearScheduled();
+      if (stateChangeTimer !== null) {
+        window.clearTimeout(stateChangeTimer);
+      }
+      unsubscribePlayer();
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      }
       if (broadcast) {
         broadcast.close();
       }

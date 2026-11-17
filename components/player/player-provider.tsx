@@ -1,8 +1,22 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import {
+  addAndroidEventListener,
+  androidHasAudioPermission,
+  androidScanLocalAudio,
+  isAndroidNativeApp,
+} from "@/lib/android-bridge";
+import { ensureAudioEffectsSynced } from "@/lib/audio-eq";
 import { getAudioElement, registerAudioElement } from "@/lib/audio-engine";
 import { getAlbum, getArtist, getTrack } from "@/lib/catalog";
+import { registerLocalAudioTrack } from "@/lib/dynamic-tracks";
+import {
+  registerScannedAndroidTracks,
+  restoreLocalAudio,
+  scanDesktopAudioLibrary,
+} from "@/lib/local-audio";
+import { listOfflineTracks } from "@/lib/offline-audio";
 import {
   getYouTubeDuration,
   getYouTubeTime,
@@ -10,11 +24,11 @@ import {
   loadYouTubeVideo,
   muteYouTube,
   pauseYouTube,
+  setYouTubePlaybackRate,
   setYouTubeVolume,
 } from "@/lib/youtube-engine";
 import { isTypingTarget } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
-import { restoreLocalAudio } from "@/lib/local-audio";
 import { useLibraryStore } from "@/store/library-store";
 import { usePlayerStore } from "@/store/player-store";
 import { toast } from "@/store/ui-store";
@@ -59,6 +73,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     registerAudioElement(audio);
 
     let active = true;
+    let lastReportedTime = -1;
 
     const currentIsYouTube = () => {
       if (audio.src && audio.src !== window.location.href && !audio.error) {
@@ -68,8 +83,17 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       return Boolean(id && getTrack(id)?.youtubeId);
     };
 
+    const syncAudioElementSettings = () => {
+      const state = usePlayerStore.getState();
+      audio.defaultPlaybackRate = state.playbackRate;
+      audio.playbackRate = state.playbackRate;
+      audio.loop = state.repeat === "one";
+      ensureAudioEffectsSynced();
+    };
+
     const setDuration = () => {
       if (currentIsYouTube()) return;
+      syncAudioElementSettings();
       if (Number.isFinite(audio.duration) && audio.duration > 0) {
         usePlayerStore.getState().syncFromAudio({ duration: audio.duration });
       }
@@ -77,7 +101,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const onTimeUpdate = () => {
       if (currentIsYouTube()) return;
       if (!audio.seeking) {
-        usePlayerStore.getState().syncFromAudio({ currentTime: audio.currentTime });
+        const shouldReport =
+          lastReportedTime < 0 ||
+          Math.abs(audio.currentTime - lastReportedTime) >= 0.35 ||
+          (audio.currentTime < 0.5 && Math.abs(audio.currentTime - lastReportedTime) >= 0.1);
+        if (shouldReport) {
+          lastReportedTime = audio.currentTime;
+          usePlayerStore.getState().syncFromAudio({ currentTime: audio.currentTime });
+        }
       }
       if (Number.isFinite(audio.duration) && audio.duration > 0 && "mediaSession" in navigator) {
         try {
@@ -91,8 +122,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         }
       }
     };
+    const onSeeked = () => {
+      if (currentIsYouTube()) return;
+      lastReportedTime = audio.currentTime;
+      usePlayerStore.getState().syncFromAudio({ currentTime: audio.currentTime });
+    };
     const onPlay = () => {
       if (currentIsYouTube()) return;
+      syncAudioElementSettings();
       usePlayerStore.getState().syncFromAudio({ isPlaying: true, isLoading: false, error: null });
       errorReportedFor.current = null;
     };
@@ -113,12 +150,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     };
     const onLoadStart = () => {
       if (currentIsYouTube()) return;
+      lastReportedTime = -1;
       if (usePlayerStore.getState().isPlaying) {
         usePlayerStore.getState().syncFromAudio({ isLoading: true });
       }
     };
     const onEnded = () => {
       if (currentIsYouTube()) return;
+      lastReportedTime = -1;
       usePlayerStore.getState().handleEnded();
     };
     const onError = () => {
@@ -133,6 +172,22 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         // Fallback to YouTube IFrame if direct audio stream extraction failed for this video.
         audio.removeAttribute("src");
         loadYouTubeVideo(track.youtubeId, state.isPlaying);
+        setYouTubePlaybackRate(state.playbackRate);
+        return;
+      }
+
+      if (
+        track?.source === "audius" &&
+        source.includes("/api/audius/stream") &&
+        track.audioUrl &&
+        !track.audioUrl.includes("/api/audius/stream")
+      ) {
+        audio.src = track.audioUrl;
+        audio.load();
+        syncAudioElementSettings();
+        if (state.isPlaying) {
+          void audio.play().catch(() => {});
+        }
         return;
       }
 
@@ -153,6 +208,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     audio.addEventListener("loadedmetadata", setDuration);
     audio.addEventListener("durationchange", setDuration);
     audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("seeked", onSeeked);
     audio.addEventListener("play", onPlay);
     audio.addEventListener("pause", onPause);
     audio.addEventListener("waiting", onWaiting);
@@ -161,14 +217,64 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     audio.addEventListener("ended", onEnded);
     audio.addEventListener("error", onError);
 
+    const restoreOfflineTracksIntoRegistry = async () => {
+      const offlineItems = await listOfflineTracks().catch(() => []);
+      for (const item of offlineItems) {
+        if (!getTrack(item.track.id)) {
+          registerLocalAudioTrack(
+            item.track,
+            {
+              id: item.track.artistId,
+              name: item.artistName || "Sangeet",
+              bio: `${item.artistName || "Sangeet"} (saved offline)`,
+              shortBio: "Saved for offline listening.",
+              image: item.track.artwork,
+              location: "Offline",
+              genreIds: item.track.genreIds ?? [],
+              relatedArtistIds: [],
+            },
+            {
+              id: item.track.albumId,
+              title: item.track.title,
+              artistId: item.track.artistId,
+              year: new Date(item.savedAt || Date.now()).getFullYear(),
+              releaseDate: new Date(item.savedAt || Date.now()).toISOString().slice(0, 10),
+              type: "Single",
+              artwork: item.track.artwork,
+              genreIds: item.track.genreIds ?? [],
+              description: "Saved for offline listening.",
+              trackIds: [item.track.id],
+            },
+          );
+        }
+      }
+    };
+
+    const restoreNativeDeviceAudio = async () => {
+      if (isAndroidNativeApp() && androidHasAudioPermission()) {
+        const scanned = androidScanLocalAudio();
+        if (scanned.length > 0) {
+          registerScannedAndroidTracks(scanned);
+        }
+      }
+      if (typeof window !== "undefined" && window.sangeetDesktop?.scanMusicLibrary) {
+        await scanDesktopAudioLibrary();
+      }
+    };
+
     Promise.all([
-      Promise.resolve(useAppStore.persist.rehydrate()),
-      Promise.resolve(useLibraryStore.persist.rehydrate()),
-      Promise.resolve(usePlayerStore.persist.rehydrate()),
+      restoreLocalAudio().catch(() => undefined),
+      restoreOfflineTracksIntoRegistry().catch(() => undefined),
+      restoreNativeDeviceAudio().catch(() => undefined),
     ]).then(async () => {
       if (!active) return;
-      await restoreLocalAudio().catch(() => undefined);
+      await Promise.all([
+        Promise.resolve(useAppStore.persist.rehydrate()),
+        Promise.resolve(useLibraryStore.persist.rehydrate()),
+        Promise.resolve(usePlayerStore.persist.rehydrate()),
+      ]);
       if (!active) return;
+      syncAudioElementSettings();
       usePlayerStore.getState().primeAudio();
     });
 
@@ -177,6 +283,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       audio.removeEventListener("loadedmetadata", setDuration);
       audio.removeEventListener("durationchange", setDuration);
       audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("seeked", onSeeked);
       audio.removeEventListener("play", onPlay);
       audio.removeEventListener("pause", onPause);
       audio.removeEventListener("waiting", onWaiting);
@@ -248,7 +355,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         try {
           navigator.mediaSession.setPositionState({
             duration,
-            playbackRate: 1,
+            playbackRate: state.playbackRate || 1,
             position: Math.min(currentTime, duration),
           });
         } catch {
@@ -278,6 +385,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.dataset.accent = accent;
   }, [accent]);
+
+  useEffect(() => {
+    document.documentElement.dataset.native = isAndroidNativeApp()
+      ? "android"
+      : window.sangeetDesktop?.isDesktop
+        ? "desktop"
+        : "web";
+  }, []);
 
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;
@@ -361,10 +476,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearTimeout(timer);
   }, [sleepTimerEndsAt]);
 
-  // Desktop native app integration (Windows media keys, tray status, presence)
+  // Native Android bridge events
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.__sangeetAndroidEvent = (type, payload) => {
+    return addAndroidEventListener((type, payload) => {
       const state = usePlayerStore.getState();
       if (type === "time" && payload) {
         const [posStr, durStr] = payload.split(":");
@@ -391,6 +506,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           const track = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
           if (track?.youtubeId) {
             loadYouTubeVideo(track.youtubeId, true);
+            setYouTubePlaybackRate(state.playbackRate);
             return;
           }
         }
@@ -405,10 +521,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       } else if (type === "previous") {
         state.previous();
       }
-    };
-    return () => {
-      delete window.__sangeetAndroidEvent;
-    };
+    });
   }, []);
 
   // Desktop native app integration (Windows media keys, tray status, presence)
@@ -460,7 +573,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       if (isTypingTarget(event.target)) return;
       if ((event.target as HTMLElement | null)?.closest?.("button, a, [role='button']")) return;
 
-      if (event.code === "Space") {
+      if (event.code === "Space" || event.key.toLowerCase() === "k") {
         event.preventDefault();
         usePlayerStore.getState().togglePlay();
       } else if (event.code === "ArrowRight") {
@@ -469,6 +582,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       } else if (event.code === "ArrowLeft") {
         event.preventDefault();
         usePlayerStore.getState().seek(usePlayerStore.getState().currentTime - 5);
+      } else if (event.key.toLowerCase() === "l") {
+        event.preventDefault();
+        usePlayerStore.getState().seek(usePlayerStore.getState().currentTime + 10);
+      } else if (event.key.toLowerCase() === "j") {
+        event.preventDefault();
+        usePlayerStore.getState().seek(usePlayerStore.getState().currentTime - 10);
+      } else if (event.key.toLowerCase() === "r") {
+        usePlayerStore.getState().cycleRepeat();
       } else if (event.key.toLowerCase() === "m") {
         usePlayerStore.getState().toggleMute();
       } else if (event.key.toLowerCase() === "n") {
@@ -481,7 +602,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // Keep the persistent audio element's volume synchronized after hydration.
+  // Keep the persistent audio element's volume, loop, and playbackRate synchronized.
   useEffect(() => {
     const audio = getAudioElement();
     const unsubscribe = usePlayerStore.subscribe((state, previous) => {
@@ -492,6 +613,16 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       if (previous.muted !== state.muted) {
         muteYouTube(state.muted);
         if (audio) audio.muted = state.muted;
+      }
+      if (previous.repeat !== state.repeat) {
+        if (audio) audio.loop = state.repeat === "one";
+      }
+      if (previous.playbackRate !== state.playbackRate) {
+        setYouTubePlaybackRate(state.playbackRate);
+        if (audio) {
+          audio.defaultPlaybackRate = state.playbackRate;
+          audio.playbackRate = state.playbackRate;
+        }
       }
     });
     return unsubscribe;

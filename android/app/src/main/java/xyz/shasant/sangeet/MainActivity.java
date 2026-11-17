@@ -21,6 +21,7 @@ import android.webkit.PermissionRequest;
 import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -124,6 +125,12 @@ public final class MainActivity extends AppCompatActivity {
         settings.setAllowContentAccess(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(false);
+        settings.setSupportZoom(false);
+        settings.setBuiltInZoomControls(false);
+        settings.setDisplayZoomControls(false);
+        settings.setTextZoom(108);
 
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
@@ -191,6 +198,21 @@ public final class MainActivity extends AppCompatActivity {
                 }
                 openExternalUri(uri);
                 return true;
+            }
+
+            @Override
+            public void onReceivedError(
+                    WebView view,
+                    WebResourceRequest request,
+                    WebResourceError error
+            ) {
+                super.onReceivedError(view, request, error);
+                if (request != null && request.isForMainFrame()) {
+                    String currentUrl = view.getUrl();
+                    if (currentUrl == null || !currentUrl.startsWith("file:///android_asset/offline.html")) {
+                        view.loadUrl("file:///android_asset/offline.html");
+                    }
+                }
             }
         });
 
@@ -446,6 +468,15 @@ public final class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public boolean hasAudioPermission() {
             return hasAudioPermissionInternal();
+        }
+
+        @JavascriptInterface
+        public void reloadOnline() {
+            runOnUiThread(() -> {
+                if (webView != null) {
+                    webView.loadUrl(START_URL);
+                }
+            });
         }
 
         @JavascriptInterface
