@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Heart, Pause, Play, SkipForward } from "lucide-react";
 import { getArtist, getTrack } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
@@ -28,115 +26,20 @@ function MiniPlayerProgress() {
 }
 
 export function MobileMiniPlayer() {
-  const router = useRouter();
   const currentTrackId = usePlayerStore((state) => state.currentTrackId);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const togglePlay = usePlayerStore((state) => state.togglePlay);
   const next = usePlayerStore((state) => state.next);
-  const previous = usePlayerStore((state) => state.previous);
 
   const isLiked = useLibraryStore((state) =>
     currentTrackId ? state.isLiked(currentTrackId) : false,
   );
   const toggleLike = useLibraryStore((state) => state.toggleLike);
 
-  const [dragX, setDragX] = useState(0);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const swipedRef = useRef(false);
-  const resetTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (resetTimerRef.current !== null) {
-        window.clearTimeout(resetTimerRef.current);
-        resetTimerRef.current = null;
-      }
-    };
-  }, []);
-
   const current = currentTrackId ? getTrack(currentTrackId) : undefined;
   const artist = current ? getArtist(current.artistId) : undefined;
 
   if (!current) return null;
-
-  const scheduleSwipeReset = () => {
-    if (resetTimerRef.current !== null) {
-      window.clearTimeout(resetTimerRef.current);
-    }
-    resetTimerRef.current = window.setTimeout(() => {
-      swipedRef.current = false;
-      resetTimerRef.current = null;
-    }, 160);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent<HTMLElement>) => {
-    if (e.touches.length !== 1) return;
-    const touch = e.touches[0];
-    if (!touch) return;
-    if (resetTimerRef.current !== null) {
-      window.clearTimeout(resetTimerRef.current);
-      resetTimerRef.current = null;
-    }
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-    swipedRef.current = false;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLElement>) => {
-    if (e.touches.length !== 1) return;
-    const start = touchStartRef.current;
-    const touch = e.touches[0];
-    if (!start || !touch) return;
-    const dx = touch.clientX - start.x;
-    const dy = touch.clientY - start.y;
-
-    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
-      swipedRef.current = true;
-    }
-
-    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.15) {
-      setDragX(Math.max(-96, Math.min(96, dx)));
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent<HTMLElement>) => {
-    const start = touchStartRef.current;
-    const touch = e.changedTouches[0];
-    if (start && touch) {
-      const dx = touch.clientX - start.x;
-      const dy = touch.clientY - start.y;
-      if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
-        swipedRef.current = true;
-      }
-      if (dy < -42 && Math.abs(dy) > Math.abs(dx) * 1.2) {
-        swipedRef.current = true;
-        setDragX(0);
-        touchStartRef.current = null;
-        scheduleSwipeReset();
-        router.push("/now-playing");
-        return;
-      }
-      if (dx < -54 && Math.abs(dx) > Math.abs(dy)) {
-        swipedRef.current = true;
-        next();
-      } else if (dx > 54 && Math.abs(dx) > Math.abs(dy)) {
-        swipedRef.current = true;
-        previous();
-      }
-    }
-    setDragX(0);
-    touchStartRef.current = null;
-    if (swipedRef.current) {
-      scheduleSwipeReset();
-    }
-  };
-
-  const handleTouchCancel = () => {
-    setDragX(0);
-    touchStartRef.current = null;
-    if (swipedRef.current) {
-      scheduleSwipeReset();
-    }
-  };
 
   const handleToggleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -151,22 +54,8 @@ export function MobileMiniPlayer() {
 
   return (
     <aside
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchCancel}
-      onClickCapture={(e) => {
-        if (swipedRef.current) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }}
-      className="mobile-mini-player pointer-events-auto fixed inset-x-3 z-[41] touch-none select-none overflow-hidden rounded-xl border border-border bg-elevated md:hidden"
-      style={{
-        bottom: "calc(74px + env(safe-area-inset-bottom))",
-        transform: `translate3d(${dragX}px, 0, 0)`,
-        transition: dragX !== 0 ? "none" : "transform 240ms cubic-bezier(0.22, 1, 0.36, 1)",
-      }}
+      className="mobile-mini-player pointer-events-auto fixed inset-x-3 z-[41] touch-pan-y select-none overflow-hidden rounded-xl border border-border bg-elevated md:hidden"
+      style={{ bottom: "calc(74px + env(safe-area-inset-bottom))" }}
       aria-label="Mini music player"
     >
       <MiniPlayerProgress />

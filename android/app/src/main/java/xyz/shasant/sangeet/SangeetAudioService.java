@@ -106,7 +106,8 @@ public final class SangeetAudioService extends MediaSessionService {
     private final Runnable progressRunnable = new Runnable() {
         @Override
         public void run() {
-            if (player != null && player.isPlaying()) {
+            if (player != null && player.getPlaybackState() != Player.STATE_IDLE
+                    && player.getPlaybackState() != Player.STATE_ENDED) {
                 long posMs = Math.max(0, player.getCurrentPosition());
                 long durMs = Math.max(0, player.getDuration());
                 EventListener l = listener;
@@ -154,7 +155,15 @@ public final class SangeetAudioService extends MediaSessionService {
                 }
                 EventListener l = listener;
                 if (l != null) {
-                    l.onState(isPlaying ? "playing" : "paused");
+                    if (isPlaying) {
+                        l.onState("playing");
+                    } else if (player != null && player.getPlayWhenReady()) {
+                        // Media3 reports isPlaying=false while buffering. Treating that as a pause
+                        // made the web player icon and lyrics flicker during normal network stalls.
+                        l.onState("buffering");
+                    } else {
+                        l.onState("paused");
+                    }
                 }
             }
 
@@ -163,14 +172,14 @@ public final class SangeetAudioService extends MediaSessionService {
                 EventListener l = listener;
                 if (l == null) return;
                 if (playbackState == Player.STATE_BUFFERING) {
-                    l.onState("buffering");
+                    l.onState(player.getPlayWhenReady() ? "buffering" : "paused");
                 } else if (playbackState == Player.STATE_ENDED) {
                     l.onState("ended");
                 } else if (playbackState == Player.STATE_READY) {
                     long durMs = Math.max(0, player.getDuration());
                     long posMs = Math.max(0, player.getCurrentPosition());
                     l.onTime(posMs / 1000.0, durMs == C.TIME_UNSET ? 0.0 : durMs / 1000.0);
-                    l.onState(player.isPlaying() ? "playing" : "paused");
+                    l.onState(player.isPlaying() || player.getPlayWhenReady() ? "playing" : "paused");
                 }
             }
 

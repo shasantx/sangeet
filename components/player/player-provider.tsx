@@ -76,11 +76,16 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     let lastReportedTime = -1;
 
     const currentIsYouTube = () => {
+      const state = usePlayerStore.getState();
+      const activeTrack = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+      // On Android the native Media3 service owns YouTube playback. The hidden
+      // HTML audio element is stopped during handoff; its pause/time events are
+      // unrelated and must not overwrite native play state or lyric position.
+      if (isAndroidNativeApp() && activeTrack?.youtubeId && !state.videoMode) return true;
       if (audio.src && audio.src !== window.location.href && !audio.error) {
         return false;
       }
-      const id = usePlayerStore.getState().currentTrackId;
-      return Boolean(id && getTrack(id)?.youtubeId);
+      return Boolean(activeTrack?.youtubeId);
     };
 
     const syncAudioElementSettings = () => {
@@ -495,7 +500,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         if (payload === "playing") {
           state.syncFromAudio({ isPlaying: true, isLoading: false, error: null });
         } else if (payload === "paused") {
-          state.syncFromAudio({ isPlaying: false, isLoading: false });
+          // Android reports the outgoing player's pause while the next track
+          // is already buffering. Keep the active track's play state stable.
+          if (!state.isLoading) {
+            state.syncFromAudio({ isPlaying: false, isLoading: false });
+          }
         } else if (payload === "buffering") {
           state.syncFromAudio({ isLoading: true });
         } else if (payload === "ended") {
