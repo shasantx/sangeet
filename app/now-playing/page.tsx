@@ -15,10 +15,10 @@ import {
   MoreHorizontal,
   Music2,
   Plus,
+  Radio,
   RotateCcw,
   RotateCw,
   Share2,
-  Sparkles,
   Trash2,
   Users,
 } from "lucide-react";
@@ -99,7 +99,7 @@ function QueueTrackRow({
           Playing
         </span>
       ) : (
-        <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
+        <span className="shrink-0 font-sans text-[11px] tabular-nums text-muted-foreground">
           {formatDuration(track.duration)}
         </span>
       )}
@@ -488,7 +488,9 @@ export default function NowPlayingPage() {
               {offlineBusy ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  {offlinePct !== null && <span className="font-mono text-[10px]">{offlinePct}%</span>}
+                  {offlinePct !== null && (
+                    <span className="font-sans text-[10px] tabular-nums">{offlinePct}%</span>
+                  )}
                 </>
               ) : offlineSaved ? (
                 <>
@@ -661,7 +663,7 @@ export default function NowPlayingPage() {
                         ) : (
                           <RotateCw className="h-7 w-7 text-white" />
                         )}
-                        <span className="mt-1 font-mono text-xs font-bold text-white">
+                        <span className="mt-1 font-sans text-xs font-bold tabular-nums text-white">
                           {seekBurst.side === "left" ? `-${seekBurst.seconds}s` : `+${seekBurst.seconds}s`}
                         </span>
                       </div>
@@ -725,7 +727,7 @@ export default function NowPlayingPage() {
               <div className="relative z-10 mt-2 shrink-0 space-y-3 border-t border-white/[0.08] pt-3 sm:mt-3 sm:space-y-3.5">
                 <ProgressBar
                   className="w-full"
-                  timeClassName="w-9 shrink-0 text-center font-mono text-[11px] tabular-nums text-muted-foreground"
+                  timeClassName="w-9 shrink-0 text-center font-sans text-[11px] tabular-nums text-muted-foreground"
                 />
 
                 <div className="flex items-center justify-center">
@@ -773,7 +775,7 @@ export default function NowPlayingPage() {
 
                 {/* Desktop Footer Row */}
                 <div className="hidden items-center justify-between pt-1 lg:flex">
-                  <span className="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">
+                  <span className="font-sans text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                     {offlineSaved ? "Offline Ready · Local Cache" : "Lossless · 320 kbps"}
                   </span>
                   <div className="w-32">
@@ -831,7 +833,7 @@ export default function NowPlayingPage() {
                         : "text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    <Sparkles className="h-3.5 w-3.5" />
+                    <Radio className="h-3.5 w-3.5" />
                     <span>Related ({relatedTracks.length})</span>
                   </button>
 
@@ -850,7 +852,7 @@ export default function NowPlayingPage() {
                   </button>
                 </div>
 
-                <span className="font-mono text-[10px] text-muted-foreground">
+                <span className="font-sans text-[11px] tabular-nums text-muted-foreground">
                   {activeTab === "lyrics" && "Synced Karaoke"}
                   {activeTab === "queue" && `${upcoming.length + 1} tracks scheduled`}
                   {activeTab === "related" && "Discovery mix"}

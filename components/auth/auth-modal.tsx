@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, LoaderCircle, Search, Sparkles } from "lucide-react";
+import { Check, LoaderCircle, Music2, Search } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { artists, getArtist } from "@/lib/catalog";
@@ -133,7 +133,7 @@ export function AuthModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeAuthModal()}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-[28px] border border-white/[0.12] bg-[#0f1311]/95 p-0 text-white shadow-[0_32px_90px_rgba(0,0,0,0.8)] backdrop-blur-2xl sm:max-w-[500px]">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-[28px] border border-border bg-card/95 p-0 text-foreground shadow-[0_32px_90px_rgba(0,0,0,0.8)] backdrop-blur-2xl sm:max-w-[500px]">
         {/* Top Specular Rim Highlight */}
         <div
           aria-hidden="true"
@@ -146,7 +146,7 @@ export function AuthModal() {
           <h2 className="text-2xl font-semibold tracking-tight">
             {activeTab === "signup" ? "Start with your favorites" : "Welcome back"}
           </h2>
-          <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-white/60">
+          <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
             {activeTab === "signup"
               ? signupEnabled
                 ? "Choose up to five artists. We’ll use your picks to shape your first recommendations."
@@ -157,20 +157,20 @@ export function AuthModal() {
           {activeTab === "signup" && signupEnabled && (
             <div className="mt-5 text-left">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-semibold text-white/85">Choose artists</span>
-                <span className="text-[11px] font-medium text-white/50">
+                <span className="text-xs font-semibold text-foreground/85">Choose artists</span>
+                <span className="font-sans text-[11px] font-medium tabular-nums text-muted-foreground">
                   {selectedArtists.length}/5 selected
                 </span>
               </div>
 
-              <label className="flex h-12 min-h-[44px] items-center gap-2.5 rounded-2xl border border-white/[0.14] bg-white/[0.05] px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition focus-within:border-[#1ed760]/70 focus-within:bg-black/40">
-                <Search className="h-4 w-4 shrink-0 text-white/45" />
+              <label className="flex h-12 min-h-[44px] items-center gap-2.5 rounded-2xl border border-border bg-elevated/70 px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition focus-within:border-primary/70 focus-within:bg-elevated">
+                <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <input
                   value={artistQuery}
                   onChange={(event) => setArtistQuery(event.target.value)}
                   placeholder="Search artists, genres or languages"
                   aria-label="Search artists"
-                  className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/35 sm:text-xs"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/65 sm:text-xs"
                 />
               </label>
 
@@ -186,8 +186,8 @@ export function AuthModal() {
                     aria-pressed={artistLanguage === language}
                     className={`inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-full border px-4 text-xs font-medium transition ${
                       artistLanguage === language
-                        ? "border-[#1ed760]/50 bg-[#1ed760] text-black shadow-[0_4px_16px_rgba(30,215,96,0.28)]"
-                        : "border-white/[0.12] bg-white/[0.06] text-white/70 hover:bg-white/[0.1] hover:text-white"
+                        ? "border-primary/50 bg-primary text-primary-foreground shadow-[0_4px_16px_hsl(var(--primary)/0.28)]"
+                        : "border-border bg-elevated/70 text-muted-foreground hover:bg-elevated hover:text-foreground"
                     }`}
                   >
                     {language}
@@ -206,8 +206,8 @@ export function AuthModal() {
                       aria-pressed={selected}
                       className={`group relative min-h-[44px] min-w-0 rounded-2xl border p-2 text-center transition ${
                         selected
-                          ? "border-[#1ed760]/70 bg-[#1ed760]/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
-                          : "border-white/[0.08] bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08]"
+                          ? "border-primary/70 bg-primary/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
+                          : "border-border bg-elevated/50 hover:border-white/20 hover:bg-elevated"
                       }`}
                     >
                       <span className="relative block">
@@ -219,14 +219,14 @@ export function AuthModal() {
                         <span
                           className={`absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full transition ${
                             selected
-                              ? "bg-[#1ed760] text-black shadow-sm"
+                              ? "bg-primary text-primary-foreground shadow-sm"
                               : "bg-black/60 text-transparent"
                           }`}
                         >
                           <Check className="h-3 w-3" />
                         </span>
                       </span>
-                      <span className="mt-1.5 block truncate text-[11px] font-medium text-white/85">
+                      <span className="mt-1.5 block truncate text-[11px] font-medium text-foreground/85">
                         {artist.name}
                       </span>
                     </button>
@@ -236,7 +236,7 @@ export function AuthModal() {
 
               {artistQuery.trim().length >= 2 && (searchingArtists || liveArtists.length > 0) && (
                 <div className="mt-3.5">
-                  <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[.12em] text-white/50">
+                  <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
                     {searchingArtists ? "Finding more artists…" : "More artists from your search"}
                     {searchingArtists && (
                       <LoaderCircle className="h-3 w-3 animate-spin text-primary" aria-hidden="true" />
@@ -253,8 +253,8 @@ export function AuthModal() {
                           aria-pressed={selected}
                           className={`flex min-h-[52px] min-w-0 items-center gap-2.5 rounded-2xl border p-2 text-left transition ${
                             selected
-                              ? "border-[#1ed760]/70 bg-[#1ed760]/15"
-                              : "border-white/[0.08] bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.08]"
+                              ? "border-primary/70 bg-primary/15"
+                              : "border-border bg-elevated/50 hover:border-white/20 hover:bg-elevated"
                           }`}
                         >
                           <Artwork
@@ -262,12 +262,12 @@ export function AuthModal() {
                             alt={`${artist.name} artwork`}
                             className="h-9 w-9 shrink-0 rounded-xl"
                           />
-                          <span className="min-w-0 flex-1 truncate text-xs font-medium text-white/90">
+                          <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground/90">
                             {artist.name}
                           </span>
                           <Check
                             className={`h-4 w-4 shrink-0 ${
-                              selected ? "text-[#1ed760]" : "text-transparent"
+                              selected ? "text-primary" : "text-transparent"
                             }`}
                           />
                         </button>
@@ -278,13 +278,13 @@ export function AuthModal() {
               )}
 
               {visibleArtists.length === 0 && (
-                <p className="py-5 text-center text-xs text-white/45">
+                <p className="py-5 text-center text-xs text-muted-foreground">
                   No artists found. Try another spelling or language.
                 </p>
               )}
 
-              <p className="mt-2.5 flex items-center gap-1.5 text-[11px] text-white/45">
-                <Sparkles className="h-3.5 w-3.5 text-[#1ed760]" />
+              <p className="mt-2.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <Music2 className="h-3.5 w-3.5 text-primary" />
                 You can follow more artists any time.
               </p>
             </div>
@@ -294,14 +294,14 @@ export function AuthModal() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={activeTab === "signup" && (!signupEnabled || selectedArtists.length === 0)}
-            className="mt-5 inline-flex h-12 min-h-[48px] w-full items-center justify-center gap-3 rounded-2xl border border-white/20 bg-white text-sm font-semibold text-[#202124] shadow-md transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1ed760] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1311]"
+            className="mt-5 inline-flex h-12 min-h-[48px] w-full items-center justify-center gap-3 rounded-2xl border border-white/20 bg-white text-sm font-semibold text-[#202124] shadow-md transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
           >
             <GoogleMark />{" "}
             {activeTab === "signup" && !signupEnabled ? "Sign up is paused" : "Continue with Google"}
           </button>
 
-          <div className="my-5 border-t border-white/[0.08]" />
-          <p className="text-xs leading-relaxed text-white/50">
+          <div className="my-5 border-t border-border" />
+          <p className="text-xs leading-relaxed text-muted-foreground">
             Passwords and password resets are managed by Google. Browse freely, then sign in to listen.
           </p>
         </div>

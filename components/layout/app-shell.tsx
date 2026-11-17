@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 import { Sidebar } from "./sidebar";
@@ -54,7 +55,7 @@ function shouldSkipTabSwipe(target: EventTarget | null, boundary: HTMLElement | 
   while (el && el !== boundary) {
     if (el.scrollWidth > el.clientWidth + 6) {
       const overflowX = window.getComputedStyle(el).overflowX;
-      if (overflowX === "auto" || overflowX === "scroll") {
+      if (overflowX === "auto" || overflowX === "scroll" || overflowX === "overlay") {
         return true;
       }
     }
@@ -192,11 +193,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh w-full max-w-full overflow-x-clip">
       <Sidebar />
       <div
         className={cn(
-          "min-h-dvh transition-[padding] duration-200 ease-out",
+          "min-h-dvh w-full max-w-full min-w-0 overflow-x-clip transition-[padding] duration-200 ease-out",
           sidebarCollapsed ? "md:pl-[80px]" : "md:pl-[240px]",
           rightPanelOpen && "xl:pr-[340px]",
           hasTrack
@@ -210,13 +211,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div
             aria-live="polite"
             className={cn(
-              "md:hidden pointer-events-none fixed top-[74px] left-1/2 z-50 -translate-x-1/2 rounded-full bg-card border border-white/15 px-4 py-1.5 text-xs font-semibold text-foreground shadow-xl transition-opacity duration-150",
-              swipeHint.ready ? "opacity-100 ring-1 ring-primary/40" : "opacity-80",
+              "md:hidden pointer-events-none fixed top-[74px] left-1/2 z-50 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-elevated/95 border border-white/15 px-3.5 py-1.5 text-xs font-semibold text-foreground shadow-xl backdrop-blur-md transition-all duration-150 ease-out",
+              swipeHint.ready
+                ? "opacity-100 scale-100 ring-1 ring-primary/50"
+                : "opacity-80 scale-95",
             )}
           >
-            {swipeHint.direction === "prev"
-              ? `← ${swipeHint.label}`
-              : `${swipeHint.label} →`}
+            {swipeHint.direction === "prev" && (
+              <ChevronLeft className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+            )}
+            <span>{swipeHint.label}</span>
+            {swipeHint.direction === "next" && (
+              <ChevronRight className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+            )}
           </div>
         )}
         <main

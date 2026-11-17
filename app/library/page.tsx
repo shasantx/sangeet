@@ -13,13 +13,13 @@ import {
   Library,
   ListMusic,
   Monitor,
+  Music2,
   Pause,
   Play,
   Plus,
   Search,
   Shuffle,
   Smartphone,
-  Sparkles,
   Trash2,
   UserRound,
 } from "lucide-react";
@@ -77,7 +77,7 @@ const quickLinks = [
     href: "/made-for-you",
     title: "Sangeet mixes",
     description: "Curated mixes and artist picks",
-    icon: Sparkles,
+    icon: Music2,
     accent: "#C7A76C",
   },
 ];
@@ -323,19 +323,19 @@ function LibraryContent() {
     { id: "playlists", label: "Playlists", count: userPlaylists.length },
     { id: "albums", label: "Albums", count: savedAlbums.length },
     { id: "artists", label: "Artists", count: followedArtists.length },
-    { id: "local", label: "Local Files", count: localCount },
+    { id: "local", label: "Local music", count: localCount },
   ];
 
   return (
     <div className="page-container">
       <div className="mb-8 flex flex-col gap-5 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-2xl">
-          <p className="eyebrow mb-3">Saved for later</p>
+          <p className="eyebrow mb-3">On this device &amp; saved</p>
           <h1 className="text-[38px] font-medium leading-none tracking-[-0.05em] sm:text-[52px]">
             Your library
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            Everything you have kept close: albums, playlists, artists, offline downloads and the songs you return to.
+            Everything you have kept close: albums, playlists, artists, offline downloads and scanned local music.
           </p>
         </div>
         <button
@@ -427,18 +427,18 @@ function LibraryContent() {
 
       {showOffline && (
         <section className="mt-9" aria-label="Offline downloads">
-          <div className="relative overflow-hidden rounded-2xl border border-white/[.08] bg-card p-5 sm:p-6">
+          <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 sm:p-6">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/15 text-primary">
                   <CloudDownload className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="eyebrow mb-1">Saved on this device</p>
+                  <p className="eyebrow mb-1">On this device</p>
                   <h2 className="font-display text-xl font-medium tracking-[-0.03em] sm:text-2xl">
                     Offline Downloads
                   </h2>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1 font-sans text-xs text-muted-foreground">
                     {offlineItems.length > 0
                       ? `${pluralize(offlineItems.length, "track")} · ${formatMb(totalOfflineBytes)} cached offline`
                       : "Download any track from the menu or track row to listen without an internet connection."}
@@ -458,7 +458,7 @@ function LibraryContent() {
                         playOfflineEntry(filteredOffline[0]);
                       }
                     }}
-                    className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-primary-foreground shadow-[0_12px_28px_-14px_hsl(var(--primary)/0.6)] transition hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
+                    className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 font-sans text-xs font-semibold text-primary-foreground transition hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
                   >
                     {isOfflineCollectionActive && isPlaying ? (
                       <Pause className="h-3.5 w-3.5 fill-current" strokeWidth={0} />
@@ -477,7 +477,7 @@ function LibraryContent() {
                         "Offline Downloads",
                       );
                     }}
-                    className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.08] bg-elevated px-4 text-xs font-medium text-foreground transition hover:border-white/[.18] hover:bg-elevated/80 disabled:opacity-40"
+                    className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-elevated px-4 font-sans text-xs font-medium text-foreground transition hover:border-foreground/20 disabled:opacity-40"
                   >
                     <Shuffle className="h-3.5 w-3.5" />
                     Shuffle
@@ -487,28 +487,28 @@ function LibraryContent() {
             </div>
 
             {filteredOffline.length === 0 ? (
-              <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-white/[.08] bg-elevated/50 px-4 py-10 text-center">
+              <div className="mt-5 flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background/40 px-4 py-10 text-center">
                 <CloudDownload className="mb-3 h-7 w-7 text-muted-foreground/60" />
-                <p className="text-sm font-medium text-foreground">
+                <p className="font-sans text-sm font-medium text-foreground">
                   {offlineItems.length > 0 && normalizedQuery
                     ? "No offline tracks match your filter"
                     : "No offline downloads yet"}
                 </p>
-                <p className="mt-1 max-w-md text-xs text-muted-foreground">
+                <p className="mt-1 max-w-md font-sans text-xs text-muted-foreground">
                   {offlineItems.length > 0 && normalizedQuery
                     ? "Try clearing the filter to see all offline downloads."
                     : "Tap the download button on any track to save it for offline listening."}
                 </p>
               </div>
             ) : (
-              <div className="mt-5 divide-y divide-white/[.05] rounded-xl border border-white/[.08] bg-elevated/50">
+              <div className="mt-5 overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border/60">
                 {filteredOffline.map((entry, index) => {
                   const isCurrent = currentTrackId === entry.track.id;
                   return (
                     <div
                       key={entry.track.id}
                       className={cn(
-                        "group flex items-center gap-3 px-3 py-2.5 transition hover:bg-white/[.045] sm:px-4",
+                        "group flex items-center gap-3 px-3.5 py-2.5 transition hover:bg-white/[0.04] sm:px-4",
                         isCurrent && "bg-primary/[0.08]",
                       )}
                     >
@@ -516,7 +516,7 @@ function LibraryContent() {
                         type="button"
                         onClick={() => playOfflineEntry(entry)}
                         aria-label={`${isCurrent && isPlaying ? "Pause" : "Play"} ${entry.track.title}`}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs text-muted-foreground transition hover:bg-white/[.08] hover:text-foreground"
+                        className="flex h-8 w-7 shrink-0 items-center justify-center rounded-full font-sans text-xs text-muted-foreground transition hover:text-foreground"
                       >
                         {isCurrent && isPlaying ? (
                           <Equalizer playing className="text-primary" />
@@ -524,7 +524,7 @@ function LibraryContent() {
                           <Play className="h-3.5 w-3.5 fill-current text-primary" />
                         ) : (
                           <>
-                            <span className="tabular-nums group-hover:hidden">
+                            <span className="font-sans text-xs font-medium tabular-nums group-hover:hidden">
                               {index + 1}
                             </span>
                             <Play className="hidden h-3.5 w-3.5 fill-current text-foreground group-hover:block" />
@@ -536,7 +536,7 @@ function LibraryContent() {
                         src={entry.track.artwork}
                         alt=""
                         res="sm"
-                        className="h-10 w-10 shrink-0 rounded-md"
+                        className="h-10 w-10 shrink-0 rounded-lg"
                       />
 
                       <button
@@ -546,20 +546,20 @@ function LibraryContent() {
                       >
                         <p
                           className={cn(
-                            "truncate text-sm font-medium",
+                            "truncate font-sans text-sm font-medium",
                             isCurrent ? "text-primary" : "text-foreground",
                           )}
                         >
                           {entry.track.title}
                         </p>
-                        <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
+                        <p className="mt-0.5 truncate font-sans text-xs text-muted-foreground">
                           {entry.artistName}
                           {entry.sizeBytes > 0 ? ` · ${formatMb(entry.sizeBytes)}` : ""}
                         </p>
                       </button>
 
                       {entry.track.duration > 0 && (
-                        <span className="hidden shrink-0 text-[11.5px] tabular-nums text-muted-foreground sm:block">
+                        <span className="hidden shrink-0 font-sans text-xs tabular-nums text-muted-foreground sm:block">
                           {formatDuration(entry.track.duration)}
                         </span>
                       )}

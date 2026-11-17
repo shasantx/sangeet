@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Clock3, History, Play, Search, Sparkles, Trash2 } from "lucide-react";
+import { Clock3, History, Play, Search, Trash2 } from "lucide-react";
 import { getArtist, getTracks } from "@/lib/catalog";
 import { formatTotalDuration } from "@/lib/utils";
 import { useLibraryStore } from "@/store/library-store";
@@ -58,7 +58,7 @@ export default function RecentlyPlayedPage() {
               Recently played
             </h1>
             <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-muted-foreground">
-              `Your latest ${HISTORY_RETENTION_LIMIT.toLocaleString()} tracks. Sign in to sync your listening history across devices.`
+              Your latest {HISTORY_RETENTION_LIMIT.toLocaleString()} tracks. Sign in to sync your listening history across devices.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground">
               <span className="font-medium text-foreground">Your history</span>
@@ -118,7 +118,7 @@ export default function RecentlyPlayedPage() {
             <aside className="space-y-5">
               <div className="rounded-xl border border-white/[.055] bg-white/[.018] p-5">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  <Clock3 className="h-3.5 w-3.5 text-primary" />
                   <p className="eyebrow">Observed</p>
                 </div>
                 <p className="mt-3 text-[12.5px] leading-[1.7] text-muted-foreground">

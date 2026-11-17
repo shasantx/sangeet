@@ -134,7 +134,7 @@ export const TrackRow = React.memo(function TrackRow({
         <button
           type="button"
           onClick={handlePlay}
-          className="hidden h-6 w-5 shrink-0 items-center justify-center text-right text-xs tabular-nums text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:flex"
+          className="hidden h-6 w-5 shrink-0 items-center justify-center text-right font-sans text-xs tabular-nums text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:flex"
           aria-label={`${isCurrent && isPlaying ? "Pause" : "Play"} ${track.title}`}
         >
           {isCurrent ? (
@@ -270,7 +270,7 @@ export const TrackRow = React.memo(function TrackRow({
         size="sm"
         className="hidden min-h-[42px] min-w-[42px] sm:flex md:h-8 md:w-8 md:min-h-0 md:min-w-0"
       />
-      <span className="hidden w-10 shrink-0 text-right text-xs tabular-nums text-muted-foreground sm:block">
+      <span className="hidden w-10 shrink-0 text-right font-sans text-xs tabular-nums text-muted-foreground sm:block">
         {formatDuration(track.duration)}
       </span>
       <TrackContextMenu

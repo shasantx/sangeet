@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, AudioLines, Radio, Sparkles } from "lucide-react";
+import { ArrowUpRight, AudioLines, Disc3, Radio } from "lucide-react";
 import { artists, getArtist, getArtistTracks, getTracks, playlists } from "@/lib/catalog";
 import { dailyMixes } from "@/lib/mixes";
 import { Artwork } from "@/components/music/artwork";
@@ -34,7 +34,7 @@ export default function MadeForYouPage() {
           </p>
         </div>
         <div className="flex w-fit items-center gap-2 rounded-full border border-white/[.07] bg-white/[.03] px-4 py-2.5 text-[11px] text-muted-foreground">
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
+          <Disc3 className="h-3.5 w-3.5 text-primary" />
           Curated catalog picks
         </div>
       </div>

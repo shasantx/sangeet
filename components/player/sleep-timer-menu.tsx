@@ -72,13 +72,13 @@ export function SleepTimerMenu({ className }: { className?: string }) {
             <Timer className="h-[15px] w-[15px]" strokeWidth={1.8} />
           )}
           {minutesLeft !== null && (
-            <span className="font-mono text-[10px] font-semibold tabular-nums">{minutesLeft}m</span>
+            <span className="font-sans text-[10px] font-semibold tabular-nums">{minutesLeft}m</span>
           )}
           {sleepAfterTrack && (
-            <span className="font-mono text-[10px] font-semibold">1T</span>
+            <span className="font-sans text-[10px] font-semibold tabular-nums">1T</span>
           )}
           {playbackRate !== 1 && !timerActive && (
-            <span className="font-mono text-[10px] font-semibold tabular-nums">{playbackRate}x</span>
+            <span className="font-sans text-[10px] font-semibold tabular-nums">{playbackRate}x</span>
           )}
         </button>
       </DropdownMenuTrigger>
@@ -126,7 +126,7 @@ export function SleepTimerMenu({ className }: { className?: string }) {
               title={option.title ?? `${option.rate}x speed`}
               onClick={() => setPlaybackRate(option.rate)}
               className={cn(
-                "rounded-md py-1 font-mono text-[10.5px] font-medium transition",
+                "rounded-md py-1 font-sans text-[10.5px] font-medium tabular-nums transition",
                 playbackRate === option.rate
                   ? "bg-primary text-primary-foreground font-bold"
                   : "bg-card text-muted-foreground hover:bg-elevated hover:text-foreground",

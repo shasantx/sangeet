@@ -105,8 +105,8 @@ export default function ExplorePage() {
               <div className="space-y-1 border-l border-white/[0.08] pl-6">
                 {editorialTracks.slice(0, 5).map((track, index) => (
                   <div key={track.id} className="flex items-center gap-3 py-2">
-                    <span className="w-4 text-[10px] tabular-nums text-muted-foreground/60">
-                      {(index + 1).toString().padStart(2, "0")}
+                    <span className="w-4 font-sans text-[11px] font-medium tabular-nums text-muted-foreground/60">
+                      {index + 1}
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[12px] font-semibold text-foreground/90">

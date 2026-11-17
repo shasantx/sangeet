@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   Bell,
   Check,
+  Disc3,
   Download,
   Flame,
   FolderOpen,
@@ -16,7 +17,6 @@ import {
   Plus,
   Settings2,
   Shuffle,
-  Sparkles,
   Trash2,
   TrendingUp,
   WifiOff,
@@ -163,12 +163,10 @@ function CarouselTrackCard({
   track,
   contextIds,
   contextLabel,
-  badge,
 }: {
   track: Track;
   contextIds: string[];
   contextLabel: string;
-  badge?: string;
 }) {
   const isCurrent = usePlayerStore((state) => state.currentTrackId === track.id);
   const isPlaying = usePlayerStore((state) =>
@@ -179,7 +177,7 @@ function CarouselTrackCard({
   const artist = getArtist(track.artistId);
 
   return (
-    <article className="group min-w-0 rounded-xl border border-transparent p-2 -m-2 transition-colors duration-150 hover:border-white/[0.08] hover:bg-card">
+    <article className="group min-w-0 rounded-2xl border border-transparent p-2 -m-2 transition-colors duration-200 hover:border-border hover:bg-card">
       <div className="relative">
         <button
           type="button"
@@ -188,7 +186,7 @@ function CarouselTrackCard({
             else playTrack(track.id, contextIds, contextLabel);
           }}
           aria-label={`${isCurrent && isPlaying ? "Pause" : "Play"} ${track.title}`}
-          className="relative block w-full overflow-hidden rounded-xl border border-white/[0.08] bg-elevated text-left outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="relative block w-full overflow-hidden rounded-2xl border border-border bg-elevated text-left outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <Artwork
             src={track.artwork}
@@ -196,16 +194,6 @@ function CarouselTrackCard({
             res="md"
             className="aspect-square w-full transition-transform duration-300 ease-out group-hover:scale-[1.02]"
           />
-          {badge && (
-            <span
-              className={cn(
-                "absolute left-2 top-2 rounded-md border border-white/15 bg-black/75 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-white transition-opacity duration-150",
-                isCurrent ? "opacity-100" : "opacity-85 sm:opacity-0 sm:group-hover:opacity-100",
-              )}
-            >
-              {badge}
-            </span>
-          )}
           <span
             className={cn(
               "absolute bottom-2.5 right-2.5 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-all duration-150",
@@ -222,10 +210,10 @@ function CarouselTrackCard({
           </span>
         </button>
       </div>
-      <div className="mt-2.5 min-w-0 px-0.5">
+      <div className="mt-3 min-w-0 px-0.5">
         <p
           className={cn(
-            "line-clamp-1 text-[13.5px] font-semibold leading-5",
+            "truncate text-[13.5px] font-semibold leading-5",
             isCurrent ? "text-primary" : "text-foreground",
           )}
         >
@@ -535,16 +523,19 @@ export default function HomePage() {
   const showTrending = filter === "trending";
   const showOffline = nativeOffline && filter === "offline";
 
+  const carouselTrackClass =
+    "no-scrollbar hide-scrollbar -mx-4 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 py-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 sm:py-0 md:grid-cols-4 lg:grid-cols-6 [&>*]:w-[146px] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:w-auto";
+
   return (
-    <div className="min-h-dvh bg-background">
-      {/* Mobile Matte Studio Sticky Home Header */}
-      <div className="sticky top-0 z-30 border-b border-border/80 bg-background/95 px-3.5 pb-3 pt-[calc(0.65rem+env(safe-area-inset-top))] md:hidden">
-        <div className="flex items-center gap-2">
+    <div className="min-h-dvh w-full max-w-full overflow-x-clip bg-background">
+      {/* Mobile Sticky Header */}
+      <div className="sticky top-0 z-30 border-b border-border bg-background/95 px-4 pb-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] backdrop-blur-md md:hidden">
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={toggleMobileSidebar}
             aria-label="Open navigation and account menu"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/80 text-xs font-bold text-white transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-xs font-semibold text-white transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             style={{ background: avatarColor }}
           >
             {session?.picture ? (
@@ -565,8 +556,10 @@ export default function HomePage() {
             role="tablist"
             aria-label="Home feed filters"
             style={{
-              maskImage: "linear-gradient(to right, black 0%, black calc(100% - 26px), transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to right, black 0%, black calc(100% - 26px), transparent 100%)",
+              maskImage:
+                "linear-gradient(to right, black 0%, black calc(100% - 24px), transparent 100%)",
+              WebkitMaskImage:
+                "linear-gradient(to right, black 0%, black calc(100% - 24px), transparent 100%)",
             }}
           >
             {filters.map((item) => {
@@ -582,7 +575,7 @@ export default function HomePage() {
                     "inline-flex h-8 shrink-0 items-center rounded-full px-3.5 text-xs font-semibold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                     active
                       ? "bg-primary text-primary-foreground"
-                      : "border border-border/80 bg-card text-muted-foreground hover:bg-elevated hover:text-foreground",
+                      : "border border-border bg-card text-muted-foreground hover:bg-elevated hover:text-foreground",
                   )}
                 >
                   {item.label}
@@ -595,21 +588,35 @@ export default function HomePage() {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                aria-label="Notifications and quick settings"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/80 bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Activity and settings menu"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <Bell className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-56 rounded-xl border-border bg-popover shadow-lg"
+              className="w-56 rounded-2xl border-border bg-popover shadow-lg"
             >
-              <DropdownMenuLabel className="text-xs">What&apos;s New</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs font-semibold">
+                Quick Menu
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={() =>
+                  playShuffled(
+                    tracks.map((t) => t.id),
+                    "Shuffle all",
+                  )
+                }
+                className="cursor-pointer"
+              >
+                <Shuffle className="mr-2 h-3.5 w-3.5 text-primary" />
+                Shuffle all
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/new-releases" className="cursor-pointer">
-                  <Sparkles className="mr-2 h-3.5 w-3.5 text-primary" />
+                  <Disc3 className="mr-2 h-3.5 w-3.5 text-primary" />
                   New releases
                 </Link>
               </DropdownMenuItem>
@@ -619,6 +626,7 @@ export default function HomePage() {
                   Recently played
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/settings" className="cursor-pointer">
                   <Settings2 className="mr-2 h-3.5 w-3.5" />
@@ -627,19 +635,11 @@ export default function HomePage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <Link
-            href="/settings"
-            aria-label="Settings"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/80 bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            <Settings2 className="h-4 w-4" />
-          </Link>
         </div>
       </div>
 
-      <div className="page-container max-w-[1480px] pt-5 md:pt-7">
-        {/* Clean Page Header */}
+      <div className="page-container max-w-[1480px] px-4 pt-5 sm:px-6 md:pt-7 lg:px-8">
+        {/* Page Header */}
         <header className="mb-6 sm:mb-7">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="min-w-0">
@@ -647,7 +647,9 @@ export default function HomePage() {
                 {greeting}
                 {session?.displayName
                   ? `, ${getFirstName(session.displayName)}`
-                  : displayName && displayName !== "Listener"
+                  : displayName &&
+                      !displayName.toLowerCase().includes("local") &&
+                      displayName.toLowerCase() !== "listener"
                     ? `, ${getFirstName(displayName)}`
                     : ""}
               </h1>
@@ -656,7 +658,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="hidden items-center gap-2 sm:flex">
+            <div className="hidden items-center gap-2 md:flex">
               <button
                 type="button"
                 onClick={() =>
@@ -665,43 +667,30 @@ export default function HomePage() {
                     "Shuffle all",
                   )
                 }
-                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-primary px-3.5 text-xs font-semibold text-primary-foreground transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <Shuffle className="h-3.5 w-3.5" />
                 Shuffle all
               </button>
               {!isNativeApp && (
-                <>
-                  {clientDevice === "android" ? (
-                    <a
-                      href="/api/download/android"
-                      download="sangeet-android.apk"
-                      className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-xs font-semibold text-foreground transition hover:bg-elevated active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                    >
-                      <Download className="h-3.5 w-3.5 text-primary" />
-                      Download Android APK
-                    </a>
-                  ) : (
-                    <>
-                      <a
-                        href="/api/download/windows"
-                        download="Sangeet.exe"
-                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-xs font-semibold text-foreground transition hover:bg-elevated active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                      >
-                        <Download className="h-3.5 w-3.5 text-primary" />
-                        Download Windows .exe
-                      </a>
-                      <a
-                        href="/api/download/android"
-                        download="sangeet-android.apk"
-                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-xs font-semibold text-foreground transition hover:bg-elevated active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                      >
-                        <Download className="h-3.5 w-3.5 text-primary" />
-                        Android APK
-                      </a>
-                    </>
-                  )}
-                </>
+                <a
+                  href={
+                    clientDevice === "android"
+                      ? "/api/download/android"
+                      : "/api/download/windows"
+                  }
+                  download={
+                    clientDevice === "android"
+                      ? "sangeet-android.apk"
+                      : "Sangeet.exe"
+                  }
+                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-4 text-xs font-semibold text-foreground transition hover:bg-elevated active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <Download className="h-3.5 w-3.5 text-primary" />
+                  {clientDevice === "android"
+                    ? "Download Android APK"
+                    : "Download Windows .exe"}
+                </a>
               )}
             </div>
           </div>
@@ -725,7 +714,7 @@ export default function HomePage() {
                     "inline-flex h-8 items-center rounded-full px-4 text-xs font-semibold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                     active
                       ? "bg-primary text-primary-foreground"
-                      : "border border-border/80 bg-card text-muted-foreground hover:bg-elevated hover:text-foreground",
+                      : "border border-border bg-card text-muted-foreground hover:bg-elevated hover:text-foreground",
                   )}
                 >
                   {item.label}
@@ -739,22 +728,23 @@ export default function HomePage() {
         {(showAll || showMusic) && (
           <section aria-label="Quick picks" className="mb-7 sm:mb-8">
             <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-              {/* Tile #1: Liked Songs */}
+              {/* Tile 1: Liked Songs */}
               <Link
                 href="/liked"
                 className={cn(
-                  "group flex h-[58px] min-w-0 items-center gap-2.5 overflow-hidden rounded-xl border border-white/[0.07] bg-card p-0 pr-3 text-left transition duration-150 hover:border-white/[0.14] hover:bg-elevated active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                  likedPlaying && "border-primary/45 bg-primary/[0.08] hover:border-primary/55 hover:bg-primary/[0.11]",
+                  "group flex h-[56px] min-w-0 items-center gap-2.5 overflow-hidden rounded-xl border border-border bg-card p-0 pr-3 text-left transition duration-150 hover:border-white/[0.16] hover:bg-elevated active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                  likedPlaying &&
+                    "border-primary/45 bg-primary/[0.08] hover:border-primary/55 hover:bg-primary/[0.11]",
                 )}
               >
-                <span className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-none bg-gradient-to-br from-[#450af5] via-[#6d3df5] to-[#8e8ee5]">
+                <span className="flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-none bg-gradient-to-br from-[#450af5] via-[#6d3df5] to-[#8e8ee5]">
                   <Heart className="h-5 w-5 fill-white text-white" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-semibold leading-tight text-foreground sm:text-[13.5px]">
                     Liked Songs
                   </span>
-                  <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                  <span className="mt-0.5 block truncate text-[11px] text-muted-foreground tabular-nums">
                     {likedTrackIds.length}{" "}
                     {likedTrackIds.length === 1 ? "song" : "songs"}
                   </span>
@@ -765,13 +755,14 @@ export default function HomePage() {
                 />
               </Link>
 
-              {/* Tiles #2-8: Quick Picks (Live Trending + Taste Matched) */}
+              {/* Tiles 2-8: Quick Picks */}
               {resolvedQuickPicks.slice(0, 7).map((track) => (
                 <QuickTrackTile
                   key={track.id}
                   track={track}
                   contextIds={quickPickIds}
                   contextLabel="Quick picks"
+                  className="h-[56px] border-border"
                 />
               ))}
             </div>
@@ -799,18 +790,18 @@ export default function HomePage() {
                 </p>
                 <Link
                   href={`/artist/${spotlight.artist.id}`}
-                  className="mt-0.5 block truncate font-display text-[17px] font-bold tracking-tight text-foreground hover:underline sm:text-xl"
+                  className="mt-1 block truncate font-display text-[17px] font-bold tracking-tight text-foreground hover:underline sm:text-xl"
                 >
                   {spotlight.artist.name}
                 </Link>
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-card">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
               <div className="flex items-stretch">
                 <Link
                   href={`/album/${spotlight.album.id}`}
-                  className="relative h-28 w-28 shrink-0 overflow-hidden rounded-none border-r border-white/[0.07] bg-elevated sm:h-40 sm:w-40"
+                  className="relative aspect-square w-28 shrink-0 overflow-hidden border-r border-border bg-elevated sm:w-40"
                 >
                   <Artwork
                     src={spotlight.album.artwork || spotlight.track.artwork}
@@ -821,14 +812,14 @@ export default function HomePage() {
                   />
                 </Link>
 
-                <div className="flex min-w-0 flex-1 flex-col justify-between self-stretch p-3.5 sm:p-5">
-                  <div>
-                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-primary">
+                <div className="flex min-w-0 flex-1 flex-col justify-between p-3.5 sm:p-5">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
                       New release · {spotlight.album.type || "Single"}
                     </p>
                     <Link
                       href={`/album/${spotlight.album.id}`}
-                      className="mt-1.5 block line-clamp-1 font-display text-base font-bold tracking-tight text-foreground hover:underline sm:text-xl"
+                      className="mt-1 block truncate font-display text-base font-bold tracking-tight text-foreground hover:underline sm:text-xl"
                     >
                       {spotlight.album.title}
                     </Link>
@@ -865,7 +856,7 @@ export default function HomePage() {
                       aria-label={`${
                         isSpotlightActive && isPlaying ? "Pause" : "Play"
                       } ${spotlight.album.title}`}
-                      className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:h-10 sm:px-5"
+                      className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:h-10 sm:px-5"
                     >
                       {isSpotlightActive && isPlaying ? (
                         <>
@@ -886,25 +877,20 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* Compact "Personalize your feed" panel for new listeners */}
+        {/* Compact Taste Tuner for new listeners */}
         {feed.isNewListener && !tuneDismissed && (showAll || showMusic) && (
           <section
             aria-label="Personalize your feed"
-            className="mb-7 rounded-xl border border-white/[0.08] bg-card p-3.5 sm:mb-8 sm:p-4"
+            className="mb-7 rounded-2xl border border-border bg-card p-4 sm:mb-8"
           >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                  <Sparkles className="h-4 w-4" />
-                </span>
-                <div>
-                  <p className="text-xs font-bold text-foreground sm:text-[13px]">
-                    Personalize your feed
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Pick a few artists to shape your recommendations.
-                  </p>
-                </div>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[13.5px] font-semibold text-foreground">
+                  Personalize your feed
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Pick a few artists to shape your recommendations.
+                </p>
               </div>
               <button
                 type="button"
@@ -917,7 +903,7 @@ export default function HomePage() {
             </div>
             <div
               data-no-tab-swipe="true"
-              className="no-scrollbar hide-scrollbar mt-3 flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:flex-wrap"
+              className="no-scrollbar hide-scrollbar mt-3 flex items-center gap-2 overflow-x-auto pb-0.5 sm:flex-wrap"
             >
               {STARTER_TASTE_ARTISTS.map((artist) => {
                 const selected = preferredArtistIds.includes(artist.id);
@@ -930,8 +916,8 @@ export default function HomePage() {
                     className={cn(
                       "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                       selected
-                        ? "border-primary/60 bg-primary font-semibold text-primary-foreground"
-                        : "border-border bg-elevated/70 text-foreground/85 hover:bg-elevated hover:text-foreground",
+                        ? "border-primary bg-primary font-semibold text-primary-foreground"
+                        : "border-border bg-elevated/70 text-foreground/90 hover:bg-elevated hover:text-foreground",
                     )}
                   >
                     {selected ? (
@@ -958,37 +944,30 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={() => setFilter("trending")}
-                  className="inline-flex h-7 items-center gap-1 rounded-full border border-border/80 bg-card px-3 text-[11px] font-semibold text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="inline-flex h-7 items-center rounded-full border border-border bg-card px-3 text-[11px] font-semibold text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   See all
                 </button>
               }
             />
             {loadingTrending && trendingTracks.length === 0 ? (
-              <div
-                data-no-tab-swipe="true"
-                className="no-scrollbar hide-scrollbar -mx-3.5 flex gap-3 overflow-x-auto px-3.5 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 md:grid-cols-4 lg:grid-cols-6 [&>*]:w-[144px] [&>*]:shrink-0 sm:[&>*]:w-auto"
-              >
+              <div data-no-tab-swipe="true" className={carouselTrackClass}>
                 {Array.from({ length: 6 }).map((_, idx) => (
-                  <div key={idx} className="space-y-2">
-                    <div className="skeleton aspect-square w-full rounded-xl" />
+                  <div key={idx} className="space-y-2.5">
+                    <div className="skeleton aspect-square w-full rounded-2xl" />
                     <div className="skeleton h-3.5 w-3/4 rounded-md" />
                     <div className="skeleton h-3 w-1/2 rounded-md" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div
-                data-no-tab-swipe="true"
-                className="no-scrollbar hide-scrollbar -mx-3.5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-3.5 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-6 [&>*]:w-[146px] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:w-auto"
-              >
-                {trendingTracks.slice(0, 6).map((track, idx) => (
+              <div data-no-tab-swipe="true" className={carouselTrackClass}>
+                {trendingTracks.slice(0, 6).map((track) => (
                   <CarouselTrackCard
                     key={track.id}
                     track={track}
                     contextIds={trendingIds}
                     contextLabel="Trending now"
-                    badge={`#${idx + 1}`}
                   />
                 ))}
               </div>
@@ -1005,23 +984,17 @@ export default function HomePage() {
               linkLabel="See all"
             />
             {loadingTaste && tasteTracks.length === 0 ? (
-              <div
-                data-no-tab-swipe="true"
-                className="no-scrollbar hide-scrollbar -mx-3.5 flex gap-3 overflow-x-auto px-3.5 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 md:grid-cols-4 lg:grid-cols-6 [&>*]:w-[144px] [&>*]:shrink-0 sm:[&>*]:w-auto"
-              >
+              <div data-no-tab-swipe="true" className={carouselTrackClass}>
                 {Array.from({ length: 6 }).map((_, idx) => (
-                  <div key={idx} className="space-y-2">
-                    <div className="skeleton aspect-square w-full rounded-xl" />
+                  <div key={idx} className="space-y-2.5">
+                    <div className="skeleton aspect-square w-full rounded-2xl" />
                     <div className="skeleton h-3.5 w-3/4 rounded-md" />
                     <div className="skeleton h-3 w-1/2 rounded-md" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div
-                data-no-tab-swipe="true"
-                className="no-scrollbar hide-scrollbar -mx-3.5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-3.5 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-6 [&>*]:w-[146px] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:w-auto"
-              >
+              <div data-no-tab-swipe="true" className={carouselTrackClass}>
                 {personalizedTracks.slice(0, 6).map((track) => (
                   <CarouselTrackCard
                     key={track.id}
@@ -1038,14 +1011,8 @@ export default function HomePage() {
         {/* ALL & MUSIC: Recommended Artists */}
         {(showAll || showMusic) && feed.artists.length > 0 && (
           <section className="section-space" aria-label="Recommended artists">
-            <SectionHeader
-              title="Recommended artists"
-              href="/explore"
-            />
-            <div
-              data-no-tab-swipe="true"
-              className="no-scrollbar hide-scrollbar -mx-3.5 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-3.5 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-6 [&>*]:w-[138px] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:w-auto"
-            >
+            <SectionHeader title="Recommended artists" href="/explore" />
+            <div data-no-tab-swipe="true" className={carouselTrackClass}>
               {feed.artists.slice(0, 6).map((artist) => (
                 <ArtistCard key={artist.id} artist={artist} />
               ))}
@@ -1056,14 +1023,8 @@ export default function HomePage() {
         {/* ALL & MUSIC: New Releases for You */}
         {(showAll || showMusic) && feed.albums.length > 0 && (
           <section className="section-space" aria-label="New releases for you">
-            <SectionHeader
-              title="New releases for you"
-              href="/new-releases"
-            />
-            <div
-              data-no-tab-swipe="true"
-              className="no-scrollbar hide-scrollbar -mx-3.5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-3.5 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-6 [&>*]:w-[146px] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:w-auto"
-            >
+            <SectionHeader title="New releases for you" href="/new-releases" />
+            <div data-no-tab-swipe="true" className={carouselTrackClass}>
               {feed.albums.slice(0, 6).map((album) => (
                 <AlbumCard key={album.id} album={album} />
               ))}
@@ -1074,14 +1035,8 @@ export default function HomePage() {
         {/* ALL & MUSIC: Your Mixes */}
         {(showAll || showMusic) && feed.playlists.length > 0 && (
           <section className="section-space" aria-label="Your mixes">
-            <SectionHeader
-              title="Your mixes"
-              href="/made-for-you"
-            />
-            <div
-              data-no-tab-swipe="true"
-              className="no-scrollbar hide-scrollbar -mx-3.5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-3.5 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-6 [&>*]:w-[146px] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:w-auto"
-            >
+            <SectionHeader title="Your mixes" href="/made-for-you" />
+            <div data-no-tab-swipe="true" className={carouselTrackClass}>
               {feed.playlists.slice(0, 6).map((playlist) => (
                 <PlaylistCard key={playlist.id} playlist={playlist} />
               ))}
@@ -1092,13 +1047,13 @@ export default function HomePage() {
         {/* TRENDING FILTER VIEW */}
         {showTrending && (
           <section aria-label="Trending chart">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-card p-4 sm:p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
                   <Flame className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
                     Live Top 12
                   </p>
                   <h2 className="font-display text-xl font-bold text-foreground sm:text-2xl">
@@ -1114,7 +1069,7 @@ export default function HomePage() {
                     trendingIds[0] &&
                     playTrack(trendingIds[0], trendingIds, "Trending Chart")
                   }
-                  className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40"
                 >
                   <Play className="h-3.5 w-3.5 fill-current" />
                   Play all
@@ -1132,9 +1087,9 @@ export default function HomePage() {
             </div>
 
             {loadingTrending && trendingTracks.length === 0 ? (
-              <div className="divide-y divide-white/[0.05] overflow-hidden rounded-xl border border-white/[0.08] bg-card">
+              <div className="divide-y divide-border/60 overflow-hidden rounded-2xl border border-border bg-card">
                 {Array.from({ length: 8 }).map((_, idx) => (
-                  <div key={idx} className="flex items-center gap-3 px-4 py-3">
+                  <div key={idx} className="flex min-h-[56px] items-center gap-3 px-4 py-2.5">
                     <div className="skeleton h-4 w-6 rounded" />
                     <div className="skeleton h-11 w-11 rounded-lg" />
                     <div className="flex-1 space-y-1.5">
@@ -1145,23 +1100,23 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="divide-y divide-white/[0.05] overflow-hidden rounded-xl border border-white/[0.08] bg-card">
+              <div className="divide-y divide-border/60 overflow-hidden rounded-2xl border border-border bg-card">
                 {trendingTracks.map((track, idx) => {
                   const isCurrent = currentTrackId === track.id;
                   const artist = getArtist(track.artistId);
                   const views = trendingViews[track.id];
-                  const rank = String(idx + 1).padStart(2, "0");
+                  const rank = idx + 1;
                   return (
                     <div
                       key={track.id}
                       className={cn(
-                        "group flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-elevated/70 sm:px-4",
+                        "group flex min-h-[56px] items-center gap-3 px-3 py-2 transition-colors hover:bg-elevated/70 sm:px-4",
                         isCurrent && "bg-primary/[0.08] hover:bg-primary/[0.11]",
                       )}
                     >
                       <span
                         className={cn(
-                          "w-7 shrink-0 text-center font-mono text-xs font-semibold tabular-nums",
+                          "w-7 shrink-0 text-center font-sans text-xs font-semibold tabular-nums",
                           isCurrent || idx < 3 ? "text-primary" : "text-muted-foreground",
                         )}
                       >
@@ -1175,7 +1130,7 @@ export default function HomePage() {
                           else playTrack(track.id, trendingIds, "Trending Chart");
                         }}
                         aria-label={`${isCurrent && isPlaying ? "Pause" : "Play"} ${track.title}`}
-                        className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-border bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       >
                         <Artwork
                           src={track.artwork}
@@ -1220,7 +1175,7 @@ export default function HomePage() {
                       </button>
 
                       {track.duration > 0 && (
-                        <span className="hidden font-mono text-xs tabular-nums text-muted-foreground sm:inline">
+                        <span className="hidden font-sans text-xs tabular-nums text-muted-foreground sm:inline">
                           {formatDuration(track.duration)}
                         </span>
                       )}
@@ -1238,21 +1193,21 @@ export default function HomePage() {
         {showOffline && (
           <div className="space-y-8">
             <section aria-label="Offline downloads">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-card p-4 sm:p-5">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
                 <div className="flex items-center gap-3">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
                     <WifiOff className="h-5 w-5" />
                   </span>
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-                      Saved on this device
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
+                      Auto-scanned local music &amp; offline downloads
                     </p>
                     <h2 className="font-display text-xl font-bold text-foreground sm:text-2xl">
                       Offline Songs ({offlineItems.length})
                     </h2>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {offlineItems.length > 0 && (
                     <button
                       type="button"
@@ -1260,7 +1215,7 @@ export default function HomePage() {
                         const ids = offlineItems.map((item) => item.track.id);
                         if (ids[0]) playTrack(ids[0], ids, "Offline songs");
                       }}
-                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       <Play className="h-3.5 w-3.5 fill-current" />
                       Play offline
@@ -1271,39 +1226,39 @@ export default function HomePage() {
                     className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-elevated px-4 text-xs font-semibold text-foreground transition hover:bg-white/[0.09] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <FolderOpen className="h-3.5 w-3.5" />
-                    Open Library
+                    Open Scanner &amp; Local Library
                   </Link>
                 </div>
               </div>
 
               {offlineItems.length === 0 ? (
-                <div className="rounded-xl border border-white/[0.08] bg-card p-8 text-center">
+                <div className="rounded-2xl border border-border bg-card p-8 text-center">
                   <HardDrive className="mx-auto h-7 w-7 text-muted-foreground" />
                   <p className="mt-3 text-sm font-semibold text-foreground">
                     No offline songs saved yet
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Tap the Download icon in Now Playing or any track&apos;s{" "}
+                    Auto-scanned local music &amp; offline downloads appear here. Tap Download in Now Playing or any track&apos;s{" "}
                     <MoreHorizontal className="inline h-3.5 w-3.5" /> menu to save songs for offline playback.
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-white/[0.05] overflow-hidden rounded-xl border border-white/[0.08] bg-card">
+                <div className="divide-y divide-border/60 overflow-hidden rounded-2xl border border-border bg-card">
                   {offlineItems.map(({ track, artistName, sizeBytes }, idx) => {
                     const isCurrent = currentTrackId === track.id;
                     const offlineIds = offlineItems.map((i) => i.track.id);
-                    const indexLabel = String(idx + 1).padStart(2, "0");
+                    const indexLabel = idx + 1;
                     return (
                       <div
                         key={track.id}
                         className={cn(
-                          "group flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-elevated/70 sm:px-4",
+                          "group flex min-h-[56px] items-center gap-3 px-3 py-2 transition-colors hover:bg-elevated/70 sm:px-4",
                           isCurrent && "bg-primary/[0.08] hover:bg-primary/[0.11]",
                         )}
                       >
                         <span
                           className={cn(
-                            "w-7 shrink-0 text-center font-mono text-xs font-semibold tabular-nums",
+                            "w-7 shrink-0 text-center font-sans text-xs font-semibold tabular-nums",
                             isCurrent ? "text-primary" : "text-muted-foreground",
                           )}
                         >
@@ -1317,7 +1272,7 @@ export default function HomePage() {
                             else playTrack(track.id, offlineIds, "Offline songs");
                           }}
                           aria-label={`${isCurrent && isPlaying ? "Pause" : "Play"} ${track.title}`}
-                          className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                          className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-border bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                         >
                           <Artwork
                             src={track.artwork}

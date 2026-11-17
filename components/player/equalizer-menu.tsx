@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RotateCcw, SlidersHorizontal, Sparkles } from "lucide-react";
+import { AudioLines, RotateCcw, SlidersHorizontal } from "lucide-react";
 import {
   type AudioEffectsState,
   EQ_BANDS,
@@ -110,7 +110,7 @@ export function EqualizerMenu({ className }: { className?: string }) {
       >
         <DropdownMenuLabel className="flex items-center justify-between px-2 py-1.5 text-xs">
           <span className="flex items-center gap-2">
-            <Sparkles
+            <AudioLines
               className={cn("h-3.5 w-3.5", isActive ? "text-primary" : "text-muted-foreground")}
             />
             Audio Effects & EQ
@@ -161,7 +161,7 @@ export function EqualizerMenu({ className }: { className?: string }) {
                       style={{ height: `${gainToBarPercent(gain)}%` }}
                     />
                   </div>
-                  <span className="font-mono text-[9px] text-muted-foreground">
+                  <span className="font-sans text-[9px] tabular-nums text-muted-foreground">
                     {band.label.replace("Hz", "")}
                   </span>
                 </div>
@@ -189,7 +189,7 @@ export function EqualizerMenu({ className }: { className?: string }) {
                 >
                   <span className="truncate">{preset.label}</span>
                   {preset.recommendedSpeed && preset.recommendedSpeed !== 1 && (
-                    <span className="shrink-0 font-mono text-[9.5px] opacity-80">
+                    <span className="shrink-0 font-sans text-[9.5px] tabular-nums opacity-80">
                       {preset.recommendedSpeed}x
                     </span>
                   )}
@@ -209,7 +209,7 @@ export function EqualizerMenu({ className }: { className?: string }) {
           <label className="block space-y-1">
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-muted-foreground">Bass</span>
-              <span className="font-mono text-[10.5px] tabular-nums text-foreground">
+              <span className="font-sans text-[10.5px] tabular-nums text-foreground">
                 {formatDb(fx.bassBoostDb)}
               </span>
             </div>
@@ -228,7 +228,7 @@ export function EqualizerMenu({ className }: { className?: string }) {
           <label className="block space-y-1">
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-muted-foreground">Treble</span>
-              <span className="font-mono text-[10.5px] tabular-nums text-foreground">
+              <span className="font-sans text-[10.5px] tabular-nums text-foreground">
                 {formatDb(fx.trebleBoostDb)}
               </span>
             </div>
@@ -247,7 +247,7 @@ export function EqualizerMenu({ className }: { className?: string }) {
           <label className="block space-y-1">
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-muted-foreground">Reverb</span>
-              <span className="font-mono text-[10.5px] tabular-nums text-foreground">
+              <span className="font-sans text-[10.5px] tabular-nums text-foreground">
                 {Math.round(fx.reverbMix * 100)}%
               </span>
             </div>
@@ -266,7 +266,7 @@ export function EqualizerMenu({ className }: { className?: string }) {
           <label className="block space-y-1">
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-muted-foreground">3D Width</span>
-              <span className="font-mono text-[10.5px] tabular-nums text-foreground">
+              <span className="font-sans text-[10.5px] tabular-nums text-foreground">
                 {Math.round(fx.stereoWidth * 100)}%
               </span>
             </div>

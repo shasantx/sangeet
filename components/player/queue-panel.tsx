@@ -49,7 +49,7 @@ export function QueuePanel() {
                   <DialogPrimitive.Title className="font-display text-xl font-medium tracking-[-0.03em]">
                     Queue
                   </DialogPrimitive.Title>
-                  <span className="rounded-full bg-white/[.06] px-2 py-0.5 font-mono text-[10px] font-medium tabular-nums text-muted-foreground">
+                  <span className="rounded-full bg-white/[.06] px-2 py-0.5 font-sans text-[10px] font-medium tabular-nums text-muted-foreground">
                     {queue.length}
                   </span>
                 </div>
@@ -110,7 +110,7 @@ export function QueuePanel() {
                   <div className="flex items-center gap-2">
                     <p className="eyebrow">Next up</p>
                     {upcoming.length > 0 && (
-                      <span className="rounded-full bg-white/[.05] px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground">
+                      <span className="rounded-full bg-white/[.05] px-1.5 py-0.5 font-sans text-[10px] tabular-nums text-muted-foreground">
                         {upcoming.length}
                       </span>
                     )}
@@ -162,7 +162,7 @@ export function QueuePanel() {
                               {getArtist(track.artistId)?.name ?? "Unknown artist"}
                             </p>
                           </button>
-                          <span className="hidden font-mono text-[11px] tabular-nums text-muted-foreground/70 sm:inline">
+                          <span className="hidden font-sans text-[11px] tabular-nums text-muted-foreground/70 sm:inline">
                             {formatDuration(track.duration)}
                           </span>
                           <button

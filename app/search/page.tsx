@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Clock3, Flame, Pause, Play, SearchX, Sparkles, X } from "lucide-react";
+import { ArrowUpRight, AudioLines, Clock3, Flame, Pause, Play, SearchX, X } from "lucide-react";
 import { artists, genres, getArtist, getArtistTracks, getTrack } from "@/lib/catalog";
 import {
   registerAudiusSearchResult,
@@ -418,7 +418,7 @@ export default function SearchPage() {
 
           <section className="mt-10">
             <div className="mb-4 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
+              <AudioLines className="h-4 w-4 text-primary" />
               <h2 className="text-xl font-medium tracking-[-0.025em]">Try a feeling</h2>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -492,11 +492,11 @@ export default function SearchPage() {
                       >
                         <span
                           className={cn(
-                            "w-7 shrink-0 text-center font-mono text-xs font-semibold tabular-nums",
+                            "w-7 shrink-0 text-center font-sans text-xs font-semibold tabular-nums",
                             index < 3 ? "text-primary" : "text-muted-foreground/75",
                           )}
                         >
-                          #{index + 1}
+                          {index + 1}
                         </span>
 
                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md">

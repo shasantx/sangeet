@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FolderPlus,
-  FolderUp,
+  FolderSearch,
   HardDrive,
   Laptop,
   Music2,
@@ -13,7 +13,6 @@ import {
   Shuffle,
   Smartphone,
   Trash2,
-  Upload,
   X,
 } from "lucide-react";
 import {
@@ -41,6 +40,7 @@ import { toast } from "@/store/ui-store";
 import { Equalizer } from "@/components/music/equalizer";
 
 const AUDIO_ACCEPT = ".mp3,.m4a,.aac,.wav,.flac,.ogg,.opus,.wma,.webm,audio/*";
+const AUDIO_EXT_RE = /\.(mp3|m4a|aac|wav|flac|ogg|opus|wma|aiff|alac|caf|webm|3gp|mp4)$/i;
 
 interface FileHandleLike {
   kind: "file";
@@ -69,6 +69,19 @@ async function collectFilesFromDirectory(dir: DirectoryHandleLike): Promise<File
   return files;
 }
 
+function isAudioCandidate(file: File): boolean {
+  return (
+    file.type.startsWith("audio/") ||
+    file.type === "application/ogg" ||
+    file.type === "video/ogg" ||
+    AUDIO_EXT_RE.test(file.name)
+  );
+}
+
+function stripExtension(name: string): string {
+  return name.replace(/\.[^.]+$/, "").trim().toLowerCase();
+}
+
 interface LocalFilesSectionProps {
   searchQuery?: string;
   onCountChange?: (count: number) => void;
@@ -82,6 +95,7 @@ export function LocalFilesSection({
 }: LocalFilesSectionProps) {
   const [isNativeAndroid, setIsNativeAndroid] = useState(false);
   const [isNativeDesktop, setIsNativeDesktop] = useState(false);
+  const [androidGranted, setAndroidGranted] = useState(false);
   const [desktopFolders, setDesktopFolders] = useState<string[]>([]);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isBusy, setIsBusy] = useState(false);
@@ -89,7 +103,6 @@ export function LocalFilesSection({
   const [permissionMessage, setPermissionMessage] = useState<string | null>(null);
   const awaitingPermissionRef = useRef(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
   const currentTrackId = usePlayerStore((state) => state.currentTrackId);
@@ -101,6 +114,7 @@ export function LocalFilesSection({
   const runAndroidScan = useCallback(() => {
     setIsBusy(true);
     setPermissionMessage(null);
+    setAndroidGranted(true);
     try {
       const scanned = androidScanLocalAudio();
       const registered = registerScannedAndroidTracks(scanned);
@@ -159,7 +173,9 @@ export function LocalFilesSection({
     setIsNativeDesktop(nativeDesktop);
 
     if (nativeAndroid) {
-      if (androidHasAudioPermission()) {
+      const granted = androidHasAudioPermission();
+      setAndroidGranted(granted);
+      if (granted) {
         runAndroidScan();
       }
       return;
@@ -196,6 +212,7 @@ export function LocalFilesSection({
           payload === "granted" ||
           payload === "true" ||
           androidHasAudioPermission();
+        setAndroidGranted(granted);
         if (granted) {
           runAndroidScan();
         } else {
@@ -236,28 +253,48 @@ export function LocalFilesSection({
     androidRequestAudioPermission();
   };
 
-  const importFiles = async (files: File[]) => {
-    if (files.length === 0) return;
+  const scanWebAudioFiles = async (files: File[]) => {
+    const audioFiles = files.filter(isAudioCandidate);
+    if (audioFiles.length === 0) {
+      toast.info(
+        "No audio files found",
+        "Choose a folder containing MP3, M4A, FLAC, WAV, AAC, OGG, or OPUS tracks.",
+      );
+      return;
+    }
+
+    const existingTitles = new Set(tracks.map((track) => track.title.trim().toLowerCase()));
+    const freshFiles = audioFiles.filter(
+      (file) => !existingTitles.has(stripExtension(file.name)),
+    );
+
+    if (freshFiles.length === 0) {
+      setHasScanned(true);
+      toast.info("Music folder up to date", "All audio files in this folder are already listed.");
+      return;
+    }
+
     setIsBusy(true);
     try {
-      const { added, skipped } = await importLocalAudio(files);
+      const { added, skipped } = await importLocalAudio(freshFiles);
+      setHasScanned(true);
       if (added.length > 0) {
         setTracks((prev) => [...prev, ...added]);
         toast.success(
-          `Imported ${pluralize(added.length, "audio file")}`,
+          `Found ${pluralize(added.length, "song")}`,
           skipped > 0
-            ? `${pluralize(skipped, "file")} skipped (unsupported format or over 100 MB).`
-            : "Saved privately on this device for offline playback.",
+            ? `${pluralize(skipped, "file")} skipped (unsupported format or too large).`
+            : "Saved locally in this browser for instant playback.",
         );
       } else if (skipped > 0) {
         toast.info(
-          "No audio files imported",
-          `${pluralize(skipped, "file")} skipped. Choose MP3, M4A, AAC, WAV, FLAC, OGG, OPUS, WMA, or WEBM files under 100 MB.`,
+          "No supported audio found",
+          `${pluralize(skipped, "file")} skipped in the selected folder.`,
         );
       }
     } catch {
       toast.error(
-        "Could not import local audio",
+        "Could not scan music folder",
         "Check browser storage permissions and available disk space.",
       );
     } finally {
@@ -265,12 +302,7 @@ export function LocalFilesSection({
     }
   };
 
-  const handleWebImport = async (fileList: FileList | null) => {
-    if (!fileList || fileList.length === 0) return;
-    await importFiles(Array.from(fileList));
-  };
-
-  const handleFolderImport = async () => {
+  const handleWebFolderScan = async () => {
     const picker =
       typeof window !== "undefined"
         ? (window as DirectoryPickerWindow).showDirectoryPicker
@@ -281,12 +313,8 @@ export function LocalFilesSection({
         const dirHandle = await picker({ mode: "read" });
         setIsBusy(true);
         const collected = await collectFilesFromDirectory(dirHandle);
-        if (collected.length === 0) {
-          setIsBusy(false);
-          toast.info("Folder is empty", "No files were found in the selected folder.");
-          return;
-        }
-        await importFiles(collected);
+        setIsBusy(false);
+        await scanWebAudioFiles(collected);
         return;
       } catch (error) {
         setIsBusy(false);
@@ -330,10 +358,10 @@ export function LocalFilesSection({
 
   return (
     <section className={cn("mt-9", className)}>
-      <div className="relative overflow-hidden rounded-2xl border border-white/[.08] bg-card p-5 sm:p-6">
+      <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/15 text-primary">
               {isNativeAndroid ? (
                 <Smartphone className="h-5 w-5" />
               ) : isNativeDesktop ? (
@@ -344,17 +372,24 @@ export function LocalFilesSection({
             </div>
             <div>
               <p className="eyebrow mb-1">On this device</p>
-              <h2 className="font-display text-xl font-medium tracking-[-0.03em] sm:text-2xl">
-                Local Files
-              </h2>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h2 className="font-display text-xl font-medium tracking-[-0.03em] text-foreground sm:text-2xl">
+                  Local Music
+                </h2>
+                {tracks.length > 0 && (
+                  <span className="inline-flex items-center rounded-full border border-border bg-elevated px-2.5 py-0.5 font-sans text-[11px] font-medium tabular-nums text-muted-foreground">
+                    {pluralize(tracks.length, "song")}
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 font-sans text-xs text-muted-foreground">
                 {tracks.length > 0
-                  ? `${pluralize(tracks.length, "song")} ready to play offline`
+                  ? `${pluralize(tracks.length, "song")} scanned and ready to play offline`
                   : isNativeAndroid
-                    ? "Scan your Android MediaStore library to play audio stored on your phone."
+                    ? "Automatically scans audio stored on your phone via Android MediaStore."
                     : isNativeDesktop
-                      ? "Automatically reads MP3, FLAC, M4A, WAV & OGG songs from your Windows Music folders."
-                      : "Import MP3, M4A, FLAC, WAV, AAC, OGG, or OPUS files from your computer."}
+                      ? "Automatically scans MP3, FLAC, M4A, WAV, and OGG songs from your Windows Music folders."
+                      : "Scan a music folder on your device to list and play all local audio automatically."}
               </p>
             </div>
           </div>
@@ -367,9 +402,9 @@ export function LocalFilesSection({
                   disabled={trackIds.length === 0}
                   onClick={() => {
                     if (isCollectionActive) togglePlay();
-                    else if (trackIds[0]) playTrack(trackIds[0], trackIds, "Local Files");
+                    else if (trackIds[0]) playTrack(trackIds[0], trackIds, "Local Music");
                   }}
-                  className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
+                  className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 font-sans text-xs font-semibold text-primary-foreground transition hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
                 >
                   {isCollectionActive && isPlaying ? (
                     <Pause className="h-3.5 w-3.5 fill-current" strokeWidth={0} />
@@ -381,8 +416,8 @@ export function LocalFilesSection({
                 <button
                   type="button"
                   disabled={trackIds.length === 0}
-                  onClick={() => playShuffled(trackIds, "Local Files")}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.12] bg-elevated px-4 text-xs font-medium text-foreground transition hover:border-white/[.2] disabled:opacity-40"
+                  onClick={() => playShuffled(trackIds, "Local Music")}
+                  className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-elevated px-4 font-sans text-xs font-medium text-foreground transition hover:border-foreground/20 disabled:opacity-40"
                 >
                   <Shuffle className="h-3.5 w-3.5" />
                   Shuffle
@@ -395,10 +430,15 @@ export function LocalFilesSection({
                 type="button"
                 disabled={isBusy}
                 onClick={handleAndroidScanClick}
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.12] bg-elevated px-4 text-xs font-medium text-foreground transition hover:border-white/[.22] disabled:opacity-50"
+                className={cn(
+                  "inline-flex h-10 items-center gap-2 rounded-full px-4 font-sans text-xs font-semibold transition disabled:opacity-50",
+                  !androidGranted && tracks.length === 0
+                    ? "bg-primary text-primary-foreground hover:brightness-110"
+                    : "border border-border bg-elevated text-foreground hover:border-foreground/20",
+                )}
               >
                 <RefreshCw className={cn("h-3.5 w-3.5", isBusy && "animate-spin")} />
-                {hasScanned ? "Rescan device audio" : "Scan device audio"}
+                {androidGranted || hasScanned ? "Rescan phone audio" : "Scan phone audio"}
               </button>
             ) : isNativeDesktop ? (
               <>
@@ -406,16 +446,21 @@ export function LocalFilesSection({
                   type="button"
                   disabled={isBusy}
                   onClick={() => void runDesktopScan()}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.12] bg-elevated px-4 text-xs font-medium text-foreground transition hover:border-white/[.22] disabled:opacity-50"
+                  className={cn(
+                    "inline-flex h-10 items-center gap-2 rounded-full px-4 font-sans text-xs font-semibold transition disabled:opacity-50",
+                    tracks.length === 0
+                      ? "bg-primary text-primary-foreground hover:brightness-110"
+                      : "border border-border bg-elevated text-foreground hover:border-foreground/20",
+                  )}
                 >
                   <RefreshCw className={cn("h-3.5 w-3.5", isBusy && "animate-spin")} />
-                  Rescan PC music
+                  Rescan music library
                 </button>
                 <button
                   type="button"
                   disabled={isBusy}
                   onClick={() => void handleDesktopPickFolder()}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.12] bg-transparent px-4 text-xs font-medium text-foreground transition hover:border-white/[.2] hover:bg-elevated disabled:opacity-50"
+                  className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-elevated px-4 font-sans text-xs font-medium text-foreground transition hover:border-foreground/20 disabled:opacity-50"
                 >
                   <FolderPlus className="h-3.5 w-3.5" />
                   Add music folder
@@ -424,17 +469,6 @@ export function LocalFilesSection({
             ) : (
               <>
                 <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept={AUDIO_ACCEPT}
-                  multiple
-                  className="hidden"
-                  onChange={(event) => {
-                    void handleWebImport(event.target.files);
-                    event.target.value = "";
-                  }}
-                />
-                <input
                   ref={folderInputRef}
                   type="file"
                   accept={AUDIO_ACCEPT}
@@ -442,27 +476,23 @@ export function LocalFilesSection({
                   {...({ webkitdirectory: "" } as Record<string, string>)}
                   className="hidden"
                   onChange={(event) => {
-                    void handleWebImport(event.target.files);
+                    void scanWebAudioFiles(Array.from(event.target.files ?? []));
                     event.target.value = "";
                   }}
                 />
                 <button
                   type="button"
                   disabled={isBusy}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.12] bg-white/[.05] px-4 text-xs font-medium text-foreground transition hover:border-white/[.22] hover:bg-white/[.09] disabled:opacity-50"
+                  onClick={() => void handleWebFolderScan()}
+                  className={cn(
+                    "inline-flex h-10 items-center gap-2 rounded-full px-4 font-sans text-xs font-semibold transition disabled:opacity-50",
+                    tracks.length === 0
+                      ? "bg-primary text-primary-foreground hover:brightness-110"
+                      : "border border-border bg-elevated text-foreground hover:border-foreground/20",
+                  )}
                 >
-                  <Upload className="h-3.5 w-3.5" />
-                  Import audio files
-                </button>
-                <button
-                  type="button"
-                  disabled={isBusy}
-                  onClick={() => void handleFolderImport()}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border border-white/[.1] bg-transparent px-4 text-xs font-medium text-muted-foreground transition hover:border-white/[.2] hover:bg-white/[.05] hover:text-foreground disabled:opacity-50"
-                >
-                  <FolderUp className="h-3.5 w-3.5" />
-                  Import folder
+                  <FolderSearch className={cn("h-3.5 w-3.5", isBusy && "animate-pulse")} />
+                  Scan music folder
                 </button>
               </>
             )}
@@ -474,7 +504,7 @@ export function LocalFilesSection({
             {desktopFolders.map((folder) => (
               <span
                 key={folder}
-                className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/[.09] bg-elevated px-2.5 py-1 text-[11px] text-muted-foreground"
+                className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 font-sans text-[11px] text-muted-foreground"
               >
                 <span className="truncate">{folder}</span>
                 {desktopFolders.length > 1 && (
@@ -493,39 +523,41 @@ export function LocalFilesSection({
         )}
 
         {permissionMessage && (
-          <p className="mt-4 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3.5 py-2.5 text-xs text-amber-200">
+          <p className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3.5 py-2.5 font-sans text-xs text-amber-200">
             {permissionMessage}
           </p>
         )}
 
         {filteredTracks.length === 0 ? (
-          <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-white/[.08] bg-black/20 px-4 py-10 text-center">
-            <Music2 className="mb-3 h-7 w-7 text-muted-foreground/60" />
-            <p className="text-sm font-medium text-foreground">
+          <div className="mt-5 flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background/40 px-4 py-10 text-center">
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-elevated text-muted-foreground">
+              <Music2 className="h-5 w-5" />
+            </div>
+            <p className="font-sans text-sm font-medium text-foreground">
               {tracks.length > 0 && normalizedQuery
-                ? "No local tracks match your filter"
+                ? "No local songs match your filter"
                 : isNativeAndroid
                   ? hasScanned
                     ? "No audio files found on this device"
-                    : "Tap “Scan device audio” to load your music"
+                    : "Tap “Scan phone audio” to load your music"
                   : isNativeDesktop
                     ? hasScanned
                       ? "No audio files found in your Music folders"
                       : "Scanning your PC Music library..."
-                    : "No local audio files imported yet"}
+                    : "No scanned music folder yet"}
             </p>
-            <p className="mt-1 max-w-md text-xs text-muted-foreground">
+            <p className="mt-1 max-w-md font-sans text-xs text-muted-foreground">
               {tracks.length > 0 && normalizedQuery
-                ? "Try clearing the search box to see all local files."
+                ? "Try clearing the search box to see all scanned songs."
                 : isNativeAndroid
                   ? "Sangeet reads audio metadata directly from your Android MediaStore."
                   : isNativeDesktop
                     ? "Click “Add music folder” to include additional folders containing MP3, FLAC, M4A, or WAV songs."
-                    : "Imported files are saved privately in this browser using IndexedDB."}
+                    : "Choose a folder to automatically scan and list all audio files inside it."}
             </p>
           </div>
         ) : (
-          <div className="mt-5 divide-y divide-white/[.045] rounded-xl border border-white/[.05] bg-black/20">
+          <div className="mt-5 overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border/60">
             {filteredTracks.map((track, index) => {
               const artistName = getArtist(track.artistId)?.name ?? "On this device";
               const albumTitle = getAlbum(track.albumId)?.title;
@@ -535,7 +567,7 @@ export function LocalFilesSection({
                 <div
                   key={track.id}
                   className={cn(
-                    "group flex items-center gap-3 px-3 py-2.5 transition hover:bg-white/[.045] sm:px-4",
+                    "group flex items-center gap-3 px-3.5 py-2.5 transition hover:bg-white/[0.04] sm:px-4",
                     isCurrent && "bg-primary/[0.08]",
                   )}
                 >
@@ -543,10 +575,10 @@ export function LocalFilesSection({
                     type="button"
                     onClick={() => {
                       if (isCurrent) togglePlay();
-                      else playTrack(track.id, trackIds, "Local Files");
+                      else playTrack(track.id, trackIds, "Local Music");
                     }}
                     aria-label={`${isCurrent && isPlaying ? "Pause" : "Play"} ${track.title}`}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs text-muted-foreground transition hover:bg-white/[.08] hover:text-foreground"
+                    className="flex h-8 w-7 shrink-0 items-center justify-center rounded-full font-sans text-xs text-muted-foreground transition hover:text-foreground"
                   >
                     {isCurrent && isPlaying ? (
                       <Equalizer playing className="text-primary" />
@@ -554,7 +586,7 @@ export function LocalFilesSection({
                       <Play className="h-3.5 w-3.5 fill-current text-primary" />
                     ) : (
                       <>
-                        <span className="tabular-nums group-hover:hidden">
+                        <span className="font-sans text-xs font-medium tabular-nums group-hover:hidden">
                           {index + 1}
                         </span>
                         <Play className="hidden h-3.5 w-3.5 fill-current text-foreground group-hover:block" />
@@ -566,25 +598,36 @@ export function LocalFilesSection({
                     type="button"
                     onClick={() => {
                       if (isCurrent) togglePlay();
-                      else playTrack(track.id, trackIds, "Local Files");
+                      else playTrack(track.id, trackIds, "Local Music");
                     }}
-                    className="min-w-0 flex-1 text-left"
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
                   >
-                    <p
+                    <span
                       className={cn(
-                        "truncate text-sm font-medium",
-                        isCurrent ? "text-primary" : "text-foreground",
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-elevated text-muted-foreground transition",
+                        isCurrent && "border-primary/30 bg-primary/15 text-primary",
                       )}
                     >
-                      {track.title}
-                    </p>
-                    <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
-                      {albumTitle ? `${artistName} · ${albumTitle}` : artistName}
-                    </p>
+                      <Music2 className="h-4 w-4" />
+                    </span>
+
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={cn(
+                          "block truncate font-sans text-sm font-medium",
+                          isCurrent ? "text-primary" : "text-foreground",
+                        )}
+                      >
+                        {track.title}
+                      </span>
+                      <span className="mt-0.5 block truncate font-sans text-xs text-muted-foreground">
+                        {albumTitle ? `${artistName} · ${albumTitle}` : artistName}
+                      </span>
+                    </span>
                   </button>
 
                   {track.duration > 0 && (
-                    <span className="shrink-0 text-[11.5px] tabular-nums text-muted-foreground">
+                    <span className="shrink-0 font-sans text-xs tabular-nums text-muted-foreground">
                       {formatDuration(track.duration)}
                     </span>
                   )}
@@ -594,7 +637,7 @@ export function LocalFilesSection({
                       type="button"
                       onClick={() => void handleRemoveTrack(track.id)}
                       aria-label={`Remove ${track.title}`}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground/60 opacity-100 transition hover:bg-white/[.08] hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground/60 opacity-100 transition hover:bg-white/[0.08] hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

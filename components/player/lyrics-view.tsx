@@ -138,7 +138,7 @@ export function LyricsView({ trackTitle, artistName, videoId, duration }: Lyrics
           <span className="font-semibold text-foreground">
             {data.hasTimestamps ? "Synchronized Lyrics" : "Plain Lyrics"}
           </span>
-          <span className="font-mono text-[11px] text-muted-foreground/75">· {data.source}</span>
+          <span className="font-sans text-[11px] text-muted-foreground/75">· {data.source}</span>
         </div>
         <button
           type="button"
@@ -186,7 +186,7 @@ export function LyricsView({ trackTitle, artistName, videoId, duration }: Lyrics
       )}
 
       {data.hasTimestamps && (
-        <p className="mt-3 border-t border-border pt-2 font-mono text-[10px] text-muted-foreground/75">
+        <p className="mt-3 border-t border-border pt-2 font-sans text-[10px] text-muted-foreground/75">
           Click any lyric line to jump directly to that point in the song.
         </p>
       )}

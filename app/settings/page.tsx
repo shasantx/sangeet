@@ -25,7 +25,6 @@ import {
   Settings2,
   ShieldCheck,
   Smartphone,
-  Sparkles,
   SunMedium,
   Trash2,
   Users,
@@ -110,7 +109,7 @@ const themes: {
     surface: "#11221B",
     elevated: "#182F25",
     accent: "#20E070",
-    icon: Sparkles,
+    icon: AudioLines,
   },
   {
     id: "aurora",
@@ -122,7 +121,7 @@ const themes: {
     surface: "#1A142E",
     elevated: "#251D40",
     accent: "#A874FF",
-    icon: Sparkles,
+    icon: Palette,
   },
   {
     id: "crimson",
@@ -249,9 +248,16 @@ export default function SettingsPage() {
   const [resetOpen, setResetOpen] = useState(false);
   const [signOutOpen, setSignOutOpen] = useState(false);
   const [nativeOffline, setNativeOffline] = useState(false);
+  const [activeTab, setActiveTab] = useState("playback");
 
   useEffect(() => {
     setNativeOffline(isNativeOfflineSupported());
+    if (typeof window !== "undefined") {
+      const tab = new URLSearchParams(window.location.search).get("tab");
+      if (tab && ["playback", "appearance", "data", "about"].includes(tab)) {
+        setActiveTab(tab);
+      }
+    }
   }, []);
 
   const chooseTheme = (next: ThemePreference) => {
@@ -318,7 +324,7 @@ export default function SettingsPage() {
         </Link>
       </div>
 
-      <Tabs defaultValue="playback">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="hide-scrollbar max-w-full overflow-x-auto">
           <TabsTrigger value="playback">
             <AudioLines className="mr-1.5 h-3.5 w-3.5" />
@@ -345,7 +351,7 @@ export default function SettingsPage() {
                 <p className="eyebrow">Playback preferences</p>
               </div>
               <ToggleRow
-                icon={<Sparkles className="h-4 w-4" />}
+                icon={<Play className="h-4 w-4" />}
                 title="Autoplay after the queue ends"
                 description="Keep the room going with related tracks when the current queue finishes."
                 checked={autoplay}
@@ -971,7 +977,7 @@ export default function SettingsPage() {
               <div className="p-6 sm:p-8">
                 <div className="flex items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-elevated text-primary">
-                    <Sparkles className="h-5 w-5" />
+                    <AudioLines className="h-5 w-5" />
                   </span>
                   <div>
                     <p className="font-display text-2xl font-medium tracking-[0.18em]">Sangeet</p>
