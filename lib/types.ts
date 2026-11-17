@@ -1,0 +1,141 @@
+export type GenreId =
+  | "ambient"
+  | "electronic"
+  | "alternative"
+  | "soul"
+  | "jazz"
+  | "indie"
+  | "cinematic"
+  | "downtempo"
+  | "pop"
+  | "hiphop";
+
+export interface Genre {
+  id: GenreId;
+  name: string;
+  description: string;
+  image: string;
+  accent: string;
+  trackIds: string[];
+}
+
+export interface Artist {
+  id: string;
+  name: string;
+  bio: string;
+  shortBio: string;
+  image: string;
+  location: string;
+  genreIds: GenreId[];
+  relatedArtistIds: string[];
+  /** Languages the artist is commonly associated with; used for discovery filters. */
+  languages?: string[];
+  /** Alternate spellings and transliterations for regional search. */
+  aliases?: string[];
+}
+
+export interface Album {
+  id: string;
+  title: string;
+  artistId: string;
+  year: number;
+  releaseDate: string;
+  type: "Album" | "EP" | "Single";
+  artwork: string;
+  genreIds: GenreId[];
+  description: string;
+  trackIds: string[];
+  featured?: boolean;
+}
+
+export interface Track {
+  id: string;
+  title: string;
+  artistId: string;
+  albumId: string;
+  duration: number;
+  audioUrl: string;
+  artwork: string;
+  source?: "local" | "youtube" | "audius";
+  youtubeId?: string;
+  genreIds: GenreId[];
+  mood: string;
+  trackNumber: number;
+  explicit?: boolean;
+}
+
+export interface Playlist {
+  id: string;
+  title: string;
+  description: string;
+  curator: string;
+  artwork: string;
+  trackIds: string[];
+  genreIds: GenreId[];
+  accent: string;
+  featured?: boolean;
+}
+
+export interface UserPlaylist {
+  id: string;
+  title: string;
+  description: string;
+  artwork?: string;
+  trackIds: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface DemoProfile {
+  id: string;
+  name: string;
+  handle: string;
+  initials: string;
+  joined: string;
+  plan: string;
+  avatarColor: string;
+}
+
+export interface DesktopScannedTrack {
+  id: string;
+  title: string;
+  artist: string;
+  album: string;
+  duration: number;
+  uri: string;
+  sizeBytes?: number;
+  folder?: string;
+}
+
+export interface DesktopMusicScanResult {
+  folders: string[];
+  tracks: DesktopScannedTrack[];
+}
+
+export interface DesktopYouTubeAudioResult {
+  ok: boolean;
+  mimeType?: string;
+  bytes?: Uint8Array;
+  error?: string;
+}
+
+declare global {
+  interface Window {
+    sangeetDesktop?: {
+      isDesktop: boolean;
+      platform: string;
+      onMediaAction: (callback: (action: string) => void) => () => void;
+      sendPlaybackState: (data: { isPlaying: boolean; track?: { title: string; artist: string; artwork?: string } }) => void;
+      getMusicFolders?: () => Promise<string[]>;
+      pickMusicFolder?: () => Promise<DesktopMusicScanResult>;
+      removeMusicFolder?: (folder: string) => Promise<DesktopMusicScanResult>;
+      scanMusicLibrary?: () => Promise<DesktopMusicScanResult>;
+      fetchYouTubeAudio?: (videoId: string) => Promise<DesktopYouTubeAudioResult>;
+      reconnectOnline?: () => Promise<void>;
+      minimize: () => void;
+      maximize: () => void;
+      close: () => void;
+    };
+  }
+}
+
