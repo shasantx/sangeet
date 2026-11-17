@@ -48,6 +48,7 @@ export function MobileNavigation() {
   const horizontalLockedRef = useRef(false);
   const horizontalAbortedRef = useRef(false);
   const resetTimerRef = useRef<number | null>(null);
+  const swipeClickRef = useRef<{ at: number; x: number; y: number } | null>(null);
   const [dragTabs, setDragTabs] = useState<number | null>(null);
   const [isDragGesture, setIsDragGesture] = useState(false);
   const [pendingIndex, setPendingIndex] = useState<number | null>(null);
@@ -175,6 +176,7 @@ export function MobileNavigation() {
 
       if (targetIndex !== activeIndex) {
         swipedRef.current = true;
+        swipeClickRef.current = { at: Date.now(), x, y };
         setPendingIndex(targetIndex);
         router.push(items[targetIndex].href);
       }
@@ -242,9 +244,16 @@ export function MobileNavigation() {
         }}
         onPointerCancel={cancelSwipe}
         onClickCapture={(e) => {
-          if (swipedRef.current) {
+          const swipe = swipeClickRef.current;
+          if (
+            swipe &&
+            Date.now() - swipe.at < 120 &&
+            Math.abs(e.clientX - swipe.x) < 32 &&
+            Math.abs(e.clientY - swipe.y) < 32
+          ) {
             e.preventDefault();
             e.stopPropagation();
+            swipeClickRef.current = null;
           }
         }}
       >

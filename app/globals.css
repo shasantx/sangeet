@@ -426,7 +426,7 @@
     border: 1px solid hsl(var(--border));
     border-radius: 999px;
     background: var(--dock-bg);
-    touch-action: none;
+    touch-action: pan-y;
     user-select: none;
     box-shadow: 0 14px 34px -8px rgba(0, 0, 0, 0.72);
     pointer-events: auto;

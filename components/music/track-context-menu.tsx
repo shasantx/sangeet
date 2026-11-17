@@ -23,6 +23,7 @@ import { getAlbum, getArtist } from "@/lib/catalog";
 import { useLibraryStore } from "@/store/library-store";
 import { usePlayerStore } from "@/store/player-store";
 import { useUIStore, toast } from "@/store/ui-store";
+import { isAndroidNativeApp } from "@/lib/android-bridge";
 import {
   canDownloadOffline,
   exportTrackAudioFile,
@@ -241,7 +242,10 @@ function ExportAudioItem({ track, artistName }: { track: Track; artistName: stri
     setExporting(true);
     try {
       await exportTrackAudioFile(track, artistName);
-      toast.success("Exported audio file", `${track.title} saved to Downloads.`);
+      toast.success(
+        isAndroidNativeApp() ? "Download started" : "Exported audio file",
+        isAndroidNativeApp() ? track.title : `${track.title} saved to Downloads.`,
+      );
     } catch (error) {
       toast.error(
         "Export failed",

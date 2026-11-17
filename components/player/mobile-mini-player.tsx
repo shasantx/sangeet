@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Heart, Pause, Play, SkipForward } from "lucide-react";
 import { getArtist, getTrack } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
@@ -28,7 +27,6 @@ function MiniPlayerProgress() {
 }
 
 export function MobileMiniPlayer() {
-  const router = useRouter();
   const currentTrackId = usePlayerStore((state) => state.currentTrackId);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const togglePlay = usePlayerStore((state) => state.togglePlay);
@@ -43,6 +41,7 @@ export function MobileMiniPlayer() {
   const [dragX, setDragX] = useState(0);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const swipedRef = useRef(false);
+  const swipeClickRef = useRef(false);
   const resetTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -65,6 +64,7 @@ export function MobileMiniPlayer() {
     }
     resetTimerRef.current = window.setTimeout(() => {
       swipedRef.current = false;
+      swipeClickRef.current = false;
       resetTimerRef.current = null;
     }, 160);
   };
@@ -79,6 +79,7 @@ export function MobileMiniPlayer() {
     }
     touchStartRef.current = { x: touch.clientX, y: touch.clientY };
     swipedRef.current = false;
+    swipeClickRef.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLElement>) => {
@@ -107,19 +108,13 @@ export function MobileMiniPlayer() {
       if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
         swipedRef.current = true;
       }
-      if (dy < -42 && Math.abs(dy) > Math.abs(dx) * 1.2) {
-        swipedRef.current = true;
-        setDragX(0);
-        touchStartRef.current = null;
-        scheduleSwipeReset();
-        router.push("/now-playing");
-        return;
-      }
       if (dx < -54 && Math.abs(dx) > Math.abs(dy)) {
         swipedRef.current = true;
+        swipeClickRef.current = true;
         next();
       } else if (dx > 54 && Math.abs(dx) > Math.abs(dy)) {
         swipedRef.current = true;
+        swipeClickRef.current = true;
         previous();
       }
     }
@@ -156,12 +151,13 @@ export function MobileMiniPlayer() {
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchCancel}
       onClickCapture={(e) => {
-        if (swipedRef.current) {
+        if (swipeClickRef.current) {
           e.preventDefault();
           e.stopPropagation();
+          swipeClickRef.current = false;
         }
       }}
-      className="mobile-mini-player pointer-events-auto fixed inset-x-3 z-[41] touch-none select-none overflow-hidden rounded-xl border border-border bg-elevated md:hidden"
+      className="mobile-mini-player pointer-events-auto fixed inset-x-3 z-[41] touch-pan-y select-none overflow-hidden rounded-xl border border-border bg-elevated md:hidden"
       style={{
         bottom: "calc(74px + env(safe-area-inset-bottom))",
         transform: `translate3d(${dragX}px, 0, 0)`,

@@ -1,4 +1,12 @@
-import { androidFetchYouTubeAudio, isAndroidNativeApp } from "./android-bridge";
+import {
+  androidDownloadAudioFile,
+  androidExportOfflineAudio,
+  androidFetchYouTubeAudio,
+  androidHasOfflineAudio,
+  androidRemoveOfflineAudio,
+  androidStoreOfflineAudio,
+  isAndroidNativeApp,
+} from "./android-bridge";
 import type { Track } from "./types";
 
 export const OFFLINE_AUDIO_CACHE = "sangeet-offline-audio-v1";
@@ -14,7 +22,7 @@ interface OfflineTrackRecord {
   sizeBytes: number;
   savedAt: number;
   mimeType: string;
-  blob: Blob;
+  blob?: Blob;
 }
 
 const downloadedIds = new Set<string>();
@@ -161,10 +169,14 @@ export function getCachedOfflineAudioUrl(trackId: string): string | null {
 export async function isOfflineAvailable(track: Track | string): Promise<boolean> {
   const id = typeof track === "string" ? track : track.id;
   if (downloadedIds.has(id)) return true;
+  if (isAndroidNativeApp() && androidHasOfflineAudio(id)) {
+    downloadedIds.add(id);
+    return true;
+  }
   if (typeof indexedDB === "undefined") return false;
   try {
     const record = await getRecord(id);
-    if (record?.blob) {
+    if (record?.blob || (record?.track && isAndroidNativeApp() && androidHasOfflineAudio(id))) {
       downloadedIds.add(id);
       return true;
     }
@@ -188,6 +200,17 @@ export async function getOfflineAudioUrl(trackId: string): Promise<string | null
     return getOrCacheBlobUrl(trackId, record.blob);
   } catch {
     return null;
+  }
+}
+
+export async function ensureAndroidOfflineAudio(trackId: string): Promise<boolean> {
+  if (!isAndroidNativeApp()) return false;
+  if (androidHasOfflineAudio(trackId)) return true;
+  try {
+    const record = await getRecord(trackId);
+    return record?.blob ? androidStoreOfflineAudio(trackId, record.blob) : false;
+  } catch {
+    return false;
   }
 }
 
@@ -223,7 +246,7 @@ async function fetchAudioBlob(
     if (blob.size === 0) {
       throw new Error("Downloaded audio file was empty.");
     }
-    onProgress?.(100);
+    onProgress?.(90);
     return { blob, mimeType: blob.type || mimeType };
   }
 
@@ -239,7 +262,7 @@ async function fetchAudioBlob(
       receivedBytes += value.byteLength;
       if (totalBytes > 0 && Number.isFinite(totalBytes)) {
         const pct = Math.min(99, Math.max(1, Math.round((receivedBytes / totalBytes) * 100)));
-        onProgress?.(pct);
+        onProgress?.(Math.min(90, Math.round(pct * 0.9)));
       }
     }
   }
@@ -251,7 +274,7 @@ async function fetchAudioBlob(
   if (blob.size === 0) {
     throw new Error("Downloaded audio file was empty.");
   }
-  onProgress?.(100);
+  onProgress?.(90);
   return { blob, mimeType };
 }
 
@@ -295,7 +318,9 @@ async function fetchTrackAudioResilient(
   if (youtubeId) {
     if (isAndroidNativeApp()) {
       try {
-        const nativeRes = await androidFetchYouTubeAudio(youtubeId, onProgress);
+        const nativeRes = await androidFetchYouTubeAudio(youtubeId, (percent) => {
+          onProgress?.(Math.min(90, Math.round(percent * 0.9)));
+        });
         return bytesToAudioBlob(nativeRes.bytes, nativeRes.mimeType);
       } catch (error) {
         nativeError = error;
@@ -305,7 +330,7 @@ async function fetchTrackAudioResilient(
         onProgress?.(15);
         const desktopRes = await window.sangeetDesktop.fetchYouTubeAudio(youtubeId);
         if (desktopRes?.ok && desktopRes.bytes && desktopRes.bytes.byteLength > 0) {
-          onProgress?.(100);
+          onProgress?.(90);
           return bytesToAudioBlob(desktopRes.bytes, desktopRes.mimeType);
         }
         nativeError = new Error(desktopRes?.error || "Desktop audio download failed.");
@@ -358,6 +383,14 @@ export async function saveTrackOffline(
     throw new Error("Downloaded audio file was empty.");
   }
 
+  let storedNatively = false;
+  if (isAndroidNativeApp()) {
+    onProgress?.(92);
+    storedNatively = await androidStoreOfflineAudio(track.id, blob, (percent) => {
+      onProgress?.(92 + Math.round(percent * 0.07));
+    });
+  }
+
   const record: OfflineTrackRecord = {
     id: track.id,
     track: { ...track },
@@ -365,10 +398,18 @@ export async function saveTrackOffline(
     sizeBytes: blob.size,
     savedAt: Date.now(),
     mimeType,
-    blob,
+    // Android's native file becomes the source of truth when it is available,
+    // avoiding a second full copy in WebView IndexedDB.
+    ...(!storedNatively ? { blob } : {}),
   };
 
-  await putRecord(record);
+  try {
+    await putRecord(record);
+  } catch (error) {
+    if (storedNatively) androidRemoveOfflineAudio(track.id);
+    throw error;
+  }
+  onProgress?.(100);
 
   const previousUrl = offlineUrlCache.get(track.id);
   if (previousUrl) {
@@ -380,12 +421,13 @@ export async function saveTrackOffline(
     offlineUrlCache.delete(track.id);
   }
   downloadedIds.add(track.id);
-  getOrCacheBlobUrl(track.id, blob);
+  if (!storedNatively) getOrCacheBlobUrl(track.id, blob);
   notifyOfflineChanges();
 }
 
 export async function removeOfflineTrack(trackOrId: Track | string): Promise<void> {
   const id = typeof trackOrId === "string" ? trackOrId : trackOrId.id;
+  androidRemoveOfflineAudio(id);
   downloadedIds.delete(id);
 
   const cachedUrl = offlineUrlCache.get(id);
@@ -420,12 +462,15 @@ export async function listOfflineTracks(): Promise<
     });
 
     registryHydrated = true;
-    const valid = records.filter((item) => Boolean(item?.id && item?.track && item?.blob));
+    const valid = records.filter((item) => Boolean(
+      item?.id && item?.track &&
+      (item.blob || (isAndroidNativeApp() && androidHasOfflineAudio(item.id))),
+    ));
     valid.sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0));
 
     for (const item of valid) {
       downloadedIds.add(item.id);
-      getOrCacheBlobUrl(item.id, item.blob);
+      if (item.blob) getOrCacheBlobUrl(item.id, item.blob);
     }
 
     return valid.map((item) => ({
@@ -474,22 +519,30 @@ export async function exportTrackAudioFile(track: Track, artistName: string): Pr
       .slice(0, 120) || "sangeet-track";
 
   if (isAndroidNativeApp()) {
-    const serverDownloadUrl = resolveAndroidServerExportUrl(track, safeBase);
-    if (!serverDownloadUrl) {
-      throw new Error("Direct file export is unavailable for this local track on Android.");
-    }
-    const urlExtMatch = serverDownloadUrl
+    const urlExtMatch = track.audioUrl
       .split("?")[0]
       .match(/\.(mp3|m4a|webm|ogg|opus|wav|flac|aac)$/i);
     const fallbackExt = urlExtMatch?.[1]?.toLowerCase() || (resolveYouTubeVideoId(track) ? "m4a" : "mp3");
-    const anchor = document.createElement("a");
-    anchor.href = serverDownloadUrl;
-    anchor.download = `${safeBase}.${fallbackExt}`;
-    anchor.rel = "noopener";
-    anchor.style.display = "none";
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
+    const filename = `${safeBase}.${fallbackExt}`;
+    if (androidExportOfflineAudio(track.id, filename)) return;
+    if (
+      await ensureAndroidOfflineAudio(track.id) &&
+      androidExportOfflineAudio(track.id, filename)
+    ) return;
+
+    const serverDownloadUrl = resolveAndroidServerExportUrl(track, safeBase);
+    const sourceUrl = serverDownloadUrl ?? track.audioUrl;
+    if (!sourceUrl) throw new Error("This audio file cannot be exported on Android.");
+    const mimeType = fallbackExt === "mp3" ? "audio/mpeg"
+      : fallbackExt === "m4a" || fallbackExt === "aac" ? "audio/mp4"
+      : fallbackExt === "ogg" || fallbackExt === "opus" ? "audio/ogg"
+      : fallbackExt === "webm" ? "audio/webm"
+      : fallbackExt === "flac" ? "audio/flac"
+      : fallbackExt === "wav" ? "audio/wav"
+      : "application/octet-stream";
+    if (!androidDownloadAudioFile(sourceUrl, filename, mimeType)) {
+      throw new Error("Android could not start this audio download.");
+    }
     return;
   }
 

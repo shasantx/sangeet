@@ -7,6 +7,7 @@ import { getAudioElement } from "@/lib/audio-engine";
 import { getArtist, getTrack, tracks } from "@/lib/catalog";
 import {
   androidPause,
+  androidPlayOfflineAudio,
   androidPlayAudioUrl,
   androidPlayYouTube,
   androidResume,
@@ -20,6 +21,7 @@ import {
   canDownloadOffline,
   getCachedOfflineAudioUrl,
   getOfflineAudioUrl,
+  ensureAndroidOfflineAudio,
   hasOfflineTrackSync,
   isNativeOfflineSupported,
   isOfflineRegistryHydrated,
@@ -238,10 +240,31 @@ export const usePlayerStore = create<PlayerState>()(
           error: null,
         });
 
-        const beginPlayback = (offlineUrl: string | null) => {
+        const beginPlayback = (offlineUrl: string | null, tryAndroidOffline = true) => {
           if (get().currentTrackId !== trackId) return;
           const state = get();
           const audio = getAudioElement();
+
+          if (shouldPlay && isAndroidNativeApp() && !state.videoMode) {
+            const artistName = getArtist(track.artistId)?.name ?? "Sangeet";
+            if (androidPlayOfflineAudio(trackId, track.title, artistName, track.artwork)) {
+              audio?.pause();
+              stopYouTube();
+              return;
+            }
+            if (offlineUrl && tryAndroidOffline) {
+              void ensureAndroidOfflineAudio(trackId).then((stored) => {
+                if (get().currentTrackId !== trackId) return;
+                if (stored && androidPlayOfflineAudio(trackId, track.title, artistName, track.artwork)) {
+                  audio?.pause();
+                  stopYouTube();
+                  return;
+                }
+                beginPlayback(offlineUrl, false);
+              });
+              return;
+            }
+          }
 
           if (offlineUrl && audio) {
             try {

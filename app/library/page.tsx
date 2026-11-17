@@ -37,6 +37,7 @@ import { cn, formatDuration, formatTotalDuration, pluralize } from "@/lib/utils"
 import { useLibraryStore } from "@/store/library-store";
 import { usePlayerStore } from "@/store/player-store";
 import { toast, useUIStore } from "@/store/ui-store";
+import { isAndroidNativeApp } from "@/lib/android-bridge";
 import { AlbumCard } from "@/components/music/album-card";
 import { ArtistCard } from "@/components/music/artist-card";
 import { Artwork } from "@/components/music/artwork";
@@ -294,7 +295,10 @@ function LibraryContent() {
   const handleExportOffline = useCallback(async (entry: OfflineEntry) => {
     try {
       await exportTrackAudioFile(entry.track, entry.artistName);
-      toast.success("Exported audio file", `${entry.track.title} saved to Downloads.`);
+      toast.success(
+        isAndroidNativeApp() ? "Download started" : "Exported audio file",
+        isAndroidNativeApp() ? entry.track.title : `${entry.track.title} saved to Downloads.`,
+      );
     } catch (error) {
       toast.error(
         "Export failed",

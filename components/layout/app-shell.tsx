@@ -86,55 +86,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const activeTabIndex = MOBILE_TABS.findIndex((tab) => tab.match(pathname));
   const swipeRef = useRef<{ startX: number; startY: number; locked: boolean } | null>(null);
-  const scrollTouchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const scrollDraggedRef = useRef(false);
-  const lastDragEndedAtRef = useRef(0);
-  const dragResetTimerRef = useRef<number | null>(null);
+  const lastTabSwipeRef = useRef<{ at: number; x: number; y: number } | null>(null);
   const [swipeHint, setSwipeHint] = useState<SwipeHintState>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
     swipeRef.current = null;
-    scrollTouchStartRef.current = null;
     setSwipeHint(null);
   }, [pathname]);
 
-  useEffect(() => {
-    return () => {
-      if (dragResetTimerRef.current !== null) {
-        window.clearTimeout(dragResetTimerRef.current);
-        dragResetTimerRef.current = null;
-      }
-    };
-  }, []);
-
-  const scheduleDragReset = () => {
-    lastDragEndedAtRef.current = Date.now();
-    if (dragResetTimerRef.current !== null) {
-      window.clearTimeout(dragResetTimerRef.current);
-    }
-    dragResetTimerRef.current = window.setTimeout(() => {
-      scrollDraggedRef.current = false;
-      dragResetTimerRef.current = null;
-    }, 160);
-  };
-
   const handleTouchStart = (e: React.TouchEvent<HTMLElement>) => {
     if (e.touches.length !== 1) {
-      scrollTouchStartRef.current = null;
       swipeRef.current = null;
       return;
     }
 
     const touch = e.touches[0];
     if (!touch) return;
-
-    if (dragResetTimerRef.current !== null) {
-      window.clearTimeout(dragResetTimerRef.current);
-      dragResetTimerRef.current = null;
-    }
-    scrollTouchStartRef.current = { x: touch.clientX, y: touch.clientY };
-    scrollDraggedRef.current = false;
 
     if (activeTabIndex === -1 || typeof window === "undefined" || window.innerWidth >= 768) {
       swipeRef.current = null;
@@ -160,15 +128,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
     const touch = e.touches[0];
     if (!touch) return;
-
-    const scrollStart = scrollTouchStartRef.current;
-    if (scrollStart && !scrollDraggedRef.current) {
-      const scrollDx = touch.clientX - scrollStart.x;
-      const scrollDy = touch.clientY - scrollStart.y;
-      if (Math.abs(scrollDx) > 10 || Math.abs(scrollDy) > 10) {
-        scrollDraggedRef.current = true;
-      }
-    }
 
     const swipe = swipeRef.current;
     if (!swipe || activeTabIndex === -1) return;
@@ -208,18 +167,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const handleTouchEnd = (e: React.TouchEvent<HTMLElement>) => {
     const endTouch = e.changedTouches[0];
-    if (scrollTouchStartRef.current && endTouch && !scrollDraggedRef.current) {
-      const endDx = endTouch.clientX - scrollTouchStartRef.current.x;
-      const endDy = endTouch.clientY - scrollTouchStartRef.current.y;
-      if (Math.abs(endDx) > 10 || Math.abs(endDy) > 10) {
-        scrollDraggedRef.current = true;
-      }
-    }
-    scrollTouchStartRef.current = null;
-    if (scrollDraggedRef.current) {
-      scheduleDragReset();
-    }
-
     const swipe = swipeRef.current;
     swipeRef.current = null;
     setSwipeHint(null);
@@ -232,24 +179,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (Math.abs(dx) > 64 && Math.abs(dx) > Math.abs(dy) * 1.6) {
       const nextIndex = dx < 0 ? activeTabIndex + 1 : activeTabIndex - 1;
       if (nextIndex >= 0 && nextIndex < MOBILE_TABS.length) {
+        lastTabSwipeRef.current = { at: Date.now(), x: endTouch.clientX, y: endTouch.clientY };
         router.push(MOBILE_TABS[nextIndex].href);
       }
     }
   };
 
   const handleTouchCancel = () => {
-    scrollTouchStartRef.current = null;
-    if (scrollDraggedRef.current) {
-      scheduleDragReset();
-    }
     swipeRef.current = null;
     setSwipeHint(null);
   };
 
   const handleClickCapture = (e: React.MouseEvent<HTMLElement>) => {
-    if (scrollDraggedRef.current || Date.now() - lastDragEndedAtRef.current < 160) {
+    // Suppress only the synthetic click that follows a horizontal tab swipe.
+    // A vertical scroll must not make the next tap feel unresponsive.
+    const swipe = lastTabSwipeRef.current;
+    if (
+      swipe &&
+      Date.now() - swipe.at < 120 &&
+      Math.abs(e.clientX - swipe.x) < 32 &&
+      Math.abs(e.clientY - swipe.y) < 32
+    ) {
       e.preventDefault();
       e.stopPropagation();
+      lastTabSwipeRef.current = null;
     }
   };
 
