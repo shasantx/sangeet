@@ -482,6 +482,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     return addAndroidEventListener((type, payload) => {
       const state = usePlayerStore.getState();
       if (type === "time" && payload) {
+        if (state.isLoading) return;
         const [posStr, durStr] = payload.split(":");
         const currentTime = Number(posStr);
         const duration = Number(durStr);
@@ -495,7 +496,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         if (payload === "playing") {
           state.syncFromAudio({ isPlaying: true, isLoading: false, error: null });
         } else if (payload === "paused") {
-          state.syncFromAudio({ isPlaying: false, isLoading: false });
+          // Android reports the outgoing player's pause while the next track
+          // is already buffering. Keep the active track's play state stable.
+          if (!state.isLoading) {
+            state.syncFromAudio({ isPlaying: false, isLoading: false });
+          }
         } else if (payload === "buffering") {
           state.syncFromAudio({ isLoading: true });
         } else if (payload === "ended") {
