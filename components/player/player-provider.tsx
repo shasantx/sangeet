@@ -487,7 +487,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     return addAndroidEventListener((type, payload) => {
       const state = usePlayerStore.getState();
       if (type === "time" && payload) {
-        if (state.isLoading) return;
         const [posStr, durStr] = payload.split(":");
         const currentTime = Number(posStr);
         const duration = Number(durStr);
