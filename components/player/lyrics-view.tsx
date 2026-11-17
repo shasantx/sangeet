@@ -155,7 +155,7 @@ export function LyricsView({ trackTitle, artistName, videoId, duration }: Lyrics
       {data.hasTimestamps && data.syncedLines.length > 0 ? (
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto pr-2 space-y-3.5 scroll-smooth"
+          className="flex-1 overflow-y-auto pr-2 space-y-3.5"
         >
           {data.syncedLines.map((line, idx) => {
             const isActive = idx === activeIndex;
@@ -165,12 +165,12 @@ export function LyricsView({ trackTitle, artistName, videoId, duration }: Lyrics
                 key={`${line.timeMs}-${idx}`}
                 ref={isActive ? activeLineRef : null}
                 onClick={() => seek(line.timeSec)}
-                className={`cursor-pointer transition-all duration-200 select-none ${
+                className={`cursor-pointer text-base sm:text-lg transition-colors duration-200 select-none ${
                   isActive
-                    ? "text-xl sm:text-2xl font-bold text-primary"
+                    ? "font-bold text-primary"
                     : isPast
-                    ? "text-sm sm:text-base font-normal text-foreground/75 hover:text-foreground"
-                    : "text-sm sm:text-base font-normal text-muted-foreground/70 hover:text-muted-foreground"
+                    ? "font-normal text-foreground/75 hover:text-foreground"
+                    : "font-normal text-muted-foreground/70 hover:text-muted-foreground"
                 }`}
               >
                 {line.text}

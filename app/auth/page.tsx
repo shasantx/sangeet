@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertCircle,
   ArrowLeft,
-  ArrowRight,
   AudioLines,
   CheckCircle2,
   Download,
@@ -16,7 +15,6 @@ import {
   Laptop,
   Lock,
   Mail,
-  ShieldCheck,
   Smartphone,
   User,
 } from "lucide-react";
@@ -353,7 +351,6 @@ function AuthForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -420,54 +417,38 @@ function AuthForm() {
   const errorMessage = useMemo(() => {
     if (googleState !== "error") return null;
     if (reason === "not_configured") {
-      return "Google OAuth credentials are being configured. You can log in directly with your email below.";
+      return "Google sign-in is unavailable. Use email and password instead.";
     }
     if (reason === "access_denied" || reason === "cancelled") {
-      return "Google sign-in was cancelled. You can log in with email below.";
+      return "Google sign-in was cancelled.";
     }
     if (reason === "suspended") {
       return "This account has been suspended by an administrator.";
     }
-    return "Could not connect to Google sign-in. You can log in with email below.";
+    return "Could not connect to Google. Try again or use email and password.";
   }, [googleState, reason]);
 
   const passwordStrength = useMemo(() => getPasswordStrength(password), [password]);
 
   return (
-    <div className="flex w-full min-w-0 flex-col justify-center px-4 py-6 sm:px-10 sm:py-11 md:w-1/2 lg:px-12">
-      {/* Mobile Top Bar */}
-      <div className="flex min-w-0 items-center justify-between gap-3 pb-5 md:hidden">
-        <Link
-          href={returnTo === "/auth" ? "/" : returnTo}
-          className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full border border-border bg-elevated/80 px-4 text-xs font-medium text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-xl transition hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4 shrink-0" /> Back
-        </Link>
-        <div className="flex shrink-0 items-center gap-2">
-          <SangeetMark size={26} />
-          <span className="font-display text-sm font-bold text-foreground">Sangeet</span>
-        </div>
-      </div>
-
-      {/* Brand Header (Desktop) */}
-      <div className="hidden items-center gap-2.5 md:flex">
+    <div className="w-full min-w-0">
+      <Link href="/" className="mb-7 inline-flex min-h-11 items-center gap-2.5 text-sm font-semibold text-foreground">
         <SangeetMark size={30} />
-        <span className="font-display text-lg font-bold tracking-tight text-foreground">Sangeet</span>
-      </div>
-
-      <div className="mt-3 min-w-0 md:mt-6">
-        <h1 className="font-display text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-          {mode === "signup" ? "Create your account" : "Login to your account"}
+        <span>Sangeet</span>
+      </Link>
+      <div className="min-w-0">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          {mode === "signup" ? "Create account" : "Welcome back"}
         </h1>
         <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground sm:text-sm">
           {mode === "signup"
             ? "Sign up to unlock ad-free streaming, personalized mixes, and synced lyrics."
-            : "Welcome back! Enter your details to start listening."}
+            : "Sign in to your account."}
         </p>
       </div>
 
       {/* Liquid Glass Segmented Switcher */}
-      <div className="mt-6 grid min-w-0 grid-cols-2 gap-1 rounded-2xl border border-border bg-elevated/65 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+      <div className="mt-5 grid min-w-0 grid-cols-2 gap-1 rounded-xl border border-border bg-elevated p-1">
         <button
           type="button"
           onClick={() => setMode("signin")}
@@ -497,10 +478,7 @@ function AuthForm() {
         <div className="mt-4 flex min-w-0 items-start gap-2.5 rounded-2xl border border-primary/30 bg-primary/10 p-3.5 text-xs text-foreground backdrop-blur-md">
           <Headphones className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-foreground">Login required to play songs</p>
-            <p className="mt-0.5 text-muted-foreground">
-              Sign in with Google or your email to stream 100M+ ad-free tracks with live synced lyrics.
-            </p>
+            <p className="font-semibold text-foreground">Sign in to continue listening.</p>
           </div>
         </div>
       )}
@@ -513,7 +491,7 @@ function AuthForm() {
       )}
 
       {/* Email / Password Form */}
-      <form onSubmit={handleFormLogin} className="mt-5 min-w-0 space-y-4">
+      <form onSubmit={handleFormLogin} className="mt-4 min-w-0 space-y-4">
         {mode === "signup" && (
           <div>
             <label className="block text-xs font-semibold text-foreground/85" htmlFor="auth-name">
@@ -611,20 +589,6 @@ function AuthForm() {
           )}
         </div>
 
-        {/* Remember Login */}
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs">
-          <label className="flex min-h-[44px] cursor-pointer select-none items-center gap-2.5 text-muted-foreground hover:text-foreground">
-            <input
-              type="checkbox"
-              checked={remember}
-              onChange={(e) => setRemember(e.target.checked)}
-              className="h-4 w-4 shrink-0 rounded border-border bg-elevated text-primary accent-primary focus:ring-0 focus:ring-offset-0"
-            />
-            <span>Remember login</span>
-          </label>
-          <span className="text-xs text-muted-foreground/80">Instant session setup</span>
-        </div>
-
         {/* Primary Submit Button */}
         <button
           type="submit"
@@ -634,7 +598,7 @@ function AuthForm() {
           {isSubmitting
             ? "Signing in..."
             : mode === "signup"
-              ? "Create Account & Start Listening"
+              ? "Create account"
               : "Sign In"}
         </button>
       </form>
@@ -657,28 +621,13 @@ function AuthForm() {
       </button>
 
       {/* Guest / Platform Footer */}
-      <div className="mt-5 space-y-2 border-t border-border pt-4 text-center">
-        {!isAdminReturn && (
-          <Link
-            href="/home"
-            className="inline-flex min-h-[44px] w-full min-w-0 items-center justify-center gap-1.5 rounded-2xl border border-border bg-elevated/60 px-4 text-center text-xs font-semibold text-foreground/85 transition hover:border-white/25 hover:bg-elevated hover:text-foreground"
-          >
-            <span>Continue listening as guest</span>
-            <ArrowRight className="h-3.5 w-3.5 shrink-0 text-primary" />
-          </Link>
-        )}
-        <p className="flex items-center justify-center gap-1.5 pt-1 text-[11px] leading-snug text-muted-foreground">
-          <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-primary" />
-          <span>Stream anywhere across Web, Windows, and Android.</span>
-        </p>
-      </div>
     </div>
   );
 }
 
 export default function AuthPage() {
   return (
-    <main className="relative flex min-h-dvh w-full max-w-full min-w-0 select-none items-center justify-center overflow-x-clip bg-background p-0 text-foreground sm:p-6 lg:p-10">
+    <main className="relative flex min-h-dvh w-full max-w-full min-w-0 items-start justify-center bg-background px-4 py-6 text-foreground sm:items-center sm:p-8">
       {/* Layered Studio Ambient Glows */}
       <div
         aria-hidden="true"
@@ -686,20 +635,10 @@ export default function AuthPage() {
       />
 
       {/* Main Liquid Glass Split Card */}
-      <div className="relative flex min-h-dvh w-full min-w-0 max-w-5xl overflow-hidden rounded-none border-0 border-border bg-card/90 backdrop-blur-2xl shadow-[0_32px_90px_rgba(0,0,0,0.75)] sm:min-h-[670px] sm:rounded-[32px] sm:border">
-        {/* Top Specular Rim Highlight */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"
-        />
-
-        {/* Left Side: Interactive Liquid Glass Showcase */}
-        <LiquidShowcasePanel />
-
-        {/* Right Side: Auth Form */}
+      <div className="my-auto w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-card sm:p-8">
         <Suspense
           fallback={
-            <div className="flex w-full flex-col justify-center p-8 text-center text-sm text-muted-foreground md:w-1/2">
+            <div className="flex w-full flex-col justify-center py-12 text-center text-sm text-muted-foreground">
               Loading sign in...
             </div>
           }

@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.DownloadManager;
 import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -51,13 +52,18 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.MessageDigest;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public final class MainActivity extends AppCompatActivity {
@@ -73,7 +79,14 @@ public final class MainActivity extends AppCompatActivity {
             .callTimeout(60, TimeUnit.SECONDS)
             .followRedirects(true)
             .build();
+    // Stream downloads can legitimately take longer than a fixed call timeout
+    // on mobile data. Keep a bounded idle read timeout, but no total transfer cap.
+    private static final OkHttpClient OFFLINE_DOWNLOAD_CLIENT = HTTP_CLIENT.newBuilder()
+            .readTimeout(60, TimeUnit.SECONDS)
+            .callTimeout(0, TimeUnit.SECONDS)
+            .build();
     private final ExecutorService bridgeExecutor = Executors.newFixedThreadPool(2);
+    private final ConcurrentHashMap<String, FileOutputStream> offlineAudioWriters = new ConcurrentHashMap<>();
     private WebView webView;
     private ValueCallback<Uri[]> fileUploadCallback;
     private ActivityResultLauncher<Intent> filePickerLauncher;
@@ -485,6 +498,261 @@ public final class MainActivity extends AppCompatActivity {
         }
 
         @JavascriptInterface
+        public boolean downloadAudioFile(String url, String filename, String mimeType) {
+            if (url == null || url.trim().isEmpty()) return false;
+            String safeName = filename == null ? "sangeet-track.mp3" : filename.trim()
+                    .replaceAll("[\\\\/:*?\"<>|]+", "_")
+                    .replaceAll("[\\r\\n\\t]", " ");
+            if (safeName.isEmpty() || safeName.equals(".") || safeName.equals("..")) {
+                safeName = "sangeet-track.mp3";
+            }
+            Uri source = Uri.parse(url.trim());
+            String scheme = source.getScheme() == null ? "" : source.getScheme().toLowerCase(Locale.ROOT);
+            String type = mimeType == null || mimeType.trim().isEmpty() ? "audio/mpeg" : mimeType.trim();
+
+            if ("http".equals(scheme) || "https".equals(scheme)) {
+                final String downloadName = safeName;
+                try {
+                    DownloadManager.Request request = new DownloadManager.Request(source);
+                    request.setMimeType(type);
+                    request.setTitle(downloadName);
+                    request.setDescription("Downloading with Sangeet");
+                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Sangeet/" + downloadName);
+                    String cookies = CookieManager.getInstance().getCookie(url);
+                    if (cookies != null && !cookies.isEmpty()) request.addRequestHeader("Cookie", cookies);
+                    DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                    if (manager == null) return false;
+                    manager.enqueue(request);
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this,
+                            "Downloading " + downloadName, Toast.LENGTH_SHORT).show());
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+
+            if (!"content".equals(scheme) || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false;
+            String sourceMime = getContentResolver().getType(source);
+            if (sourceMime != null && sourceMime.startsWith("audio/")) type = sourceMime;
+            String extension = extensionForAudioMime(type);
+            if (extension != null && !safeName.toLowerCase(Locale.ROOT).endsWith("." + extension)) {
+                int dot = safeName.lastIndexOf('.');
+                if (dot > 0) safeName = safeName.substring(0, dot);
+                safeName = safeName + "." + extension;
+            }
+            final String outputName = safeName;
+            final String outputMimeType = type;
+            bridgeExecutor.execute(() -> copyContentAudioToDownloads(source, outputName, outputMimeType));
+            return true;
+        }
+
+        private String extensionForAudioMime(String mimeType) {
+            String lower = mimeType == null ? "" : mimeType.toLowerCase(Locale.ROOT);
+            if (lower.contains("mpeg")) return "mp3";
+            if (lower.contains("mp4") || lower.contains("aac")) return "m4a";
+            if (lower.contains("flac")) return "flac";
+            if (lower.contains("webm")) return "webm";
+            if (lower.contains("opus")) return "opus";
+            if (lower.contains("ogg")) return "ogg";
+            if (lower.contains("wav")) return "wav";
+            return null;
+        }
+
+        private void copyContentAudioToDownloads(Uri source, String filename, String mimeType) {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Downloads.DISPLAY_NAME, filename);
+            values.put(MediaStore.Downloads.MIME_TYPE, mimeType);
+            values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Sangeet");
+            values.put(MediaStore.Downloads.IS_PENDING, 1);
+            Uri destination = null;
+            try {
+                destination = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                if (destination == null) throw new IllegalStateException("Could not create download file.");
+                try (InputStream input = getContentResolver().openInputStream(source);
+                     OutputStream output = getContentResolver().openOutputStream(destination)) {
+                    if (input == null || output == null) throw new IllegalStateException("Could not open audio file.");
+                    byte[] buffer = new byte[64 * 1024];
+                    int count;
+                    while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+                    output.flush();
+                }
+                ContentValues ready = new ContentValues();
+                ready.put(MediaStore.Downloads.IS_PENDING, 0);
+                getContentResolver().update(destination, ready, null, null);
+                runOnUiThread(() -> Toast.makeText(MainActivity.this,
+                        "Saved " + filename + " to Downloads/Sangeet", Toast.LENGTH_SHORT).show());
+            } catch (Exception e) {
+                if (destination != null) {
+                    try { getContentResolver().delete(destination, null, null); } catch (Exception ignored) {}
+                }
+                runOnUiThread(() -> Toast.makeText(MainActivity.this,
+                        "Could not save this audio file.", Toast.LENGTH_LONG).show());
+            }
+        }
+
+        @JavascriptInterface
+        public boolean beginOfflineAudioWrite(String trackId, String extension) {
+            try {
+                String key = offlineAudioKey(trackId);
+                File directory = new File(getFilesDir(), "offline-audio");
+                if (!directory.exists() && !directory.mkdirs()) return false;
+                abortOfflineAudioWrite(trackId);
+                File temporary = new File(directory, key + ".part");
+                offlineAudioWriters.put(key, new FileOutputStream(temporary, false));
+                String safeExtension = extension != null && extension.matches("[a-zA-Z0-9]{2,5}")
+                        ? extension.toLowerCase(Locale.ROOT) : "m4a";
+                getSharedPreferences("offline-audio", MODE_PRIVATE)
+                        .edit().putString("ext_" + key, safeExtension).apply();
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public boolean writeOfflineAudioChunk(String trackId, String base64) {
+            if (base64 == null || base64.isEmpty()) return false;
+            try {
+                FileOutputStream output = offlineAudioWriters.get(offlineAudioKey(trackId));
+                if (output == null) return false;
+                output.write(Base64.decode(base64, Base64.DEFAULT));
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public boolean finishOfflineAudioWrite(String trackId) {
+            String key;
+            try {
+                key = offlineAudioKey(trackId);
+                FileOutputStream output = offlineAudioWriters.remove(key);
+                if (output == null) return false;
+                output.flush();
+                output.getFD().sync();
+                output.close();
+                File directory = new File(getFilesDir(), "offline-audio");
+                File temporary = new File(directory, key + ".part");
+                String extension = getSharedPreferences("offline-audio", MODE_PRIVATE)
+                        .getString("ext_" + key, "m4a");
+                File destination = new File(directory, key + "." + extension);
+                if (destination.exists() && !destination.delete()) return false;
+                return temporary.length() > 0 && temporary.renameTo(destination);
+            } catch (Exception e) {
+                abortOfflineAudioWrite(trackId);
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public void abortOfflineAudioWrite(String trackId) {
+            try {
+                String key = offlineAudioKey(trackId);
+                FileOutputStream output = offlineAudioWriters.remove(key);
+                if (output != null) output.close();
+                File temporary = new File(new File(getFilesDir(), "offline-audio"), key + ".part");
+                if (temporary.exists()) temporary.delete();
+            } catch (Exception ignored) {
+            }
+        }
+
+        @JavascriptInterface
+        public boolean playOfflineAudio(String trackId, String title, String artist, String artworkUrl) {
+            try {
+                String key = offlineAudioKey(trackId);
+                String extension = getSharedPreferences("offline-audio", MODE_PRIVATE)
+                        .getString("ext_" + key, "m4a");
+                File audio = new File(new File(getFilesDir(), "offline-audio"), key + "." + extension);
+                if (!audio.isFile() || audio.length() == 0) return false;
+                Intent intent = new Intent(MainActivity.this, SangeetAudioService.class);
+                intent.setAction(SangeetAudioService.ACTION_PLAY_URL);
+                intent.putExtra(SangeetAudioService.EXTRA_URL, Uri.fromFile(audio).toString());
+                intent.putExtra(SangeetAudioService.EXTRA_TITLE, title);
+                intent.putExtra(SangeetAudioService.EXTRA_ARTIST, artist);
+                intent.putExtra(SangeetAudioService.EXTRA_ARTWORK, artworkUrl);
+                sendServiceAction(intent);
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public void removeOfflineAudio(String trackId) {
+            try {
+                String key = offlineAudioKey(trackId);
+                FileOutputStream output = offlineAudioWriters.remove(key);
+                if (output != null) output.close();
+                File directory = new File(getFilesDir(), "offline-audio");
+                File temporary = new File(directory, key + ".part");
+                if (temporary.exists()) temporary.delete();
+                String extension = getSharedPreferences("offline-audio", MODE_PRIVATE)
+                        .getString("ext_" + key, "m4a");
+                File saved = new File(directory, key + "." + extension);
+                if (saved.exists()) saved.delete();
+                getSharedPreferences("offline-audio", MODE_PRIVATE).edit().remove("ext_" + key).apply();
+            } catch (Exception ignored) {
+            }
+        }
+
+        @JavascriptInterface
+        public boolean hasOfflineAudio(String trackId) {
+            try {
+                String key = offlineAudioKey(trackId);
+                String extension = getSharedPreferences("offline-audio", MODE_PRIVATE)
+                        .getString("ext_" + key, "m4a");
+                File audio = new File(new File(getFilesDir(), "offline-audio"), key + "." + extension);
+                return audio.isFile() && audio.length() > 0;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public boolean exportOfflineAudio(String trackId, String filename) {
+            try {
+                String key = offlineAudioKey(trackId);
+                String extension = getSharedPreferences("offline-audio", MODE_PRIVATE)
+                        .getString("ext_" + key, "m4a");
+                File audio = new File(new File(getFilesDir(), "offline-audio"), key + "." + extension);
+                if (!audio.isFile() || audio.length() == 0 || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                    return false;
+                }
+                String safeName = filename == null ? "sangeet-track." + extension : filename.trim()
+                        .replaceAll("[\\\\/:*?\"<>|]+", "_")
+                        .replaceAll("[\\r\\n\\t]", " ");
+                bridgeExecutor.execute(() -> copyContentAudioToDownloads(
+                        Uri.fromFile(audio), safeName, mimeTypeForAudioExtension(extension)));
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        private String mimeTypeForAudioExtension(String extension) {
+            switch (extension.toLowerCase(Locale.ROOT)) {
+                case "mp3": return "audio/mpeg";
+                case "webm": return "audio/webm";
+                case "ogg":
+                case "opus": return "audio/ogg";
+                case "flac": return "audio/flac";
+                case "wav": return "audio/wav";
+                default: return "audio/mp4";
+            }
+        }
+
+        private String offlineAudioKey(String trackId) throws Exception {
+            if (trackId == null || trackId.trim().isEmpty()) throw new IllegalArgumentException("Missing track ID");
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(trackId.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder key = new StringBuilder(digest.length * 2);
+            for (byte value : digest) key.append(String.format(Locale.ROOT, "%02x", value & 0xff));
+            return key.toString();
+        }
+
+        @JavascriptInterface
         public void pause() {
             Intent intent = new Intent(MainActivity.this, SangeetAudioService.class);
             intent.setAction(SangeetAudioService.ACTION_PAUSE);
@@ -622,6 +890,106 @@ public final class MainActivity extends AppCompatActivity {
             }
 
             return results.toString();
+        }
+
+        @JavascriptInterface
+        public void downloadYouTubeAudioToOffline(String requestId, String trackId, String videoId) {
+            final String reqId = requestId != null ? requestId.trim() : "";
+            final String track = trackId != null ? trackId.trim() : "";
+            final String vid = videoId != null ? videoId.trim() : "";
+            if (reqId.isEmpty() || track.isEmpty() || !vid.matches("^[A-Za-z0-9_-]{11}$")) {
+                sendOfflineAudioError(reqId, "Invalid offline audio request.");
+                return;
+            }
+
+            bridgeExecutor.execute(() -> {
+                String lastError = "Could not extract audio stream from YouTube.";
+                try {
+                    List<YouTubeInnerTubeExtractor.StreamResult> candidates =
+                            YouTubeInnerTubeExtractor.extractAll(vid);
+                    for (YouTubeInnerTubeExtractor.StreamResult candidate : candidates) {
+                        if (candidate == null || candidate.url == null || candidate.url.isEmpty()) continue;
+                        String lowerUrl = candidate.url.toLowerCase(Locale.ROOT);
+                        if (lowerUrl.contains(".m3u8") || lowerUrl.contains("hls_playlist")) continue;
+                        try {
+                            sendOfflineAudioProgress(reqId, 1);
+                            long size = downloadAudioCandidateToOffline(track, reqId, candidate.url, candidate.userAgent);
+                            JSONObject payload = new JSONObject();
+                            payload.put("requestId", reqId);
+                            payload.put("sizeBytes", size);
+                            dispatchToWeb("offline_audio_saved", payload.toString());
+                            return;
+                        } catch (Exception candidateError) {
+                            String message = candidateError.getMessage();
+                            if (message != null && !message.isEmpty()) lastError = message;
+                        }
+                    }
+                    sendOfflineAudioError(reqId, lastError);
+                } catch (Exception e) {
+                    String message = e.getMessage();
+                    sendOfflineAudioError(reqId, message != null && !message.isEmpty()
+                            ? message : "Offline download failed on Android.");
+                }
+            });
+        }
+
+        private long downloadAudioCandidateToOffline(String trackId, String requestId, String url, @Nullable String userAgent) throws Exception {
+            Request.Builder request = new Request.Builder().url(url).header("Accept", "*/*");
+            if (userAgent != null && !userAgent.isEmpty()) request.header("User-Agent", userAgent);
+            String key = offlineAudioKey(trackId);
+            File directory = new File(getFilesDir(), "offline-audio");
+            if (!directory.exists() && !directory.mkdirs()) throw new IllegalStateException("Could not create offline music folder.");
+            File temporary = new File(directory, key + ".part");
+            try (Response response = OFFLINE_DOWNLOAD_CLIENT.newCall(request.build()).execute()) {
+                if (!response.isSuccessful()) throw new IllegalStateException("YouTube audio source returned HTTP " + response.code());
+                ResponseBody body = response.body();
+                if (body == null) throw new IllegalStateException("The audio source returned an empty response.");
+                String mime = normalizeAudioMimeType(response.header("Content-Type"), url);
+                if (mime == null) throw new IllegalStateException("The audio source returned an unsupported file.");
+                long expected = body.contentLength();
+                if (expected > MAX_OFFLINE_AUDIO_BYTES) throw new IllegalStateException("Audio file exceeds 40MB offline limit.");
+
+                long received = 0;
+                long lastHeartbeatAt = System.currentTimeMillis();
+                int lastProgress = -1;
+                try (InputStream input = body.byteStream(); FileOutputStream output = new FileOutputStream(temporary, false)) {
+                    byte[] buffer = new byte[64 * 1024];
+                    int count;
+                    while ((count = input.read(buffer)) != -1) {
+                        if (isFinishing() || isDestroyed()) throw new IllegalStateException("Download cancelled.");
+                        received += count;
+                        if (received > MAX_OFFLINE_AUDIO_BYTES) throw new IllegalStateException("Audio file exceeds 40MB offline limit.");
+                        output.write(buffer, 0, count);
+                        long now = System.currentTimeMillis();
+                        if (expected > 0) {
+                            int progress = (int) Math.min(99, Math.max(1, received * 100L / expected));
+                            if (progress >= lastProgress + 5 || progress == 99) {
+                                lastProgress = progress;
+                                sendOfflineAudioProgress(requestId, progress);
+                                lastHeartbeatAt = now;
+                            } else if (now - lastHeartbeatAt >= 5000) {
+                                sendOfflineAudioProgress(requestId, Math.max(1, progress));
+                                lastHeartbeatAt = now;
+                            }
+                        } else if (now - lastHeartbeatAt >= 5000) {
+                            sendOfflineAudioProgress(requestId, 1);
+                            lastHeartbeatAt = now;
+                        }
+                    }
+                    output.flush();
+                    output.getFD().sync();
+                }
+                if (received == 0) throw new IllegalStateException("Downloaded audio file was empty.");
+                String extension = extensionForAudioMime(mime);
+                File destination = new File(directory, key + "." + extension);
+                if (destination.exists() && !destination.delete()) throw new IllegalStateException("Could not replace the saved offline song.");
+                if (!temporary.renameTo(destination)) throw new IllegalStateException("Could not finish saving the offline song.");
+                getSharedPreferences("offline-audio", MODE_PRIVATE).edit().putString("ext_" + key, extension).apply();
+                return received;
+            } catch (Exception e) {
+                if (temporary.exists()) temporary.delete();
+                throw e;
+            }
         }
 
         @JavascriptInterface
@@ -964,6 +1332,15 @@ public final class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         bridgeExecutor.shutdownNow();
+        for (String key : offlineAudioWriters.keySet()) {
+            try {
+                FileOutputStream output = offlineAudioWriters.remove(key);
+                if (output != null) output.close();
+                File temporary = new File(new File(getFilesDir(), "offline-audio"), key + ".part");
+                if (temporary.exists()) temporary.delete();
+            } catch (Exception ignored) {
+            }
+        }
         SangeetAudioService.setEventListener(null);
         if (webView != null) {
             webView.destroy();

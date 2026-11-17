@@ -40,6 +40,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const isLoading = usePlayerStore((state) => state.isLoading);
   const audioRef = useRef<HTMLAudioElement>(null);
   const errorReportedFor = useRef<string | null>(null);
+  const androidIframeFallbackTrack = useRef<string | null>(null);
 
   useEffect(() => {
     const track = currentTrackId ? getTrack(currentTrackId) : undefined;
@@ -76,11 +77,16 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     let lastReportedTime = -1;
 
     const currentIsYouTube = () => {
+      const state = usePlayerStore.getState();
+      const activeTrack = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+      // On Android the native Media3 service owns YouTube playback. The hidden
+      // HTML audio element is stopped during handoff; its pause/time events are
+      // unrelated and must not overwrite native play state or lyric position.
+      if (isAndroidNativeApp() && activeTrack?.youtubeId && !state.videoMode) return true;
       if (audio.src && audio.src !== window.location.href && !audio.error) {
         return false;
       }
-      const id = usePlayerStore.getState().currentTrackId;
-      return Boolean(id && getTrack(id)?.youtubeId);
+      return Boolean(activeTrack?.youtubeId);
     };
 
     const syncAudioElementSettings = () => {
@@ -296,35 +302,45 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const activeYouTube = () => {
-      const id = usePlayerStore.getState().currentTrackId;
-      return Boolean(id && getTrack(id)?.youtubeId);
+    const iframeOwnsPlayback = () => {
+      const state = usePlayerStore.getState();
+      const id = state.currentTrackId;
+      if (!id || !getTrack(id)?.youtubeId) return false;
+      // Android uses Media3 for YouTube audio. The hidden iframe emits stale
+      // pause/play events when it is stopped during native handoff; only listen
+      // to it again when the native extractor explicitly falls back to iframe.
+      if (
+        isAndroidNativeApp() &&
+        !state.videoMode &&
+        androidIframeFallbackTrack.current !== id
+      ) return false;
+      return true;
     };
 
     initYouTubePlayer("aura-youtube-frame", {
       onReady: () => {
-        if (activeYouTube()) {
+        if (iframeOwnsPlayback()) {
           usePlayerStore.getState().syncFromAudio({ isLoading: false });
         }
       },
       onPlay: () => {
-        if (!activeYouTube()) return;
+        if (!iframeOwnsPlayback()) return;
         usePlayerStore.getState().syncFromAudio({ isPlaying: true, isLoading: false, error: null });
       },
       onPause: () => {
-        if (!activeYouTube()) return;
+        if (!iframeOwnsPlayback()) return;
         usePlayerStore.getState().syncFromAudio({ isPlaying: false, isLoading: false });
       },
       onBuffering: () => {
-        if (!activeYouTube()) return;
+        if (!iframeOwnsPlayback()) return;
         usePlayerStore.getState().syncFromAudio({ isLoading: true });
       },
       onEnded: () => {
-        if (!activeYouTube()) return;
+        if (!iframeOwnsPlayback()) return;
         usePlayerStore.getState().handleEnded();
       },
       onError: (message) => {
-        if (!activeYouTube()) return;
+        if (!iframeOwnsPlayback()) return;
         usePlayerStore.getState().syncFromAudio({
           isPlaying: false,
           isLoading: false,
@@ -341,6 +357,25 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       if (!state.currentTrackId || !state.isPlaying) return;
       const track = getTrack(state.currentTrackId);
       if (!track?.youtubeId) return;
+
+      // On Android the Media3 service is the clock for audio playback. The
+      // hidden YouTube iframe is idle and reports zero, so polling it here
+      // overwrote native time events and made lyrics/progress jump backwards.
+      if (isAndroidNativeApp() && !state.videoMode) {
+        const duration = state.duration;
+        if ("mediaSession" in navigator && duration > 0) {
+          try {
+            navigator.mediaSession.setPositionState({
+              duration,
+              playbackRate: state.playbackRate || 1,
+              position: Math.min(state.currentTime, duration),
+            });
+          } catch {
+            // Position state is a progressive enhancement.
+          }
+        }
+        return;
+      }
 
       const currentTime = getYouTubeTime();
       const duration = getYouTubeDuration();
@@ -495,8 +530,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         if (payload === "playing") {
           state.syncFromAudio({ isPlaying: true, isLoading: false, error: null });
         } else if (payload === "paused") {
+          // The native service filters buffering transitions before emitting
+          // "paused", so this event is authoritative even during loading.
           state.syncFromAudio({ isPlaying: false, isLoading: false });
         } else if (payload === "buffering") {
+          if (isAndroidNativeApp() && !state.videoMode) {
+            androidIframeFallbackTrack.current = null;
+          }
           state.syncFromAudio({ isLoading: true });
         } else if (payload === "ended") {
           state.handleEnded();
@@ -505,6 +545,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         if (payload === "fallback_iframe") {
           const track = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
           if (track?.youtubeId) {
+            androidIframeFallbackTrack.current = track.id;
             loadYouTubeVideo(track.youtubeId, true);
             setYouTubePlaybackRate(state.playbackRate);
             return;
