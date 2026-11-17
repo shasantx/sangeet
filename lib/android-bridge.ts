@@ -25,6 +25,15 @@ export interface SangeetAndroidBridge {
   scanLocalAudio?: () => string;
   reloadOnline?: () => void;
   fetchYouTubeAudioBase64?: (requestId: string, videoId: string) => void;
+  downloadAudioFile?: (url: string, filename: string, mimeType: string) => boolean;
+  beginOfflineAudioWrite?: (trackId: string, extension: string) => boolean;
+  writeOfflineAudioChunk?: (trackId: string, base64: string) => boolean;
+  finishOfflineAudioWrite?: (trackId: string) => boolean;
+  abortOfflineAudioWrite?: (trackId: string) => void;
+  playOfflineAudio?: (trackId: string, title: string, artist: string, artworkUrl: string) => boolean;
+  removeOfflineAudio?: (trackId: string) => void;
+  hasOfflineAudio?: (trackId: string) => boolean;
+  exportOfflineAudio?: (trackId: string, filename: string) => boolean;
 }
 
 declare global {
@@ -154,6 +163,100 @@ export function androidSeek(seconds: number): void {
 export function androidStop(): void {
   if (!isAndroidNativeApp()) return;
   try { window.SangeetAndroid?.stop?.(); } catch { /* ignore */ }
+}
+
+export function androidDownloadAudioFile(
+  url: string,
+  filename: string,
+  mimeType = "audio/mpeg",
+): boolean {
+  if (!isAndroidNativeApp() || !window.SangeetAndroid?.downloadAudioFile) return false;
+  try {
+    const absoluteUrl = url.startsWith("content://")
+      ? url
+      : new URL(url, window.location.origin).href;
+    return Boolean(window.SangeetAndroid.downloadAudioFile(absoluteUrl, filename, mimeType));
+  } catch {
+    return false;
+  }
+}
+
+export async function androidStoreOfflineAudio(
+  trackId: string,
+  blob: Blob,
+  onProgress?: (percent: number) => void,
+): Promise<boolean> {
+  const bridge = typeof window !== "undefined" ? window.SangeetAndroid : undefined;
+  if (
+    !isAndroidNativeApp() ||
+    !bridge?.beginOfflineAudioWrite ||
+    !bridge.writeOfflineAudioChunk ||
+    !bridge.finishOfflineAudioWrite ||
+    blob.size === 0
+  ) return false;
+
+  const mime = blob.type.toLowerCase();
+  const extension = mime.includes("webm") ? "webm"
+    : mime.includes("ogg") || mime.includes("opus") ? "ogg"
+    : mime.includes("flac") ? "flac"
+    : mime.includes("wav") ? "wav"
+    : mime.includes("mpeg") || mime.includes("mp3") ? "mp3"
+    : "m4a";
+  const chunkSize = 196608;
+  try {
+    if (!bridge.beginOfflineAudioWrite(trackId, extension)) return false;
+    for (let offset = 0; offset < blob.size; offset += chunkSize) {
+      const bytes = new Uint8Array(await blob.slice(offset, offset + chunkSize).arrayBuffer());
+      let binary = "";
+      for (let index = 0; index < bytes.length; index += 1) {
+        binary += String.fromCharCode(bytes[index]);
+      }
+      if (!bridge.writeOfflineAudioChunk(trackId, btoa(binary))) {
+        bridge.abortOfflineAudioWrite?.(trackId);
+        return false;
+      }
+      onProgress?.(Math.round(Math.min(99, ((offset + bytes.length) / blob.size) * 100)));
+    }
+    if (!bridge.finishOfflineAudioWrite(trackId)) {
+      bridge.abortOfflineAudioWrite?.(trackId);
+      return false;
+    }
+    onProgress?.(100);
+    return true;
+  } catch {
+    try { bridge.abortOfflineAudioWrite?.(trackId); } catch { /* ignore */ }
+    return false;
+  }
+}
+
+export function androidPlayOfflineAudio(
+  trackId: string,
+  title: string,
+  artist: string,
+  artworkUrl: string,
+): boolean {
+  if (!isAndroidNativeApp() || !window.SangeetAndroid?.playOfflineAudio) return false;
+  try {
+    const absoluteArt = artworkUrl ? new URL(artworkUrl, window.location.origin).href : "";
+    return Boolean(window.SangeetAndroid.playOfflineAudio(trackId, title, artist, absoluteArt));
+  } catch {
+    return false;
+  }
+}
+
+export function androidRemoveOfflineAudio(trackId: string): void {
+  if (!isAndroidNativeApp()) return;
+  try { window.SangeetAndroid?.removeOfflineAudio?.(trackId); } catch { /* ignore */ }
+}
+
+export function androidHasOfflineAudio(trackId: string): boolean {
+  if (!isAndroidNativeApp() || !window.SangeetAndroid?.hasOfflineAudio) return false;
+  try { return Boolean(window.SangeetAndroid.hasOfflineAudio(trackId)); } catch { return false; }
+}
+
+export function androidExportOfflineAudio(trackId: string, filename: string): boolean {
+  if (!isAndroidNativeApp() || !window.SangeetAndroid?.exportOfflineAudio) return false;
+  try { return Boolean(window.SangeetAndroid.exportOfflineAudio(trackId, filename)); } catch { return false; }
 }
 
 export function androidSetVolume(volume: number): void {
