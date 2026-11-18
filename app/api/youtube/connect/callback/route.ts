@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { appUrl, googleClientId, googleClientSecret, secureCookies, verifySession } from "@/lib/google-auth";
+import { appUrl, googleClientId, googleClientSecret, sealYouTubeCookie, secureCookies, verifySession } from "@/lib/google-auth";
 import { getManagedUser } from "@/lib/admin-users";
-import { saveYouTubeTokens } from "@/lib/youtube-account";
+import { isYouTubeTokenStorageConfigured, saveYouTubeTokens } from "@/lib/youtube-account";
 import { enforceRateLimit, safeCompare } from "@/lib/security";
 
 export const runtime = "nodejs";
@@ -73,15 +73,32 @@ export async function GET(request: NextRequest) {
     ) {
       throw new Error("Required read-only scope missing");
     }
-    await saveYouTubeTokens(
-      userId,
-      {
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        expires_at: Date.now() + (tokens.expires_in ?? 3600) * 1000,
-      },
-      ["https://www.googleapis.com/auth/youtube.readonly"],
-    );
+    const expiresAt = Date.now() + (tokens.expires_in ?? 3600) * 1000;
+    if (isYouTubeTokenStorageConfigured()) {
+      await saveYouTubeTokens(
+        userId,
+        {
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          expires_at: expiresAt,
+        },
+        ["https://www.googleapis.com/auth/youtube.readonly"],
+      ).catch(() => undefined);
+    }
+    const ytCookie = sealYouTubeCookie({
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      expires_at: expiresAt,
+    });
+    if (ytCookie) {
+      response.cookies.set("sangeet_yt_oauth", ytCookie, {
+        httpOnly: true,
+        secure: secureCookies(base),
+        sameSite: "lax",
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60,
+      });
+    }
     return response;
   } catch {
     const failed = NextResponse.redirect(new URL("/my-youtube-library?youtube=error", base));

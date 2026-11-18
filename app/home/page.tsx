@@ -1040,27 +1040,25 @@ export default function HomePage() {
 
         {showAll && <InstallPromptBanner />}
 
-        {/* Personalized YouTube Music Feed */}
+        {/* Personalized Feed */}
         {(showAll || showMusic) && session && ytFeedConnected && (ytSuggestedTracks.length > 0 || ytLikedTracks.length > 0) && (
           <>
             {ytSuggestedTracks.length > 0 && (
-              <section className="section-space" aria-label="Your YouTube Music feed">
+              <section className="section-space" aria-label="Picked for you">
                 <SectionHeader
-                  title="Your YouTube Music Feed"
+                  title="Picked for you"
                   description={
                     ytSeeds.length > 0
-                      ? `Suggested from your YouTube taste · ${ytSeeds.join(", ")}`
-                      : "Suggested from your YouTube Music activity"
+                      ? `Inspired by ${ytSeeds.join(", ")}`
+                      : "Curated for your listening taste"
                   }
-                  href="/my-youtube-library"
-                  linkLabel="Library"
                   action={
                     <button
                       type="button"
                       onClick={() =>
                         playShuffled(
                           ytSuggestedTracks.map((t) => t.id),
-                          "Your YouTube Music Feed",
+                          "Picked for you",
                         )
                       }
                       className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-medium text-foreground transition hover:bg-elevated active:scale-95"
@@ -1076,7 +1074,7 @@ export default function HomePage() {
                       key={track.id}
                       track={track}
                       contextIds={ytSuggestedTracks.map((t) => t.id)}
-                      contextLabel="Your YouTube Music Feed"
+                      contextLabel="Picked for you"
                     />
                   ))}
                 </div>
@@ -1084,12 +1082,10 @@ export default function HomePage() {
             )}
 
             {ytLikedTracks.length > 0 && (
-              <section className="section-space" aria-label="Liked on YouTube Music">
+              <section className="section-space" aria-label="Your favorites">
                 <SectionHeader
-                  title="From your YouTube likes"
-                  description="Music you liked on YouTube & YouTube Music"
-                  href="/my-youtube-library"
-                  linkLabel="See all"
+                  title="Your favorites"
+                  description="Tracks you've loved recently"
                 />
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
                   {ytLikedTracks.slice(0, 6).map((track) => (
@@ -1097,35 +1093,13 @@ export default function HomePage() {
                       key={track.id}
                       track={track}
                       contextIds={ytLikedTracks.map((t) => t.id)}
-                      contextLabel="Liked on YouTube Music"
+                      contextLabel="Your favorites"
                     />
                   ))}
                 </div>
               </section>
             )}
           </>
-        )}
-
-        {(showAll || showMusic) && session?.provider === "google" && !loadingYtFeed && !ytFeedConnected && (
-          <section
-            aria-label="Connect YouTube Music"
-            className="mb-7 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 sm:mb-8"
-          >
-            <div className="min-w-0">
-              <p className="text-[13.5px] font-semibold text-foreground">
-                Get your personal YouTube Music feed
-              </p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Grant read-only YouTube access to see songs and recommendations from your likes and playlists.
-              </p>
-            </div>
-            <a
-              href="/api/youtube/connect"
-              className="inline-flex min-h-[40px] shrink-0 items-center gap-2 rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:brightness-110 active:scale-95"
-            >
-              Connect YouTube Music
-            </a>
-          </section>
         )}
 
         {/* ALL: Trending Now Carousel */}
