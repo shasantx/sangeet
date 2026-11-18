@@ -17,18 +17,19 @@ import {
   Info,
   Keyboard,
   Laptop,
+  Layers,
   Leaf,
   ListMusic,
   LogOut,
   Monitor,
   Moon,
+  Music2,
   Palette,
   Play,
   RotateCcw,
   Settings2,
   ShieldCheck,
   Smartphone,
-  Sparkles,
   SunMedium,
   Trash2,
   Users,
@@ -184,7 +185,7 @@ const themes: ThemeOption[] = [
     gradient:
       "radial-gradient(ellipse 85% 60% at 18% 0%, rgba(88, 101, 242, 0.36), transparent 65%), radial-gradient(ellipse 65% 50% at 88% 10%, rgba(121, 131, 245, 0.24), transparent 60%)",
     swatchGradient: "linear-gradient(135deg, #5865F2 0%, #7983F5 52%, #14152B 100%)",
-    icon: Sparkles,
+    icon: Layers,
   },
   {
     id: "cotton-candy",
@@ -201,7 +202,7 @@ const themes: ThemeOption[] = [
     gradient:
       "radial-gradient(ellipse 80% 58% at 14% 0%, rgba(244, 114, 182, 0.30), transparent 65%), radial-gradient(ellipse 70% 52% at 88% 8%, rgba(56, 189, 248, 0.24), transparent 60%)",
     swatchGradient: "linear-gradient(135deg, #F472B6 0%, #38BDF8 100%)",
-    icon: Sparkles,
+    icon: Music2,
   },
   {
     id: "retro",
@@ -813,7 +814,7 @@ export default function SettingsPage() {
                         Animated Gradient Themes
                       </h3>
                       <span className="glass-pill glass-pill-violet">
-                        <Sparkles className="h-2.5 w-2.5 shrink-0" />
+                        <Zap className="h-2.5 w-2.5 shrink-0" />
                         <span>Live Motion</span>
                       </span>
                     </div>

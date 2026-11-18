@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  AudioLines,
   Check,
   ChevronDown,
   ChevronsLeft,
@@ -19,28 +18,10 @@ import {
   Music2,
   Plus,
   Radio,
-  RotateCcw,
   Share2,
-  SlidersHorizontal,
-  Sparkles,
   Trash2,
   Users,
 } from "lucide-react";
-import {
-  type AudioEffectsState,
-  EQ_BANDS,
-  EQ_PRESETS,
-  type EqPresetId,
-  applyEqPreset,
-  canUseWebAudioFx,
-  getAudioEffectsState,
-  getEffectiveEqGains,
-  getEqPreset,
-  isPresetActive,
-  resumeAudioEffectsContext,
-  setAudioEffectsState,
-  subscribeAudioEffects,
-} from "@/lib/audio-eq";
 import { getAlbum, getArtist, getTrack, tracks } from "@/lib/catalog";
 import {
   canDownloadOffline,
@@ -62,29 +43,12 @@ import { VolumeControl } from "@/components/player/volume-control";
 import { LyricsView } from "@/components/player/lyrics-view";
 import { SleepTimerMenu } from "@/components/player/sleep-timer-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-function gainToBarPercent(gain: number): number {
-  const normalized = (gain + 8) / 20;
-  return Math.round(Math.max(0.16, Math.min(1, normalized)) * 100);
-}
-
-function formatDb(value: number): string {
-  const rounded = Math.round(value * 10) / 10;
-  return `${rounded > 0 ? "+" : ""}${rounded.toFixed(1)} dB`;
-}
 
 export interface NowPlayingViewProps {
   onDismiss?: () => void;
@@ -156,9 +120,6 @@ export function NowPlayingView({ onDismiss, isOverlay = false }: NowPlayingViewP
   const nextTrack = usePlayerStore((state) => state.next);
   const previousTrack = usePlayerStore((state) => state.previous);
   const seek = usePlayerStore((state) => state.seek);
-  const playbackRate = usePlayerStore((state) => state.playbackRate);
-  const videoMode = usePlayerStore((state) => state.videoMode);
-  const setPlaybackRate = usePlayerStore((state) => state.setPlaybackRate);
 
   const current = currentTrackId ? getTrack(currentTrackId) : undefined;
   const artist = current ? getArtist(current.artistId) : undefined;
@@ -172,63 +133,6 @@ export function NowPlayingView({ onDismiss, isOverlay = false }: NowPlayingViewP
 
   const [activeTab, setActiveTab] = useState<"lyrics" | "queue" | "related" | "artist">("lyrics");
   const [mobileMode, setMobileMode] = useState<"player" | "lyrics" | "queue">("player");
-  const [effectsOpen, setEffectsOpen] = useState(false);
-  const [fx, setFx] = useState<AudioEffectsState>({
-    presetId: "flat",
-    bassBoostDb: 0,
-    trebleBoostDb: 0,
-    reverbMix: 0,
-    stereoWidth: 0,
-  });
-
-  useEffect(() => {
-    setFx(getAudioEffectsState());
-    return subscribeAudioEffects((next) => setFx(next));
-  }, []);
-
-  const activePreset = getEqPreset(fx.presetId);
-  const effectiveGains = getEffectiveEqGains(fx);
-  const isFxActive =
-    isPresetActive() ||
-    Math.abs(fx.bassBoostDb) > 0.05 ||
-    Math.abs(fx.trebleBoostDb) > 0.05 ||
-    fx.reverbMix > 0.01 ||
-    fx.stereoWidth > 0.01 ||
-    playbackRate !== 1;
-  const webAudioAvailable = current ? canUseWebAudioFx() : false;
-  const isYouTubeEmbedMode = Boolean(current?.youtubeId && (videoMode || !webAudioAvailable));
-
-  const handleOpenEffects = () => {
-    resumeAudioEffectsContext();
-    setEffectsOpen(true);
-  };
-
-  const handleSelectPreset = (nextId: EqPresetId) => {
-    resumeAudioEffectsContext();
-    const result = applyEqPreset(nextId);
-    if (result.recommendedSpeed !== undefined) {
-      setPlaybackRate(result.recommendedSpeed);
-    }
-  };
-
-  const handleBandChange = (bandIndex: number, nextDb: number) => {
-    resumeAudioEffectsContext();
-    const nextGains: [number, number, number, number, number] = [
-      effectiveGains[0],
-      effectiveGains[1],
-      effectiveGains[2],
-      effectiveGains[3],
-      effectiveGains[4],
-    ];
-    nextGains[bandIndex] = nextDb;
-    setAudioEffectsState({ bandGains: nextGains });
-  };
-
-  const handleResetEffects = () => {
-    resumeAudioEffectsContext();
-    applyEqPreset("flat");
-    setPlaybackRate(1);
-  };
 
   // YouTube Music-style double-tap seek (-10s / +10s) & horizontal artwork swipe gestures
   const [seekBurst, setSeekBurst] = useState<{ side: "left" | "right"; seconds: number; key: number } | null>(null);
@@ -882,31 +786,8 @@ export function NowPlayingView({ onDismiss, isOverlay = false }: NowPlayingViewP
           </button>
         </div>
 
-        {/* Right Header Extras: EQ, Speed/SleepTimer, Offline Download, Share, More */}
+        {/* Right Header Extras: Speed/SleepTimer, Offline Download, Share, More */}
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <button
-            type="button"
-            onClick={handleOpenEffects}
-            aria-label={`Audio Effects & Equalizer: ${activePreset.label}`}
-            title={`Audio Effects & EQ (${activePreset.label})`}
-            className={cn(
-              "relative flex h-9 min-h-[36px] min-w-[36px] items-center justify-center gap-1.5 rounded-full border border-white/[0.1] bg-white/[0.08] px-1.5 text-foreground/85 transition hover:bg-white/[0.14] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary min-[390px]:h-10 min-[390px]:min-w-[40px] min-[390px]:px-2 sm:h-9 sm:min-h-0 sm:min-w-0 sm:px-2.5",
-              isFxActive && "border-primary/45 bg-primary/15 text-primary shadow-[0_0_16px_hsl(var(--primary)/0.25)]",
-            )}
-          >
-            <SlidersHorizontal className="h-[15px] w-[15px]" strokeWidth={1.8} />
-            {isFxActive && (
-              <span className="flex h-3 items-end gap-[2px]" aria-hidden="true">
-                {effectiveGains.map((gain, idx) => (
-                  <span
-                    key={EQ_BANDS[idx].label}
-                    className="w-[2px] rounded-full bg-primary transition-all duration-200"
-                    style={{ height: `${gainToBarPercent(gain)}%` }}
-                  />
-                ))}
-              </span>
-            )}
-          </button>
           <SleepTimerMenu className="h-9 min-h-[36px] min-w-[36px] border border-white/[0.1] bg-white/[0.08] px-1.5 min-[390px]:h-10 min-[390px]:min-w-[40px] min-[390px]:px-2 sm:h-9 sm:min-h-0 sm:min-w-0 sm:px-2.5" />
 
           {current && downloadable && (
@@ -1029,7 +910,7 @@ export function NowPlayingView({ onDismiss, isOverlay = false }: NowPlayingViewP
       {/* Main Content Area */}
       <main className="min-h-0 w-full max-w-full flex-1 overflow-x-clip overflow-y-hidden p-2.5 sm:p-5 lg:p-6">
         {current ? (
-          <div className="grid h-full w-full min-w-0 grid-cols-1 items-stretch gap-4 overflow-hidden sm:gap-5 lg:grid-cols-[minmax(360px,min(42vw,500px))_1fr]">
+          <div className="grid h-full w-full min-w-0 grid-cols-1 grid-rows-[minmax(0,1fr)] items-stretch gap-4 overflow-hidden sm:gap-5 lg:grid-cols-[minmax(360px,min(42vw,500px))_1fr]">
             {/* Left Column: Player Stage (Swipe art left/right to skip, double-tap left/right for -10s/+10s) */}
             <div
               onTouchStart={handleDeckTouchStart}
@@ -1038,13 +919,13 @@ export function NowPlayingView({ onDismiss, isOverlay = false }: NowPlayingViewP
               onTouchCancel={handleDeckTouchCancel}
               onClickCapture={handleGestureClickCapture}
               className={cn(
-                "relative flex h-full w-full min-w-0 flex-col justify-between overflow-hidden rounded-3xl border border-white/[0.09] bg-black/35 p-3.5 backdrop-blur-xl sm:p-5",
+                "relative flex h-full min-h-0 w-full min-w-0 flex-col justify-between overflow-hidden rounded-3xl border border-white/[0.09] bg-black/35 p-3.5 backdrop-blur-xl sm:p-5",
                 mobileMode !== "player" ? "hidden lg:flex" : "flex",
               )}
             >
               {/* Artwork Box + Dynamic Ambient Glow */}
-              <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center">
-                <div className="relative flex items-center justify-center">
+              <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden">
+                <div className="relative flex min-h-0 shrink items-center justify-center">
                   {current.artwork && (
                     <div
                       aria-hidden="true"
@@ -1059,7 +940,7 @@ export function NowPlayingView({ onDismiss, isOverlay = false }: NowPlayingViewP
                   <div
                     onTouchEnd={handleArtworkTouchEnd}
                     onDoubleClick={handleArtworkDoubleClick}
-                    className="relative aspect-square w-[min(84vw,42dvh,360px)] shrink-0 cursor-pointer touch-none overflow-hidden rounded-2xl border border-white/[0.14] bg-elevated shadow-[0_24px_64px_rgba(0,0,0,0.78)] lg:w-[min(34vw,38dvh,380px)]"
+                    className="relative aspect-square w-[min(78vw,36dvh,340px)] shrink-0 cursor-pointer touch-none overflow-hidden rounded-2xl border border-white/[0.14] bg-elevated shadow-[0_24px_64px_rgba(0,0,0,0.78)] sm:w-[min(80vw,40dvh,360px)] lg:w-[min(34vw,38dvh,380px)]"
                     style={artworkStyle}
                     title="Double-tap left/right to seek 10s · Swipe left/right for next/previous"
                   >
@@ -1218,7 +1099,7 @@ export function NowPlayingView({ onDismiss, isOverlay = false }: NowPlayingViewP
             {/* Right Column: Context Panels */}
             <div
               className={cn(
-                "flex h-full w-full min-w-0 flex-col overflow-hidden rounded-3xl border border-white/[0.09] bg-black/35 p-3 backdrop-blur-xl sm:p-5",
+                "flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-3xl border border-white/[0.09] bg-black/35 p-3 backdrop-blur-xl sm:p-5",
                 mobileMode === "player" ? "hidden lg:flex" : "flex",
               )}
             >
@@ -1481,284 +1362,6 @@ export function NowPlayingView({ onDismiss, isOverlay = false }: NowPlayingViewP
           </div>
         )}
       </main>
-
-      {/* Spacious Responsive Audio Effects & EQ Modal / Bottom Sheet */}
-      <Dialog open={effectsOpen} onOpenChange={setEffectsOpen}>
-        <DialogContent className="bottom-0 left-0 right-0 top-auto max-h-[88dvh] w-full max-w-full translate-x-0 translate-y-0 rounded-b-none rounded-t-3xl border border-white/[0.12] bg-[#101118]/95 p-5 shadow-[0_-20px_70px_rgba(0,0,0,0.85)] backdrop-blur-2xl sm:bottom-auto sm:left-1/2 sm:right-auto sm:top-1/2 sm:max-h-[88vh] sm:w-[calc(100%-2rem)] sm:max-w-[540px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:p-6">
-          {/* Mobile sheet pull indicator */}
-          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/25 sm:hidden" aria-hidden="true" />
-
-          <DialogHeader className="mb-4 space-y-1.5 pr-9">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <DialogTitle className="flex items-center gap-2.5 font-display text-lg font-bold tracking-tight text-foreground sm:text-xl">
-                <span
-                  className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-xl border",
-                    isFxActive
-                      ? "border-primary/45 bg-primary/20 text-primary shadow-[0_0_16px_hsl(var(--primary)/0.3)]"
-                      : "border-white/10 bg-white/[0.06] text-muted-foreground",
-                  )}
-                >
-                  <AudioLines className="h-4 w-4" />
-                </span>
-                <span>Audio Effects &amp; EQ</span>
-              </DialogTitle>
-
-              <button
-                type="button"
-                onClick={handleResetEffects}
-                disabled={!isFxActive}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition",
-                  isFxActive
-                    ? "border-white/15 bg-white/[0.08] text-foreground hover:bg-white/[0.14]"
-                    : "cursor-not-allowed border-white/[0.06] bg-white/[0.03] text-muted-foreground/50",
-                )}
-              >
-                <RotateCcw className="h-3 w-3" />
-                <span>Reset</span>
-              </button>
-            </div>
-
-            <DialogDescription className="text-xs text-muted-foreground">
-              {activePreset.label} · {activePreset.description}
-              {playbackRate !== 1 ? ` · ${playbackRate}x speed` : ""}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-5">
-            {/* Honest DSP / Speed Status Pill */}
-            <div
-              className={cn(
-                "flex items-center gap-2.5 rounded-2xl border px-3.5 py-2.5 text-xs backdrop-blur-md",
-                !current
-                  ? "border-white/10 bg-white/[0.05] text-muted-foreground"
-                  : isYouTubeEmbedMode
-                    ? "border-amber-400/30 bg-amber-500/10 text-amber-200"
-                    : "border-emerald-400/30 bg-emerald-500/10 text-emerald-200",
-              )}
-            >
-              <span
-                className={cn(
-                  "h-2 w-2 shrink-0 rounded-full",
-                  !current
-                    ? "bg-white/40"
-                    : isYouTubeEmbedMode
-                      ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.8)]"
-                      : "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]",
-                )}
-              />
-              <div className="min-w-0 flex-1">
-                {!current ? (
-                  <p className="font-medium">Ready · Start a track to engage Web Audio DSP</p>
-                ) : isYouTubeEmbedMode ? (
-                  <p className="leading-snug">
-                    <span className="font-semibold">Speed-Only Mode · YouTube Embed</span>{" "}
-                    <span className="text-amber-200/80">
-                      — Slowed + Reverb (0.85x) &amp; Nightcore (1.25x) speed changes still apply.
-                    </span>
-                  </p>
-                ) : (
-                  <p className="leading-snug">
-                    <span className="font-semibold">Full Web Audio DSP + Speed Active</span>{" "}
-                    <span className="text-emerald-200/80">
-                      — 5-band EQ, Reverb, 3D Width &amp; Speed live on stream.
-                    </span>
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Visual 5-Band EQ Meter & Interactive Sliders */}
-            <div className="rounded-2xl border border-white/[0.09] bg-black/35 p-3.5 sm:p-4">
-              <div className="mb-3 flex items-center justify-between text-[11px]">
-                <span className="font-semibold uppercase tracking-wider text-white/70">
-                  5-Band Equalizer
-                </span>
-                <span className="font-sans text-[10.5px] text-muted-foreground">
-                  -8 dB to +12 dB
-                </span>
-              </div>
-
-              <div className="grid grid-cols-5 gap-2 sm:gap-3">
-                {EQ_BANDS.map((band, idx) => {
-                  const gain = effectiveGains[idx] ?? 0;
-                  const pct = gainToBarPercent(gain);
-                  return (
-                    <div
-                      key={band.label}
-                      className="flex flex-col items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.03] px-1.5 py-2.5"
-                    >
-                      <span className="font-sans text-[10px] font-semibold tabular-nums text-foreground/90">
-                        {gain > 0 ? `+${gain.toFixed(1)}` : gain.toFixed(1)}
-                      </span>
-
-                      <div className="relative flex h-20 w-full items-end justify-center overflow-hidden rounded-lg bg-black/40 p-1">
-                        <div
-                          className={cn(
-                            "w-3 rounded-md transition-all duration-200 sm:w-4",
-                            isFxActive
-                              ? "bg-gradient-to-t from-primary/60 via-primary to-primary shadow-[0_0_14px_hsl(var(--primary)/0.45)]"
-                              : "bg-white/25",
-                          )}
-                          style={{ height: `${pct}%` }}
-                        />
-                      </div>
-
-                      <input
-                        type="range"
-                        min={-8}
-                        max={12}
-                        step={0.5}
-                        value={gain}
-                        aria-label={`${band.label} EQ gain`}
-                        onChange={(e) => handleBandChange(idx, Number(e.target.value))}
-                        className="h-1.5 w-full cursor-pointer accent-primary"
-                      />
-
-                      <span className="font-sans text-[10px] font-medium tabular-nums text-muted-foreground">
-                        {band.label}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Glowing Glassmorphic Preset Pills */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/70">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                <span>Sound Presets</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {EQ_PRESETS.map((preset) => {
-                  const selected = preset.id === fx.presetId;
-                  return (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => handleSelectPreset(preset.id)}
-                      title={preset.description}
-                      className={cn(
-                        "glass-pill inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium backdrop-blur-md transition-all active:scale-95",
-                        selected
-                          ? "border-primary/65 bg-primary/20 font-semibold text-primary shadow-[0_0_20px_hsl(var(--primary)/0.38)]"
-                          : "border-white/15 bg-white/[0.06] text-white/80 hover:border-white/25 hover:bg-white/[0.12] hover:text-foreground",
-                      )}
-                    >
-                      <span>{preset.label}</span>
-                      {preset.recommendedSpeed && preset.recommendedSpeed !== 1 && (
-                        <span
-                          className={cn(
-                            "rounded-full px-1.5 py-0.5 font-sans text-[10px] tabular-nums",
-                            selected
-                              ? "bg-primary/25 text-primary"
-                              : "bg-white/10 text-white/70",
-                          )}
-                        >
-                          {preset.recommendedSpeed}x
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Bass, Treble, Reverb & 3D Width Sliders */}
-            <div className="grid grid-cols-1 gap-3.5 rounded-2xl border border-white/[0.09] bg-white/[0.03] p-3.5 sm:grid-cols-2 sm:p-4">
-              <label className="block space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-white/80">Bass</span>
-                  <span className="font-sans text-[11px] tabular-nums text-primary">
-                    {formatDb(fx.bassBoostDb)}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min={-6}
-                  max={12}
-                  step={0.5}
-                  value={fx.bassBoostDb}
-                  aria-label="Bass boost"
-                  onChange={(e) => {
-                    resumeAudioEffectsContext();
-                    setAudioEffectsState({ bassBoostDb: Number(e.target.value) });
-                  }}
-                  className="h-1.5 w-full cursor-pointer accent-primary"
-                />
-              </label>
-
-              <label className="block space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-white/80">Treble</span>
-                  <span className="font-sans text-[11px] tabular-nums text-primary">
-                    {formatDb(fx.trebleBoostDb)}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min={-6}
-                  max={12}
-                  step={0.5}
-                  value={fx.trebleBoostDb}
-                  aria-label="Treble boost"
-                  onChange={(e) => {
-                    resumeAudioEffectsContext();
-                    setAudioEffectsState({ trebleBoostDb: Number(e.target.value) });
-                  }}
-                  className="h-1.5 w-full cursor-pointer accent-primary"
-                />
-              </label>
-
-              <label className="block space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-white/80">Reverb</span>
-                  <span className="font-sans text-[11px] tabular-nums text-primary">
-                    {Math.round(fx.reverbMix * 100)}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={Math.round(fx.reverbMix * 100)}
-                  aria-label="Reverb mix"
-                  onChange={(e) => {
-                    resumeAudioEffectsContext();
-                    setAudioEffectsState({ reverbMix: Number(e.target.value) / 100 });
-                  }}
-                  className="h-1.5 w-full cursor-pointer accent-primary"
-                />
-              </label>
-
-              <label className="block space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-white/80">3D Width</span>
-                  <span className="font-sans text-[11px] tabular-nums text-primary">
-                    {Math.round(fx.stereoWidth * 100)}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={Math.round(fx.stereoWidth * 100)}
-                  aria-label="3D stereo width"
-                  onChange={(e) => {
-                    resumeAudioEffectsContext();
-                    setAudioEffectsState({ stereoWidth: Number(e.target.value) / 100 });
-                  }}
-                  className="h-1.5 w-full cursor-pointer accent-primary"
-                />
-              </label>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

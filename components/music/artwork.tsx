@@ -123,6 +123,7 @@ export const Artwork = React.memo(function Artwork({
           alt={alt}
           loading={priority ? "eager" : "lazy"}
           decoding="async"
+          referrerPolicy="no-referrer"
           onError={handleError}
           className={cn("h-full w-full object-cover transition-opacity duration-300", imgClassName)}
           draggable={false}

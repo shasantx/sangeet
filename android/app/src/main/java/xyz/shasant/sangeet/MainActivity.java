@@ -556,16 +556,34 @@ public final class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        @Nullable
         private String extensionForAudioMime(String mimeType) {
             String lower = mimeType == null ? "" : mimeType.toLowerCase(Locale.ROOT);
             if (lower.contains("mpeg")) return "mp3";
-            if (lower.contains("mp4") || lower.contains("aac")) return "m4a";
+            if (lower.contains("mp4") || lower.contains("m4a") || lower.contains("aac")) return "m4a";
             if (lower.contains("flac")) return "flac";
             if (lower.contains("webm")) return "webm";
             if (lower.contains("opus")) return "opus";
             if (lower.contains("ogg")) return "ogg";
             if (lower.contains("wav")) return "wav";
             return null;
+        }
+
+        private String safeOfflineExtensionForMime(String mimeType) {
+            String extension = extensionForAudioMime(mimeType);
+            return extension != null && !extension.isEmpty() ? extension : "m4a";
+        }
+
+        @Nullable
+        private InputStream openSourceAudioStream(Uri source) throws Exception {
+            if ("file".equals(source.getScheme())) {
+                String path = source.getPath();
+                if (path == null || path.isEmpty()) {
+                    throw new IllegalStateException("Missing audio file path.");
+                }
+                return new FileInputStream(new File(path));
+            }
+            return getContentResolver().openInputStream(source);
         }
 
         private void copyContentAudioToDownloads(Uri source, String filename, String mimeType) {
@@ -578,7 +596,7 @@ public final class MainActivity extends AppCompatActivity {
             try {
                 destination = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
                 if (destination == null) throw new IllegalStateException("Could not create download file.");
-                try (InputStream input = getContentResolver().openInputStream(source);
+                try (InputStream input = openSourceAudioStream(source);
                      OutputStream output = getContentResolver().openOutputStream(destination)) {
                     if (input == null || output == null) throw new IllegalStateException("Could not open audio file.");
                     byte[] buffer = new byte[64 * 1024];
@@ -963,16 +981,22 @@ public final class MainActivity extends AppCompatActivity {
             }
 
             bridgeExecutor.execute(() -> {
+                sendOfflineAudioProgress(reqId, 1);
                 String lastError = "Could not extract audio stream from YouTube.";
                 try {
                     List<YouTubeInnerTubeExtractor.StreamResult> candidates =
                             YouTubeInnerTubeExtractor.extractAll(vid);
+                    if (candidates == null || candidates.isEmpty()) {
+                        sendOfflineAudioError(reqId, "Could not extract audio stream from YouTube.");
+                        return;
+                    }
+                    boolean attemptedCandidate = false;
                     for (YouTubeInnerTubeExtractor.StreamResult candidate : candidates) {
                         if (candidate == null || candidate.url == null || candidate.url.isEmpty()) continue;
                         String lowerUrl = candidate.url.toLowerCase(Locale.ROOT);
                         if (lowerUrl.contains(".m3u8") || lowerUrl.contains("hls_playlist")) continue;
+                        attemptedCandidate = true;
                         try {
-                            sendOfflineAudioProgress(reqId, 1);
                             long size = downloadAudioCandidateToOffline(track, reqId, candidate.url, candidate.userAgent);
                             JSONObject payload = new JSONObject();
                             payload.put("requestId", reqId);
@@ -984,7 +1008,9 @@ public final class MainActivity extends AppCompatActivity {
                             if (message != null && !message.isEmpty()) lastError = message;
                         }
                     }
-                    sendOfflineAudioError(reqId, lastError);
+                    sendOfflineAudioError(
+                            reqId,
+                            attemptedCandidate ? lastError : "No downloadable audio stream was found for this track.");
                 } catch (Exception e) {
                     String message = e.getMessage();
                     sendOfflineAudioError(reqId, message != null && !message.isEmpty()
@@ -1040,7 +1066,7 @@ public final class MainActivity extends AppCompatActivity {
                     output.getFD().sync();
                 }
                 if (received == 0) throw new IllegalStateException("Downloaded audio file was empty.");
-                String extension = extensionForAudioMime(mime);
+                String extension = safeOfflineExtensionForMime(mime);
                 SharedPreferences prefs = getSharedPreferences("offline-audio", MODE_PRIVATE);
                 String previousExtension = prefs.getString("ext_" + key, null);
                 if (previousExtension != null && !previousExtension.equals(extension)) {

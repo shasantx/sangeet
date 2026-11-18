@@ -69,12 +69,12 @@ public final class YouTubeInnerTubeExtractor {
             }
         }
         List<ClientAttempt> attempts = List.of(
-                new ClientAttempt("com.google.android.youtube/21.26.364 (Linux; U; Android 14) gzip", buildAndroidContext(visitorData)),
                 new ClientAttempt("com.google.android.apps.youtube.vr.oculus/1.65.10 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip", buildAndroidVrContext(visitorData)),
-                new ClientAttempt("Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36", buildMwebContext(visitorData)),
-                new ClientAttempt("com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X;)", buildIosContext(visitorData)),
                 new ClientAttempt("Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15", buildVisionOsContext(visitorData)),
-                new ClientAttempt("Mozilla/5.0 (SMART-TV; LINUX; Tizen 6.5) AppleWebKit/537.36 (KHTML, like Gecko) 85.0.4183.93/6.5 TV Safari/537.36", buildTvEmbeddedContext(visitorData))
+                new ClientAttempt("com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X;)", buildIosContext(visitorData)),
+                new ClientAttempt("Mozilla/5.0 (SMART-TV; LINUX; Tizen 6.5) AppleWebKit/537.36 (KHTML, like Gecko) 85.0.4183.93/6.5 TV Safari/537.36", buildTvEmbeddedContext(visitorData)),
+                new ClientAttempt("com.google.android.youtube/21.26.364 (Linux; U; Android 14) gzip", buildAndroidContext(visitorData)),
+                new ClientAttempt("Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36", buildMwebContext(visitorData))
         );
         CompletionService<StreamResult> completed = new ExecutorCompletionService<>(CLIENT_EXECUTOR);
         List<Future<StreamResult>> pending = new ArrayList<>();
@@ -82,6 +82,7 @@ public final class YouTubeInnerTubeExtractor {
             pending.add(completed.submit(() -> tryClient(videoId, attempt.userAgent, attempt.context, visitorData)));
         }
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(9);
+        boolean firstResultSeen = false;
         for (int i = 0; i < attempts.size(); i++) {
             long remaining = deadline - System.nanoTime();
             if (remaining <= 0) break;
@@ -89,7 +90,16 @@ public final class YouTubeInnerTubeExtractor {
                 Future<StreamResult> ready = completed.poll(remaining, TimeUnit.NANOSECONDS);
                 if (ready == null) break;
                 StreamResult result = ready.get();
-                if (result != null) results.add(result);
+                if (result != null) {
+                    results.add(result);
+                    if (!firstResultSeen) {
+                        firstResultSeen = true;
+                        long tightenedDeadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(1200);
+                        if (tightenedDeadline < deadline) {
+                            deadline = tightenedDeadline;
+                        }
+                    }
+                }
             } catch (Exception ignored) {
                 // One public client failing must not block the remaining clients.
             }

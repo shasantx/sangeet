@@ -397,30 +397,37 @@ export async function saveTrackOffline(
 
   const youtubeId = resolveYouTubeVideoId(track);
   if (youtubeId && isAndroidNativeApp()) {
-    const sizeBytes = await androidDownloadYouTubeAudioToOffline(track.id, youtubeId, onProgress);
-    const record: OfflineTrackRecord = {
-      id: track.id,
-      track: { ...track },
-      artistName: artistName || "Sangeet",
-      sizeBytes,
-      savedAt: Date.now(),
-      mimeType: "audio/mp4",
-    };
+    let sizeBytes: number | null = null;
     try {
-      await putRecord(record);
-    } catch (error) {
-      androidRemoveOfflineAudio(track.id);
-      throw error;
+      sizeBytes = await androidDownloadYouTubeAudioToOffline(track.id, youtubeId, onProgress);
+    } catch {
+      // Fall back to resilient fetch + chunked native storage below.
     }
-    downloadedIds.add(track.id);
-    const previousUrl = offlineUrlCache.get(track.id);
-    if (previousUrl) {
-      try { URL.revokeObjectURL(previousUrl); } catch { /* Ignore stale URL cleanup errors. */ }
-      offlineUrlCache.delete(track.id);
+    if (sizeBytes !== null) {
+      const record: OfflineTrackRecord = {
+        id: track.id,
+        track: { ...track },
+        artistName: artistName || "Sangeet",
+        sizeBytes,
+        savedAt: Date.now(),
+        mimeType: "audio/mp4",
+      };
+      try {
+        await putRecord(record);
+      } catch (error) {
+        androidRemoveOfflineAudio(track.id);
+        throw error;
+      }
+      downloadedIds.add(track.id);
+      const previousUrl = offlineUrlCache.get(track.id);
+      if (previousUrl) {
+        try { URL.revokeObjectURL(previousUrl); } catch { /* Ignore stale URL cleanup errors. */ }
+        offlineUrlCache.delete(track.id);
+      }
+      notifyOfflineChanges();
+      onProgress?.(100);
+      return;
     }
-    notifyOfflineChanges();
-    onProgress?.(100);
-    return;
   }
 
   const { blob, mimeType } = await fetchTrackAudioResilient(track, onProgress);
@@ -564,16 +571,25 @@ export async function exportTrackAudioFile(track: Track, artistName: string): Pr
       .slice(0, 120) || "sangeet-track";
 
   if (isAndroidNativeApp()) {
+    const youtubeId = resolveYouTubeVideoId(track);
     const urlExtMatch = track.audioUrl
       .split("?")[0]
       .match(/\.(mp3|m4a|webm|ogg|opus|wav|flac|aac)$/i);
-    const fallbackExt = urlExtMatch?.[1]?.toLowerCase() || (resolveYouTubeVideoId(track) ? "m4a" : "mp3");
+    const fallbackExt = urlExtMatch?.[1]?.toLowerCase() || (youtubeId ? "m4a" : "mp3");
     const filename = `${safeBase}.${fallbackExt}`;
     if (androidExportOfflineAudio(track.id, filename)) return;
     if (
       await ensureAndroidOfflineAudio(track.id) &&
       androidExportOfflineAudio(track.id, filename)
     ) return;
+    if (youtubeId) {
+      try {
+        await androidDownloadYouTubeAudioToOffline(track.id, youtubeId);
+        if (androidExportOfflineAudio(track.id, filename)) return;
+      } catch {
+        // Fall through to server/URL export fallback if native YouTube download fails.
+      }
+    }
 
     const serverDownloadUrl = resolveAndroidServerExportUrl(track, safeBase);
     const sourceUrl = serverDownloadUrl ?? track.audioUrl;

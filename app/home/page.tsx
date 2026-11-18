@@ -10,7 +10,6 @@ import {
   Flame,
   FolderOpen,
   HardDrive,
-  Heart,
   MoreHorizontal,
   Pause,
   Play,
@@ -48,7 +47,6 @@ import { Artwork } from "@/components/music/artwork";
 import { Equalizer } from "@/components/music/equalizer";
 import { LikeButton } from "@/components/music/like-button";
 import { PlaylistCard } from "@/components/music/playlist-card";
-import { QuickTrackTile } from "@/components/music/quick-track-tile";
 import { SectionHeader } from "@/components/music/section-header";
 import { TrackContextMenu } from "@/components/music/track-context-menu";
 import { LocalFilesSection } from "@/components/library/local-files-section";
@@ -84,6 +82,14 @@ interface TrendingCacheEntry {
   viewsById: Record<string, string>;
 }
 
+interface FeedApiTrack {
+  videoId: string;
+  title: string;
+  artist: string;
+  durationSeconds?: number;
+  thumbnail?: string;
+}
+
 const CACHE_TTL_MS = 10 * 60 * 1000;
 let trendingCache: TrendingCacheEntry | null = null;
 const tasteSearchCache = new Map<string, { at: number; tracks: Track[] }>();
@@ -92,8 +98,9 @@ const ytFeedCache = new Map<
   {
     at: number;
     connected: boolean;
-    suggested: Track[];
-    liked: Track[];
+    quickPicks: Track[];
+    listenAgain: Track[];
+    recommended: Track[];
     seeds: string[];
   }
 >();
@@ -167,6 +174,97 @@ function registerTrendingItem(item: TrendingApiItem): Track | undefined {
     return undefined;
   }
   return undefined;
+}
+
+function registerFeedTracks(items: FeedApiTrack[] | undefined): Track[] {
+  return (items ?? [])
+    .filter((item) => Boolean(item.videoId))
+    .map((item) =>
+      registerYouTubeSearchResult({
+        videoId: item.videoId,
+        title: item.title,
+        artist: item.artist,
+        durationSeconds: item.durationSeconds,
+        thumbnail: item.thumbnail,
+      }),
+    );
+}
+
+function QuickPickRow({
+  track,
+  contextIds,
+  contextLabel,
+}: {
+  track: Track;
+  contextIds: string[];
+  contextLabel: string;
+}) {
+  const isCurrent = usePlayerStore((state) => state.currentTrackId === track.id);
+  const isPlaying = usePlayerStore((state) =>
+    state.currentTrackId === track.id ? state.isPlaying : false,
+  );
+  const playTrack = usePlayerStore((state) => state.playTrack);
+  const togglePlay = usePlayerStore((state) => state.togglePlay);
+  const artist = getArtist(track.artistId);
+
+  const handleToggle = () => {
+    if (isCurrent) togglePlay();
+    else playTrack(track.id, contextIds, contextLabel);
+  };
+
+  return (
+    <div
+      className={cn(
+        "group flex min-w-0 items-center gap-2 rounded-xl p-1.5 pr-1 transition-colors hover:bg-card",
+        isCurrent && "bg-primary/[0.08] hover:bg-primary/[0.11]",
+      )}
+    >
+      <button
+        type="button"
+        onClick={handleToggle}
+        aria-label={`${isCurrent && isPlaying ? "Pause" : "Play"} ${track.title}`}
+        className="flex min-w-0 flex-1 items-center gap-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg"
+      >
+        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-border bg-elevated">
+          <Artwork
+            src={track.artwork}
+            alt={track.title}
+            res="sm"
+            className="h-full w-full"
+          />
+          <span
+            className={cn(
+              "absolute inset-0 flex items-center justify-center bg-black/55 transition-opacity",
+              isCurrent ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+            )}
+          >
+            {isCurrent && isPlaying ? (
+              <Equalizer playing className="h-3.5 text-white" />
+            ) : (
+              <Play className="ml-0.5 h-4 w-4 fill-white text-white" strokeWidth={0} />
+            )}
+          </span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p
+            className={cn(
+              "truncate text-[13.5px] font-semibold leading-snug",
+              isCurrent ? "text-primary" : "text-foreground",
+            )}
+          >
+            {track.title}
+          </p>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {artist?.name ?? "Sangeet"}
+          </p>
+        </div>
+      </button>
+      <TrackContextMenu
+        track={track}
+        className="h-8 w-8 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 data-[state=open]:opacity-100"
+      />
+    </div>
+  );
 }
 
 function CarouselTrackCard({
@@ -278,8 +376,9 @@ export default function HomePage() {
   const [loadingTaste, setLoadingTaste] = useState(false);
 
   const [ytFeedConnected, setYtFeedConnected] = useState(false);
-  const [ytSuggestedTracks, setYtSuggestedTracks] = useState<Track[]>([]);
-  const [ytLikedTracks, setYtLikedTracks] = useState<Track[]>([]);
+  const [ytQuickPicks, setYtQuickPicks] = useState<Track[]>([]);
+  const [ytListenAgain, setYtListenAgain] = useState<Track[]>([]);
+  const [ytRecommended, setYtRecommended] = useState<Track[]>([]);
   const [ytSeeds, setYtSeeds] = useState<string[]>([]);
   const [loadingYtFeed, setLoadingYtFeed] = useState(false);
 
@@ -376,12 +475,13 @@ export default function HomePage() {
     };
   }, []);
 
-  // Personalized YouTube Music feed for signed-in Google accounts
+  // Personalized feed for signed-in Google accounts
   useEffect(() => {
     if (!session) {
       setYtFeedConnected(false);
-      setYtSuggestedTracks([]);
-      setYtLikedTracks([]);
+      setYtQuickPicks([]);
+      setYtListenAgain([]);
+      setYtRecommended([]);
       setYtSeeds([]);
       setLoadingYtFeed(false);
       return;
@@ -391,8 +491,9 @@ export default function HomePage() {
     const cached = ytFeedCache.get(cacheKey);
     if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
       setYtFeedConnected(cached.connected);
-      setYtSuggestedTracks(cached.suggested);
-      setYtLikedTracks(cached.liked);
+      setYtQuickPicks(cached.quickPicks);
+      setYtListenAgain(cached.listenAgain);
+      setYtRecommended(cached.recommended);
       setYtSeeds(cached.seeds);
       setLoadingYtFeed(false);
       return;
@@ -406,55 +507,33 @@ export default function HomePage() {
         if (!res.ok) return null;
         return (await res.json()) as {
           connected?: boolean;
-          suggested?: Array<{
-            videoId: string;
-            title: string;
-            artist: string;
-            durationSeconds?: number;
-            thumbnail?: string;
-          }>;
-          liked?: Array<{
-            videoId: string;
-            title: string;
-            artist: string;
-            durationSeconds?: number;
-            thumbnail?: string;
-          }>;
+          quickPicks?: FeedApiTrack[];
+          listenAgain?: FeedApiTrack[];
+          recommended?: FeedApiTrack[];
+          suggested?: FeedApiTrack[];
+          liked?: FeedApiTrack[];
           seeds?: string[];
         };
       })
       .then((payload) => {
         if (!active || !payload) return;
-        const suggested = (payload.suggested ?? []).map((item) =>
-          registerYouTubeSearchResult({
-            videoId: item.videoId,
-            title: item.title,
-            artist: item.artist,
-            durationSeconds: item.durationSeconds,
-            thumbnail: item.thumbnail,
-          }),
-        );
-        const liked = (payload.liked ?? []).map((item) =>
-          registerYouTubeSearchResult({
-            videoId: item.videoId,
-            title: item.title,
-            artist: item.artist,
-            durationSeconds: item.durationSeconds,
-            thumbnail: item.thumbnail,
-          }),
-        );
+        const quickPicks = registerFeedTracks(payload.quickPicks ?? payload.suggested);
+        const listenAgain = registerFeedTracks(payload.listenAgain ?? payload.liked);
+        const recommended = registerFeedTracks(payload.recommended ?? payload.suggested);
         const seeds = Array.isArray(payload.seeds) ? payload.seeds : [];
         const connected = Boolean(payload.connected);
         ytFeedCache.set(cacheKey, {
           at: Date.now(),
           connected,
-          suggested,
-          liked,
+          quickPicks,
+          listenAgain,
+          recommended,
           seeds,
         });
         setYtFeedConnected(connected);
-        setYtSuggestedTracks(suggested);
-        setYtLikedTracks(liked);
+        setYtQuickPicks(quickPicks);
+        setYtListenAgain(listenAgain);
+        setYtRecommended(recommended);
         setYtSeeds(seeds);
       })
       .catch(() => undefined)
@@ -549,33 +628,6 @@ export default function HomePage() {
     });
   }, [loadOffline, nativeOffline]);
 
-  const likedPlaying = Boolean(currentTrackId && likedTrackIds.includes(currentTrackId));
-  const resolvedQuickPicks = useMemo(() => {
-    const personalCount = Math.min(4, recentlyPlayed.length + likedTrackIds.length);
-    const base = feed.quickPicks.slice(0, personalCount > 0 ? Math.max(personalCount, 3) : 0);
-    const seen = new Set(base.map((t) => t.id));
-    const combined = [...base];
-    for (const t of trendingTracks) {
-      if (combined.length >= 7) break;
-      if (!seen.has(t.id)) {
-        seen.add(t.id);
-        combined.push(t);
-      }
-    }
-    for (const t of feed.quickPicks) {
-      if (combined.length >= 7) break;
-      if (!seen.has(t.id)) {
-        seen.add(t.id);
-        combined.push(t);
-      }
-    }
-    return combined;
-  }, [feed.quickPicks, trendingTracks, recentlyPlayed.length, likedTrackIds.length]);
-
-  const quickPickIds = useMemo(
-    () => resolvedQuickPicks.map((t) => t.id),
-    [resolvedQuickPicks],
-  );
   const trendingIds = useMemo(
     () => trendingTracks.map((t) => t.id),
     [trendingTracks],
@@ -584,9 +636,64 @@ export default function HomePage() {
     () => (tasteTracks.length > 0 ? tasteTracks : feed.tracks.slice(0, 12)),
     [tasteTracks, feed.tracks],
   );
-  const personalizedIds = useMemo(
-    () => personalizedTracks.map((t) => t.id),
-    [personalizedTracks],
+  const quickPicksTracks = useMemo(() => {
+    if (ytFeedConnected && ytQuickPicks.length > 0) {
+      return ytQuickPicks.slice(0, 20);
+    }
+    const seen = new Set<string>();
+    const artistCounts = new Map<string, number>();
+    const combined: Track[] = [];
+    for (const candidate of [...feed.quickPicks, ...trendingTracks, ...personalizedTracks]) {
+      if (combined.length >= 16) break;
+      if (seen.has(candidate.id)) continue;
+      const artistCount = artistCounts.get(candidate.artistId) ?? 0;
+      if (artistCount >= 2) continue;
+      seen.add(candidate.id);
+      artistCounts.set(candidate.artistId, artistCount + 1);
+      combined.push(candidate);
+    }
+    return combined;
+  }, [ytFeedConnected, ytQuickPicks, feed.quickPicks, trendingTracks, personalizedTracks]);
+
+  const quickPickIds = useMemo(
+    () => quickPicksTracks.map((t) => t.id),
+    [quickPicksTracks],
+  );
+
+  const listenAgainTracks = useMemo(() => {
+    if (ytFeedConnected && ytListenAgain.length > 0) {
+      return ytListenAgain.slice(0, 12);
+    }
+    const seen = new Set<string>();
+    const local: Track[] = [];
+    for (const id of [...recentlyPlayed, ...likedTrackIds]) {
+      if (local.length >= 12) break;
+      if (seen.has(id)) continue;
+      const track = getTrack(id);
+      if (track) {
+        seen.add(id);
+        local.push(track);
+      }
+    }
+    return local;
+  }, [ytFeedConnected, ytListenAgain, recentlyPlayed, likedTrackIds]);
+
+  const listenAgainIds = useMemo(
+    () => listenAgainTracks.map((t) => t.id),
+    [listenAgainTracks],
+  );
+
+  const recommendedTracks = useMemo(
+    () =>
+      ytFeedConnected && ytRecommended.length > 0
+        ? ytRecommended.slice(0, 12)
+        : personalizedTracks.slice(0, 12),
+    [ytFeedConnected, ytRecommended, personalizedTracks],
+  );
+
+  const recommendedIds = useMemo(
+    () => recommendedTracks.map((t) => t.id),
+    [recommendedTracks],
   );
 
   const toggleTuneArtist = (artistId: string) => {
@@ -632,6 +739,9 @@ export default function HomePage() {
 
   const carouselTrackClass =
     "no-scrollbar hide-scrollbar -mx-4 flex min-w-0 snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 py-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 sm:py-0 md:grid-cols-4 lg:grid-cols-6 [&>*]:w-[146px] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:w-auto";
+
+  const horizontalShelfClass =
+    "no-scrollbar hide-scrollbar -mx-4 flex min-w-0 snap-x snap-mandatory gap-4 overflow-x-auto px-4 py-1 sm:mx-0 sm:px-0 [&>*]:w-[146px] sm:[&>*]:w-[168px] lg:[&>*]:w-[180px] [&>*]:shrink-0 [&>*]:snap-start";
 
   return (
     <div className="min-h-dvh w-full max-w-full min-w-0 overflow-x-clip bg-background">
@@ -831,50 +941,135 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* ALL & MUSIC: 8-Tile Rectangular Quick-Pick Grid */}
+        {/* ALL & MUSIC: Quick picks (4-row horizontal swipeable multi-column compact track grid) */}
         {(showAll || showMusic) && (
-          <section aria-label="Quick picks" className="mb-7 sm:mb-8">
-            <div className="grid min-w-0 grid-cols-2 gap-2.5 lg:grid-cols-4">
-              {/* Tile 1: Liked Songs */}
-              <Link
-                href="/liked"
-                className={cn(
-                  "group flex h-[56px] w-full min-w-0 items-center gap-2 overflow-hidden rounded-xl border border-border bg-card p-0 pr-2.5 text-left transition duration-150 hover:border-white/[0.16] hover:bg-elevated active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:gap-2.5 sm:pr-3",
-                  likedPlaying &&
-                    "border-primary/45 bg-primary/[0.08] hover:border-primary/55 hover:bg-primary/[0.11]",
-                )}
+          <section aria-label="Quick picks" className="section-space">
+            <SectionHeader
+              title="Quick picks"
+              action={
+                quickPickIds.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => playShuffled(quickPickIds, "Quick picks")}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-medium text-foreground transition hover:bg-elevated active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <Shuffle className="h-3.5 w-3.5 text-primary" />
+                    Play all
+                  </button>
+                ) : undefined
+              }
+            />
+            {loadingYtFeed && quickPicksTracks.length === 0 ? (
+              <div
+                data-no-tab-swipe="true"
+                className="no-scrollbar hide-scrollbar grid grid-flow-col grid-rows-4 auto-cols-[minmax(270px,82vw)] sm:auto-cols-[minmax(310px,360px)] gap-x-4 gap-y-1.5 overflow-x-auto pb-1"
               >
-                <span className="flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-none bg-gradient-to-br from-[#450af5] via-[#6d3df5] to-[#8e8ee5]">
-                  <Heart className="h-5 w-5 fill-white text-white" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-semibold leading-tight text-foreground sm:text-[13.5px]">
-                    Liked Songs
-                  </span>
-                  <span className="mt-0.5 block truncate text-[11px] text-muted-foreground tabular-nums">
-                    {likedTrackIds.length}{" "}
-                    {likedTrackIds.length === 1 ? "song" : "songs"}
-                  </span>
-                </span>
-                {likedPlaying && (
-                  <Equalizer
-                    playing={isPlaying}
-                    className="shrink-0 text-primary"
+                {Array.from({ length: 12 }).map((_, idx) => (
+                  <div key={idx} className="flex items-center gap-3 rounded-xl p-1.5">
+                    <div className="skeleton h-12 w-12 shrink-0 rounded-lg" />
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <div className="skeleton h-3.5 w-3/4 rounded" />
+                      <div className="skeleton h-3 w-1/2 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div
+                data-no-tab-swipe="true"
+                className="no-scrollbar hide-scrollbar grid grid-flow-col grid-rows-4 auto-cols-[minmax(270px,82vw)] sm:auto-cols-[minmax(310px,360px)] gap-x-4 gap-y-1.5 overflow-x-auto pb-1"
+              >
+                {quickPicksTracks.map((track) => (
+                  <QuickPickRow
+                    key={track.id}
+                    track={track}
+                    contextIds={quickPickIds}
+                    contextLabel="Quick picks"
                   />
-                )}
-              </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
-              {/* Tiles 2-8: Quick Picks */}
-              {resolvedQuickPicks.slice(0, 7).map((track) => (
-                <QuickTrackTile
-                  key={track.id}
-                  track={track}
-                  contextIds={quickPickIds}
-                  contextLabel="Quick picks"
-                  className="h-[56px] w-full min-w-0 border-border"
-                />
-              ))}
-            </div>
+        {/* ALL & MUSIC: Listen again horizontal carousel */}
+        {(showAll || showMusic) && (listenAgainTracks.length > 0 || loadingYtFeed) && (
+          <section aria-label="Listen again" className="section-space">
+            <SectionHeader
+              title="Listen again"
+              href="/recently-played"
+              linkLabel="See all"
+            />
+            {loadingYtFeed && listenAgainTracks.length === 0 ? (
+              <div data-no-tab-swipe="true" className={horizontalShelfClass}>
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div key={idx} className="space-y-2.5">
+                    <div className="skeleton aspect-square w-full rounded-2xl" />
+                    <div className="skeleton h-3.5 w-3/4 rounded-md" />
+                    <div className="skeleton h-3 w-1/2 rounded-md" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div data-no-tab-swipe="true" className={horizontalShelfClass}>
+                {listenAgainTracks.map((track) => (
+                  <CarouselTrackCard
+                    key={track.id}
+                    track={track}
+                    contextIds={listenAgainIds}
+                    contextLabel="Listen again"
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ALL & MUSIC: Recommended for you horizontal carousel */}
+        {(showAll || showMusic) && (
+          <section aria-label="Recommended for you" className="section-space">
+            <SectionHeader
+              title="Recommended for you"
+              description={
+                ytFeedConnected && ytSeeds.length > 0
+                  ? `Inspired by ${ytSeeds.slice(0, 3).join(", ")}`
+                  : undefined
+              }
+              action={
+                recommendedIds.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => playShuffled(recommendedIds, "Recommended for you")}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-medium text-foreground transition hover:bg-elevated active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <Shuffle className="h-3.5 w-3.5 text-primary" />
+                    Shuffle
+                  </button>
+                ) : undefined
+              }
+            />
+            {(loadingYtFeed || loadingTaste) && recommendedTracks.length === 0 ? (
+              <div data-no-tab-swipe="true" className={horizontalShelfClass}>
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div key={idx} className="space-y-2.5">
+                    <div className="skeleton aspect-square w-full rounded-2xl" />
+                    <div className="skeleton h-3.5 w-3/4 rounded-md" />
+                    <div className="skeleton h-3 w-1/2 rounded-md" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div data-no-tab-swipe="true" className={horizontalShelfClass}>
+                {recommendedTracks.map((track) => (
+                  <CarouselTrackCard
+                    key={track.id}
+                    track={track}
+                    contextIds={recommendedIds}
+                    contextLabel="Recommended for you"
+                  />
+                ))}
+              </div>
+            )}
           </section>
         )}
 
@@ -983,7 +1178,7 @@ export default function HomePage() {
         )}
 
         {/* Compact Taste Tuner for new listeners */}
-        {feed.isNewListener && !tuneDismissed && (showAll || showMusic) && (
+        {feed.isNewListener && !tuneDismissed && !ytFeedConnected && (showAll || showMusic) && (
           <section
             aria-label="Personalize your feed"
             className="mb-7 rounded-2xl border border-border bg-card p-4 sm:mb-8"
@@ -1040,68 +1235,6 @@ export default function HomePage() {
 
         {showAll && <InstallPromptBanner />}
 
-        {/* Personalized Feed */}
-        {(showAll || showMusic) && session && ytFeedConnected && (ytSuggestedTracks.length > 0 || ytLikedTracks.length > 0) && (
-          <>
-            {ytSuggestedTracks.length > 0 && (
-              <section className="section-space" aria-label="Picked for you">
-                <SectionHeader
-                  title="Picked for you"
-                  description={
-                    ytSeeds.length > 0
-                      ? `Inspired by ${ytSeeds.join(", ")}`
-                      : "Curated for your listening taste"
-                  }
-                  action={
-                    <button
-                      type="button"
-                      onClick={() =>
-                        playShuffled(
-                          ytSuggestedTracks.map((t) => t.id),
-                          "Picked for you",
-                        )
-                      }
-                      className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-medium text-foreground transition hover:bg-elevated active:scale-95"
-                    >
-                      <Shuffle className="h-3.5 w-3.5 text-primary" />
-                      Shuffle
-                    </button>
-                  }
-                />
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-                  {ytSuggestedTracks.slice(0, 12).map((track) => (
-                    <CarouselTrackCard
-                      key={track.id}
-                      track={track}
-                      contextIds={ytSuggestedTracks.map((t) => t.id)}
-                      contextLabel="Picked for you"
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {ytLikedTracks.length > 0 && (
-              <section className="section-space" aria-label="Your favorites">
-                <SectionHeader
-                  title="Your favorites"
-                  description="Tracks you've loved recently"
-                />
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-                  {ytLikedTracks.slice(0, 6).map((track) => (
-                    <CarouselTrackCard
-                      key={track.id}
-                      track={track}
-                      contextIds={ytLikedTracks.map((t) => t.id)}
-                      contextLabel="Your favorites"
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-          </>
-        )}
-
         {/* ALL: Trending Now Carousel */}
         {showAll && (
           <section className="section-space" aria-label="Trending now">
@@ -1135,39 +1268,6 @@ export default function HomePage() {
                     track={track}
                     contextIds={trendingIds}
                     contextLabel="Trending now"
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* ALL: Personalized Picks */}
-        {showAll && (
-          <section className="section-space" aria-label="Picked for you">
-            <SectionHeader
-              title="Picked for you"
-              href="/search"
-              linkLabel="See all"
-            />
-            {loadingTaste && tasteTracks.length === 0 ? (
-              <div data-no-tab-swipe="true" className={carouselTrackClass}>
-                {Array.from({ length: 6 }).map((_, idx) => (
-                  <div key={idx} className="space-y-2.5">
-                    <div className="skeleton aspect-square w-full rounded-2xl" />
-                    <div className="skeleton h-3.5 w-3/4 rounded-md" />
-                    <div className="skeleton h-3 w-1/2 rounded-md" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div data-no-tab-swipe="true" className={carouselTrackClass}>
-                {personalizedTracks.slice(0, 6).map((track) => (
-                  <CarouselTrackCard
-                    key={track.id}
-                    track={track}
-                    contextIds={personalizedIds}
-                    contextLabel={feed.tasteSeedLabel}
                   />
                 ))}
               </div>

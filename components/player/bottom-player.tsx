@@ -11,7 +11,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { PlaybackControls } from "./playback-controls";
 import { ProgressBar } from "./progress-bar";
 import { VolumeControl } from "./volume-control";
-import { EqualizerMenu } from "./equalizer-menu";
 import { SleepTimerMenu } from "./sleep-timer-menu";
 
 export function BottomPlayer() {
@@ -104,7 +103,6 @@ export function BottomPlayer() {
         </div>
 
         <div className="flex items-center justify-end gap-2">
-          <EqualizerMenu />
           <SleepTimerMenu />
           <Tooltip>
             <TooltipTrigger asChild>

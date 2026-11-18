@@ -41,7 +41,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     document.body.classList.toggle("app-shell-scroll-locked", usesAppScroll);
-    return () => document.body.classList.remove("app-shell-scroll-locked");
+    document.documentElement.classList.toggle("app-shell-scroll-locked", usesAppScroll);
+    return () => {
+      document.body.classList.remove("app-shell-scroll-locked");
+      document.documentElement.classList.remove("app-shell-scroll-locked");
+    };
   }, [usesAppScroll]);
 
   if (isAdmin) {
@@ -62,23 +66,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-dvh w-full max-w-full overflow-x-clip">
+    <div className="h-dvh w-full max-w-full overflow-hidden">
       <Sidebar />
       <div
         ref={scrollContainerRef}
         className={cn(
-          "app-shell-scroll flex flex-col min-h-dvh w-full max-w-full min-w-0 overflow-x-clip transition-[padding] duration-200 ease-out",
+          "app-shell-scroll w-full max-w-full min-w-0 transition-[padding] duration-200 ease-out",
           sidebarCollapsed ? "md:pl-[80px]" : "md:pl-[240px]",
           rightPanelOpen && "xl:pr-[340px]",
-          hasTrack
-            ? "pb-[calc(var(--app-shell-pb-track,156px)+env(safe-area-inset-bottom))] md:pb-[92px]"
-            : "pb-[calc(var(--app-shell-pb-idle,92px)+env(safe-area-inset-bottom))] md:pb-0",
         )}
       >
-        <TopBar />
-        <SiteAnnouncement />
-        <main className="flex-1">{children}</main>
-        <SiteFooter />
+        <div
+          className={cn(
+            "flex min-h-full flex-col",
+            hasTrack
+              ? "pb-[calc(136px+env(safe-area-inset-bottom))] md:pb-[92px]"
+              : "pb-[calc(76px+env(safe-area-inset-bottom))] md:pb-0",
+          )}
+        >
+          <TopBar />
+          <SiteAnnouncement />
+          <main className="flex-1">{children}</main>
+          <SiteFooter />
+        </div>
       </div>
       <RightPanel />
       <BottomPlayer />

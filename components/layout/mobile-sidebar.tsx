@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clock3, Compass, Heart, Home, Library, ListMusic, Palette, Plus, Search, Settings2, X, Youtube } from "lucide-react";
+import { Clock3, Compass, Heart, Home, Library, ListMusic, Palette, Plus, Search, Settings2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -19,7 +19,6 @@ const links = [
   { href: "/library", label: "Your Library", icon: Library },
   { href: "/liked", label: "Liked Songs", icon: Heart },
   { href: "/recently-played", label: "Recently Played", icon: Clock3 },
-  { href: "/my-youtube-library", label: "YouTube Library", icon: Youtube },
   { href: "/queue", label: "Queue", icon: ListMusic },
 ];
 

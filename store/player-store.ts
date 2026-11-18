@@ -23,10 +23,12 @@ import {
   getOfflineAudioUrl,
   ensureAndroidOfflineAudio,
   hasOfflineTrackSync,
+  isDesktopNativeApp,
   isNativeOfflineSupported,
   isOfflineRegistryHydrated,
 } from "@/lib/offline-audio";
 import {
+  getLoadedYouTubeVideoId,
   loadYouTubeVideo,
   muteYouTube,
   pauseYouTube,
@@ -145,6 +147,10 @@ export function markYouTubeAudioProxyUnavailable(): void {
 
 export function isYouTubeAudioProxyUnavailable(): boolean {
   return youtubeAudioProxyUnavailable;
+}
+
+function canUseYouTubeAudioProxy(): boolean {
+  return isDesktopNativeApp() && !isYouTubeAudioProxyUnavailable();
 }
 
 function audiusStreamProxyUrl(trackId: string): string {
@@ -315,7 +321,7 @@ export const usePlayerStore = create<PlayerState>()(
           }
 
           if (track.youtubeId) {
-            if (audio && !state.videoMode && !isYouTubeAudioProxyUnavailable()) {
+            if (audio && !state.videoMode && canUseYouTubeAudioProxy()) {
               try {
                 stopYouTube();
                 loadAndPlayAudioElement(
@@ -329,10 +335,15 @@ export const usePlayerStore = create<PlayerState>()(
                 // Fall back to YouTube IFrame if audio element setup fails.
               }
             }
-            audio?.pause();
-            if (audio && audio.src) {
-              audio.removeAttribute("src");
+            if (audio) {
+              if (audio.src) {
+                audio.removeAttribute("src");
+                audio.load();
+              }
+              audio.pause();
             }
+            setYouTubeVolume(state.volume);
+            muteYouTube(state.muted);
             loadYouTubeVideo(track.youtubeId, shouldPlay);
             setYouTubePlaybackRate(state.playbackRate);
             return;
@@ -371,7 +382,7 @@ export const usePlayerStore = create<PlayerState>()(
 
           if (
             canDownloadOffline(track) &&
-            (hasOfflineTrackSync(trackId) || !isOfflineRegistryHydrated())
+            !(isOfflineRegistryHydrated() && !hasOfflineTrackSync(trackId))
           ) {
             void getOfflineAudioUrl(trackId)
               .then((offlineUrl) => {
@@ -560,7 +571,11 @@ export const usePlayerStore = create<PlayerState>()(
           }
           const track = getTrack(state.currentTrackId);
           if (track?.youtubeId) {
-            if (audio && !state.videoMode) {
+            if (audio && !state.videoMode && canUseYouTubeAudioProxy()) {
+              startTrack(track.id, true);
+              return;
+            }
+            if (getLoadedYouTubeVideoId() !== track.youtubeId) {
               startTrack(track.id, true);
               return;
             }
@@ -720,17 +735,28 @@ export const usePlayerStore = create<PlayerState>()(
           if (!track?.youtubeId) return;
           const audio = getAudioElement();
           if (mode) {
-            // Switching to Theater video mode: pause audio element and hand off to YouTube embed
-            const pos = audio && isAudioElementActive(audio) ? audio.currentTime : state.currentTime;
-            audio?.pause();
-            if (audio) {
-              audio.removeAttribute("src");
-              audio.load();
+            // Switching to Theater video mode: pause audio element / native service and hand off to YouTube embed
+            const audioActive = Boolean(audio && isAudioElementActive(audio));
+            const pos = audioActive && audio ? audio.currentTime : state.currentTime;
+            if (isAndroidNativeApp()) {
+              androidPause();
             }
-            loadYouTubeVideo(track.youtubeId, state.isPlaying, pos);
-            setYouTubePlaybackRate(state.playbackRate);
-          } else if (audio && !isYouTubeAudioProxyUnavailable()) {
-            // Switching back to Compact audio mode: resume via <audio> for background support
+            if (audio) {
+              if (audio.src) {
+                audio.removeAttribute("src");
+                audio.load();
+              }
+              audio.pause();
+            }
+            if (audioActive || isAndroidNativeApp() || getLoadedYouTubeVideoId() !== track.youtubeId) {
+              loadYouTubeVideo(track.youtubeId, state.isPlaying, pos);
+              setYouTubePlaybackRate(state.playbackRate);
+            }
+          } else if (isAndroidNativeApp()) {
+            stopYouTube();
+            startTrack(track.id, state.isPlaying);
+          } else if (audio && canUseYouTubeAudioProxy()) {
+            // Switching back to Compact audio mode on Desktop: resume via <audio> for background support
             const pos = state.currentTime;
             stopYouTube();
             audio.src = youtubeAudioProxyUrl(track.youtubeId);
@@ -930,7 +956,11 @@ export const usePlayerStore = create<PlayerState>()(
             }
 
             if (track.youtubeId) {
-              if (audio && !latest.videoMode && !isYouTubeAudioProxyUnavailable()) {
+              if (isAndroidNativeApp() && !latest.videoMode) {
+                if (!latest.duration) set({ duration: track.duration });
+                return;
+              }
+              if (audio && !latest.videoMode && canUseYouTubeAudioProxy()) {
                 try {
                   if (!audio.src) {
                     audio.src = youtubeAudioProxyUrl(track.youtubeId);

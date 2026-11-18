@@ -16,7 +16,6 @@ import {
   Search,
   Settings2,
   ShieldCheck,
-  Youtube,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
@@ -36,7 +35,6 @@ const libraryNav = [
   { href: "/library", label: "Your Library", icon: Library },
   { href: "/liked", label: "Liked Songs", icon: Heart },
   { href: "/recently-played", label: "Recently Played", icon: Clock3 },
-  { href: "/my-youtube-library", label: "YouTube Library", icon: Youtube },
   { href: "/queue", label: "Queue", icon: ListMusic },
 ];
 

@@ -16,14 +16,18 @@ import {
   restoreLocalAudio,
   scanDesktopAudioLibrary,
 } from "@/lib/local-audio";
-import { listOfflineTracks } from "@/lib/offline-audio";
+import { isDesktopNativeApp, listOfflineTracks } from "@/lib/offline-audio";
 import {
   getYouTubeDuration,
+  getYouTubePlayerState,
   getYouTubeTime,
+  hasPendingYouTubeLoad,
   initYouTubePlayer,
+  isYouTubeReady,
   loadYouTubeVideo,
   muteYouTube,
   pauseYouTube,
+  playYouTube,
   setYouTubePlaybackRate,
   setYouTubeVolume,
 } from "@/lib/youtube-engine";
@@ -52,21 +56,30 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const retryTimer = window.setTimeout(() => {
       const state = usePlayerStore.getState();
       if (isAndroidNativeApp() && !state.videoMode) return;
-      if (state.currentTrackId !== currentTrackId || !state.isLoading) return;
+      if (state.currentTrackId !== currentTrackId || !state.isPlaying || !state.isLoading) return;
       if (state.currentTime >= 1 || getYouTubeTime() >= 0.5) return;
       const audio = getAudioElement();
-      if (!audio?.src) {
+      if (audio?.src) return;
+      const ytState = getYouTubePlayerState();
+      // Never interrupt API init, active playback (1), or active buffering (3).
+      if (!isYouTubeReady() || ytState === 1 || ytState === 3) return;
+      if (ytState === 5 || ytState === 2) {
+        playYouTube();
+      } else {
         loadYouTubeVideo(track.youtubeId!, true, state.currentTime);
       }
     }, 4500);
     const timer = window.setTimeout(() => {
       const state = usePlayerStore.getState();
       if (isAndroidNativeApp() && !state.videoMode) return;
-      if (state.currentTrackId !== currentTrackId || !state.isLoading) return;
-      if (state.currentTime >= 1 || getYouTubeTime() >= 0.5) {
+      if (state.currentTrackId !== currentTrackId || !state.isPlaying || !state.isLoading) return;
+      const ytState = getYouTubePlayerState();
+      if (state.currentTime >= 1 || getYouTubeTime() >= 0.5 || ytState === 1) {
         state.syncFromAudio({ isLoading: false });
         return;
       }
+      // Never stop playback while YouTube is actively buffering.
+      if (ytState === 3) return;
       state.syncFromAudio({
         isPlaying: false,
         isLoading: false,
@@ -90,14 +103,21 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const currentIsYouTube = () => {
       const state = usePlayerStore.getState();
       const activeTrack = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+      if (!activeTrack?.youtubeId) return false;
       // On Android the native Media3 service owns YouTube playback. The hidden
       // HTML audio element is stopped during handoff; its pause/time events are
       // unrelated and must not overwrite native play state or lyric position.
-      if (isAndroidNativeApp() && activeTrack?.youtubeId && !state.videoMode) return true;
+      if (isAndroidNativeApp() && !state.videoMode) return true;
+      // Only Desktop native .exe uses <audio> for YouTube proxy playback, or any platform playing an offline blob.
       if (audio.src && audio.src !== window.location.href && !audio.error) {
-        return false;
+        if (
+          audio.src.startsWith("blob:") ||
+          (isDesktopNativeApp() && audio.src.includes("/api/youtube/audio"))
+        ) {
+          return false;
+        }
       }
-      return Boolean(activeTrack?.youtubeId);
+      return true;
     };
 
     const syncAudioElementSettings = () => {
@@ -331,7 +351,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
     initYouTubePlayer("aura-youtube-frame", {
       onReady: () => {
-        if (iframeOwnsPlayback()) {
+        if (iframeOwnsPlayback() && !usePlayerStore.getState().isPlaying) {
           usePlayerStore.getState().syncFromAudio({ isLoading: false });
         }
       },
@@ -389,8 +409,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      if (!isYouTubeReady() || hasPendingYouTubeLoad()) return;
       const currentTime = getYouTubeTime();
       const duration = getYouTubeDuration();
+      const ytState = getYouTubePlayerState();
+      if (ytState === 1 && state.isLoading) {
+        state.syncFromAudio({ isLoading: false });
+      }
       if (Number.isFinite(currentTime) && currentTime >= 0) {
         state.syncFromAudio({
           currentTime,

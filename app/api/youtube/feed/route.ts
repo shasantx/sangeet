@@ -72,17 +72,49 @@ function isUsableArtistSeed(name: string): boolean {
   return Boolean(key && key !== "youtube music" && key !== "various artists");
 }
 
-function capByArtist(tracks: YouTubeFeedTrack[], maxPerArtist: number): YouTubeFeedTrack[] {
-  const counts = new Map<string, number>();
-  const result: YouTubeFeedTrack[] = [];
+function interleaveByArtist(
+  tracks: YouTubeFeedTrack[],
+  maxPerArtist = 2,
+  limit = 20,
+): YouTubeFeedTrack[] {
+  const seenIds = new Set<string>();
+  const artistBuckets = new Map<string, YouTubeFeedTrack[]>();
+
   for (const track of tracks) {
+    if (!track.videoId || seenIds.has(track.videoId)) continue;
+    seenIds.add(track.videoId);
     const key = normalizeArtistKey(track.artist) || track.videoId;
-    const count = counts.get(key) ?? 0;
-    if (count >= maxPerArtist) continue;
-    counts.set(key, count + 1);
-    result.push(track);
+    const bucket = artistBuckets.get(key);
+    if (bucket) {
+      if (bucket.length < maxPerArtist) bucket.push(track);
+    } else {
+      artistBuckets.set(key, [track]);
+    }
+  }
+
+  const queues = Array.from(artistBuckets.values());
+  const result: YouTubeFeedTrack[] = [];
+  for (let round = 0; round < maxPerArtist && result.length < limit; round++) {
+    for (const queue of queues) {
+      if (result.length >= limit) break;
+      const track = queue[round];
+      if (track) result.push(track);
+    }
   }
   return result;
+}
+
+function emptyFeedPayload() {
+  return {
+    connected: false,
+    quickPicks: [],
+    listenAgain: [],
+    recommended: [],
+    liked: [],
+    suggested: [],
+    playlists: [],
+    seeds: [],
+  };
 }
 
 function extractTitleKeywordSeed(title: string): string {
@@ -187,10 +219,9 @@ export async function GET(request: NextRequest) {
   const identity = verifySession(request.cookies.get("aura_session")?.value);
   const rawYtCookie = request.cookies.get("sangeet_yt_oauth")?.value;
   if (!identity && !rawYtCookie) {
-    return NextResponse.json(
-      { connected: false, liked: [], suggested: [], playlists: [], seeds: [] },
-      { headers: { "cache-control": "no-store" } },
-    );
+    return NextResponse.json(emptyFeedPayload(), {
+      headers: { "cache-control": "no-store" },
+    });
   }
 
   let accessToken: string | null = null;
@@ -218,16 +249,16 @@ export async function GET(request: NextRequest) {
   }
 
   if (!accessToken) {
-    return NextResponse.json(
-      { connected: false, liked: [], suggested: [], playlists: [], seeds: [] },
-      { headers: { "cache-control": "no-store" } },
-    );
+    return NextResponse.json(emptyFeedPayload(), {
+      headers: { "cache-control": "no-store" },
+    });
   }
 
   try {
-    const [likedPayload, playlistsPayload] = await Promise.all([
+    const [likedPayload, playlistsPayload, subsPayload] = await Promise.all([
       ytGet("videos", { part: "snippet,contentDetails", myRating: "like", maxResults: "25" }, accessToken),
       ytGet("playlists", { part: "snippet,contentDetails", mine: "true", maxResults: "10" }, accessToken),
+      ytGet("subscriptions", { part: "snippet", mine: "true", maxResults: "15" }, accessToken),
     ]);
 
     const mappedLiked = (likedPayload?.items ?? [])
@@ -255,29 +286,42 @@ export async function GET(request: NextRequest) {
       })
       .filter((p) => p.id && !p.id.startsWith("LL"));
 
-    // If user has few liked music tracks or low artist variety, also pull items from their first playlist.
-    const distinctLikedArtists = new Set(
-      liked.map((t) => normalizeArtistKey(t.artist)).filter(Boolean),
-    );
     let playlistTracks: YouTubeFeedTrack[] = [];
-    if ((liked.length < 6 || distinctLikedArtists.size < 5) && playlists.length > 0) {
-      const firstPl = await ytGet(
-        "playlistItems",
-        { part: "snippet,contentDetails", playlistId: playlists[0].id, maxResults: "12" },
-        accessToken,
+    if (playlists.length > 0) {
+      const playlistPayloads = await Promise.all(
+        playlists.slice(0, 2).map((pl) =>
+          ytGet(
+            "playlistItems",
+            { part: "snippet,contentDetails", playlistId: pl.id, maxResults: "12" },
+            accessToken!,
+          ),
+        ),
       );
-      playlistTracks = (firstPl?.items ?? [])
+      const mappedPlaylistEntries = playlistPayloads
+        .flatMap((plPayload) => plPayload?.items ?? [])
         .map((item) => {
           const details = item.contentDetails as Record<string, unknown> | undefined;
           const vid = typeof details?.videoId === "string" ? details.videoId : undefined;
-          return mapVideoItem(item, vid)?.track ?? null;
+          return mapVideoItem(item, vid);
         })
-        .filter((t): t is YouTubeFeedTrack => t !== null);
+        .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+
+      const musicPlaylist = mappedPlaylistEntries.filter((e) => e.isMusic).map((e) => e.track);
+      playlistTracks =
+        musicPlaylist.length >= 4 ? musicPlaylist : mappedPlaylistEntries.map((e) => e.track);
+    }
+
+    const subChannelNames: string[] = [];
+    for (const item of subsPayload?.items ?? []) {
+      const snippet = item.snippet as Record<string, unknown> | undefined;
+      if (typeof snippet?.title === "string") {
+        subChannelNames.push(snippet.title);
+      }
     }
 
     const seedMap = new Map<string, string>();
-    const addSeed = (rawName: string) => {
-      if (seedMap.size >= 5) return;
+    const addSeed = (rawName: string, cap = 5) => {
+      if (seedMap.size >= cap) return;
       const cleaned = cleanChannelArtist(rawName);
       if (!isUsableArtistSeed(cleaned)) return;
       const key = normalizeArtistKey(cleaned);
@@ -286,23 +330,14 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    for (const track of liked) addSeed(track.artist);
-    for (const track of playlistTracks) addSeed(track.artist);
+    // Draw distinct seeds across liked music, playlists, and subscriptions.
+    for (const track of liked) addSeed(track.artist, 3);
+    for (const track of playlistTracks) addSeed(track.artist, 4);
+    for (const channel of subChannelNames) addSeed(channel, 5);
 
-    if (seedMap.size < 5) {
-      const subsPayload = await ytGet(
-        "subscriptions",
-        { part: "snippet", mine: "true", maxResults: "15" },
-        accessToken,
-      );
-      for (const item of subsPayload?.items ?? []) {
-        const snippet = item.snippet as Record<string, unknown> | undefined;
-        if (typeof snippet?.title === "string") {
-          addSeed(snippet.title);
-        }
-      }
-    }
-
+    // Fill any remaining slots up to 5 from all sources, then title keywords.
+    for (const track of liked) addSeed(track.artist, 5);
+    for (const track of playlistTracks) addSeed(track.artist, 5);
     if (seedMap.size < 5) {
       for (const track of [...liked, ...playlistTracks]) {
         if (seedMap.size >= 5) break;
@@ -317,10 +352,10 @@ export async function GET(request: NextRequest) {
     }
 
     const seeds = Array.from(seedMap.values()).slice(0, 5);
-    const searchSeeds = seeds.slice(0, 4);
+    const searchSeeds = seeds.slice(0, 5);
 
     const likedIds = new Set(liked.map((t) => t.videoId));
-    const suggested: YouTubeFeedTrack[] = [];
+    let rawRecommended: YouTubeFeedTrack[] = [];
 
     if (searchSeeds.length > 0) {
       const searchPayloads = await Promise.all(
@@ -346,31 +381,36 @@ export async function GET(request: NextRequest) {
       );
 
       const seenIds = new Set<string>(likedIds);
-      const artistCounts = new Map<string, number>();
       const maxBucketLen = Math.max(0, ...buckets.map((b) => b.length));
 
-      for (let round = 0; round < maxBucketLen && suggested.length < 16; round++) {
+      for (let round = 0; round < maxBucketLen; round++) {
         for (const bucket of buckets) {
-          if (suggested.length >= 16) break;
           const track = bucket[round];
           if (!track || seenIds.has(track.videoId)) continue;
-          const artistKey = normalizeArtistKey(track.artist) || track.videoId;
-          const count = artistCounts.get(artistKey) ?? 0;
-          if (count >= 2) continue;
           seenIds.add(track.videoId);
-          artistCounts.set(artistKey, count + 1);
-          suggested.push(track);
+          rawRecommended.push(track);
         }
       }
     }
 
-    const cappedLiked = capByArtist(liked, 2).slice(0, 16);
-    const fallbackSuggested = capByArtist(playlistTracks, 2).slice(0, 16);
+    if (rawRecommended.length === 0) {
+      rawRecommended = playlistTracks.filter((t) => !likedIds.has(t.videoId));
+      if (rawRecommended.length === 0) rawRecommended = playlistTracks;
+    }
+
+    const recommended = interleaveByArtist(rawRecommended, 2, 16);
+    const listenAgain = interleaveByArtist([...liked, ...playlistTracks], 2, 16);
+    const quickPicks = interleaveByArtist([...recommended, ...listenAgain], 2, 20);
+    const cappedLiked = interleaveByArtist(liked, 2, 16);
+
     const response = NextResponse.json(
       {
         connected: true,
+        quickPicks,
+        listenAgain,
+        recommended,
         liked: cappedLiked,
-        suggested: suggested.length > 0 ? suggested : fallbackSuggested,
+        suggested: recommended,
         playlists: playlists.slice(0, 8),
         seeds,
       },
@@ -398,9 +438,8 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch {
-    return NextResponse.json(
-      { connected: false, liked: [], suggested: [], playlists: [], seeds: [] },
-      { headers: { "cache-control": "no-store" } },
-    );
+    return NextResponse.json(emptyFeedPayload(), {
+      headers: { "cache-control": "no-store" },
+    });
   }
 }

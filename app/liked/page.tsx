@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Heart, ListMusic, Search, Shuffle, Sparkles } from "lucide-react";
+import { ArrowUpRight, Heart, ListMusic, Music2, Search, Shuffle } from "lucide-react";
 import { albums, getArtist, getTracks } from "@/lib/catalog";
 import { formatTotalDuration } from "@/lib/utils";
 import { useLibraryStore } from "@/store/library-store";
@@ -90,7 +90,7 @@ export default function LikedSongsPage() {
                 href="/explore"
                 className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-medium text-primary-foreground transition hover:bg-secondary"
               >
-                <Sparkles className="h-4 w-4" />
+                <Music2 className="h-4 w-4" />
                 Find music to love
               </Link>
             }

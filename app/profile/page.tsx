@@ -14,7 +14,6 @@ import {
   Pencil,
   Settings2,
   ShieldCheck,
-  Sparkles,
   UserRound,
   Users,
 } from "lucide-react";
@@ -266,7 +265,7 @@ export default function ProfilePage() {
       </section>
 
       <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-white/[.05] bg-white/[.015] px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">
-        <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
         <p>{isAuthenticated
           ? "Your Google account secures your Sangeet profile. Favorites, playlists and listening history sync to your account when the library database migration is installed."
           : "You are listening as a guest. Your library stays on this device until you sign in with Google."}</p>
