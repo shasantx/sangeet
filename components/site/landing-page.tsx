@@ -651,6 +651,12 @@ export function LandingPage() {
             <Link href="/library" className="inline-flex min-h-[36px] items-center transition hover:text-foreground">
               Library
             </Link>
+            <Link href="/privacy" className="inline-flex min-h-[36px] items-center transition hover:text-foreground">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="inline-flex min-h-[36px] items-center transition hover:text-foreground">
+              Terms of Service
+            </Link>
             <a
               href={APK_URL}
               download="sangeet-android.apk"

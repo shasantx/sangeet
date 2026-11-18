@@ -19,6 +19,7 @@ export function BottomPlayer() {
   const error = usePlayerStore((state) => state.error);
   const next = usePlayerStore((state) => state.next);
   const toggleQueue = useUIStore((state) => state.toggleQueuePanel);
+  const openNowPlaying = useUIStore((state) => state.openNowPlaying);
   const current = currentTrackId ? getTrack(currentTrackId) : undefined;
   const artist = current ? getArtist(current.artistId) : undefined;
   const albumHref =
@@ -47,8 +48,9 @@ export function BottomPlayer() {
         <div className="flex min-w-0 items-center gap-3">
           {current ? (
             <>
-              <Link
-                href="/now-playing"
+              <button
+                type="button"
+                onClick={openNowPlaying}
                 className="group relative shrink-0 overflow-hidden rounded-xl border border-border shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 aria-label="Open now playing"
               >
@@ -61,7 +63,7 @@ export function BottomPlayer() {
                 <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/35 group-hover:opacity-100">
                   <Expand className="h-4 w-4 text-white" />
                 </span>
-              </Link>
+              </button>
               <div className="min-w-0">
                 <span className="flex min-w-0 items-center gap-1.5">
                   <Link
@@ -106,13 +108,14 @@ export function BottomPlayer() {
           <SleepTimerMenu />
           <Tooltip>
             <TooltipTrigger asChild>
-              <Link
-                href="/now-playing"
+              <button
+                type="button"
+                onClick={openNowPlaying}
                 aria-label="View synchronized lyrics"
                 className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <Mic2 className="h-[16px] w-[16px]" strokeWidth={1.7} />
-              </Link>
+              </button>
             </TooltipTrigger>
             <TooltipContent>Lyrics</TooltipContent>
           </Tooltip>
@@ -132,13 +135,14 @@ export function BottomPlayer() {
           <VolumeControl className="hidden w-28 lg:flex xl:w-36" />
           <Tooltip>
             <TooltipTrigger asChild>
-              <Link
-                href="/now-playing"
+              <button
+                type="button"
+                onClick={openNowPlaying}
                 aria-label="Open full-screen player"
                 className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <Expand className="h-[16px] w-[16px]" strokeWidth={1.7} />
-              </Link>
+              </button>
             </TooltipTrigger>
             <TooltipContent>Full screen</TooltipContent>
           </Tooltip>

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clock3, Compass, Heart, Home, Library, Plus, Search, Settings2, X } from "lucide-react";
+import { Clock3, Compass, Heart, Home, Library, ListMusic, Palette, Plus, Search, Settings2, X, Youtube } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -19,6 +19,13 @@ const links = [
   { href: "/library", label: "Your Library", icon: Library },
   { href: "/liked", label: "Liked Songs", icon: Heart },
   { href: "/recently-played", label: "Recently Played", icon: Clock3 },
+  { href: "/my-youtube-library", label: "YouTube Library", icon: Youtube },
+  { href: "/queue", label: "Queue", icon: ListMusic },
+];
+
+const preferenceLinks = [
+  { href: "/settings?tab=appearance", label: "Themes & Appearance", icon: Palette },
+  { href: "/settings", label: "Settings", icon: Settings2 },
 ];
 
 export function MobileSidebar() {
@@ -55,6 +62,13 @@ export function MobileSidebar() {
         <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3" aria-label="Main navigation">
           {links.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
+            return <Link key={href} href={href} aria-current={active ? "page" : undefined} className={cn("flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition", active ? "bg-white/[.09] text-white" : "text-white/60 hover:bg-white/[.05] hover:text-white")}>
+              <Icon className={cn("h-[18px] w-[18px]", active ? "text-primary" : "text-white/45")} />{label}
+            </Link>;
+          })}
+          <div className="my-3 h-px bg-white/[.07]" />
+          {preferenceLinks.map(({ href, label, icon: Icon }) => {
+            const active = href === "/settings" && pathname === "/settings";
             return <Link key={href} href={href} aria-current={active ? "page" : undefined} className={cn("flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition", active ? "bg-white/[.09] text-white" : "text-white/60 hover:bg-white/[.05] hover:text-white")}>
               <Icon className={cn("h-[18px] w-[18px]", active ? "text-primary" : "text-white/45")} />{label}
             </Link>;

@@ -10,10 +10,14 @@ import type { DemoProfile } from "@/lib/types";
 export type ThemePreference =
   | "dark"
   | "midnight"
+  | "onyx"
+  | "blurple"
   | "dusk"
   | "emerald"
   | "aurora"
-  | "crimson";
+  | "crimson"
+  | "cotton-candy"
+  | "retro";
 export type AccentPreference =
   | "green"
   | "red"

@@ -67,17 +67,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div
         ref={scrollContainerRef}
         className={cn(
-          "app-shell-scroll min-h-dvh w-full max-w-full min-w-0 overflow-x-clip transition-[padding] duration-200 ease-out",
+          "app-shell-scroll flex flex-col min-h-dvh w-full max-w-full min-w-0 overflow-x-clip transition-[padding] duration-200 ease-out",
           sidebarCollapsed ? "md:pl-[80px]" : "md:pl-[240px]",
           rightPanelOpen && "xl:pr-[340px]",
           hasTrack
-            ? "pb-[calc(var(--app-shell-pb-track,156px)+env(safe-area-inset-bottom))] md:pb-[108px]"
-            : "pb-[calc(var(--app-shell-pb-idle,92px)+env(safe-area-inset-bottom))] md:pb-[32px]",
+            ? "pb-[calc(var(--app-shell-pb-track,156px)+env(safe-area-inset-bottom))] md:pb-[92px]"
+            : "pb-[calc(var(--app-shell-pb-idle,92px)+env(safe-area-inset-bottom))] md:pb-0",
         )}
       >
         <TopBar />
         <SiteAnnouncement />
-        <main className="min-h-[calc(100dvh-70px)]">{children}</main>
+        <main className="flex-1">{children}</main>
         <SiteFooter />
       </div>
       <RightPanel />

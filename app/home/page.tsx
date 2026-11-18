@@ -87,6 +87,16 @@ interface TrendingCacheEntry {
 const CACHE_TTL_MS = 10 * 60 * 1000;
 let trendingCache: TrendingCacheEntry | null = null;
 const tasteSearchCache = new Map<string, { at: number; tracks: Track[] }>();
+const ytFeedCache = new Map<
+  string,
+  {
+    at: number;
+    connected: boolean;
+    suggested: Track[];
+    liked: Track[];
+    seeds: string[];
+  }
+>();
 
 const TUNE_DISMISS_KEY = "sangeet-tune-feed-dismissed-v1";
 
@@ -267,6 +277,12 @@ export default function HomePage() {
   const [tasteTracks, setTasteTracks] = useState<Track[]>([]);
   const [loadingTaste, setLoadingTaste] = useState(false);
 
+  const [ytFeedConnected, setYtFeedConnected] = useState(false);
+  const [ytSuggestedTracks, setYtSuggestedTracks] = useState<Track[]>([]);
+  const [ytLikedTracks, setYtLikedTracks] = useState<Track[]>([]);
+  const [ytSeeds, setYtSeeds] = useState<string[]>([]);
+  const [loadingYtFeed, setLoadingYtFeed] = useState(false);
+
   const [offlineItems, setOfflineItems] = useState<
     Array<{ track: Track; artistName: string; sizeBytes: number; savedAt: number }>
   >([]);
@@ -359,6 +375,97 @@ export default function HomePage() {
       active = false;
     };
   }, []);
+
+  // Personalized YouTube Music feed for signed-in Google accounts
+  useEffect(() => {
+    if (!session) {
+      setYtFeedConnected(false);
+      setYtSuggestedTracks([]);
+      setYtLikedTracks([]);
+      setYtSeeds([]);
+      setLoadingYtFeed(false);
+      return;
+    }
+
+    const cacheKey = session.email || session.displayName || "user";
+    const cached = ytFeedCache.get(cacheKey);
+    if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
+      setYtFeedConnected(cached.connected);
+      setYtSuggestedTracks(cached.suggested);
+      setYtLikedTracks(cached.liked);
+      setYtSeeds(cached.seeds);
+      setLoadingYtFeed(false);
+      return;
+    }
+
+    let active = true;
+    setLoadingYtFeed(true);
+
+    fetch("/api/youtube/feed", { signal: AbortSignal.timeout(10000) })
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return (await res.json()) as {
+          connected?: boolean;
+          suggested?: Array<{
+            videoId: string;
+            title: string;
+            artist: string;
+            durationSeconds?: number;
+            thumbnail?: string;
+          }>;
+          liked?: Array<{
+            videoId: string;
+            title: string;
+            artist: string;
+            durationSeconds?: number;
+            thumbnail?: string;
+          }>;
+          seeds?: string[];
+        };
+      })
+      .then((payload) => {
+        if (!active || !payload) return;
+        const suggested = (payload.suggested ?? []).map((item) =>
+          registerYouTubeSearchResult({
+            videoId: item.videoId,
+            title: item.title,
+            artist: item.artist,
+            durationSeconds: item.durationSeconds,
+            thumbnail: item.thumbnail,
+          }),
+        );
+        const liked = (payload.liked ?? []).map((item) =>
+          registerYouTubeSearchResult({
+            videoId: item.videoId,
+            title: item.title,
+            artist: item.artist,
+            durationSeconds: item.durationSeconds,
+            thumbnail: item.thumbnail,
+          }),
+        );
+        const seeds = Array.isArray(payload.seeds) ? payload.seeds : [];
+        const connected = Boolean(payload.connected);
+        ytFeedCache.set(cacheKey, {
+          at: Date.now(),
+          connected,
+          suggested,
+          liked,
+          seeds,
+        });
+        setYtFeedConnected(connected);
+        setYtSuggestedTracks(suggested);
+        setYtLikedTracks(liked);
+        setYtSeeds(seeds);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setLoadingYtFeed(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [session]);
 
   // Single cached fetch for feed.tasteSeedQuery
   useEffect(() => {
@@ -932,6 +1039,94 @@ export default function HomePage() {
         )}
 
         {showAll && <InstallPromptBanner />}
+
+        {/* Personalized YouTube Music Feed */}
+        {(showAll || showMusic) && session && ytFeedConnected && (ytSuggestedTracks.length > 0 || ytLikedTracks.length > 0) && (
+          <>
+            {ytSuggestedTracks.length > 0 && (
+              <section className="section-space" aria-label="Your YouTube Music feed">
+                <SectionHeader
+                  title="Your YouTube Music Feed"
+                  description={
+                    ytSeeds.length > 0
+                      ? `Suggested from your YouTube taste · ${ytSeeds.join(", ")}`
+                      : "Suggested from your YouTube Music activity"
+                  }
+                  href="/my-youtube-library"
+                  linkLabel="Library"
+                  action={
+                    <button
+                      type="button"
+                      onClick={() =>
+                        playShuffled(
+                          ytSuggestedTracks.map((t) => t.id),
+                          "Your YouTube Music Feed",
+                        )
+                      }
+                      className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-medium text-foreground transition hover:bg-elevated active:scale-95"
+                    >
+                      <Shuffle className="h-3.5 w-3.5 text-primary" />
+                      Shuffle
+                    </button>
+                  }
+                />
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                  {ytSuggestedTracks.slice(0, 12).map((track) => (
+                    <CarouselTrackCard
+                      key={track.id}
+                      track={track}
+                      contextIds={ytSuggestedTracks.map((t) => t.id)}
+                      contextLabel="Your YouTube Music Feed"
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {ytLikedTracks.length > 0 && (
+              <section className="section-space" aria-label="Liked on YouTube Music">
+                <SectionHeader
+                  title="From your YouTube likes"
+                  description="Music you liked on YouTube & YouTube Music"
+                  href="/my-youtube-library"
+                  linkLabel="See all"
+                />
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                  {ytLikedTracks.slice(0, 6).map((track) => (
+                    <CarouselTrackCard
+                      key={track.id}
+                      track={track}
+                      contextIds={ytLikedTracks.map((t) => t.id)}
+                      contextLabel="Liked on YouTube Music"
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
+        )}
+
+        {(showAll || showMusic) && session?.provider === "google" && !loadingYtFeed && !ytFeedConnected && (
+          <section
+            aria-label="Connect YouTube Music"
+            className="mb-7 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 sm:mb-8"
+          >
+            <div className="min-w-0">
+              <p className="text-[13.5px] font-semibold text-foreground">
+                Get your personal YouTube Music feed
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Grant read-only YouTube access to see songs and recommendations from your likes and playlists.
+              </p>
+            </div>
+            <a
+              href="/api/youtube/connect"
+              className="inline-flex min-h-[40px] shrink-0 items-center gap-2 rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:brightness-110 active:scale-95"
+            >
+              Connect YouTube Music
+            </a>
+          </section>
+        )}
 
         {/* ALL: Trending Now Carousel */}
         {showAll && (

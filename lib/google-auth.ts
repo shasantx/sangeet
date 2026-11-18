@@ -1,4 +1,13 @@
-import { createHmac, createPublicKey, createVerify, timingSafeEqual } from "crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  createHmac,
+  createPublicKey,
+  createVerify,
+  randomBytes,
+  timingSafeEqual,
+} from "crypto";
 import { safeCompare } from "@/lib/security";
 
 if (typeof window !== "undefined") {
@@ -151,7 +160,67 @@ export async function googleAuthorizationEndpoint(): Promise<string> {
   return metadata.authorization_endpoint;
 }
 
-export async function exchangeGoogleCode(code: string, redirectUri: string, verifier: string, nonce: string): Promise<GoogleIdentity> {
+export interface GoogleTokenResult {
+  identity: GoogleIdentity;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn: number;
+  scopes: string[];
+}
+
+export interface YouTubeCookieTokens {
+  access_token: string;
+  refresh_token?: string;
+  expires_at: number;
+}
+
+function getCookieCipherKey(): Buffer | null {
+  const secret = getSessionSecret();
+  if (!secret) return null;
+  return createHash("sha256").update(`yt-cookie:${secret}`).digest();
+}
+
+export function sealYouTubeCookie(tokens: YouTubeCookieTokens): string | null {
+  const key = getCookieCipherKey();
+  if (!key) return null;
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(JSON.stringify(tokens), "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return `${iv.toString("base64url")}.${tag.toString("base64url")}.${encrypted.toString("base64url")}`;
+}
+
+export function unsealYouTubeCookie(value: string | undefined): YouTubeCookieTokens | null {
+  if (!value || value.length > 4096) return null;
+  const key = getCookieCipherKey();
+  if (!key) return null;
+  const [ivB64, tagB64, dataB64, extra] = value.split(".");
+  if (!ivB64 || !tagB64 || !dataB64 || extra) return null;
+  try {
+    const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(ivB64, "base64url"));
+    decipher.setAuthTag(Buffer.from(tagB64, "base64url"));
+    const plain = Buffer.concat([
+      decipher.update(Buffer.from(dataB64, "base64url")),
+      decipher.final(),
+    ]).toString("utf8");
+    const parsed = JSON.parse(plain) as Partial<YouTubeCookieTokens>;
+    if (typeof parsed.access_token !== "string" || !parsed.access_token) return null;
+    return {
+      access_token: parsed.access_token,
+      refresh_token: typeof parsed.refresh_token === "string" ? parsed.refresh_token : undefined,
+      expires_at: typeof parsed.expires_at === "number" ? parsed.expires_at : 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function exchangeGoogleCodeWithTokens(
+  code: string,
+  redirectUri: string,
+  verifier: string,
+  nonce: string,
+): Promise<GoogleTokenResult> {
   const metadata = await getDiscovery();
   const body = new URLSearchParams({
     code,
@@ -169,9 +238,27 @@ export async function exchangeGoogleCode(code: string, redirectUri: string, veri
     signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) throw new Error("Google token exchange failed");
-  const tokenPayload = (await response.json()) as { id_token?: string };
+  const tokenPayload = (await response.json()) as {
+    id_token?: string;
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+    scope?: string;
+  };
   if (!tokenPayload.id_token) throw new Error("Google did not return an ID token");
-  return verifyGoogleIdToken(tokenPayload.id_token, nonce);
+  const identity = await verifyGoogleIdToken(tokenPayload.id_token, nonce);
+  return {
+    identity,
+    accessToken: tokenPayload.access_token,
+    refreshToken: tokenPayload.refresh_token,
+    expiresIn: typeof tokenPayload.expires_in === "number" ? tokenPayload.expires_in : 3600,
+    scopes: typeof tokenPayload.scope === "string" ? tokenPayload.scope.split(/\s+/).filter(Boolean) : [],
+  };
+}
+
+export async function exchangeGoogleCode(code: string, redirectUri: string, verifier: string, nonce: string): Promise<GoogleIdentity> {
+  const result = await exchangeGoogleCodeWithTokens(code, redirectUri, verifier, nonce);
+  return result.identity;
 }
 
 async function verifyGoogleIdToken(token: string, expectedNonce: string): Promise<GoogleIdentity> {

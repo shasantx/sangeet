@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Heart, Pause, Play, SkipForward } from "lucide-react";
 import { getArtist, getTrack } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
@@ -8,7 +7,7 @@ import { usePlayerStore } from "@/store/player-store";
 import { useLibraryStore } from "@/store/library-store";
 import { Artwork } from "@/components/music/artwork";
 import { Equalizer } from "@/components/music/equalizer";
-import { toast } from "@/store/ui-store";
+import { toast, useUIStore } from "@/store/ui-store";
 
 function MiniPlayerProgress() {
   const currentTime = usePlayerStore((state) => state.currentTime);
@@ -35,6 +34,7 @@ export function MobileMiniPlayer() {
     currentTrackId ? state.isLiked(currentTrackId) : false,
   );
   const toggleLike = useLibraryStore((state) => state.toggleLike);
+  const openNowPlaying = useUIStore((state) => state.openNowPlaying);
 
   const current = currentTrackId ? getTrack(currentTrackId) : undefined;
   const artist = current ? getArtist(current.artistId) : undefined;
@@ -61,10 +61,10 @@ export function MobileMiniPlayer() {
       <MiniPlayerProgress />
 
       <div className="flex h-[var(--mini-player-height,62px)] items-center gap-2 p-0 pr-2">
-        <Link
-          href="/now-playing"
-          draggable={false}
-          className="flex h-full min-w-0 flex-1 items-center gap-3 rounded-l-xl outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+        <button
+          type="button"
+          onClick={openNowPlaying}
+          className="flex h-full min-w-0 flex-1 items-center gap-3 rounded-l-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
           aria-label={`Open now playing: ${current.title} by ${artist?.name ?? "Sangeet artist"}`}
         >
           <div className="relative h-[var(--mini-player-height,62px)] w-[var(--mini-player-height,62px)] shrink-0 overflow-hidden rounded-none border-r border-border bg-card">
@@ -92,7 +92,7 @@ export function MobileMiniPlayer() {
               <span className="truncate">{artist?.name ?? "Sangeet artist"}</span>
             </div>
           </div>
-        </Link>
+        </button>
 
         <div className="flex shrink-0 items-center gap-0.5">
           <button

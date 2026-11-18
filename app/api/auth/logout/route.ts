@@ -27,5 +27,12 @@ export async function POST(request: NextRequest) {
     path: "/",
     maxAge: 0,
   });
+  response.cookies.set("sangeet_yt_oauth", "", {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
   return response;
 }

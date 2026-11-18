@@ -21,6 +21,11 @@ interface UIState {
   setQueuePanelOpen: (open: boolean) => void;
   toggleQueuePanel: () => void;
 
+  nowPlayingOpen: boolean;
+  openNowPlaying: () => void;
+  closeNowPlaying: () => void;
+  toggleNowPlaying: () => void;
+
   addToPlaylistTrackId: string | null;
   openAddToPlaylist: (trackId: string) => void;
   closeAddToPlaylist: () => void;
@@ -43,6 +48,11 @@ export const useUIStore = create<UIState>((set) => ({
   queuePanelOpen: false,
   setQueuePanelOpen: (open) => set({ queuePanelOpen: open }),
   toggleQueuePanel: () => set((state) => ({ queuePanelOpen: !state.queuePanelOpen })),
+
+  nowPlayingOpen: false,
+  openNowPlaying: () => set({ nowPlayingOpen: true }),
+  closeNowPlaying: () => set({ nowPlayingOpen: false }),
+  toggleNowPlaying: () => set((state) => ({ nowPlayingOpen: !state.nowPlayingOpen })),
 
   addToPlaylistTrackId: null,
   openAddToPlaylist: (trackId) => set({ addToPlaylistTrackId: trackId }),

@@ -25,6 +25,7 @@ import {
   Settings2,
   ShieldCheck,
   Smartphone,
+  Sparkles,
   SunMedium,
   Trash2,
   Users,
@@ -55,85 +56,176 @@ const themes: {
   id: ThemePreference;
   label: string;
   tag: string;
+  tier: "default" | "nitro" | "studio";
   description: string;
   background: string;
   sidebar: string;
   surface: string;
   elevated: string;
   accent: string;
+  gradient: string;
+  swatchGradient: string;
   icon: typeof Moon;
 }[] = [
   {
     id: "dark",
-    label: "Obsidian Studio",
+    label: "Discord Ash",
     tag: "Studio Default",
-    description: "Neutral graphite noir engineered for long listening sessions.",
-    background: "#09090B",
+    tier: "default",
+    description: "Balanced charcoal ash engineered for long listening sessions.",
+    background: "#121215",
     sidebar: "#0E0E11",
-    surface: "#16161A",
-    elevated: "#202026",
+    surface: "#18181C",
+    elevated: "#26272E",
     accent: "#1ED760",
+    gradient:
+      "radial-gradient(ellipse 80% 55% at 15% 0%, rgba(30, 215, 96, 0.10), transparent 65%)",
+    swatchGradient: "linear-gradient(135deg, #26272E 0%, #121215 100%)",
     icon: Moon,
   },
   {
+    id: "onyx",
+    label: "True Onyx",
+    tag: "OLED Black",
+    tier: "studio",
+    description: "Pure #000000 OLED canvas with razor-sharp contrast and depth.",
+    background: "#000000",
+    sidebar: "#050507",
+    surface: "#0A0A0D",
+    elevated: "#14141A",
+    accent: "#E4E4E7",
+    gradient:
+      "radial-gradient(ellipse 75% 50% at 20% 0%, rgba(161, 161, 170, 0.08), transparent 65%)",
+    swatchGradient: "linear-gradient(135deg, #18181B 0%, #000000 100%)",
+    icon: Moon,
+  },
+  {
+    id: "blurple",
+    label: "Blurple Dusk",
+    tag: "Nitro",
+    tier: "nitro",
+    description: "Iconic Discord Blurple twilight with luminous indigo-violet glow.",
+    background: "#14152B",
+    sidebar: "#101124",
+    surface: "#1B1C38",
+    elevated: "#26284D",
+    accent: "#5865F2",
+    gradient:
+      "radial-gradient(ellipse 85% 60% at 18% 0%, rgba(88, 101, 242, 0.36), transparent 65%), radial-gradient(ellipse 65% 50% at 88% 10%, rgba(121, 131, 245, 0.24), transparent 60%)",
+    swatchGradient: "linear-gradient(135deg, #5865F2 0%, #7983F5 52%, #14152B 100%)",
+    icon: Sparkles,
+  },
+  {
+    id: "cotton-candy",
+    label: "Cotton Candy",
+    tag: "Nitro",
+    tier: "nitro",
+    description: "Deep twilight plum infused with soft pink and cyan ambient gradients.",
+    background: "#1B1026",
+    sidebar: "#150C1F",
+    surface: "#241633",
+    elevated: "#311F45",
+    accent: "#F472B6",
+    gradient:
+      "radial-gradient(ellipse 80% 58% at 14% 0%, rgba(244, 114, 182, 0.30), transparent 65%), radial-gradient(ellipse 70% 52% at 88% 8%, rgba(56, 189, 248, 0.24), transparent 60%)",
+    swatchGradient: "linear-gradient(135deg, #F472B6 0%, #38BDF8 100%)",
+    icon: Sparkles,
+  },
+  {
+    id: "retro",
+    label: "Retro Synthwave",
+    tag: "Nitro",
+    tier: "nitro",
+    description: "Neon synthwave dusk with electric magenta and warm amber glow.",
+    background: "#140B24",
+    sidebar: "#0F081C",
+    surface: "#1E1136",
+    elevated: "#2B194D",
+    accent: "#EC4899",
+    gradient:
+      "radial-gradient(ellipse 82% 58% at 15% 0%, rgba(236, 72, 153, 0.32), transparent 65%), radial-gradient(ellipse 68% 50% at 88% 10%, rgba(245, 158, 11, 0.24), transparent 60%)",
+    swatchGradient: "linear-gradient(135deg, #EC4899 0%, #F59E0B 100%)",
+    icon: Sparkles,
+  },
+  {
     id: "midnight",
-    label: "Midnight Slate",
+    label: "Midnight Sapphire",
     tag: "Cool Focus",
+    tier: "studio",
     description: "Deep ink sapphire with crisp slate layers and cool contrast.",
     background: "#070B14",
     sidebar: "#0B1120",
     surface: "#111A2E",
     elevated: "#18243E",
     accent: "#3898FF",
+    gradient:
+      "radial-gradient(ellipse 80% 55% at 18% 0%, rgba(56, 152, 255, 0.20), transparent 65%)",
+    swatchGradient: "linear-gradient(135deg, #3898FF 0%, #070B14 100%)",
     icon: AudioLines,
-  },
-  {
-    id: "dusk",
-    label: "Warm Espresso",
-    tag: "Late Night",
-    description: "Refined roasted charcoal with warm copper studio depth.",
-    background: "#0E0B09",
-    sidebar: "#140F0C",
-    surface: "#1F1814",
-    elevated: "#2A211C",
-    accent: "#E58E49",
-    icon: SunMedium,
   },
   {
     id: "emerald",
     label: "Evergreen Nocturne",
     tag: "Botanical",
+    tier: "studio",
     description: "Deep pine slate balanced with crisp jade highlights.",
     background: "#060D0A",
     sidebar: "#0A1410",
     surface: "#11221B",
     elevated: "#182F25",
     accent: "#20E070",
+    gradient:
+      "radial-gradient(ellipse 80% 55% at 18% 0%, rgba(32, 224, 112, 0.18), transparent 65%)",
+    swatchGradient: "linear-gradient(135deg, #20E070 0%, #060D0A 100%)",
     icon: AudioLines,
   },
   {
     id: "aurora",
     label: "Velvet Indigo",
     tag: "Editorial",
+    tier: "studio",
     description: "Editorial plum indigo with muted violet studio framing.",
     background: "#0A0812",
     sidebar: "#100C1C",
     surface: "#1A142E",
     elevated: "#251D40",
     accent: "#A874FF",
+    gradient:
+      "radial-gradient(ellipse 80% 55% at 18% 0%, rgba(168, 116, 255, 0.22), transparent 65%)",
+    swatchGradient: "linear-gradient(135deg, #A874FF 0%, #0A0812 100%)",
     icon: Palette,
   },
   {
     id: "crimson",
     label: "Noir Crimson",
     tag: "Velvet Noir",
+    tier: "studio",
     description: "Sophisticated burgundy noir with restrained rose accents.",
     background: "#10080B",
     sidebar: "#160B0E",
     surface: "#241217",
     elevated: "#321A21",
     accent: "#F4516C",
+    gradient:
+      "radial-gradient(ellipse 80% 55% at 18% 0%, rgba(244, 81, 108, 0.20), transparent 65%)",
+    swatchGradient: "linear-gradient(135deg, #F4516C 0%, #10080B 100%)",
     icon: Heart,
+  },
+  {
+    id: "dusk",
+    label: "Warm Espresso",
+    tag: "Late Night",
+    tier: "studio",
+    description: "Refined roasted charcoal with warm copper studio depth.",
+    background: "#0E0B09",
+    sidebar: "#140F0C",
+    surface: "#1F1814",
+    elevated: "#2A211C",
+    accent: "#E58E49",
+    gradient:
+      "radial-gradient(ellipse 80% 55% at 18% 0%, rgba(229, 142, 73, 0.20), transparent 65%)",
+    swatchGradient: "linear-gradient(135deg, #E58E49 0%, #0E0B09 100%)",
+    icon: SunMedium,
   },
 ];
 
@@ -523,9 +615,9 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 overflow-hidden rounded-xl border border-border bg-background">
+                <div className="mt-4 overflow-hidden rounded-xl border border-border bg-background" style={{ backgroundImage: activeTheme.gradient }}>
                   <div className="flex min-h-[104px] min-w-0 sm:min-h-[120px]">
-                    <div className="hidden w-[132px] shrink-0 flex-col justify-between border-r border-border bg-sidebar p-3 sm:flex">
+                    <div className="hidden w-[132px] shrink-0 flex-col justify-between border-r border-border bg-sidebar/95 p-3 sm:flex">
                       <div className="flex items-center gap-2">
                         <span className="h-2.5 w-2.5 rounded-full bg-primary" />
                         <span className="font-display text-[11px] font-semibold tracking-wide text-foreground">
@@ -593,13 +685,19 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Studio Theme Picker Grid */}
+              {/* Discord-Style Nitro Theme Picker Grid */}
               <div className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="eyebrow">Studio themes</p>
+                    <div className="flex items-center gap-2">
+                      <p className="eyebrow">Appearance &amp; Themes</p>
+                      <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-primary">
+                        <Sparkles className="h-2.5 w-2.5" />
+                        Nitro Studio
+                      </span>
+                    </div>
                     <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
-                      Six calibrated dark palettes with crisp contrast and zero visual clutter.
+                      Preview every surface, sidebar, track card and player dock before switching.
                     </p>
                   </div>
                   <span className="shrink-0 rounded-full border border-border bg-elevated px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
@@ -611,6 +709,7 @@ export default function SettingsPage() {
                   {themes.map((item) => {
                     const Icon = item.icon;
                     const selected = theme === item.id;
+                    const isNitro = item.tier === "nitro";
                     return (
                       <button
                         key={item.id}
@@ -618,123 +717,151 @@ export default function SettingsPage() {
                         onClick={() => chooseTheme(item.id)}
                         aria-pressed={selected}
                         className={cn(
-                          "group flex w-full min-w-0 flex-col overflow-hidden rounded-xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                          "group relative flex min-h-[44px] w-full min-w-0 flex-col overflow-hidden rounded-2xl border p-3 text-left transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                           selected
-                            ? "border-primary bg-elevated ring-2 ring-primary/60"
-                            : "border-border bg-background/60 hover:border-primary/40 hover:bg-elevated/70",
+                            ? "border-primary bg-elevated shadow-[0_0_0_1px_hsl(var(--primary)/0.45)] ring-2 ring-primary/40"
+                            : "border-border bg-background/60 hover:border-primary/45 hover:bg-elevated/70",
                         )}
                       >
+                        {/* Miniature Live UI Preview */}
                         <div
-                          className="flex h-[112px] w-full flex-col overflow-hidden rounded-lg border border-white/[.08]"
-                          style={{ background: item.background }}
+                          className="relative flex h-[126px] w-full flex-col overflow-hidden rounded-xl border border-white/[0.09] shadow-inner"
+                          style={{
+                            backgroundColor: item.background,
+                            backgroundImage: item.gradient,
+                          }}
                         >
+                          {/* Top-left Nitro / Studio Tag */}
+                          <span
+                            className={cn(
+                              "pointer-events-none absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-semibold tracking-wide backdrop-blur-md",
+                              isNitro
+                                ? "border-white/25 bg-black/45 text-white"
+                                : "border-white/15 bg-black/35 text-white/80",
+                            )}
+                          >
+                            {isNitro && <Sparkles className="h-2.5 w-2.5" style={{ color: item.accent }} />}
+                            {item.tag}
+                          </span>
+
+                          {/* Top-right Active Checkmark Badge */}
+                          <span
+                            className={cn(
+                              "pointer-events-none absolute right-2 top-2 z-10 flex h-5 w-5 items-center justify-center rounded-full border transition",
+                              selected
+                                ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                                : "border-white/20 bg-black/35 text-transparent group-hover:border-white/40",
+                            )}
+                          >
+                            <Check className="h-3 w-3 stroke-[2.5]" />
+                          </span>
+
+                          {/* Mini App Body: Sidebar + Header + Track Cards */}
                           <div className="flex min-h-0 flex-1">
+                            {/* Mini Sidebar */}
                             <div
-                              className="flex w-[26%] shrink-0 flex-col gap-1.5 border-r border-white/[.06] p-2"
-                              style={{ background: item.sidebar }}
+                              className="flex w-[26%] shrink-0 flex-col justify-end gap-1.5 border-r border-white/[0.07] p-2 pt-7"
+                              style={{ backgroundColor: item.sidebar }}
                             >
-                              <span
-                                className="h-1.5 w-full rounded-full"
-                                style={{ background: item.accent }}
-                              />
-                              <span className="h-1.5 w-[78%] rounded-full bg-white/15" />
-                              <span className="h-1.5 w-[58%] rounded-full bg-white/10" />
+                              <div className="flex items-center gap-1 rounded px-1 py-0.5" style={{ backgroundColor: `${item.accent}24` }}>
+                                <span
+                                  className="h-1.5 w-1.5 shrink-0 rounded-full"
+                                  style={{ backgroundColor: item.accent }}
+                                />
+                                <span
+                                  className="h-1.5 flex-1 rounded-full"
+                                  style={{ backgroundColor: item.accent }}
+                                />
+                              </div>
+                              <span className="h-1.5 w-[76%] rounded-full bg-white/15" />
+                              <span className="h-1.5 w-[56%] rounded-full bg-white/10" />
                             </div>
 
-                            <div className="flex min-w-0 flex-1 flex-col gap-2 p-2">
+                            {/* Mini Main Content */}
+                            <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-2 pt-7">
+                              {/* Mini Header */}
                               <div
-                                className="flex h-3.5 w-full items-center rounded-full border border-white/[.06] px-1.5"
-                                style={{ background: item.surface }}
+                                className="flex h-4 w-full items-center justify-between rounded-full border border-white/[0.07] px-1.5"
+                                style={{ backgroundColor: item.surface }}
                               >
-                                <span className="h-1 w-[44%] rounded-full bg-white/15" />
+                                <span className="h-1 w-[46%] rounded-full bg-white/20" />
+                                <span
+                                  className="h-2 w-2 rounded-full"
+                                  style={{ backgroundColor: item.accent }}
+                                />
                               </div>
+
+                              {/* Mini Track Cards */}
                               <div className="grid flex-1 grid-cols-2 gap-1.5">
                                 <div
-                                  className="flex flex-col justify-end rounded-md border border-white/[.05] p-1.5"
-                                  style={{ background: item.surface }}
-                                >
-                                  <span className="h-2.5 w-4 rounded-[2px] bg-white/10" />
-                                  <span className="mt-1 h-1 w-[75%] rounded-full bg-white/20" />
-                                </div>
-                                <div
-                                  className="flex flex-col justify-end rounded-md border border-white/[.05] p-1.5"
-                                  style={{ background: item.surface }}
+                                  className="flex flex-col justify-between rounded-md border border-white/[0.06] p-1.5"
+                                  style={{ backgroundColor: item.surface }}
                                 >
                                   <span
-                                    className="h-2.5 w-4 rounded-[2px]"
-                                    style={{ background: item.accent, opacity: 0.45 }}
+                                    className="h-3.5 w-3.5 rounded-[3px]"
+                                    style={{ backgroundColor: item.accent, opacity: 0.7 }}
                                   />
-                                  <span className="mt-1 h-1 w-[68%] rounded-full bg-white/20" />
+                                  <div className="space-y-1">
+                                    <span className="block h-1 w-[82%] rounded-full bg-white/25" />
+                                    <span className="block h-1 w-[52%] rounded-full bg-white/12" />
+                                  </div>
+                                </div>
+                                <div
+                                  className="flex flex-col justify-between rounded-md border border-white/[0.06] p-1.5"
+                                  style={{ backgroundColor: item.surface }}
+                                >
+                                  <span className="h-3.5 w-3.5 rounded-[3px] bg-white/15" />
+                                  <div className="space-y-1">
+                                    <span className="block h-1 w-[74%] rounded-full bg-white/25" />
+                                    <span className="block h-1 w-[48%] rounded-full bg-white/12" />
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
 
+                          {/* Mini Player Bar */}
                           <div
-                            className="flex h-[24px] shrink-0 items-center gap-2 border-t border-white/[.07] px-2"
-                            style={{ background: item.elevated }}
+                            className="flex h-[25px] shrink-0 items-center gap-2 border-t border-white/[0.08] px-2"
+                            style={{ backgroundColor: item.elevated }}
                           >
                             <span
                               className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full"
-                              style={{ background: item.accent }}
+                              style={{ backgroundColor: item.accent }}
                             >
-                              <span className="h-1 w-1 rounded-full bg-black/75" />
+                              <span className="ml-[1px] h-1.5 w-1.5 rounded-full bg-black/75" />
                             </span>
-                            <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/10">
+                            <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/12">
                               <span
-                                className="block h-full w-[56%] rounded-full"
-                                style={{ background: item.accent }}
+                                className="block h-full w-[58%] rounded-full"
+                                style={{ backgroundColor: item.accent }}
                               />
                             </span>
+                            <span className="h-1.5 w-3 rounded-full bg-white/15" />
                           </div>
                         </div>
 
-                        <div className="mt-3 flex min-w-0 flex-1 flex-col justify-between gap-2.5 px-0.5">
-                          <div className="min-w-0">
-                            <div className="flex min-w-0 items-start justify-between gap-2">
-                              <div className="min-w-0 flex-1">
+                        {/* Card Footer: Gradient Swatch + Label + Tag */}
+                        <div className="mt-3 flex min-w-0 flex-1 flex-col justify-between gap-2 px-0.5">
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span
+                              className="h-7 w-7 shrink-0 rounded-full border border-white/20 shadow-sm ring-1 ring-black/30"
+                              style={{ background: item.swatchGradient }}
+                              aria-hidden="true"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-1.5">
                                 <p className="truncate text-[13px] font-semibold tracking-tight text-foreground">
                                   {item.label}
                                 </p>
-                                <span className="mt-1 inline-flex rounded-full border border-border bg-card px-2 py-0.5 text-[9.5px] font-medium text-muted-foreground">
-                                  {item.tag}
+                                <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                                  <Icon className="h-3 w-3" />
                                 </span>
                               </div>
-                              <span
-                                className={cn(
-                                  "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition",
-                                  selected
-                                    ? "border-primary bg-primary text-primary-foreground"
-                                    : "border-border bg-card text-transparent",
-                                )}
-                              >
-                                <Check className="h-3 w-3" />
-                              </span>
+                              <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+                                {item.description}
+                              </p>
                             </div>
-                            <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
-                              {item.description}
-                            </p>
-                          </div>
-
-                          <div className="flex min-w-0 items-center justify-between gap-2 border-t border-border/70 pt-2.5">
-                            <div className="flex shrink-0 items-center gap-1.5" aria-hidden="true">
-                              <span
-                                className="h-3 w-3 rounded-full border border-white/15"
-                                style={{ background: item.background }}
-                              />
-                              <span
-                                className="h-3 w-3 rounded-full border border-white/15"
-                                style={{ background: item.surface }}
-                              />
-                              <span
-                                className="h-3 w-3 rounded-full border border-white/15"
-                                style={{ background: item.accent }}
-                              />
-                            </div>
-                            <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-medium text-muted-foreground">
-                              <Icon className="h-3 w-3" />
-                              {item.id}
-                            </span>
                           </div>
                         </div>
                       </button>

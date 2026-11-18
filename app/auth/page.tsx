@@ -13,6 +13,7 @@ import {
   User,
 } from "lucide-react";
 import { SangeetMark } from "@/components/brand/sangeet-mark";
+import { isAndroidNativeApp } from "@/lib/android-bridge";
 import { useAuthStore } from "@/store/auth-store";
 import { toast } from "@/store/ui-store";
 
@@ -130,7 +131,8 @@ function AuthForm() {
   }, [isAuthenticated, isAdminReturn, returnTo, router, session?.isAdmin]);
 
   const handleGoogleSignIn = () => {
-    window.location.assign(`/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`);
+    const appParam = isAndroidNativeApp() ? "&app=android" : "";
+    window.location.assign(`/api/auth/google?returnTo=${encodeURIComponent(returnTo)}${appParam}`);
   };
 
   const handleFormLogin = async (e: React.FormEvent) => {

@@ -8,12 +8,15 @@ import {
   Heart,
   Home,
   Library,
+  ListMusic,
+  Palette,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
   Search,
   Settings2,
   ShieldCheck,
+  Youtube,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
@@ -33,6 +36,13 @@ const libraryNav = [
   { href: "/library", label: "Your Library", icon: Library },
   { href: "/liked", label: "Liked Songs", icon: Heart },
   { href: "/recently-played", label: "Recently Played", icon: Clock3 },
+  { href: "/my-youtube-library", label: "YouTube Library", icon: Youtube },
+  { href: "/queue", label: "Queue", icon: ListMusic },
+];
+
+const preferencesNav = [
+  { href: "/settings?tab=appearance", label: "Themes & Appearance", icon: Palette },
+  { href: "/settings", label: "Settings", icon: Settings2 },
 ];
 
 export function Sidebar() {
@@ -131,7 +141,46 @@ export function Sidebar() {
             const active =
               item.href === "/library"
                 ? pathname.startsWith("/library")
-                : pathname === item.href;
+                : isActive(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                title={collapsed ? item.label : undefined}
+                className={cn(
+                  "group relative flex h-10 items-center gap-3 rounded-xl border px-3 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                  collapsed && "justify-center px-0",
+                  active
+                    ? "border-border bg-elevated text-foreground"
+                    : "border-transparent text-muted-foreground hover:bg-elevated/60 hover:text-foreground",
+                )}
+              >
+                {active && !collapsed && (
+                  <span
+                    className="absolute left-1 h-4 w-[2.5px] rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.45)]"
+                    aria-hidden="true"
+                  />
+                )}
+                <Icon
+                  className={cn(
+                    "h-[18px] w-[18px] shrink-0",
+                    active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                  )}
+                  strokeWidth={active ? 2.2 : 1.75}
+                />
+                {!collapsed && <span>{item.label}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="mx-2 my-4 h-px bg-border" />
+
+        <nav className="space-y-1" aria-label="Preferences">
+          {preferencesNav.map((item) => {
+            const Icon = item.icon;
+            const active = item.href === "/settings" && pathname === "/settings";
             return (
               <Link
                 key={item.href}

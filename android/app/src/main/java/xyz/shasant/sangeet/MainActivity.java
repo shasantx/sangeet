@@ -414,12 +414,19 @@ public final class MainActivity extends AppCompatActivity {
         if (returnTo == null || returnTo.isEmpty() || !returnTo.startsWith("/") || returnTo.startsWith("//")) {
             returnTo = "/home?google=success";
         }
+        String yt = data.getQueryParameter("yt");
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
         cookieManager.setCookie(
                 "https://sangeet.shasant.xyz",
                 "aura_session=" + session + "; Path=/; Secure; HttpOnly; SameSite=Lax"
         );
+        if (yt != null && !yt.isEmpty()) {
+            cookieManager.setCookie(
+                    "https://sangeet.shasant.xyz",
+                    "sangeet_yt_oauth=" + yt + "; Path=/; Secure; HttpOnly; SameSite=Lax"
+            );
+        }
         cookieManager.flush();
         if (webView != null) {
             webView.loadUrl("https://sangeet.shasant.xyz" + returnTo);

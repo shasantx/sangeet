@@ -31,7 +31,8 @@ import { isTypingTarget } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 import { useLibraryStore } from "@/store/library-store";
 import { usePlayerStore } from "@/store/player-store";
-import { toast } from "@/store/ui-store";
+import { toast, useUIStore } from "@/store/ui-store";
+import { NowPlayingOverlay } from "./now-playing-overlay";
 import { YouTubeDock } from "./youtube-dock";
 
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
@@ -672,6 +673,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, []);
 
+  // Close the Now Playing overlay if playback is cleared
+  useEffect(() => {
+    if (!currentTrackId && useUIStore.getState().nowPlayingOpen) {
+      useUIStore.getState().closeNowPlaying();
+    }
+  }, [currentTrackId]);
+
   return (
     <>
       {children}
@@ -684,6 +692,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         aria-label="Sangeet audio playback"
       />
       <YouTubeDock />
+      <NowPlayingOverlay />
     </>
   );
 }
