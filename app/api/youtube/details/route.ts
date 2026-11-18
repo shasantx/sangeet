@@ -1,0 +1,98 @@
+import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/security";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const serviceUrl = process.env.YTMUSIC_SERVICE_URL ?? (process.env.VERCEL ? "" : "http://127.0.0.1:8765");
+
+function safeThumbnail(value: unknown) {
+  if (typeof value !== "string") return "";
+  try {
+    const url = new URL(value);
+    const validHost =
+      url.hostname.endsWith(".googleusercontent.com") ||
+      url.hostname.endsWith(".ggpht.com") ||
+      url.hostname.endsWith(".ytimg.com") ||
+      url.hostname.endsWith(".youtube.com");
+    return url.protocol === "https:" && validHost ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
+function cleanTracks(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .flatMap((row) => {
+      if (!row || typeof row !== "object") return [];
+      const item = row as Record<string, unknown>;
+      if (typeof item.videoId !== "string" || !/^[\w-]{11}$/.test(item.videoId) || typeof item.title !== "string") return [];
+      return [
+        {
+          videoId: item.videoId,
+          title: item.title.slice(0, 180),
+          artist: typeof item.artist === "string" ? item.artist.slice(0, 140) : "YouTube",
+          album: typeof item.album === "string" ? item.album.slice(0, 160) : "",
+          durationSeconds: Number.isFinite(item.durationSeconds) ? Number(item.durationSeconds) : 0,
+          thumbnail: safeThumbnail(item.thumbnail) || `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`,
+          year: Number.isFinite(item.year) ? Number(item.year) : undefined,
+        },
+      ];
+    })
+    .slice(0, 30);
+}
+
+export async function GET(request: Request) {
+  const rateLimited = enforceRateLimit(request, "youtube:details", 45, 60_000);
+  if (rateLimited) return rateLimited;
+
+  const params = new URL(request.url).searchParams;
+  const kind = params.get("kind") ?? "";
+  const browseId = params.get("browseId") ?? "";
+  if (!["artist", "album", "playlist"].includes(kind) || !/^[A-Za-z0-9_-]{1,100}$/.test(browseId)) {
+    return NextResponse.json({ error: "invalid_request" }, { status: 400, headers: { "cache-control": "no-store" } });
+  }
+  try {
+    if (!serviceUrl) throw new Error("Discovery service unavailable");
+    const response = await fetch(`${serviceUrl.replace(/\/$/, "")}/api/details?kind=${kind}&browseId=${encodeURIComponent(browseId)}`, {
+      headers: process.env.YTMUSIC_SERVICE_TOKEN ? { authorization: `Bearer ${process.env.YTMUSIC_SERVICE_TOKEN}` } : undefined,
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) throw new Error("Discovery service unavailable");
+    const data = (await response.json()) as { details?: Record<string, unknown> };
+    const source = data.details ?? {};
+    const albums = Array.isArray(source.albums)
+      ? source.albums.flatMap((row) => {
+          if (!row || typeof row !== "object") return [];
+          const alb = row as Record<string, unknown>;
+          if (typeof alb.browseId !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(alb.browseId)) return [];
+          return [
+            {
+              browseId: alb.browseId,
+              title: typeof alb.title === "string" ? alb.title.slice(0, 180) : "Album",
+              year: alb.year ? String(alb.year).slice(0, 12) : null,
+              thumbnail: safeThumbnail(alb.thumbnail),
+              type: typeof alb.type === "string" ? alb.type.slice(0, 40) : "Album",
+            },
+          ];
+        })
+      : [];
+
+    const details = {
+      browseId,
+      title: typeof source.title === "string" ? source.title.slice(0, 180) : "",
+      artist: typeof source.artist === "string" ? source.artist.slice(0, 140) : "",
+      description: typeof source.description === "string" ? source.description.slice(0, 1200) : "",
+      subscribers: typeof source.subscribers === "string" ? source.subscribers.slice(0, 60) : "",
+      year: Number.isFinite(source.year) ? Number(source.year) : null,
+      thumbnail: safeThumbnail(source.thumbnail),
+      tracks: cleanTracks(source.tracks),
+      albums,
+    };
+    return NextResponse.json({ details }, { headers: { "cache-control": "private, max-age=60" } });
+  } catch {
+    return NextResponse.json({ error: "discovery_unavailable" }, { status: 503, headers: { "cache-control": "no-store" } });
+  }
+}

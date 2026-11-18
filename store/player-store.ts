@@ -1,0 +1,1097 @@
+"use client";
+
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { ensureAudioEffectsSynced } from "@/lib/audio-eq";
+import { getAudioElement } from "@/lib/audio-engine";
+import { getArtist, getTrack, tracks } from "@/lib/catalog";
+import {
+  androidPause,
+  androidPlayOfflineAudio,
+  androidPlayAudioUrl,
+  androidPlayYouTube,
+  androidResume,
+  androidSeek,
+  androidSetPlaybackRate,
+  androidSetVolume,
+  androidStop,
+  isAndroidNativeApp,
+} from "@/lib/android-bridge";
+import {
+  canDownloadOffline,
+  getCachedOfflineAudioUrl,
+  getOfflineAudioUrl,
+  ensureAndroidOfflineAudio,
+  hasOfflineTrackSync,
+  isDesktopNativeApp,
+  isNativeOfflineSupported,
+  isOfflineRegistryHydrated,
+} from "@/lib/offline-audio";
+import {
+  getLoadedYouTubeVideoId,
+  loadYouTubeVideo,
+  muteYouTube,
+  pauseYouTube,
+  playYouTube,
+  replayYouTube,
+  seekYouTube,
+  setYouTubePlaybackRate,
+  setYouTubeVolume,
+  stopYouTube,
+} from "@/lib/youtube-engine";
+import { safeStorage } from "@/lib/storage";
+import { clamp } from "@/lib/utils";
+import type { Track } from "@/lib/types";
+import { useAppStore } from "./app-store";
+import { toast } from "./ui-store";
+
+export type RepeatMode = "off" | "all" | "one";
+
+interface PlayerState {
+  currentTrackId: string | null;
+  queue: string[];
+  queueIndex: number;
+  contextLabel: string;
+  isPlaying: boolean;
+  isLoading: boolean;
+  currentTime: number;
+  duration: number;
+  volume: number;
+  muted: boolean;
+  shuffle: boolean;
+  repeat: RepeatMode;
+  error: string | null;
+  videoMode: boolean;
+  playbackRate: number;
+  sleepTimerEndsAt: number | null;
+  sleepAfterTrack: boolean;
+
+  playTrack: (trackId: string, contextIds?: string[], contextLabel?: string) => void;
+  playShuffled: (trackIds: string[], contextLabel?: string) => void;
+  togglePlay: () => void;
+  setVideoMode: (mode: boolean) => void;
+  toggleVideoMode: () => void;
+  setPlaybackRate: (rate: number) => void;
+  setSleepTimer: (mode: number | "track" | null) => void;
+  next: (automatic?: boolean) => void;
+  previous: () => void;
+  seek: (seconds: number) => void;
+  setVolume: (volume: number) => void;
+  toggleMute: () => void;
+  toggleShuffle: () => void;
+  cycleRepeat: () => void;
+  addToQueue: (trackId: string) => boolean;
+  playNext: (trackId: string) => boolean;
+  removeFromQueue: (index: number) => void;
+  reorderQueue: (from: number, to: number) => void;
+  clearQueue: () => void;
+  playQueueIndex: (index: number) => void;
+  handleEnded: () => void;
+  primeAudio: () => void;
+  syncFromAudio: (patch: Partial<PlayerState>) => void;
+  resetPlayer: () => void;
+}
+
+const initialPlayer = {
+  currentTrackId: null,
+  queue: [] as string[],
+  queueIndex: 0,
+  contextLabel: "",
+  isPlaying: false,
+  isLoading: false,
+  currentTime: 0,
+  duration: 0,
+  volume: 0.78,
+  muted: false,
+  shuffle: false,
+  repeat: "off" as RepeatMode,
+  error: null,
+  videoMode: false,
+  playbackRate: 1,
+  sleepTimerEndsAt: null as number | null,
+  sleepAfterTrack: false,
+};
+
+function uniqueValid(ids: string[]): string[] {
+  return Array.from(new Set(ids.filter((id) => Boolean(getTrack(id)))));
+}
+
+function autoplayQueue(track: Track): string[] {
+  const matching = tracks.filter(
+    (candidate) =>
+      candidate.id !== track.id &&
+      candidate.genreIds.some((genre) => track.genreIds.includes(genre)),
+  );
+  const list = matching.slice(0, 18).map((item) => item.id);
+  return uniqueValid([...list]).slice(0, 18);
+}
+
+function playableError() {
+  return "This track could not start playing. Check your connection and try another track.";
+}
+
+function isAudioElementActive(audio: HTMLAudioElement | null): boolean {
+  if (typeof window === "undefined" || !audio) return false;
+  return Boolean(audio.src && audio.src !== window.location.href && !audio.error);
+}
+
+function youtubeAudioProxyUrl(videoId: string): string {
+  return `/api/youtube/audio?videoId=${encodeURIComponent(videoId)}`;
+}
+
+let youtubeAudioProxyUnavailable = false;
+
+export function markYouTubeAudioProxyUnavailable(): void {
+  youtubeAudioProxyUnavailable = true;
+}
+
+export function isYouTubeAudioProxyUnavailable(): boolean {
+  return youtubeAudioProxyUnavailable;
+}
+
+function canUseYouTubeAudioProxy(): boolean {
+  return isDesktopNativeApp() && !isYouTubeAudioProxyUnavailable();
+}
+
+function audiusStreamProxyUrl(trackId: string): string {
+  return `/api/audius/stream?id=${encodeURIComponent(trackId.replace(/^aud-/, ""))}`;
+}
+
+function applyAudioElementConfig(
+  audio: HTMLAudioElement,
+  state: Pick<PlayerState, "volume" | "muted" | "playbackRate" | "repeat">,
+) {
+  audio.volume = state.volume;
+  audio.muted = state.muted;
+  audio.defaultPlaybackRate = state.playbackRate;
+  audio.playbackRate = state.playbackRate;
+  audio.loop = state.repeat === "one";
+}
+
+function loadAndPlayAudioElement(
+  audio: HTMLAudioElement,
+  sourceUrl: string,
+  shouldPlay: boolean,
+  state: Pick<PlayerState, "volume" | "muted" | "playbackRate" | "repeat">,
+) {
+  const expectedUrl = new URL(sourceUrl, window.location.href).href;
+  if (audio.src !== expectedUrl) {
+    audio.src = sourceUrl;
+    audio.load();
+  } else {
+    audio.currentTime = 0;
+  }
+  applyAudioElementConfig(audio, state);
+  if (shouldPlay) {
+    ensureAudioEffectsSynced();
+    resumeAudio(audio);
+  }
+}
+
+function resumeAudio(audio: HTMLAudioElement) {
+  if (audio.currentTime >= audio.duration - 0.2 && Number.isFinite(audio.duration)) {
+    audio.currentTime = 0;
+  }
+  const promise = audio.play();
+  if (promise) {
+    promise.catch((error: DOMException) => {
+      const state = usePlayerStore.getState();
+      if (error.name === "AbortError") return;
+
+      const track = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+      const source = audio.currentSrc || audio.src || "";
+      if (error.name !== "NotAllowedError" && track?.youtubeId && (source.includes("/api/youtube/audio") || source === "")) {
+        // Proxy audio unavailable (e.g. YouTube bot-check on server IP): seamlessly fall back to YouTube IFrame.
+        if (source.includes("/api/youtube/audio")) {
+          markYouTubeAudioProxyUnavailable();
+        }
+        if (source) audio.removeAttribute("src");
+        loadYouTubeVideo(track.youtubeId, true);
+        setYouTubePlaybackRate(state.playbackRate);
+        return;
+      }
+
+      if (
+        error.name !== "NotAllowedError" &&
+        track?.source === "audius" &&
+        source.includes("/api/audius/stream") &&
+        track.audioUrl &&
+        !track.audioUrl.includes("/api/audius/stream")
+      ) {
+        // Fall back to direct Audius stream URL if local proxy fails.
+        loadAndPlayAudioElement(audio, track.audioUrl, true, state);
+        return;
+      }
+
+      state.syncFromAudio({
+        isPlaying: false,
+        isLoading: false,
+        error:
+          error.name === "NotAllowedError"
+            ? "Playback was paused by your browser. Press play to continue."
+            : playableError(),
+      });
+      toast.error(
+        "Playback stopped",
+        error.name === "NotAllowedError"
+          ? "Your browser needs a tap on play before audio can continue."
+          : "The audio source could not be reached. Try another track.",
+      );
+    });
+  }
+}
+
+let androidServiceLoadedTrackId: string | null = null;
+
+export const usePlayerStore = create<PlayerState>()(
+  persist(
+    (set, get) => {
+      const startTrack = (trackId: string, shouldPlay: boolean) => {
+        const track = getTrack(trackId);
+        if (!track) {
+          set({ error: "That track is no longer available." });
+          return;
+        }
+        set({
+          currentTrackId: trackId,
+          currentTime: 0,
+          duration: track.duration,
+          isPlaying: shouldPlay,
+          isLoading: shouldPlay,
+          error: null,
+        });
+
+        const beginPlayback = (offlineUrl: string | null, tryAndroidOffline = true) => {
+          if (get().currentTrackId !== trackId) return;
+          const state = get();
+          const audio = getAudioElement();
+
+          if (shouldPlay && isAndroidNativeApp() && !state.videoMode) {
+            const artistName = getArtist(track.artistId)?.name ?? "Sangeet";
+            androidSetPlaybackRate(state.playbackRate);
+            if (androidPlayOfflineAudio(trackId, track.title, artistName, track.artwork)) {
+              androidServiceLoadedTrackId = trackId;
+              audio?.pause();
+              stopYouTube();
+              return;
+            }
+            if (offlineUrl && tryAndroidOffline) {
+              void ensureAndroidOfflineAudio(trackId).then((stored) => {
+                if (get().currentTrackId !== trackId) return;
+                if (stored) {
+                  androidSetPlaybackRate(get().playbackRate);
+                  if (androidPlayOfflineAudio(trackId, track.title, artistName, track.artwork)) {
+                    androidServiceLoadedTrackId = trackId;
+                    audio?.pause();
+                    stopYouTube();
+                    return;
+                  }
+                }
+                beginPlayback(offlineUrl, false);
+              });
+              return;
+            }
+          }
+
+          if (offlineUrl && audio) {
+            try {
+              stopYouTube();
+              audio.pause();
+              loadAndPlayAudioElement(audio, offlineUrl, shouldPlay, state);
+              return;
+            } catch {
+              // Fall through to normal online resolution if cached blob URL failed.
+            }
+          }
+
+          if (isAndroidNativeApp() && !state.videoMode && !track.audioUrl.startsWith("blob:")) {
+            audio?.pause();
+            stopYouTube();
+            const artistName = getArtist(track.artistId)?.name ?? "Sangeet";
+            if (shouldPlay) {
+              androidSetPlaybackRate(state.playbackRate);
+              if (track.youtubeId) {
+                androidPlayYouTube(track.youtubeId, track.title, artistName, track.artwork);
+              } else {
+                androidPlayAudioUrl(track.audioUrl, track.title, artistName, track.artwork);
+              }
+              androidServiceLoadedTrackId = trackId;
+            }
+            return;
+          }
+
+          if (track.youtubeId) {
+            if (audio && !state.videoMode && canUseYouTubeAudioProxy()) {
+              try {
+                stopYouTube();
+                loadAndPlayAudioElement(
+                  audio,
+                  youtubeAudioProxyUrl(track.youtubeId),
+                  shouldPlay,
+                  state,
+                );
+                return;
+              } catch {
+                // Fall back to YouTube IFrame if audio element setup fails.
+              }
+            }
+            if (audio) {
+              if (audio.src) {
+                audio.removeAttribute("src");
+                audio.load();
+              }
+              audio.pause();
+            }
+            setYouTubeVolume(state.volume);
+            muteYouTube(state.muted);
+            loadYouTubeVideo(track.youtubeId, shouldPlay);
+            setYouTubePlaybackRate(state.playbackRate);
+            return;
+          }
+
+          stopYouTube();
+          if (!audio) {
+            set({
+              isPlaying: false,
+              isLoading: false,
+              error: "The audio engine is unavailable. Reload the app and try again.",
+            });
+            return;
+          }
+
+          const targetUrl =
+            track.source === "audius" && !isAndroidNativeApp()
+              ? audiusStreamProxyUrl(track.id)
+              : track.audioUrl;
+
+          try {
+            audio.pause();
+            loadAndPlayAudioElement(audio, targetUrl, shouldPlay, state);
+          } catch {
+            set({ isPlaying: false, isLoading: false, error: playableError() });
+            toast.error("Playback unavailable", "This track could not be loaded. Try another track.");
+          }
+        };
+
+        if (isNativeOfflineSupported()) {
+          const cachedOfflineUrl = getCachedOfflineAudioUrl(trackId);
+          if (cachedOfflineUrl) {
+            beginPlayback(cachedOfflineUrl);
+            return;
+          }
+
+          if (
+            canDownloadOffline(track) &&
+            !(isOfflineRegistryHydrated() && !hasOfflineTrackSync(trackId))
+          ) {
+            void getOfflineAudioUrl(trackId)
+              .then((offlineUrl) => {
+                if (get().currentTrackId !== trackId) return;
+                beginPlayback(offlineUrl);
+              })
+              .catch(() => {
+                if (get().currentTrackId !== trackId) return;
+                beginPlayback(null);
+              });
+            return;
+          }
+        }
+
+        beginPlayback(null);
+      };
+
+      const replayCurrentTrack = (state: PlayerState) => {
+        const current = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+        if (
+          isAndroidNativeApp() &&
+          !state.videoMode &&
+          current &&
+          !current.audioUrl.startsWith("blob:")
+        ) {
+          startTrack(current.id, true);
+          return;
+        }
+        const audio = getAudioElement();
+        if (audio && isAudioElementActive(audio)) {
+          audio.currentTime = 0;
+          applyAudioElementConfig(audio, state);
+          set({ currentTime: 0, isPlaying: true, error: null });
+          ensureAudioEffectsSynced();
+          resumeAudio(audio);
+          return;
+        }
+        if (current?.youtubeId) {
+          set({ currentTime: 0, isPlaying: true, error: null });
+          setYouTubePlaybackRate(state.playbackRate);
+          replayYouTube();
+          return;
+        }
+        if (audio) {
+          audio.currentTime = 0;
+          applyAudioElementConfig(audio, state);
+          set({ currentTime: 0, isPlaying: true, error: null });
+          ensureAudioEffectsSynced();
+          resumeAudio(audio);
+        }
+      };
+
+      return {
+        ...initialPlayer,
+
+        playTrack: (trackId, contextIds, contextLabel) => {
+          const track = getTrack(trackId);
+          if (!track) {
+            toast.error("Track unavailable", "This track is no longer in the Sangeet catalogue.");
+            return;
+          }
+          const current = get();
+          const sameTrack = current.currentTrackId === trackId;
+          if (sameTrack) {
+            if (isAndroidNativeApp() && !current.videoMode) {
+              if (current.isPlaying) {
+                androidPause();
+                set({ isPlaying: false, isLoading: false });
+              } else if (androidServiceLoadedTrackId !== trackId) {
+                startTrack(trackId, true);
+              } else {
+                set({ isPlaying: true, isLoading: false, error: null });
+                androidResume();
+              }
+              return;
+            }
+            const audio = getAudioElement();
+            if (audio && isAudioElementActive(audio)) {
+              if (current.isPlaying) {
+                audio.pause();
+                set({ isPlaying: false, isLoading: false });
+              } else {
+                applyAudioElementConfig(audio, current);
+                set({ isPlaying: true, isLoading: true, error: null });
+                ensureAudioEffectsSynced();
+                resumeAudio(audio);
+              }
+              return;
+            }
+            if (track.youtubeId) {
+              if (current.isPlaying) {
+                pauseYouTube();
+                set({ isPlaying: false, isLoading: false });
+              } else {
+                set({ isPlaying: true, isLoading: true, error: null });
+                setYouTubePlaybackRate(current.playbackRate);
+                playYouTube();
+              }
+              return;
+            }
+            if (current.isPlaying) {
+              audio?.pause();
+              set({ isPlaying: false, isLoading: false });
+            } else {
+              set({ isPlaying: true, isLoading: true, error: null });
+              if (audio) {
+                applyAudioElementConfig(audio, current);
+                ensureAudioEffectsSynced();
+                resumeAudio(audio);
+              }
+            }
+            return;
+          }
+          if (contextIds && contextIds.length > 0) {
+            const validQueue = uniqueValid(contextIds);
+            const index = validQueue.indexOf(trackId);
+            set({
+              queue: validQueue,
+              queueIndex: index >= 0 ? index : 0,
+              contextLabel: contextLabel ?? "",
+            });
+          } else {
+            set({
+              queue: [trackId],
+              queueIndex: 0,
+              contextLabel: "",
+            });
+          }
+          startTrack(trackId, true);
+        },
+
+        playShuffled: (trackIds, contextLabel) => {
+          const valid = uniqueValid(trackIds);
+          if (valid.length === 0) return;
+          const shuffled = [...valid].sort(() => Math.random() - 0.5);
+          set({
+            queue: shuffled,
+            queueIndex: 0,
+            contextLabel: contextLabel ?? "",
+            shuffle: true,
+          });
+          startTrack(shuffled[0], true);
+        },
+
+        togglePlay: () => {
+          const state = get();
+          const audio = getAudioElement();
+          if (!state.currentTrackId) {
+            const fallback = tracks[15] ?? tracks[0];
+            if (fallback) {
+              state.playTrack(fallback.id, [fallback.id], "Sangeet selection");
+            }
+            return;
+          }
+
+          const hasAudioStream = isAudioElementActive(audio);
+
+          if (state.isPlaying) {
+            if (isAndroidNativeApp() && !state.videoMode) {
+              androidPause();
+            }
+            if (hasAudioStream && audio) {
+              audio.pause();
+            }
+            pauseYouTube();
+            set({ isPlaying: false, isLoading: false });
+            return;
+          }
+
+          if (isAndroidNativeApp() && !state.videoMode) {
+            if (state.currentTime === 0 || androidServiceLoadedTrackId !== state.currentTrackId) {
+              startTrack(state.currentTrackId, true);
+            } else {
+              set({ isPlaying: true, isLoading: false, error: null });
+              androidResume();
+            }
+            return;
+          }
+
+          set({ isPlaying: true, isLoading: false, error: null });
+          if (hasAudioStream && audio) {
+            applyAudioElementConfig(audio, state);
+            ensureAudioEffectsSynced();
+            resumeAudio(audio);
+            return;
+          }
+          const track = getTrack(state.currentTrackId);
+          if (track?.youtubeId) {
+            if (audio && !state.videoMode && canUseYouTubeAudioProxy()) {
+              startTrack(track.id, true);
+              return;
+            }
+            if (getLoadedYouTubeVideoId() !== track.youtubeId) {
+              startTrack(track.id, true);
+              return;
+            }
+            setYouTubePlaybackRate(state.playbackRate);
+            playYouTube();
+          } else if (audio) {
+            startTrack(state.currentTrackId, true);
+          }
+        },
+
+        seek: (timeSeconds: number) => {
+          const state = get();
+          const target = Math.max(0, Math.min(timeSeconds, state.duration || timeSeconds));
+          set({ currentTime: target });
+          if (isAndroidNativeApp() && !state.videoMode) {
+            androidSeek(target);
+            return;
+          }
+          const audio = getAudioElement();
+          const hasAudioStream = Boolean(audio && audio.src && audio.src !== window.location.href && !audio.error);
+          if (hasAudioStream && audio) {
+            audio.currentTime = target;
+            return;
+          }
+          const track = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+          if (track?.youtubeId) {
+            seekYouTube(target);
+          } else if (audio) {
+            audio.currentTime = target;
+          }
+        },
+
+        next: (automatic = false) => {
+          const state = get();
+          if (state.repeat === "one" && automatic) {
+            replayCurrentTrack(state);
+            return;
+          }
+          const shouldPlay = automatic ? true : state.isPlaying;
+          if (state.queue.length === 0) return;
+
+          if (state.shuffle && state.queue.length > 1) {
+            const candidates = state.queue
+              .map((_, index) => index)
+              .filter((index) => index !== state.queueIndex);
+            const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+            if (chosen !== undefined) {
+              set({ queueIndex: chosen });
+              startTrack(state.queue[chosen], shouldPlay);
+              return;
+            }
+          }
+
+          if (state.queueIndex < state.queue.length - 1) {
+            const index = state.queueIndex + 1;
+            set({ queueIndex: index });
+            startTrack(state.queue[index], shouldPlay);
+            return;
+          }
+
+          if (state.repeat === "all") {
+            set({ queueIndex: 0 });
+            startTrack(state.queue[0], true);
+            return;
+          }
+
+          if (automatic) {
+            const currentTrack = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+            if (useAppStore.getState().autoplay && currentTrack) {
+              const autoplay = autoplayQueue(currentTrack);
+              if (autoplay.length > 0) {
+                set({ queue: autoplay, queueIndex: 0, contextLabel: "AURA autoplay" });
+                startTrack(autoplay[0], true);
+                return;
+              }
+            }
+            set({ isPlaying: false, isLoading: false });
+            return;
+          }
+          set({ isPlaying: false });
+        },
+
+        previous: () => {
+          const state = get();
+          const audio = getAudioElement();
+          const hasAudioStream = isAudioElementActive(audio);
+          const current = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+          const isYouTube = !hasAudioStream && Boolean(current?.youtubeId);
+          const elapsed = isYouTube ? state.currentTime : audio?.currentTime ?? state.currentTime;
+          if (elapsed > 3.5) {
+            if (isYouTube) seekYouTube(0);
+            else if (audio) audio.currentTime = 0;
+            set({ currentTime: 0 });
+            return;
+          }
+          if (state.queue.length === 0) return;
+          const shouldPlay = state.isPlaying;
+          if (state.shuffle && state.queue.length > 1) {
+            const candidates = state.queue
+              .map((_, index) => index)
+              .filter((index) => index !== state.queueIndex);
+            const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+            if (chosen !== undefined) {
+              set({ queueIndex: chosen });
+              startTrack(state.queue[chosen], shouldPlay);
+              return;
+            }
+          }
+          if (state.queueIndex > 0) {
+            const index = state.queueIndex - 1;
+            set({ queueIndex: index });
+            startTrack(state.queue[index], shouldPlay);
+            return;
+          }
+          if (state.repeat === "all") {
+            const index = state.queue.length - 1;
+            set({ queueIndex: index });
+            startTrack(state.queue[index], shouldPlay);
+            return;
+          }
+          if (isYouTube) seekYouTube(0);
+          else if (audio) audio.currentTime = 0;
+          set({ currentTime: 0 });
+        },
+
+        setVolume: (volume) => {
+          const next = clamp(volume, 0, 1);
+          const audio = getAudioElement();
+          if (audio) {
+            audio.volume = next;
+            audio.muted = next === 0 ? true : false;
+          }
+          androidSetVolume(next);
+          setYouTubeVolume(next);
+          muteYouTube(next === 0);
+          set({ volume: next, muted: next === 0 });
+        },
+
+        toggleMute: () => {
+          const audio = getAudioElement();
+          const next = !get().muted;
+          if (audio) audio.muted = next;
+          androidSetVolume(next ? 0 : get().volume);
+          muteYouTube(next);
+          set({ muted: next });
+        },
+
+        toggleShuffle: () => set((state) => ({ shuffle: !state.shuffle })),
+
+        setVideoMode: (mode) => {
+          const state = get();
+          set({ videoMode: mode });
+          if (mode) {
+            androidServiceLoadedTrackId = null;
+          }
+          const track = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
+          if (!track?.youtubeId) return;
+          const audio = getAudioElement();
+          if (mode) {
+            // Switching to Theater video mode: pause audio element / native service and hand off to YouTube embed
+            const audioActive = Boolean(audio && isAudioElementActive(audio));
+            const pos = audioActive && audio ? audio.currentTime : state.currentTime;
+            if (isAndroidNativeApp()) {
+              androidPause();
+            }
+            if (audio) {
+              if (audio.src) {
+                audio.removeAttribute("src");
+                audio.load();
+              }
+              audio.pause();
+            }
+            if (audioActive || isAndroidNativeApp() || getLoadedYouTubeVideoId() !== track.youtubeId) {
+              loadYouTubeVideo(track.youtubeId, state.isPlaying, pos);
+              setYouTubePlaybackRate(state.playbackRate);
+            }
+          } else if (isAndroidNativeApp()) {
+            stopYouTube();
+            startTrack(track.id, state.isPlaying);
+          } else if (audio && canUseYouTubeAudioProxy()) {
+            // Switching back to Compact audio mode on Desktop: resume via <audio> for background support
+            const pos = state.currentTime;
+            stopYouTube();
+            audio.src = youtubeAudioProxyUrl(track.youtubeId);
+            audio.load();
+            audio.currentTime = pos;
+            applyAudioElementConfig(audio, state);
+            if (state.isPlaying) {
+              ensureAudioEffectsSynced();
+              resumeAudio(audio);
+            }
+          }
+        },
+        toggleVideoMode: () => get().setVideoMode(!get().videoMode),
+
+        setPlaybackRate: (rate) => {
+          const nextRate = clamp(rate, 0.5, 2);
+          const audio = getAudioElement();
+          if (audio) {
+            audio.defaultPlaybackRate = nextRate;
+            audio.playbackRate = nextRate;
+          }
+          setYouTubePlaybackRate(nextRate);
+          androidSetPlaybackRate(nextRate);
+          set({ playbackRate: nextRate });
+        },
+
+        setSleepTimer: (mode) => {
+          if (mode === null) {
+            set({ sleepTimerEndsAt: null, sleepAfterTrack: false });
+            toast.show("Sleep timer cleared", "Playback will continue normally.");
+            return;
+          }
+          if (mode === "track") {
+            set({ sleepTimerEndsAt: null, sleepAfterTrack: true });
+            toast.success("Sleep timer set", "Playback will pause after this track finishes.");
+            return;
+          }
+          const endsAt = Date.now() + mode * 60_000;
+          set({ sleepTimerEndsAt: endsAt, sleepAfterTrack: false });
+          toast.success("Sleep timer set", `Playback will pause in ${mode} minutes.`);
+        },
+
+        cycleRepeat: () => {
+          const current = get().repeat;
+          const nextRepeat: RepeatMode =
+            current === "off" ? "all" : current === "all" ? "one" : "off";
+          const audio = getAudioElement();
+          if (audio) {
+            audio.loop = nextRepeat === "one";
+          }
+          set({ repeat: nextRepeat });
+        },
+
+        addToQueue: (trackId) => {
+          if (!getTrack(trackId)) return false;
+          const state = get();
+          if (state.queue.slice(state.queueIndex).includes(trackId)) return false;
+          if (!state.currentTrackId) {
+            set({ queue: [trackId], queueIndex: 0, contextLabel: "Queue" });
+            startTrack(trackId, false);
+            return true;
+          }
+          set({ queue: [...state.queue, trackId] });
+          return true;
+        },
+
+        playNext: (trackId) => {
+          if (!getTrack(trackId)) return false;
+          const state = get();
+          const filtered = state.queue.filter((id, index) => index !== state.queueIndex && id !== trackId);
+          const base = state.currentTrackId ? state.currentTrackId : filtered[0];
+          if (!base) {
+            set({ queue: [trackId], queueIndex: 0 });
+            startTrack(trackId, false);
+            return true;
+          }
+          if (!state.currentTrackId) return false;
+          const newQueue = [...filtered];
+          newQueue.splice(state.queueIndex + 1, 0, trackId);
+          set({ queue: newQueue, queueIndex: newQueue.indexOf(state.currentTrackId) });
+          return true;
+        },
+
+        removeFromQueue: (index) => {
+          const state = get();
+          if (index < 0 || index >= state.queue.length) return;
+          if (index === state.queueIndex) {
+            const remaining = state.queue.filter((_, itemIndex) => itemIndex !== index);
+            if (remaining.length === 0) {
+              const audio = getAudioElement();
+              audio?.pause();
+              androidStop();
+              androidServiceLoadedTrackId = null;
+              stopYouTube();
+              set({
+                queue: [],
+                queueIndex: 0,
+                currentTrackId: null,
+                isPlaying: false,
+                currentTime: 0,
+                duration: 0,
+                error: null,
+              });
+              return;
+            }
+            const nextIndex = Math.min(index, remaining.length - 1);
+            set({ queue: remaining, queueIndex: nextIndex });
+            startTrack(remaining[nextIndex], state.isPlaying);
+            return;
+          }
+          set({
+            queue: state.queue.filter((_, itemIndex) => itemIndex !== index),
+            queueIndex: index < state.queueIndex ? state.queueIndex - 1 : state.queueIndex,
+          });
+        },
+
+        reorderQueue: (from, to) => {
+          const state = get();
+          if (
+            from === to ||
+            from < 0 ||
+            to < 0 ||
+            from >= state.queue.length ||
+            to >= state.queue.length
+          ) {
+            return;
+          }
+          const nextQueue = [...state.queue];
+          const [moved] = nextQueue.splice(from, 1);
+          nextQueue.splice(to, 0, moved);
+          const currentTrackId = state.currentTrackId;
+          set({
+            queue: nextQueue,
+            queueIndex: currentTrackId ? nextQueue.indexOf(currentTrackId) : state.queueIndex,
+          });
+        },
+
+        clearQueue: () => {
+          const state = get();
+          if (!state.currentTrackId) {
+            set({ queue: [], queueIndex: 0, contextLabel: "" });
+            return;
+          }
+          set({
+            queue: [state.currentTrackId],
+            queueIndex: 0,
+            contextLabel: "Now playing",
+          });
+        },
+
+        playQueueIndex: (index) => {
+          const state = get();
+          const trackId = state.queue[index];
+          if (!trackId) return;
+          set({ queueIndex: index });
+          startTrack(trackId, true);
+        },
+
+        handleEnded: () => {
+          const state = get();
+          if (state.sleepAfterTrack) {
+            set({ isPlaying: false, isLoading: false, sleepAfterTrack: false, sleepTimerEndsAt: null });
+            toast.show("Sleep timer finished", "Playback paused at the end of the track.");
+            return;
+          }
+          if (state.repeat === "one") {
+            replayCurrentTrack(state);
+            return;
+          }
+          get().next(true);
+        },
+
+        primeAudio: () => {
+          const state = get();
+          const trackId = state.currentTrackId;
+          if (!trackId) return;
+          const track = getTrack(trackId);
+          if (!track) return;
+
+          const applyPrime = (offlineUrl: string | null) => {
+            if (get().currentTrackId !== trackId) return;
+            const latest = get();
+            const audio = getAudioElement();
+
+            if (offlineUrl && audio) {
+              try {
+                if (!audio.src) {
+                  audio.src = offlineUrl;
+                  audio.load();
+                }
+                applyAudioElementConfig(audio, latest);
+                if (!latest.duration) set({ duration: track.duration });
+                return;
+              } catch {
+                // Fall back to online priming.
+              }
+            }
+
+            if (track.youtubeId) {
+              if (isAndroidNativeApp() && !latest.videoMode) {
+                if (!latest.duration) set({ duration: track.duration });
+                return;
+              }
+              if (audio && !latest.videoMode && canUseYouTubeAudioProxy()) {
+                try {
+                  if (!audio.src) {
+                    audio.src = youtubeAudioProxyUrl(track.youtubeId);
+                    audio.load();
+                  }
+                  applyAudioElementConfig(audio, latest);
+                  if (!latest.duration) set({ duration: track.duration });
+                  return;
+                } catch {
+                  // Fall back to YouTube iframe priming below.
+                }
+              }
+              loadYouTubeVideo(track.youtubeId, latest.isPlaying);
+              setYouTubeVolume(latest.volume);
+              muteYouTube(latest.muted);
+              setYouTubePlaybackRate(latest.playbackRate);
+              if (!latest.duration) set({ duration: track.duration });
+              return;
+            }
+
+            if (!audio) return;
+            try {
+              const targetUrl =
+                track.source === "audius" && !isAndroidNativeApp()
+                  ? audiusStreamProxyUrl(track.id)
+                  : track.audioUrl;
+              if (!audio.src && targetUrl) {
+                audio.src = targetUrl;
+                audio.load();
+              }
+              applyAudioElementConfig(audio, latest);
+              if (!latest.duration) set({ duration: track.duration });
+            } catch {
+              // The next explicit play attempt will surface a useful error.
+            }
+          };
+
+          if (isNativeOfflineSupported()) {
+            const cachedOfflineUrl = getCachedOfflineAudioUrl(trackId);
+            if (cachedOfflineUrl) {
+              applyPrime(cachedOfflineUrl);
+              return;
+            }
+
+            if (
+              canDownloadOffline(track) &&
+              (hasOfflineTrackSync(trackId) || !isOfflineRegistryHydrated())
+            ) {
+              void getOfflineAudioUrl(trackId)
+                .then((offlineUrl) => applyPrime(offlineUrl))
+                .catch(() => applyPrime(null));
+              return;
+            }
+          }
+
+          applyPrime(null);
+        },
+
+        syncFromAudio: (patch) => set(patch),
+
+        resetPlayer: () => {
+          const audio = getAudioElement();
+          audio?.pause();
+          androidStop();
+          androidServiceLoadedTrackId = null;
+          stopYouTube();
+          if (audio) {
+            audio.removeAttribute("src");
+            audio.load();
+          }
+          set({ ...initialPlayer });
+        },
+      };
+    },
+    {
+      name: "aura-player-v1",
+      storage: createJSONStorage(() => safeStorage),
+      skipHydration: true,
+      version: 1,
+      partialize: (state) => ({
+        currentTrackId: state.currentTrackId,
+        queue: state.queue,
+        queueIndex: state.queueIndex,
+        contextLabel: state.contextLabel,
+        volume: state.volume,
+        muted: state.muted,
+        shuffle: state.shuffle,
+        repeat: state.repeat,
+        videoMode: state.videoMode,
+        playbackRate: state.playbackRate,
+      }),
+      merge: (persisted, current) => {
+        const source = (persisted ?? {}) as Partial<PlayerState>;
+        const queue = Array.isArray(source.queue) ? uniqueValid(source.queue) : [];
+        const currentTrackId =
+          typeof source.currentTrackId === "string" && getTrack(source.currentTrackId)
+            ? source.currentTrackId
+            : queue[0] ?? null;
+        const safeQueue =
+          currentTrackId && !queue.includes(currentTrackId) ? [currentTrackId, ...queue] : queue;
+        const requestedIndex =
+          typeof source.queueIndex === "number" && Number.isFinite(source.queueIndex)
+            ? Math.floor(source.queueIndex)
+            : 0;
+        return {
+          ...current,
+          ...source,
+          currentTrackId,
+          queue: safeQueue,
+          queueIndex: currentTrackId
+            ? Math.max(0, safeQueue.indexOf(currentTrackId))
+            : clamp(requestedIndex, 0, Math.max(0, safeQueue.length - 1)),
+          volume:
+            typeof source.volume === "number" ? clamp(source.volume, 0, 1) : current.volume,
+          muted: typeof source.muted === "boolean" ? source.muted : current.muted,
+          shuffle: typeof source.shuffle === "boolean" ? source.shuffle : current.shuffle,
+          videoMode: typeof source.videoMode === "boolean" ? source.videoMode : false,
+          playbackRate:
+            typeof source.playbackRate === "number" && Number.isFinite(source.playbackRate)
+              ? clamp(source.playbackRate, 0.5, 2)
+              : current.playbackRate,
+          repeat: ["off", "all", "one"].includes(source.repeat as string)
+            ? (source.repeat as RepeatMode)
+            : "off",
+          isPlaying: false,
+          isLoading: false,
+          currentTime: 0,
+          duration: currentTrackId ? getTrack(currentTrackId)?.duration ?? 0 : 0,
+          error: null,
+        };
+      },
+    },
+  ),
+);

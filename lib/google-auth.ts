@@ -1,0 +1,314 @@
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  createHmac,
+  createPublicKey,
+  createVerify,
+  randomBytes,
+  timingSafeEqual,
+} from "crypto";
+import { safeCompare } from "@/lib/security";
+
+if (typeof window !== "undefined") {
+  throw new Error("lib/google-auth is a server-only module.");
+}
+
+export interface GoogleIdentity {
+  sub: string;
+  email: string;
+  name: string;
+  picture?: string;
+}
+
+interface GoogleDiscovery {
+  authorization_endpoint: string;
+  token_endpoint: string;
+  jwks_uri: string;
+}
+
+interface GoogleJwk {
+  kid: string;
+  kty: string;
+  alg?: string;
+  use?: string;
+  [key: string]: string | undefined;
+}
+
+interface GoogleClaims extends GoogleIdentity {
+  iss: string;
+  aud: string | string[];
+  exp: number;
+  nonce: string;
+  email_verified: boolean;
+}
+
+const MAX_SESSION_LIFETIME_SECONDS = 8 * 24 * 60 * 60;
+
+let discoveryCache: { value: GoogleDiscovery; expiresAt: number } | undefined;
+let keysCache: { value: GoogleJwk[]; expiresAt: number } | undefined;
+
+function requiredEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) throw new Error(`Missing ${name}`);
+  return value;
+}
+
+export function googleClientId(): string {
+  return requiredEnv("GOOGLE_CLIENT_ID");
+}
+
+export function googleClientSecret(): string {
+  return requiredEnv("GOOGLE_CLIENT_SECRET");
+}
+
+export function appUrl(requestUrl: string): URL {
+  const raw = process.env.APP_URL?.trim() || new URL(requestUrl).origin;
+  const url = new URL(raw);
+  if (url.protocol !== "https:" && url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {
+    throw new Error("APP_URL must use HTTPS outside localhost");
+  }
+  return url;
+}
+
+export function safeReturnTo(value: string | null, base: URL): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\") || /[\u0000-\u001F\u007F]/.test(value)) {
+    return "/";
+  }
+  try {
+    const parsed = new URL(value, base);
+    if (parsed.origin !== base.origin) return "/";
+    parsed.searchParams.delete("google");
+    parsed.searchParams.delete("reason");
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return "/";
+  }
+}
+
+export function oauthRedirectUri(base: URL): string {
+  return new URL("/api/auth/google/callback", base).toString();
+}
+
+export function secureCookies(base: URL): boolean {
+  return base.protocol === "https:";
+}
+
+export function isGoogleOAuthConfigured(): boolean {
+  return Boolean(process.env.GOOGLE_CLIENT_ID?.trim() && process.env.GOOGLE_CLIENT_SECRET?.trim());
+}
+
+function getSessionSecret(): string | null {
+  const explicit = process.env.AUTH_SECRET?.trim();
+  if (explicit && explicit.length >= 32) return explicit;
+  const seed =
+    explicit ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    process.env.GOOGLE_CLIENT_SECRET?.trim() ||
+    process.env.ADMIN_PASSWORD?.trim() ||
+    process.env.ADMIN_EMAILS?.trim();
+  if (!seed) return null;
+  return createHmac("sha256", "sangeet-aura-session-key-v1").update(seed).digest("base64url");
+}
+
+export function signSession(payload: GoogleIdentity & { exp: number }): string {
+  const secret = getSessionSecret();
+  if (!secret) throw new Error("Missing AUTH_SECRET");
+  const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const signature = createHmac("sha256", secret).update(encoded).digest("base64url");
+  return `${encoded}.${signature}`;
+}
+
+export function verifySession(value: string | undefined): (GoogleIdentity & { exp: number }) | null {
+  if (!value || value.length > 4096) return null;
+  const secret = getSessionSecret();
+  if (!secret) return null;
+  const [encoded, signature, extra] = value.split(".");
+  if (!encoded || !signature || extra) return null;
+  const expected = createHmac("sha256", secret).update(encoded).digest();
+  let actual: Buffer;
+  try {
+    actual = Buffer.from(signature, "base64url");
+  } catch {
+    return null;
+  }
+  if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as GoogleIdentity & { exp: number };
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (
+      typeof payload.sub !== "string" ||
+      !payload.sub ||
+      payload.sub.length > 128 ||
+      typeof payload.email !== "string" ||
+      !payload.email ||
+      payload.email.length > 320 ||
+      !Number.isFinite(payload.exp) ||
+      payload.exp <= nowSec ||
+      payload.exp > nowSec + MAX_SESSION_LIFETIME_SECONDS
+    ) {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+export async function googleAuthorizationEndpoint(): Promise<string> {
+  const metadata = await getDiscovery();
+  return metadata.authorization_endpoint;
+}
+
+export interface GoogleTokenResult {
+  identity: GoogleIdentity;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn: number;
+  scopes: string[];
+}
+
+export interface YouTubeCookieTokens {
+  access_token: string;
+  refresh_token?: string;
+  expires_at: number;
+}
+
+function getCookieCipherKey(): Buffer | null {
+  const secret = getSessionSecret();
+  if (!secret) return null;
+  return createHash("sha256").update(`yt-cookie:${secret}`).digest();
+}
+
+export function sealYouTubeCookie(tokens: YouTubeCookieTokens): string | null {
+  const key = getCookieCipherKey();
+  if (!key) return null;
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(JSON.stringify(tokens), "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return `${iv.toString("base64url")}.${tag.toString("base64url")}.${encrypted.toString("base64url")}`;
+}
+
+export function unsealYouTubeCookie(value: string | undefined): YouTubeCookieTokens | null {
+  if (!value || value.length > 4096) return null;
+  const key = getCookieCipherKey();
+  if (!key) return null;
+  const [ivB64, tagB64, dataB64, extra] = value.split(".");
+  if (!ivB64 || !tagB64 || !dataB64 || extra) return null;
+  try {
+    const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(ivB64, "base64url"));
+    decipher.setAuthTag(Buffer.from(tagB64, "base64url"));
+    const plain = Buffer.concat([
+      decipher.update(Buffer.from(dataB64, "base64url")),
+      decipher.final(),
+    ]).toString("utf8");
+    const parsed = JSON.parse(plain) as Partial<YouTubeCookieTokens>;
+    if (typeof parsed.access_token !== "string" || !parsed.access_token) return null;
+    return {
+      access_token: parsed.access_token,
+      refresh_token: typeof parsed.refresh_token === "string" ? parsed.refresh_token : undefined,
+      expires_at: typeof parsed.expires_at === "number" ? parsed.expires_at : 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function exchangeGoogleCodeWithTokens(
+  code: string,
+  redirectUri: string,
+  verifier: string,
+  nonce: string,
+): Promise<GoogleTokenResult> {
+  const metadata = await getDiscovery();
+  const body = new URLSearchParams({
+    code,
+    client_id: googleClientId(),
+    client_secret: googleClientSecret(),
+    redirect_uri: redirectUri,
+    grant_type: "authorization_code",
+    code_verifier: verifier,
+  });
+  const response = await fetch(metadata.token_endpoint, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body,
+    cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) throw new Error("Google token exchange failed");
+  const tokenPayload = (await response.json()) as {
+    id_token?: string;
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+    scope?: string;
+  };
+  if (!tokenPayload.id_token) throw new Error("Google did not return an ID token");
+  const identity = await verifyGoogleIdToken(tokenPayload.id_token, nonce);
+  return {
+    identity,
+    accessToken: tokenPayload.access_token,
+    refreshToken: tokenPayload.refresh_token,
+    expiresIn: typeof tokenPayload.expires_in === "number" ? tokenPayload.expires_in : 3600,
+    scopes: typeof tokenPayload.scope === "string" ? tokenPayload.scope.split(/\s+/).filter(Boolean) : [],
+  };
+}
+
+export async function exchangeGoogleCode(code: string, redirectUri: string, verifier: string, nonce: string): Promise<GoogleIdentity> {
+  const result = await exchangeGoogleCodeWithTokens(code, redirectUri, verifier, nonce);
+  return result.identity;
+}
+
+async function verifyGoogleIdToken(token: string, expectedNonce: string): Promise<GoogleIdentity> {
+  const metadata = await getDiscovery();
+  const [encodedHeader, encodedClaims, encodedSignature] = token.split(".");
+  if (!encodedHeader || !encodedClaims || !encodedSignature) throw new Error("Malformed Google ID token");
+  const header = JSON.parse(Buffer.from(encodedHeader, "base64url").toString("utf8")) as { alg?: string; kid?: string };
+  const claims = JSON.parse(Buffer.from(encodedClaims, "base64url").toString("utf8")) as GoogleClaims;
+  if (header.alg !== "RS256" || !header.kid) throw new Error("Unsupported Google ID token signature");
+
+  const keys = await getGoogleKeys(metadata.jwks_uri);
+  const jwk = keys.find((key) => key.kid === header.kid && key.kty === "RSA" && (!key.alg || key.alg === "RS256"));
+  if (!jwk) throw new Error("Google signing key not found");
+  const verifier = createVerify("RSA-SHA256");
+  verifier.update(`${encodedHeader}.${encodedClaims}`);
+  verifier.end();
+  const publicKey = createPublicKey({ key: jwk as import("crypto").JsonWebKey, format: "jwk" });
+  if (!verifier.verify(publicKey, Buffer.from(encodedSignature, "base64url"))) throw new Error("Invalid Google ID token signature");
+
+  const audiences = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
+  if (!audiences.includes(googleClientId())) throw new Error("Google ID token audience mismatch");
+  if (!["https://accounts.google.com", "accounts.google.com"].includes(claims.iss)) throw new Error("Invalid Google ID token issuer");
+  if (!Number.isFinite(claims.exp) || claims.exp <= Math.floor(Date.now() / 1000)) throw new Error("Google ID token expired");
+  if (!safeCompare(claims.nonce, expectedNonce)) throw new Error("Google ID token nonce mismatch");
+  if (!claims.sub || !claims.email || claims.email_verified !== true) throw new Error("Google account email is not verified");
+  return { sub: claims.sub, email: claims.email, name: claims.name || claims.email.split("@")[0], picture: claims.picture };
+}
+
+async function getDiscovery(): Promise<GoogleDiscovery> {
+  if (discoveryCache && discoveryCache.expiresAt > Date.now()) return discoveryCache.value;
+  const response = await fetch("https://accounts.google.com/.well-known/openid-configuration", {
+    cache: "no-store",
+    signal: AbortSignal.timeout(8_000),
+  });
+  if (!response.ok) throw new Error("Unable to load Google OpenID configuration");
+  const value = (await response.json()) as GoogleDiscovery;
+  if (!value.authorization_endpoint || !value.token_endpoint || !value.jwks_uri) throw new Error("Invalid Google OpenID configuration");
+  discoveryCache = { value, expiresAt: Date.now() + 60 * 60 * 1000 };
+  return value;
+}
+
+async function getGoogleKeys(uri: string): Promise<GoogleJwk[]> {
+  if (keysCache && keysCache.expiresAt > Date.now()) return keysCache.value;
+  const response = await fetch(uri, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(8_000),
+  });
+  if (!response.ok) throw new Error("Unable to load Google signing keys");
+  const payload = (await response.json()) as { keys?: GoogleJwk[] };
+  if (!Array.isArray(payload.keys)) throw new Error("Invalid Google signing key response");
+  keysCache = { value: payload.keys, expiresAt: Date.now() + 60 * 60 * 1000 };
+  return payload.keys;
+}
