@@ -52,7 +52,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (immersive) {
     return (
-      <main className="min-h-dvh">
+      <main className="min-h-dvh w-full max-w-full overflow-x-clip">
         {children}
         {pathname !== "/premium" && pathname !== "/now-playing" && pathname !== "/auth" && (
           <MobileSidebar />
@@ -71,8 +71,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           sidebarCollapsed ? "md:pl-[80px]" : "md:pl-[240px]",
           rightPanelOpen && "xl:pr-[340px]",
           hasTrack
-            ? "pb-[calc(156px+env(safe-area-inset-bottom))] md:pb-[108px]"
-            : "pb-[calc(92px+env(safe-area-inset-bottom))] md:pb-[32px]",
+            ? "pb-[calc(var(--app-shell-pb-track,156px)+env(safe-area-inset-bottom))] md:pb-[108px]"
+            : "pb-[calc(var(--app-shell-pb-idle,92px)+env(safe-area-inset-bottom))] md:pb-[32px]",
         )}
       >
         <TopBar />

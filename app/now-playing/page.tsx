@@ -681,12 +681,12 @@ export default function NowPlayingPage() {
         </div>
 
         {/* Center: Mobile 3-Way Switcher */}
-        <div className="flex shrink-0 items-center rounded-full border border-white/[0.08] bg-card p-0.5 lg:hidden">
+        <div className="flex min-w-0 shrink-0 items-center rounded-full border border-white/[0.08] bg-card p-0.5 lg:hidden">
           <button
             type="button"
             onClick={() => setMobileMode("player")}
             className={cn(
-              "min-h-[32px] rounded-full px-2 py-1 text-[11px] font-semibold transition min-[390px]:min-h-[34px] min-[390px]:px-2.5 sm:min-h-[36px] sm:px-3",
+              "min-h-[34px] rounded-full px-1.5 py-1 text-[10.5px] font-semibold transition min-[360px]:px-2.5 min-[360px]:text-[11px] min-[390px]:min-h-[36px] sm:px-3",
               mobileMode === "player"
                 ? "bg-elevated text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
@@ -698,7 +698,7 @@ export default function NowPlayingPage() {
             type="button"
             onClick={() => setMobileMode("lyrics")}
             className={cn(
-              "min-h-[32px] rounded-full px-2 py-1 text-[11px] font-semibold transition min-[390px]:min-h-[34px] min-[390px]:px-2.5 sm:min-h-[36px] sm:px-3",
+              "min-h-[34px] rounded-full px-1.5 py-1 text-[10.5px] font-semibold transition min-[360px]:px-2.5 min-[360px]:text-[11px] min-[390px]:min-h-[36px] sm:px-3",
               mobileMode === "lyrics"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground",
@@ -710,7 +710,7 @@ export default function NowPlayingPage() {
             type="button"
             onClick={() => setMobileMode("queue")}
             className={cn(
-              "min-h-[32px] rounded-full px-2 py-1 text-[11px] font-semibold transition min-[390px]:min-h-[34px] min-[390px]:px-2.5 sm:min-h-[36px] sm:px-3",
+              "min-h-[34px] rounded-full px-1.5 py-1 text-[10.5px] font-semibold transition min-[360px]:px-2.5 min-[360px]:text-[11px] min-[390px]:min-h-[36px] sm:px-3",
               mobileMode === "queue"
                 ? "bg-elevated text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
@@ -877,7 +877,7 @@ export default function NowPlayingPage() {
                   <div
                     onTouchEnd={handleArtworkTouchEnd}
                     onDoubleClick={handleArtworkDoubleClick}
-                    className="relative aspect-square w-[min(68vw,31dvh,276px)] shrink-0 cursor-pointer touch-none overflow-hidden rounded-2xl border border-white/[0.14] bg-elevated shadow-[0_24px_56px_rgba(0,0,0,0.72)] sm:w-[min(100%,36dvh,304px)]"
+                    className="relative aspect-square w-[min(72vw,32dvh,288px)] shrink-0 cursor-pointer touch-none overflow-hidden rounded-2xl border border-white/[0.14] bg-elevated shadow-[0_24px_56px_rgba(0,0,0,0.72)] sm:w-[min(100%,36dvh,304px)]"
                     style={artworkStyle}
                     title="Double-tap left/right to seek 10s · Swipe left/right for next/previous"
                   >
@@ -942,7 +942,7 @@ export default function NowPlayingPage() {
                         disabled={offlineBusy}
                         aria-label={offlineSaved ? "Saved offline" : "Download for offline"}
                         className={cn(
-                          "flex h-[42px] min-h-[42px] w-[42px] min-w-[42px] items-center justify-center rounded-full border border-white/[0.08] bg-elevated transition active:scale-95 sm:h-9 sm:min-h-0 sm:w-9 sm:min-w-0",
+                          "flex h-11 min-h-[44px] w-11 min-w-[44px] items-center justify-center rounded-full border border-white/[0.08] bg-elevated transition active:scale-95 sm:h-9 sm:min-h-0 sm:w-9 sm:min-w-0",
                           offlineSaved
                             ? "border-primary/45 bg-primary/15 text-primary"
                             : "text-foreground/75 hover:text-foreground",
@@ -960,7 +960,7 @@ export default function NowPlayingPage() {
                     <LikeButton
                       trackId={current.id}
                       size="md"
-                      className="h-[42px] min-h-[42px] w-[42px] min-w-[42px] border border-white/[0.08] bg-elevated text-foreground/80 hover:bg-elevated/80 hover:text-foreground sm:h-9 sm:min-h-0 sm:w-9 sm:min-w-0"
+                      className="h-11 min-h-[44px] w-11 min-w-[44px] border border-white/[0.08] bg-elevated text-foreground/80 hover:bg-elevated/80 hover:text-foreground sm:h-9 sm:min-h-0 sm:w-9 sm:min-w-0"
                     />
                   </div>
                 </div>
@@ -969,8 +969,8 @@ export default function NowPlayingPage() {
               {/* Controls Deck (Includes Shuffle, Prev, Play/Pause, Next, Loop/Repeat) */}
               <div className="relative z-10 mt-2 shrink-0 space-y-3 border-t border-white/[0.08] pt-3 sm:mt-3 sm:space-y-3.5">
                 <ProgressBar
-                  className="w-full"
-                  timeClassName="w-9 shrink-0 text-center font-sans text-[11px] tabular-nums text-muted-foreground"
+                  className="now-playing-progress w-full"
+                  timeClassName="w-10 shrink-0 text-center font-sans text-[11px] tabular-nums text-muted-foreground"
                 />
 
                 <div className="flex items-center justify-center">
@@ -986,7 +986,7 @@ export default function NowPlayingPage() {
                     type="button"
                     onClick={() => setMobileMode("lyrics")}
                     aria-label="Open synced lyrics"
-                    className="flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-3 text-xs font-medium text-muted-foreground transition hover:bg-elevated hover:text-primary active:scale-95"
+                    className="flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 text-xs font-medium text-muted-foreground transition hover:bg-elevated hover:text-primary active:scale-95"
                   >
                     <Mic2 className="h-4 w-4" />
                     <span>Lyrics</span>
@@ -996,7 +996,7 @@ export default function NowPlayingPage() {
                     type="button"
                     onClick={() => setMobileMode("queue")}
                     aria-label="Open playback queue"
-                    className="flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-3 text-xs font-medium text-muted-foreground transition hover:bg-elevated hover:text-foreground active:scale-95"
+                    className="flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 text-xs font-medium text-muted-foreground transition hover:bg-elevated hover:text-foreground active:scale-95"
                   >
                     <ListMusic className="h-4 w-4" />
                     <span>Queue</span>
@@ -1006,7 +1006,7 @@ export default function NowPlayingPage() {
                     type="button"
                     onClick={() => void copyLink()}
                     aria-label="Share song link"
-                    className="flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-3 text-xs font-medium text-muted-foreground transition hover:bg-elevated hover:text-foreground active:scale-95"
+                    className="flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 text-xs font-medium text-muted-foreground transition hover:bg-elevated hover:text-foreground active:scale-95"
                   >
                     <Share2 className="h-4 w-4" />
                     <span>Share</span>

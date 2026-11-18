@@ -72,20 +72,20 @@ export function TopBar() {
         isMobileHome && "hidden md:block",
       )}
     >
-      <div className="flex min-h-[60px] w-full items-center gap-1.5 sm:min-h-[68px] sm:gap-3">
+      <div className="flex min-h-[60px] w-full max-w-full min-w-0 items-center gap-1.5 sm:min-h-[68px] sm:gap-3">
         <button
           type="button"
           onClick={toggleMobileSidebar}
           aria-label={mobileSidebarOpen ? "Close navigation" : "Open navigation"}
           aria-expanded={mobileSidebarOpen}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/80 bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:hidden"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border/80 bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:hidden"
         >
           <Menu className="h-[18px] w-[18px]" />
         </button>
 
         <Link
           href="/home"
-          className="flex shrink-0 items-center gap-1.5 md:hidden"
+          className="flex min-w-0 shrink-0 items-center gap-1.5 md:hidden"
           aria-label="Sangeet home"
         >
           <SangeetMark size={26} />
@@ -107,11 +107,11 @@ export function TopBar() {
           </kbd>
         </Link>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
           <Link
             href="/search"
             aria-label="Search"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border/80 bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:hidden"
           >
             <Search className="h-[17px] w-[17px]" />
           </Link>
@@ -122,7 +122,7 @@ export function TopBar() {
             aria-label={queueOpen ? "Close queue" : "Open queue"}
             aria-pressed={queueOpen}
             className={cn(
-              "relative hidden h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary min-[380px]:flex",
+              "relative hidden h-10 w-10 items-center justify-center rounded-full border border-border/80 bg-card text-muted-foreground transition hover:bg-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary min-[380px]:flex sm:h-9 sm:w-9",
               queueOpen && "border-primary/45 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
             )}
           >
@@ -149,7 +149,7 @@ export function TopBar() {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="ml-0.5 flex items-center gap-1.5 rounded-full border border-border/80 bg-card p-0.5 transition hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:ml-1.5 sm:gap-2 sm:p-1"
+                  className="ml-0.5 flex min-h-10 items-center gap-1.5 rounded-full border border-border/80 bg-card p-1 transition hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:ml-1.5 sm:min-h-0 sm:gap-2"
                   aria-label="User account menu"
                 >
                   <span
@@ -203,14 +203,14 @@ export function TopBar() {
             <div className="ml-0.5 flex shrink-0 items-center gap-1.5 sm:ml-2 sm:gap-2">
               <Link
                 href={`/auth?tab=signin&returnTo=${encodeURIComponent(pathname)}`}
-                className="inline-flex min-h-8 items-center whitespace-nowrap rounded-full border border-border bg-card px-3 py-1 text-[11px] font-semibold text-foreground transition hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-9 sm:px-3.5 sm:py-1.5 sm:text-xs"
+                className="inline-flex min-h-9 items-center whitespace-nowrap rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-semibold text-foreground transition hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary min-[380px]:px-3 sm:px-3.5 sm:py-1.5 sm:text-xs"
               >
                 Sign in
               </Link>
               <Link
                 href={`/auth?tab=signup&returnTo=${encodeURIComponent(pathname)}`}
                 aria-label="Create account"
-                className="inline-flex min-h-8 items-center whitespace-nowrap rounded-full bg-primary px-3 py-1 text-[11px] font-semibold text-primary-foreground transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:min-h-9 sm:px-4 sm:py-1.5 sm:text-xs"
+                className="inline-flex min-h-9 items-center whitespace-nowrap rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary min-[380px]:px-3 sm:px-4 sm:py-1.5 sm:text-xs"
               >
                 <span className="sm:hidden">Sign up</span>
                 <span className="hidden sm:inline">Create account</span>

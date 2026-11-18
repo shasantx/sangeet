@@ -55,19 +55,19 @@ export function MobileMiniPlayer() {
   return (
     <aside
       className="mobile-mini-player pointer-events-auto fixed inset-x-3 z-[41] touch-pan-y select-none overflow-hidden rounded-xl border border-border bg-elevated md:hidden"
-      style={{ bottom: "calc(74px + env(safe-area-inset-bottom))" }}
+      style={{ bottom: "calc(var(--mobile-dock-clearance, 74px) + env(safe-area-inset-bottom))" }}
       aria-label="Mini music player"
     >
       <MiniPlayerProgress />
 
-      <div className="flex h-[62px] items-center gap-2 p-0 pr-2">
+      <div className="flex h-[var(--mini-player-height,62px)] items-center gap-2 p-0 pr-2">
         <Link
           href="/now-playing"
           draggable={false}
           className="flex h-full min-w-0 flex-1 items-center gap-3 rounded-l-xl outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
           aria-label={`Open now playing: ${current.title} by ${artist?.name ?? "Sangeet artist"}`}
         >
-          <div className="relative h-[62px] w-[62px] shrink-0 overflow-hidden rounded-none border-r border-border bg-card">
+          <div className="relative h-[var(--mini-player-height,62px)] w-[var(--mini-player-height,62px)] shrink-0 overflow-hidden rounded-none border-r border-border bg-card">
             <Artwork
               src={current.artwork}
               alt=""

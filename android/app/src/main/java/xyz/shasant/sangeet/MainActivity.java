@@ -8,6 +8,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -53,6 +54,7 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -602,8 +604,14 @@ public final class MainActivity extends AppCompatActivity {
                 offlineAudioWriters.put(key, new FileOutputStream(temporary, false));
                 String safeExtension = extension != null && extension.matches("[a-zA-Z0-9]{2,5}")
                         ? extension.toLowerCase(Locale.ROOT) : "m4a";
-                getSharedPreferences("offline-audio", MODE_PRIVATE)
-                        .edit().putString("ext_" + key, safeExtension).apply();
+                SharedPreferences prefs = getSharedPreferences("offline-audio", MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+                String previousExtension = prefs.getString("ext_" + key, null);
+                if (previousExtension != null && !previousExtension.equals(safeExtension)
+                        && new File(directory, key + "." + previousExtension).isFile()) {
+                    editor.putString("prev_ext_" + key, previousExtension);
+                }
+                editor.putString("ext_" + key, safeExtension).apply();
                 return true;
             } catch (Exception e) {
                 return false;
@@ -635,8 +643,16 @@ public final class MainActivity extends AppCompatActivity {
                 output.close();
                 File directory = new File(getFilesDir(), "offline-audio");
                 File temporary = new File(directory, key + ".part");
-                String extension = getSharedPreferences("offline-audio", MODE_PRIVATE)
-                        .getString("ext_" + key, "m4a");
+                SharedPreferences prefs = getSharedPreferences("offline-audio", MODE_PRIVATE);
+                String extension = prefs.getString("ext_" + key, "m4a");
+                String previousExtension = prefs.getString("prev_ext_" + key, null);
+                if (previousExtension != null && !previousExtension.equals(extension)) {
+                    File oldFile = new File(directory, key + "." + previousExtension);
+                    if (oldFile.exists()) oldFile.delete();
+                }
+                if (previousExtension != null) {
+                    prefs.edit().remove("prev_ext_" + key).apply();
+                }
                 File destination = new File(directory, key + "." + extension);
                 if (destination.exists() && !destination.delete()) return false;
                 return temporary.length() > 0 && temporary.renameTo(destination);
@@ -717,12 +733,49 @@ public final class MainActivity extends AppCompatActivity {
                 String extension = getSharedPreferences("offline-audio", MODE_PRIVATE)
                         .getString("ext_" + key, "m4a");
                 File audio = new File(new File(getFilesDir(), "offline-audio"), key + "." + extension);
-                if (!audio.isFile() || audio.length() == 0 || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                if (!audio.isFile() || audio.length() == 0) {
                     return false;
                 }
-                String safeName = filename == null ? "sangeet-track." + extension : filename.trim()
+                String rawName = filename == null ? "" : filename.trim()
                         .replaceAll("[\\\\/:*?\"<>|]+", "_")
-                        .replaceAll("[\\r\\n\\t]", " ");
+                        .replaceAll("[\\r\\n\\t]", " ")
+                        .trim();
+                String baseName = rawName.replaceFirst("\\.[a-zA-Z0-9]{2,5}$", "");
+                if (baseName.isEmpty()) {
+                    baseName = "sangeet-track";
+                }
+                String safeName = baseName + "." + extension;
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                    bridgeExecutor.execute(() -> {
+                        File target = new File(
+                                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                                "Sangeet/" + safeName);
+                        try {
+                            File parent = target.getParentFile();
+                            if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                                throw new IllegalStateException("Could not create Downloads/Sangeet folder.");
+                            }
+                            try (InputStream input = new FileInputStream(audio);
+                                 OutputStream output = new FileOutputStream(target, false)) {
+                                byte[] buffer = new byte[64 * 1024];
+                                int count;
+                                while ((count = input.read(buffer)) != -1) {
+                                    output.write(buffer, 0, count);
+                                }
+                                output.flush();
+                            }
+                            runOnUiThread(() -> Toast.makeText(MainActivity.this,
+                                    "Saved " + safeName + " to Downloads/Sangeet", Toast.LENGTH_SHORT).show());
+                        } catch (Exception e) {
+                            if (target.exists()) {
+                                try { target.delete(); } catch (Exception ignored) {}
+                            }
+                            runOnUiThread(() -> Toast.makeText(MainActivity.this,
+                                    "Could not save this audio file.", Toast.LENGTH_LONG).show());
+                        }
+                    });
+                    return true;
+                }
                 bridgeExecutor.execute(() -> copyContentAudioToDownloads(
                         Uri.fromFile(audio), safeName, mimeTypeForAudioExtension(extension)));
                 return true;
@@ -981,10 +1034,16 @@ public final class MainActivity extends AppCompatActivity {
                 }
                 if (received == 0) throw new IllegalStateException("Downloaded audio file was empty.");
                 String extension = extensionForAudioMime(mime);
+                SharedPreferences prefs = getSharedPreferences("offline-audio", MODE_PRIVATE);
+                String previousExtension = prefs.getString("ext_" + key, null);
+                if (previousExtension != null && !previousExtension.equals(extension)) {
+                    File oldFile = new File(directory, key + "." + previousExtension);
+                    if (oldFile.exists()) oldFile.delete();
+                }
                 File destination = new File(directory, key + "." + extension);
                 if (destination.exists() && !destination.delete()) throw new IllegalStateException("Could not replace the saved offline song.");
                 if (!temporary.renameTo(destination)) throw new IllegalStateException("Could not finish saving the offline song.");
-                getSharedPreferences("offline-audio", MODE_PRIVATE).edit().putString("ext_" + key, extension).apply();
+                prefs.edit().putString("ext_" + key, extension).remove("prev_ext_" + key).apply();
                 return received;
             } catch (Exception e) {
                 if (temporary.exists()) temporary.delete();

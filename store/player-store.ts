@@ -222,6 +222,8 @@ function resumeAudio(audio: HTMLAudioElement) {
   }
 }
 
+let androidServiceLoadedTrackId: string | null = null;
+
 export const usePlayerStore = create<PlayerState>()(
   persist(
     (set, get) => {
@@ -247,7 +249,9 @@ export const usePlayerStore = create<PlayerState>()(
 
           if (shouldPlay && isAndroidNativeApp() && !state.videoMode) {
             const artistName = getArtist(track.artistId)?.name ?? "Sangeet";
+            androidSetPlaybackRate(state.playbackRate);
             if (androidPlayOfflineAudio(trackId, track.title, artistName, track.artwork)) {
+              androidServiceLoadedTrackId = trackId;
               audio?.pause();
               stopYouTube();
               return;
@@ -255,10 +259,14 @@ export const usePlayerStore = create<PlayerState>()(
             if (offlineUrl && tryAndroidOffline) {
               void ensureAndroidOfflineAudio(trackId).then((stored) => {
                 if (get().currentTrackId !== trackId) return;
-                if (stored && androidPlayOfflineAudio(trackId, track.title, artistName, track.artwork)) {
-                  audio?.pause();
-                  stopYouTube();
-                  return;
+                if (stored) {
+                  androidSetPlaybackRate(get().playbackRate);
+                  if (androidPlayOfflineAudio(trackId, track.title, artistName, track.artwork)) {
+                    androidServiceLoadedTrackId = trackId;
+                    audio?.pause();
+                    stopYouTube();
+                    return;
+                  }
                 }
                 beginPlayback(offlineUrl, false);
               });
@@ -288,6 +296,7 @@ export const usePlayerStore = create<PlayerState>()(
               } else {
                 androidPlayAudioUrl(track.audioUrl, track.title, artistName, track.artwork);
               }
+              androidServiceLoadedTrackId = trackId;
             }
             return;
           }
@@ -415,6 +424,8 @@ export const usePlayerStore = create<PlayerState>()(
               if (current.isPlaying) {
                 androidPause();
                 set({ isPlaying: false, isLoading: false });
+              } else if (androidServiceLoadedTrackId !== trackId) {
+                startTrack(trackId, true);
               } else {
                 set({ isPlaying: true, isLoading: false, error: null });
                 androidResume();
@@ -515,10 +526,10 @@ export const usePlayerStore = create<PlayerState>()(
           }
 
           if (isAndroidNativeApp() && !state.videoMode) {
-            set({ isPlaying: true, isLoading: false, error: null });
-            if (state.currentTime === 0) {
+            if (state.currentTime === 0 || androidServiceLoadedTrackId !== state.currentTrackId) {
               startTrack(state.currentTrackId, true);
             } else {
+              set({ isPlaying: true, isLoading: false, error: null });
               androidResume();
             }
             return;
@@ -686,6 +697,9 @@ export const usePlayerStore = create<PlayerState>()(
         setVideoMode: (mode) => {
           const state = get();
           set({ videoMode: mode });
+          if (mode) {
+            androidServiceLoadedTrackId = null;
+          }
           const track = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
           if (!track?.youtubeId) return;
           const audio = getAudioElement();
@@ -792,6 +806,8 @@ export const usePlayerStore = create<PlayerState>()(
             if (remaining.length === 0) {
               const audio = getAudioElement();
               audio?.pause();
+              androidStop();
+              androidServiceLoadedTrackId = null;
               stopYouTube();
               set({
                 queue: [],
@@ -963,6 +979,7 @@ export const usePlayerStore = create<PlayerState>()(
           const audio = getAudioElement();
           audio?.pause();
           androidStop();
+          androidServiceLoadedTrackId = null;
           stopYouTube();
           if (audio) {
             audio.removeAttribute("src");

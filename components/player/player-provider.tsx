@@ -45,8 +45,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const track = currentTrackId ? getTrack(currentTrackId) : undefined;
     if (!track?.youtubeId || !isPlaying || !isLoading) return;
+    if (isAndroidNativeApp() && !usePlayerStore.getState().videoMode) return;
     const retryTimer = window.setTimeout(() => {
       const state = usePlayerStore.getState();
+      if (isAndroidNativeApp() && !state.videoMode) return;
       if (state.currentTrackId !== currentTrackId || !state.isLoading) return;
       const audio = getAudioElement();
       if (!audio?.src) {
@@ -55,6 +57,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }, 3500);
     const timer = window.setTimeout(() => {
       const state = usePlayerStore.getState();
+      if (isAndroidNativeApp() && !state.videoMode) return;
       if (state.currentTrackId !== currentTrackId || !state.isLoading) return;
       state.syncFromAudio({
         isPlaying: false,

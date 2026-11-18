@@ -5,45 +5,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertCircle,
-  ArrowLeft,
-  AudioLines,
-  CheckCircle2,
-  Download,
   Eye,
   EyeOff,
   Headphones,
-  Laptop,
   Lock,
   Mail,
-  Smartphone,
   User,
 } from "lucide-react";
 import { SangeetMark } from "@/components/brand/sangeet-mark";
-import { Artwork } from "@/components/music/artwork";
-import { albums, getArtist, selectedAlbums } from "@/lib/catalog";
 import { useAuthStore } from "@/store/auth-store";
 import { toast } from "@/store/ui-store";
-
-const APK_URL = "/api/download/android";
-const EXE_URL = "/api/download/windows";
-
-const LYRIC_SNIPPETS = [
-  {
-    prev: "City lights blur into neon green",
-    active: "Lossless studio warmth in every frame",
-    next: "Synced word by word, zero interruptions",
-  },
-  {
-    prev: "Lossless studio warmth in every frame",
-    active: "Synced word by word, zero interruptions",
-    next: "Take your queue from browser to pocket",
-  },
-  {
-    prev: "Synced word by word, zero interruptions",
-    active: "Take your queue from browser to pocket",
-    next: "City lights blur into neon green",
-  },
-];
 
 function sanitizeClientReturnTo(value: string | null | undefined, fallback = "/home"): string {
   if (!value || typeof value !== "string") return fallback;
@@ -126,210 +97,6 @@ function GoogleMark() {
   );
 }
 
-function LiquidShowcasePanel() {
-  const [lyricIndex, setLyricIndex] = useState(0);
-  const [activeStackIndex, setActiveStackIndex] = useState<number | null>(null);
-
-  const stackAlbums = useMemo(() => {
-    const source = selectedAlbums.length >= 3 ? selectedAlbums : albums;
-    return source.slice(0, 3);
-  }, []);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setLyricIndex((prev) => (prev + 1) % LYRIC_SNIPPETS.length);
-    }, 3400);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  const currentLyric = LYRIC_SNIPPETS[lyricIndex];
-  const selectedMiniAlbum =
-    activeStackIndex !== null ? stackAlbums[activeStackIndex] : undefined;
-  const selectedMiniArtist = selectedMiniAlbum
-    ? getArtist(selectedMiniAlbum.artistId)
-    : undefined;
-
-  const heroArtSrc = selectedMiniAlbum?.artwork || "/art/albums/the-weeknd-sao-paulo.jpg";
-  const heroTitle = selectedMiniAlbum?.title || "São Paulo · Spatial Mix";
-  const heroSubtitle =
-    selectedMiniArtist?.name || "The Weeknd · 320 kbps Lossless Stream";
-
-  return (
-    <div className="relative hidden w-1/2 min-w-0 flex-col justify-between overflow-hidden border-r border-border bg-elevated/45 bg-[radial-gradient(circle_at_15%_12%,hsl(var(--primary)/0.14),transparent_48%),radial-gradient(circle_at_88%_88%,rgba(99,102,241,0.12),transparent_48%)] p-7 lg:p-8 md:flex">
-      <style>{`
-        @keyframes sangeetEqPulse {
-          0%, 100% { transform: scaleY(0.32); opacity: 0.72; }
-          50% { transform: scaleY(1); opacity: 1; }
-        }
-      `}</style>
-
-      {/* Specular ambient blooms */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-12 -top-12 h-72 w-72 rounded-full bg-primary/20 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-14 -right-12 h-72 w-72 rounded-full bg-indigo-500/18 blur-3xl"
-      />
-
-      {/* Top Navigation */}
-      <div className="z-10 flex flex-wrap items-center justify-between gap-2">
-        <Link
-          href="/"
-          className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full border border-border bg-elevated/80 px-4 text-xs font-medium text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-xl transition hover:border-white/25 hover:bg-elevated hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5 shrink-0" /> Back to home
-        </Link>
-
-        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-primary backdrop-blur-xl">
-          <AudioLines className="h-3 w-3 shrink-0" /> Studio Audio
-        </span>
-      </div>
-
-      {/* Interactive Liquid Glass Now Streaming Preview Card */}
-      <div className="z-10 my-auto py-5">
-        <div className="relative overflow-hidden rounded-[28px] border border-border bg-card/85 p-4 shadow-[0_24px_60px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-2xl">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"
-          />
-
-          {/* Live Status + Animated Equalizer */}
-          <div className="mb-3.5 flex min-w-0 items-center justify-between gap-2">
-            <div className="inline-flex min-w-0 items-center gap-2 rounded-full border border-border bg-elevated/90 px-3 py-1 text-[11px] font-semibold text-foreground">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.8)]" />
-              <span className="truncate">Now Streaming on Sangeet</span>
-            </div>
-
-            <div
-              aria-hidden="true"
-              className="flex h-5 shrink-0 items-end gap-1 rounded-full border border-border bg-elevated/80 px-2.5 py-1"
-            >
-              {[0, 140, 280, 90].map((delay, idx) => (
-                <span
-                  key={idx}
-                  className="h-3 w-0.5 origin-bottom rounded-full bg-primary"
-                  style={{
-                    animation: `sangeetEqPulse ${0.85 + idx * 0.12}s ease-in-out ${delay}ms infinite`,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Primary Artwork + Stacked Mini Catalog Albums */}
-          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_72px] gap-3">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-background/60">
-              <img
-                src={heroArtSrc}
-                alt={heroTitle}
-                className="h-full w-full object-cover transition duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
-              <div className="absolute inset-x-3.5 bottom-3">
-                <p className="truncate font-display text-sm font-bold text-white">
-                  {heroTitle}
-                </p>
-                <p className="truncate text-[11px] text-white/75">{heroSubtitle}</p>
-              </div>
-            </div>
-
-            {/* Interactive Stacked Mini Album Cards from @/lib/catalog */}
-            <div className="flex flex-col justify-between gap-2">
-              {stackAlbums.map((album, idx) => {
-                const isSelected = activeStackIndex === idx;
-                return (
-                  <button
-                    key={album.id}
-                    type="button"
-                    onClick={() =>
-                      setActiveStackIndex((curr) => (curr === idx ? null : idx))
-                    }
-                    title={`Preview ${album.title}`}
-                    aria-label={`Preview ${album.title}`}
-                    className={`group relative aspect-square w-full overflow-hidden rounded-xl border transition ${
-                      isSelected
-                        ? "border-primary ring-2 ring-primary/40 scale-[1.03]"
-                        : "border-border opacity-85 hover:opacity-100 hover:border-white/30"
-                    }`}
-                  >
-                    <Artwork
-                      src={album.artwork}
-                      alt={album.title}
-                      className="h-full w-full"
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Synchronized Lyrics Snippet Preview */}
-          <button
-            type="button"
-            onClick={() => setLyricIndex((prev) => (prev + 1) % LYRIC_SNIPPETS.length)}
-            className="mt-3.5 w-full rounded-2xl border border-border bg-elevated/70 px-3.5 py-2.5 text-left transition hover:border-white/20"
-            aria-label="Cycle synchronized lyrics preview"
-          >
-            <div className="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              <span>Live Synced Lyrics</span>
-              <span className="text-primary">Tap to sync</span>
-            </div>
-            <p className="truncate text-[11px] text-muted-foreground/70">{currentLyric.prev}</p>
-            <p className="truncate py-0.5 text-xs font-semibold text-foreground">
-              <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-primary align-middle" />
-              {currentLyric.active}
-            </p>
-            <p className="truncate text-[11px] text-muted-foreground/70">{currentLyric.next}</p>
-          </button>
-
-          {/* Platform Badges */}
-          <div className="mt-3.5 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/80 px-2.5 py-1 text-[10px] font-semibold text-foreground/85">
-              <CheckCircle2 className="h-3 w-3 text-primary" /> Web
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/80 px-2.5 py-1 text-[10px] font-semibold text-foreground/85">
-              <Smartphone className="h-3 w-3 text-primary" /> Android APK
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/80 px-2.5 py-1 text-[10px] font-semibold text-foreground/85">
-              <Laptop className="h-3 w-3 text-primary" /> Windows .exe
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Quick-Download Bar (Website Routes Only) */}
-      <div className="z-10 min-w-0 space-y-2.5 border-t border-border pt-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-          <span>Direct native apps · Offline playback included</span>
-          <span className="shrink-0 font-medium text-primary">Free &amp; Ad-free</span>
-        </div>
-        <div className="grid min-w-0 grid-cols-2 gap-2.5">
-          <a
-            href={APK_URL}
-            download="sangeet-android.apk"
-            className="inline-flex min-h-[44px] min-w-0 items-center justify-center gap-2 rounded-2xl border border-border bg-elevated/75 px-2.5 text-xs font-semibold text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl transition hover:border-primary/40 hover:bg-elevated"
-          >
-            <Smartphone className="h-3.5 w-3.5 shrink-0 text-primary" />
-            <span className="truncate">Android APK</span>
-            <Download className="h-3 w-3 shrink-0 text-muted-foreground" />
-          </a>
-          <a
-            href={EXE_URL}
-            download="Sangeet.exe"
-            className="inline-flex min-h-[44px] min-w-0 items-center justify-center gap-2 rounded-2xl border border-border bg-elevated/75 px-2.5 text-xs font-semibold text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl transition hover:border-white/30 hover:bg-elevated"
-          >
-            <Laptop className="h-3.5 w-3.5 shrink-0 text-indigo-300" />
-            <span className="truncate">Windows .exe</span>
-            <Download className="h-3 w-3 shrink-0 text-muted-foreground" />
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -407,8 +174,11 @@ function AuthForm() {
       );
       router.replace(returnTo);
     } catch {
-      loginWithEmail(cleanEmail, mode === "signup" ? name.trim().slice(0, 80) : undefined, false);
-      router.replace(isAdminReturn ? "/home" : returnTo);
+      setIsSubmitting(false);
+      toast.error(
+        "Sign in failed",
+        "Could not reach the server. Please check your connection and try again.",
+      );
     }
   };
 
@@ -432,7 +202,7 @@ function AuthForm() {
 
   return (
     <div className="w-full min-w-0">
-      <Link href="/" className="mb-7 inline-flex min-h-11 items-center gap-2.5 text-sm font-semibold text-foreground">
+      <Link href="/" className="mb-6 inline-flex min-h-[48px] items-center gap-2.5 text-sm font-semibold text-foreground">
         <SangeetMark size={30} />
         <span>Sangeet</span>
       </Link>
@@ -452,7 +222,7 @@ function AuthForm() {
         <button
           type="button"
           onClick={() => setMode("signin")}
-          className={`min-h-[44px] truncate rounded-xl px-2 text-xs font-semibold transition sm:text-sm ${
+          className={`min-h-[48px] truncate rounded-xl px-2 text-xs font-semibold transition sm:text-sm ${
             mode === "signin"
               ? "bg-primary text-primary-foreground shadow-[0_6px_20px_hsl(var(--primary)/0.28)]"
               : "text-muted-foreground hover:bg-elevated hover:text-foreground"
@@ -463,7 +233,7 @@ function AuthForm() {
         <button
           type="button"
           onClick={() => setMode("signup")}
-          className={`min-h-[44px] truncate rounded-xl px-2 text-xs font-semibold transition sm:text-sm ${
+          className={`min-h-[48px] truncate rounded-xl px-2 text-xs font-semibold transition sm:text-sm ${
             mode === "signup"
               ? "bg-primary text-primary-foreground shadow-[0_6px_20px_hsl(var(--primary)/0.28)]"
               : "text-muted-foreground hover:bg-elevated hover:text-foreground"
@@ -509,7 +279,7 @@ function AuthForm() {
                 maxLength={80}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
-                className="h-12 w-full rounded-2xl border border-border bg-elevated/65 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus:border-primary focus:bg-elevated focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-12 min-h-[48px] w-full rounded-2xl border border-border bg-elevated/65 pl-11 pr-4 text-base text-foreground placeholder:text-muted-foreground/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus:border-primary focus:bg-elevated focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm"
               />
             </div>
           </div>
@@ -532,7 +302,7 @@ function AuthForm() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required
-              className="h-12 w-full rounded-2xl border border-border bg-elevated/65 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus:border-primary focus:bg-elevated focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-12 min-h-[48px] w-full rounded-2xl border border-border bg-elevated/65 pl-11 pr-4 text-base text-foreground placeholder:text-muted-foreground/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus:border-primary focus:bg-elevated focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm"
             />
           </div>
         </div>
@@ -553,12 +323,12 @@ function AuthForm() {
               maxLength={128}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              className="h-12 w-full rounded-2xl border border-border bg-elevated/65 pl-11 pr-12 text-sm text-foreground placeholder:text-muted-foreground/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus:border-primary focus:bg-elevated focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-12 min-h-[48px] w-full rounded-2xl border border-border bg-elevated/65 pl-11 pr-12 text-base text-foreground placeholder:text-muted-foreground/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus:border-primary focus:bg-elevated focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm"
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-1 top-1/2 flex h-11 min-h-[44px] w-11 -translate-y-1/2 items-center justify-center rounded-xl text-muted-foreground transition hover:bg-white/[0.08] hover:text-foreground"
+              className="absolute right-0.5 top-1/2 flex h-12 min-h-[48px] w-12 -translate-y-1/2 items-center justify-center rounded-xl text-muted-foreground transition hover:bg-white/[0.08] hover:text-foreground"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -627,15 +397,15 @@ function AuthForm() {
 
 export default function AuthPage() {
   return (
-    <main className="relative flex min-h-dvh w-full max-w-full min-w-0 items-start justify-center bg-background px-4 py-6 text-foreground sm:items-center sm:p-8">
+    <main className="relative isolate flex min-h-dvh w-full max-w-full min-w-0 items-start justify-center bg-background px-4 py-6 text-foreground sm:items-center sm:p-8">
       {/* Layered Studio Ambient Glows */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_75%_55%_at_18%_0%,hsl(var(--primary)/0.16),transparent_62%),radial-gradient(ellipse_60%_50%_at_88%_100%,rgba(99,102,241,0.14),transparent_62%),radial-gradient(ellipse_55%_40%_at_50%_50%,rgba(255,255,255,0.025),transparent_70%)]"
+        className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_75%_55%_at_18%_0%,hsl(var(--primary)/0.16),transparent_62%),radial-gradient(ellipse_60%_50%_at_88%_100%,rgba(99,102,241,0.14),transparent_62%),radial-gradient(ellipse_55%_40%_at_50%_50%,rgba(255,255,255,0.025),transparent_70%)]"
       />
 
       {/* Main Liquid Glass Split Card */}
-      <div className="my-auto w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-card sm:p-8">
+      <div className="relative z-10 my-auto w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-card sm:p-8">
         <Suspense
           fallback={
             <div className="flex w-full flex-col justify-center py-12 text-center text-sm text-muted-foreground">

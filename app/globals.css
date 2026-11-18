@@ -175,6 +175,8 @@
   }
 
   .app-shell-scroll {
+    width: 100%;
+    max-width: 100%;
     height: 100dvh;
     min-height: 0;
     overflow-x: clip;
@@ -379,7 +381,9 @@
     bottom: 0;
     display: flex;
     justify-content: center;
+    width: 100%;
     max-width: 100%;
+    overflow-x: clip;
     box-sizing: border-box;
     padding: 0.4rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
     pointer-events: none;
@@ -395,6 +399,8 @@
   }
 
   .mobile-mini-player {
+    max-width: calc(100% - 1.5rem);
+    box-sizing: border-box;
     background: var(--mini-bg);
     border: 1px solid hsl(var(--border));
     box-shadow: 0 14px 32px -10px rgba(0, 0, 0, 0.65);
@@ -521,23 +527,91 @@
 
   @media (max-width: 379px) {
     .mobile-brand-name { display: none; }
-    .mobile-dock-pill { padding-inline: 0.35rem; }
+    .mobile-dock-pill { padding-inline: 0.35rem; min-height: 46px; }
     .dock-label { font-size: 0.625rem; }
   }
 
   /* Android APK comfortable sizing & touch targets */
   html[data-native="android"] {
-    font-size: 16px;
+    font-size: 17.5px;
+    --mobile-dock-clearance: 84px;
+    --mini-player-height: 68px;
+    --app-shell-pb-track: 174px;
+    --app-shell-pb-idle: 104px;
+  }
+
+  html[data-native="android"] .mobile-dock-shell {
+    padding: 0.45rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom));
+  }
+
+  html[data-native="android"] .dock.mobile-dock {
+    min-height: 64px;
+    width: min(100%, 420px);
+    padding: 5px;
+  }
+
+  html[data-native="android"] .mobile-dock-indicator {
+    top: 5px;
+    bottom: 5px;
+    left: 5px;
+    width: calc((100% - 10px) / 4);
   }
 
   html[data-native="android"] .mobile-dock-pill {
-    min-height: 48px;
+    min-height: 52px;
+    padding: 0.35rem 0.5rem;
+    gap: 3px;
+  }
+
+  html[data-native="android"] .dock-label {
+    font-size: 0.72rem;
+  }
+
+  html[data-native="android"] .mobile-mini-player {
+    border-radius: 1rem;
+  }
+
+  html[data-native="android"] .mobile-mini-player button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  @media (max-width: 379px) {
+    html[data-native="android"] {
+      font-size: 16.5px;
+    }
+
+    html[data-native="android"] .mobile-dock-pill {
+      min-height: 48px;
+      padding-inline: 0.35rem;
+    }
+
+    html[data-native="android"] .dock-label {
+      font-size: 0.65rem;
+    }
   }
 
   html[data-native="android"] button,
   html[data-native="android"] [role="button"],
   html[data-native="android"] [role="tab"] {
     touch-action: manipulation;
+  }
+
+  /* Comfortable touch target for Now Playing seek slider */
+  .now-playing-progress .group {
+    min-height: 36px;
+    padding-block: 10px;
+    cursor: pointer;
+  }
+
+  .now-playing-progress [data-orientation="horizontal"] > span:first-child {
+    height: 6px;
+  }
+
+  .now-playing-progress [role="slider"] {
+    height: 14px;
+    width: 14px;
+    opacity: 1;
   }
 
   .marquee-fade {

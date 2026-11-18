@@ -247,7 +247,7 @@ export function MobileNavigation() {
           const swipe = swipeClickRef.current;
           if (
             swipe &&
-            Date.now() - swipe.at < 120 &&
+            Date.now() - swipe.at < 300 &&
             Math.abs(e.clientX - swipe.x) < 32 &&
             Math.abs(e.clientY - swipe.y) < 32
           ) {
@@ -292,7 +292,7 @@ export function MobileNavigation() {
                 />
                 <span
                   className={cn(
-                    "dock-label text-[11px] transition-colors duration-150",
+                    "dock-label max-w-full truncate text-[11px] transition-colors duration-150",
                     isHighlighted ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
                   )}
                 >
