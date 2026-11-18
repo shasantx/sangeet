@@ -9,11 +9,15 @@ import {
   Check,
   Clock3,
   Database,
+  Disc3,
   Download,
+  Eclipse,
+  Flame,
   Heart,
   Info,
   Keyboard,
   Laptop,
+  Leaf,
   ListMusic,
   LogOut,
   Monitor,
@@ -21,7 +25,6 @@ import {
   Palette,
   Play,
   RotateCcw,
-  Search,
   Settings2,
   ShieldCheck,
   Smartphone,
@@ -29,10 +32,12 @@ import {
   SunMedium,
   Trash2,
   Users,
+  Waves,
+  Zap,
 } from "lucide-react";
 import { isNativeOfflineSupported } from "@/lib/offline-audio";
 import { cn, formatCount } from "@/lib/utils";
-import type { AccentPreference, ThemePreference } from "@/store/app-store";
+import type { ThemePreference } from "@/store/app-store";
 import { useAppStore } from "@/store/app-store";
 import { albums, tracks } from "@/lib/catalog";
 import { useLibraryStore } from "@/store/library-store";
@@ -52,11 +57,21 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const themes: {
+type GlassPillVariant =
+  | "cyan"
+  | "violet"
+  | "amber"
+  | "emerald"
+  | "rose"
+  | "blue"
+  | "slate";
+
+interface ThemeOption {
   id: ThemePreference;
   label: string;
   tag: string;
-  tier: "default" | "nitro" | "studio";
+  group: "animated" | "dark";
+  pillVariant: GlassPillVariant;
   description: string;
   background: string;
   sidebar: string;
@@ -66,12 +81,66 @@ const themes: {
   gradient: string;
   swatchGradient: string;
   icon: typeof Moon;
-}[] = [
+}
+
+const themes: ThemeOption[] = [
+  {
+    id: "aurora-flow",
+    label: "Aurora Flow",
+    tag: "Animated",
+    group: "animated",
+    pillVariant: "cyan",
+    description: "Drifting northern lights in deep cosmic indigo, teal and violet.",
+    background: "#090D18",
+    sidebar: "#070A13",
+    surface: "#121728",
+    elevated: "#1C2238",
+    accent: "#2DD4BF",
+    gradient:
+      "linear-gradient(125deg, rgba(45, 212, 191, 0.34) 0%, rgba(15, 23, 42, 0.05) 38%, rgba(167, 139, 250, 0.34) 70%, rgba(56, 189, 248, 0.28) 100%)",
+    swatchGradient: "linear-gradient(135deg, #2DD4BF 0%, #8B5CF6 55%, #38BDF8 100%)",
+    icon: Waves,
+  },
+  {
+    id: "sunset-pulse",
+    label: "Sunset Pulse",
+    tag: "Animated",
+    group: "animated",
+    pillVariant: "amber",
+    description: "Warm ember coral, amber gold and twilight magenta in slow motion.",
+    background: "#140A0E",
+    sidebar: "#10080B",
+    surface: "#211218",
+    elevated: "#2E1A22",
+    accent: "#FB923C",
+    gradient:
+      "linear-gradient(130deg, rgba(251, 146, 60, 0.34) 0%, rgba(20, 10, 14, 0.05) 40%, rgba(236, 72, 153, 0.32) 72%, rgba(245, 158, 11, 0.28) 100%)",
+    swatchGradient: "linear-gradient(135deg, #FB923C 0%, #EC4899 55%, #F59E0B 100%)",
+    icon: Flame,
+  },
+  {
+    id: "cyber-drift",
+    label: "Cyber Drift",
+    tag: "Animated",
+    group: "animated",
+    pillVariant: "violet",
+    description: "Electric cyan and neon magenta currents over midnight ultraviolet.",
+    background: "#0B0A1A",
+    sidebar: "#080714",
+    surface: "#15132B",
+    elevated: "#1F1D3D",
+    accent: "#22D3EE",
+    gradient:
+      "linear-gradient(125deg, rgba(34, 211, 238, 0.34) 0%, rgba(11, 10, 26, 0.05) 38%, rgba(232, 121, 249, 0.32) 70%, rgba(99, 102, 241, 0.28) 100%)",
+    swatchGradient: "linear-gradient(135deg, #22D3EE 0%, #E879F9 55%, #6366F1 100%)",
+    icon: Zap,
+  },
   {
     id: "dark",
     label: "Discord Ash",
-    tag: "Studio Default",
-    tier: "default",
+    tag: "Default",
+    group: "dark",
+    pillVariant: "emerald",
     description: "Balanced charcoal ash engineered for long listening sessions.",
     background: "#121215",
     sidebar: "#0E0E11",
@@ -86,8 +155,9 @@ const themes: {
   {
     id: "onyx",
     label: "True Onyx",
-    tag: "OLED Black",
-    tier: "studio",
+    tag: "OLED",
+    group: "dark",
+    pillVariant: "slate",
     description: "Pure #000000 OLED canvas with razor-sharp contrast and depth.",
     background: "#000000",
     sidebar: "#050507",
@@ -97,14 +167,15 @@ const themes: {
     gradient:
       "radial-gradient(ellipse 75% 50% at 20% 0%, rgba(161, 161, 170, 0.08), transparent 65%)",
     swatchGradient: "linear-gradient(135deg, #18181B 0%, #000000 100%)",
-    icon: Moon,
+    icon: Eclipse,
   },
   {
     id: "blurple",
     label: "Blurple Dusk",
-    tag: "Nitro",
-    tier: "nitro",
-    description: "Iconic Discord Blurple twilight with luminous indigo-violet glow.",
+    tag: "Blurple",
+    group: "dark",
+    pillVariant: "blue",
+    description: "Iconic Blurple twilight with luminous indigo-violet glow.",
     background: "#14152B",
     sidebar: "#101124",
     surface: "#1B1C38",
@@ -118,8 +189,9 @@ const themes: {
   {
     id: "cotton-candy",
     label: "Cotton Candy",
-    tag: "Nitro",
-    tier: "nitro",
+    tag: "Pastel",
+    group: "dark",
+    pillVariant: "rose",
     description: "Deep twilight plum infused with soft pink and cyan ambient gradients.",
     background: "#1B1026",
     sidebar: "#150C1F",
@@ -134,8 +206,9 @@ const themes: {
   {
     id: "retro",
     label: "Retro Synthwave",
-    tag: "Nitro",
-    tier: "nitro",
+    tag: "Synth",
+    group: "dark",
+    pillVariant: "violet",
     description: "Neon synthwave dusk with electric magenta and warm amber glow.",
     background: "#140B24",
     sidebar: "#0F081C",
@@ -145,13 +218,14 @@ const themes: {
     gradient:
       "radial-gradient(ellipse 82% 58% at 15% 0%, rgba(236, 72, 153, 0.32), transparent 65%), radial-gradient(ellipse 68% 50% at 88% 10%, rgba(245, 158, 11, 0.24), transparent 60%)",
     swatchGradient: "linear-gradient(135deg, #EC4899 0%, #F59E0B 100%)",
-    icon: Sparkles,
+    icon: Disc3,
   },
   {
     id: "midnight",
     label: "Midnight Sapphire",
-    tag: "Cool Focus",
-    tier: "studio",
+    tag: "Focus",
+    group: "dark",
+    pillVariant: "blue",
     description: "Deep ink sapphire with crisp slate layers and cool contrast.",
     background: "#070B14",
     sidebar: "#0B1120",
@@ -167,7 +241,8 @@ const themes: {
     id: "emerald",
     label: "Evergreen Nocturne",
     tag: "Botanical",
-    tier: "studio",
+    group: "dark",
+    pillVariant: "emerald",
     description: "Deep pine slate balanced with crisp jade highlights.",
     background: "#060D0A",
     sidebar: "#0A1410",
@@ -177,14 +252,15 @@ const themes: {
     gradient:
       "radial-gradient(ellipse 80% 55% at 18% 0%, rgba(32, 224, 112, 0.18), transparent 65%)",
     swatchGradient: "linear-gradient(135deg, #20E070 0%, #060D0A 100%)",
-    icon: AudioLines,
+    icon: Leaf,
   },
   {
     id: "aurora",
     label: "Velvet Indigo",
-    tag: "Editorial",
-    tier: "studio",
-    description: "Editorial plum indigo with muted violet studio framing.",
+    tag: "Velvet",
+    group: "dark",
+    pillVariant: "violet",
+    description: "Editorial plum indigo with muted violet framing.",
     background: "#0A0812",
     sidebar: "#100C1C",
     surface: "#1A142E",
@@ -198,8 +274,9 @@ const themes: {
   {
     id: "crimson",
     label: "Noir Crimson",
-    tag: "Velvet Noir",
-    tier: "studio",
+    tag: "Noir",
+    group: "dark",
+    pillVariant: "rose",
     description: "Sophisticated burgundy noir with restrained rose accents.",
     background: "#10080B",
     sidebar: "#160B0E",
@@ -214,9 +291,10 @@ const themes: {
   {
     id: "dusk",
     label: "Warm Espresso",
-    tag: "Late Night",
-    tier: "studio",
-    description: "Refined roasted charcoal with warm copper studio depth.",
+    tag: "Warm",
+    group: "dark",
+    pillVariant: "amber",
+    description: "Refined roasted charcoal with warm copper depth.",
     background: "#0E0B09",
     sidebar: "#140F0C",
     surface: "#1F1814",
@@ -229,56 +307,189 @@ const themes: {
   },
 ];
 
-const accents: {
-  id: AccentPreference;
-  label: string;
-  mood: string;
-  primaryHex: string;
-  secondaryHex: string;
-}[] = [
-  {
-    id: "green",
-    label: "Sangeet Green",
-    mood: "Default",
-    primaryHex: "#1ED760",
-    secondaryHex: "#4CE584",
-  },
-  {
-    id: "cyan",
-    label: "Aurora Cyan",
-    mood: "Crisp Ice",
-    primaryHex: "#1BC6DB",
-    secondaryHex: "#4ED8EB",
-  },
-  {
-    id: "blue",
-    label: "Cobalt Blue",
-    mood: "Electric",
-    primaryHex: "#3D95F5",
-    secondaryHex: "#62B8FA",
-  },
-  {
-    id: "violet",
-    label: "Electric Violet",
-    mood: "Studio",
-    primaryHex: "#9D66F2",
-    secondaryHex: "#BC74F2",
-  },
-  {
-    id: "red",
-    label: "Crimson Red",
-    mood: "Signal",
-    primaryHex: "#E73D38",
-    secondaryHex: "#F05E59",
-  },
-  {
-    id: "yellow",
-    label: "Amber Gold",
-    mood: "Warm",
-    primaryHex: "#F7B911",
-    secondaryHex: "#F7AB3B",
-  },
-];
+const animatedThemes = themes.filter((item) => item.group === "animated");
+const darkThemes = themes.filter((item) => item.group === "dark");
+
+const pillVariantClass: Record<GlassPillVariant, string> = {
+  cyan: "glass-pill-cyan",
+  violet: "glass-pill-violet",
+  amber: "glass-pill-amber",
+  emerald: "glass-pill-emerald",
+  rose: "glass-pill-rose",
+  blue: "glass-pill-blue",
+  slate: "glass-pill-slate",
+};
+
+function ThemePreviewCard({
+  item,
+  selected,
+  onSelect,
+}: {
+  item: ThemeOption;
+  selected: boolean;
+  onSelect: (id: ThemePreference) => void;
+}) {
+  const Icon = item.icon;
+  const isAnimated = item.group === "animated";
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(item.id)}
+      aria-pressed={selected}
+      className={cn(
+        "group relative flex min-h-[44px] w-full min-w-0 flex-col overflow-hidden rounded-2xl border p-3 text-left transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+        selected
+          ? "border-primary bg-elevated shadow-[0_0_0_1px_hsl(var(--primary)/0.45)] ring-2 ring-primary/40"
+          : "border-border bg-background/60 hover:border-primary/45 hover:bg-elevated/70",
+      )}
+    >
+      {/* Miniature Live UI Preview */}
+      <div
+        className={cn(
+          "relative flex h-[126px] w-full flex-col overflow-hidden rounded-xl border border-white/[0.09] shadow-inner",
+          isAnimated && "animate-gradient-drift",
+        )}
+        style={{
+          backgroundColor: item.background,
+          backgroundImage: item.gradient,
+        }}
+      >
+        {/* Top-left Glowing Glassmorphic Pill */}
+        <span
+          className={cn(
+            "pointer-events-none absolute left-2 top-2 z-10 glass-pill",
+            pillVariantClass[item.pillVariant],
+          )}
+        >
+          <Icon className="h-2.5 w-2.5 shrink-0" />
+          <span>{item.tag}</span>
+        </span>
+
+        {/* Top-right Active Checkmark Badge */}
+        <span
+          className={cn(
+            "pointer-events-none absolute right-2 top-2 z-10 flex h-5 w-5 items-center justify-center rounded-full border transition",
+            selected
+              ? "border-primary bg-primary text-primary-foreground shadow-sm"
+              : "border-white/20 bg-black/35 text-transparent group-hover:border-white/40",
+          )}
+        >
+          <Check className="h-3 w-3 stroke-[2.5]" />
+        </span>
+
+        {/* Mini App Body: Sidebar + Header + Track Cards */}
+        <div className="flex min-h-0 flex-1">
+          {/* Mini Sidebar */}
+          <div
+            className="flex w-[26%] shrink-0 flex-col justify-end gap-1.5 border-r border-white/[0.07] p-2 pt-7"
+            style={{ backgroundColor: item.sidebar }}
+          >
+            <div
+              className="flex items-center gap-1 rounded px-1 py-0.5"
+              style={{ backgroundColor: `${item.accent}24` }}
+            >
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: item.accent }}
+              />
+              <span
+                className="h-1.5 flex-1 rounded-full"
+                style={{ backgroundColor: item.accent }}
+              />
+            </div>
+            <span className="h-1.5 w-[76%] rounded-full bg-white/15" />
+            <span className="h-1.5 w-[56%] rounded-full bg-white/10" />
+          </div>
+
+          {/* Mini Main Content */}
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-2 pt-7">
+            {/* Mini Header */}
+            <div
+              className="flex h-4 w-full items-center justify-between rounded-full border border-white/[0.07] px-1.5"
+              style={{ backgroundColor: item.surface }}
+            >
+              <span className="h-1 w-[46%] rounded-full bg-white/20" />
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: item.accent }}
+              />
+            </div>
+
+            {/* Mini Track Cards */}
+            <div className="grid flex-1 grid-cols-2 gap-1.5">
+              <div
+                className="flex flex-col justify-between rounded-md border border-white/[0.06] p-1.5"
+                style={{ backgroundColor: item.surface }}
+              >
+                <span
+                  className="h-3.5 w-3.5 rounded-[3px]"
+                  style={{ backgroundColor: item.accent, opacity: 0.7 }}
+                />
+                <div className="space-y-1">
+                  <span className="block h-1 w-[82%] rounded-full bg-white/25" />
+                  <span className="block h-1 w-[52%] rounded-full bg-white/12" />
+                </div>
+              </div>
+              <div
+                className="flex flex-col justify-between rounded-md border border-white/[0.06] p-1.5"
+                style={{ backgroundColor: item.surface }}
+              >
+                <span className="h-3.5 w-3.5 rounded-[3px] bg-white/15" />
+                <div className="space-y-1">
+                  <span className="block h-1 w-[74%] rounded-full bg-white/25" />
+                  <span className="block h-1 w-[48%] rounded-full bg-white/12" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mini Player Bar */}
+        <div
+          className="flex h-[25px] shrink-0 items-center gap-2 border-t border-white/[0.08] px-2"
+          style={{ backgroundColor: item.elevated }}
+        >
+          <span
+            className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full"
+            style={{ backgroundColor: item.accent }}
+          >
+            <span className="ml-[1px] h-1.5 w-1.5 rounded-full bg-black/75" />
+          </span>
+          <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/12">
+            <span
+              className="block h-full w-[58%] rounded-full"
+              style={{ backgroundColor: item.accent }}
+            />
+          </span>
+          <span className="h-1.5 w-3 rounded-full bg-white/15" />
+        </div>
+      </div>
+
+      {/* Card Footer: Gradient Swatch + Label + Description */}
+      <div className="mt-3 flex min-w-0 flex-1 flex-col justify-between gap-2 px-0.5">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span
+            className={cn(
+              "h-7 w-7 shrink-0 rounded-full border border-white/20 shadow-sm ring-1 ring-black/30",
+              isAnimated && "animate-gradient-drift",
+            )}
+            style={{ background: item.swatchGradient }}
+            aria-hidden="true"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13px] font-semibold tracking-tight text-foreground">
+              {item.label}
+            </p>
+            <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+              {item.description}
+            </p>
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
 
 function ToggleRow({
   icon,
@@ -316,8 +527,6 @@ export default function SettingsPage() {
   const router = useRouter();
   const theme = useAppStore((state) => state.theme);
   const setTheme = useAppStore((state) => state.setTheme);
-  const accent = useAppStore((state) => state.accent);
-  const setAccent = useAppStore((state) => state.setAccent);
   const autoplay = useAppStore((state) => state.autoplay);
   const setAutoplay = useAppStore((state) => state.setAutoplay);
   const shortcuts = useAppStore((state) => state.shortcuts);
@@ -361,19 +570,6 @@ export default function SettingsPage() {
     const selected = themes.find((item) => item.id === next);
     toast.success("Theme updated", selected?.label ?? next);
   };
-
-  const chooseAccent = (next: AccentPreference) => {
-    if (next === accent) return;
-    setAccent(next);
-    if (typeof document !== "undefined") {
-      document.documentElement.dataset.accent = next;
-    }
-    const selected = accents.find((item) => item.id === next);
-    toast.success("Accent updated", selected?.label ?? next);
-  };
-
-  const activeTheme = themes.find((item) => item.id === theme) ?? themes[0];
-  const activeAccent = accents.find((item) => item.id === accent) ?? accents[0];
 
   const handleReset = () => {
     resetLibrary();
@@ -589,111 +785,15 @@ export default function SettingsPage() {
 
           <TabsContent value="appearance" className="min-w-0">
             <div className="min-w-0 space-y-4">
-              {/* Live Theme Studio Preview Banner */}
-              <div className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
-                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="eyebrow text-primary">Live studio preview</p>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                      <h2 className="font-display text-base font-semibold tracking-tight text-foreground">
-                        {activeTheme.label}
-                      </h2>
-                      <span className="rounded-full border border-border bg-elevated px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                        {activeTheme.tag}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="inline-flex w-fit max-w-full items-center gap-2 rounded-full border border-border bg-elevated px-3 py-1.5 text-[11px] font-medium text-foreground">
-                    <span
-                      className="h-3 w-3 shrink-0 rounded-full border border-white/20"
-                      style={{
-                        background: `linear-gradient(135deg, ${activeAccent.primaryHex} 50%, ${activeAccent.secondaryHex} 50%)`,
-                      }}
-                    />
-                    <span className="truncate">{activeAccent.label}</span>
-                    <span className="shrink-0 text-muted-foreground">· {activeAccent.mood}</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 overflow-hidden rounded-xl border border-border bg-background" style={{ backgroundImage: activeTheme.gradient }}>
-                  <div className="flex min-h-[104px] min-w-0 sm:min-h-[120px]">
-                    <div className="hidden w-[132px] shrink-0 flex-col justify-between border-r border-border bg-sidebar/95 p-3 sm:flex">
-                      <div className="flex items-center gap-2">
-                        <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-                        <span className="font-display text-[11px] font-semibold tracking-wide text-foreground">
-                          Sangeet
-                        </span>
-                      </div>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-2 rounded-md bg-elevated px-2 py-1 text-[10px] font-medium text-foreground">
-                          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                          <span>Home</span>
-                        </div>
-                        <div className="flex items-center gap-2 px-2 py-1 text-[10px] text-muted-foreground">
-                          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
-                          <span>Discover</span>
-                        </div>
-                        <div className="flex items-center gap-2 px-2 py-1 text-[10px] text-muted-foreground">
-                          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
-                          <span>Library</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex min-w-0 flex-1 flex-col justify-between bg-background">
-                      <div className="flex min-w-0 items-center justify-between gap-3 border-b border-border px-3 py-2 sm:px-3.5">
-                        <div className="flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[10px] text-muted-foreground">
-                          <Search className="h-2.5 w-2.5 shrink-0" />
-                          <span className="truncate">Search tracks, artists…</span>
-                        </div>
-                        <span className="hidden shrink-0 text-[10px] text-muted-foreground sm:inline">
-                          Live token preview
-                        </span>
-                      </div>
-
-                      <div className="flex min-w-0 flex-nowrap items-center justify-between gap-2.5 px-3 py-2.5 sm:gap-3 sm:px-3.5 sm:py-3">
-                        <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-primary sm:h-9 sm:w-9">
-                            <AudioLines className="h-4 w-4" />
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-[12px] font-medium text-foreground">
-                              Nocturne in Obsidian
-                            </p>
-                            <p className="truncate text-[10px] text-muted-foreground">
-                              {activeTheme.label} · {activeAccent.label}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-[10.5px] font-semibold text-primary-foreground sm:px-3 sm:py-1.5">
-                          <Play className="h-2.5 w-2.5 fill-current" />
-                          Play
-                        </span>
-                      </div>
-
-                      <div className="border-t border-border bg-elevated px-3 py-2 sm:px-3.5">
-                        <div className="flex items-center justify-between gap-3 text-[9.5px] text-muted-foreground">
-                          <span className="shrink-0 tabular-nums">01:48</span>
-                          <div className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-background">
-                            <div className="h-full w-[62%] rounded-full bg-primary" />
-                          </div>
-                          <span className="shrink-0 tabular-nums">03:12</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Discord-Style Nitro Theme Picker Grid */}
+              {/* Theme Picker Grid */}
               <div className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <p className="eyebrow">Appearance &amp; Themes</p>
-                      <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-primary">
-                        <Sparkles className="h-2.5 w-2.5" />
-                        Nitro Studio
+                      <span className="glass-pill glass-pill-cyan">
+                        <Waves className="h-2.5 w-2.5 shrink-0" />
+                        <span>Animated &amp; Dark</span>
                       </span>
                     </div>
                     <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
@@ -705,224 +805,60 @@ export default function SettingsPage() {
                   </span>
                 </div>
 
-                <div className="mt-5 grid min-w-0 grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-                  {themes.map((item) => {
-                    const Icon = item.icon;
-                    const selected = theme === item.id;
-                    const isNitro = item.tier === "nitro";
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => chooseTheme(item.id)}
-                        aria-pressed={selected}
-                        className={cn(
-                          "group relative flex min-h-[44px] w-full min-w-0 flex-col overflow-hidden rounded-2xl border p-3 text-left transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                          selected
-                            ? "border-primary bg-elevated shadow-[0_0_0_1px_hsl(var(--primary)/0.45)] ring-2 ring-primary/40"
-                            : "border-border bg-background/60 hover:border-primary/45 hover:bg-elevated/70",
-                        )}
-                      >
-                        {/* Miniature Live UI Preview */}
-                        <div
-                          className="relative flex h-[126px] w-full flex-col overflow-hidden rounded-xl border border-white/[0.09] shadow-inner"
-                          style={{
-                            backgroundColor: item.background,
-                            backgroundImage: item.gradient,
-                          }}
-                        >
-                          {/* Top-left Nitro / Studio Tag */}
-                          <span
-                            className={cn(
-                              "pointer-events-none absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-semibold tracking-wide backdrop-blur-md",
-                              isNitro
-                                ? "border-white/25 bg-black/45 text-white"
-                                : "border-white/15 bg-black/35 text-white/80",
-                            )}
-                          >
-                            {isNitro && <Sparkles className="h-2.5 w-2.5" style={{ color: item.accent }} />}
-                            {item.tag}
-                          </span>
-
-                          {/* Top-right Active Checkmark Badge */}
-                          <span
-                            className={cn(
-                              "pointer-events-none absolute right-2 top-2 z-10 flex h-5 w-5 items-center justify-center rounded-full border transition",
-                              selected
-                                ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                                : "border-white/20 bg-black/35 text-transparent group-hover:border-white/40",
-                            )}
-                          >
-                            <Check className="h-3 w-3 stroke-[2.5]" />
-                          </span>
-
-                          {/* Mini App Body: Sidebar + Header + Track Cards */}
-                          <div className="flex min-h-0 flex-1">
-                            {/* Mini Sidebar */}
-                            <div
-                              className="flex w-[26%] shrink-0 flex-col justify-end gap-1.5 border-r border-white/[0.07] p-2 pt-7"
-                              style={{ backgroundColor: item.sidebar }}
-                            >
-                              <div className="flex items-center gap-1 rounded px-1 py-0.5" style={{ backgroundColor: `${item.accent}24` }}>
-                                <span
-                                  className="h-1.5 w-1.5 shrink-0 rounded-full"
-                                  style={{ backgroundColor: item.accent }}
-                                />
-                                <span
-                                  className="h-1.5 flex-1 rounded-full"
-                                  style={{ backgroundColor: item.accent }}
-                                />
-                              </div>
-                              <span className="h-1.5 w-[76%] rounded-full bg-white/15" />
-                              <span className="h-1.5 w-[56%] rounded-full bg-white/10" />
-                            </div>
-
-                            {/* Mini Main Content */}
-                            <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-2 pt-7">
-                              {/* Mini Header */}
-                              <div
-                                className="flex h-4 w-full items-center justify-between rounded-full border border-white/[0.07] px-1.5"
-                                style={{ backgroundColor: item.surface }}
-                              >
-                                <span className="h-1 w-[46%] rounded-full bg-white/20" />
-                                <span
-                                  className="h-2 w-2 rounded-full"
-                                  style={{ backgroundColor: item.accent }}
-                                />
-                              </div>
-
-                              {/* Mini Track Cards */}
-                              <div className="grid flex-1 grid-cols-2 gap-1.5">
-                                <div
-                                  className="flex flex-col justify-between rounded-md border border-white/[0.06] p-1.5"
-                                  style={{ backgroundColor: item.surface }}
-                                >
-                                  <span
-                                    className="h-3.5 w-3.5 rounded-[3px]"
-                                    style={{ backgroundColor: item.accent, opacity: 0.7 }}
-                                  />
-                                  <div className="space-y-1">
-                                    <span className="block h-1 w-[82%] rounded-full bg-white/25" />
-                                    <span className="block h-1 w-[52%] rounded-full bg-white/12" />
-                                  </div>
-                                </div>
-                                <div
-                                  className="flex flex-col justify-between rounded-md border border-white/[0.06] p-1.5"
-                                  style={{ backgroundColor: item.surface }}
-                                >
-                                  <span className="h-3.5 w-3.5 rounded-[3px] bg-white/15" />
-                                  <div className="space-y-1">
-                                    <span className="block h-1 w-[74%] rounded-full bg-white/25" />
-                                    <span className="block h-1 w-[48%] rounded-full bg-white/12" />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Mini Player Bar */}
-                          <div
-                            className="flex h-[25px] shrink-0 items-center gap-2 border-t border-white/[0.08] px-2"
-                            style={{ backgroundColor: item.elevated }}
-                          >
-                            <span
-                              className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full"
-                              style={{ backgroundColor: item.accent }}
-                            >
-                              <span className="ml-[1px] h-1.5 w-1.5 rounded-full bg-black/75" />
-                            </span>
-                            <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/12">
-                              <span
-                                className="block h-full w-[58%] rounded-full"
-                                style={{ backgroundColor: item.accent }}
-                              />
-                            </span>
-                            <span className="h-1.5 w-3 rounded-full bg-white/15" />
-                          </div>
-                        </div>
-
-                        {/* Card Footer: Gradient Swatch + Label + Tag */}
-                        <div className="mt-3 flex min-w-0 flex-1 flex-col justify-between gap-2 px-0.5">
-                          <div className="flex min-w-0 items-center gap-2.5">
-                            <span
-                              className="h-7 w-7 shrink-0 rounded-full border border-white/20 shadow-sm ring-1 ring-black/30"
-                              style={{ background: item.swatchGradient }}
-                              aria-hidden="true"
-                            />
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center justify-between gap-1.5">
-                                <p className="truncate text-[13px] font-semibold tracking-tight text-foreground">
-                                  {item.label}
-                                </p>
-                                <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-medium text-muted-foreground">
-                                  <Icon className="h-3 w-3" />
-                                </span>
-                              </div>
-                              <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
-                                {item.description}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Accent Color Selector Grid */}
-              <div className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="eyebrow">Accent color</p>
-                    <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
-                      Personalize buttons, active playback controls, and studio highlights across Sangeet.
-                    </p>
+                {/* Animated Gradient Themes */}
+                <div className="mt-6">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
+                        Animated Gradient Themes
+                      </h3>
+                      <span className="glass-pill glass-pill-violet">
+                        <Sparkles className="h-2.5 w-2.5 shrink-0" />
+                        <span>Live Motion</span>
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground">
+                      {animatedThemes.length} themes
+                    </span>
                   </div>
-                  <Palette className="h-4 w-4 shrink-0 text-muted-foreground/60" />
+                  <div className="mt-3 grid min-w-0 grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+                    {animatedThemes.map((item) => (
+                      <ThemePreviewCard
+                        key={item.id}
+                        item={item}
+                        selected={theme === item.id}
+                        onSelect={chooseTheme}
+                      />
+                    ))}
+                  </div>
                 </div>
 
-                <div className="mt-4 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5">
-                  {accents.map((item) => {
-                    const selected = accent === item.id;
-                    return (
-                      <button
+                {/* Dark Themes */}
+                <div className="mt-7 border-t border-border pt-6">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
+                        Dark Themes
+                      </h3>
+                      <span className="glass-pill glass-pill-slate">
+                        <Moon className="h-2.5 w-2.5 shrink-0" />
+                        <span>Static</span>
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground">
+                      {darkThemes.length} themes
+                    </span>
+                  </div>
+                  <div className="mt-3 grid min-w-0 grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+                    {darkThemes.map((item) => (
+                      <ThemePreviewCard
                         key={item.id}
-                        type="button"
-                        onClick={() => chooseAccent(item.id)}
-                        aria-pressed={selected}
-                        className={cn(
-                          "group relative flex w-full min-w-0 items-center gap-2 rounded-xl border p-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:gap-3 sm:p-3",
-                          selected
-                            ? "border-primary bg-elevated ring-1 ring-primary/50"
-                            : "border-border bg-background/60 hover:border-primary/40 hover:bg-elevated/70",
-                        )}
-                      >
-                        <span
-                          className="h-7 w-7 shrink-0 rounded-full border border-white/15 sm:h-8 sm:w-8"
-                          style={{
-                            background: `linear-gradient(135deg, ${item.primaryHex} 50%, ${item.secondaryHex} 50%)`,
-                          }}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate pr-5 text-[11.5px] font-semibold text-foreground sm:pr-0 sm:text-[12px]">
-                            {item.label}
-                          </p>
-                          <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{item.mood}</p>
-                        </div>
-                        <span
-                          className={cn(
-                            "absolute right-2 top-2 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition sm:static sm:h-5 sm:w-5",
-                            selected
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-card text-transparent",
-                          )}
-                        >
-                          <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        </span>
-                      </button>
-                    );
-                  })}
+                        item={item}
+                        selected={theme === item.id}
+                        onSelect={chooseTheme}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -971,7 +907,7 @@ export default function SettingsPage() {
               <div className="flex items-start gap-2.5 rounded-xl border border-border bg-card px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">
                 <Moon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
                 <p className="min-w-0">
-                  Pair any studio palette with a custom accent color. Preferences are saved locally on this device.
+                  Theme and interface preferences are saved locally on this device.
                 </p>
               </div>
             </div>

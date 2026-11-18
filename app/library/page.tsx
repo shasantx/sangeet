@@ -10,10 +10,8 @@ import {
   Disc3,
   FileDown,
   Heart,
-  Library,
   ListMusic,
   Monitor,
-  Music2,
   Pause,
   Play,
   Plus,
@@ -23,7 +21,7 @@ import {
   Trash2,
   UserRound,
 } from "lucide-react";
-import { albums, artists, getTrack, getTracks, playlists } from "@/lib/catalog";
+import { albums, artists, getTrack } from "@/lib/catalog";
 import { restoreAudiusTrack, restoreYouTubeTrack } from "@/lib/dynamic-tracks";
 import {
   exportTrackAudioFile,
@@ -33,7 +31,7 @@ import {
   subscribeOfflineChanges,
 } from "@/lib/offline-audio";
 import type { Track } from "@/lib/types";
-import { cn, formatDuration, formatTotalDuration, pluralize } from "@/lib/utils";
+import { cn, formatDuration, pluralize } from "@/lib/utils";
 import { useLibraryStore } from "@/store/library-store";
 import { usePlayerStore } from "@/store/player-store";
 import { toast, useUIStore } from "@/store/ui-store";
@@ -41,11 +39,9 @@ import { isAndroidNativeApp } from "@/lib/android-bridge";
 import { AlbumCard } from "@/components/music/album-card";
 import { ArtistCard } from "@/components/music/artist-card";
 import { Artwork } from "@/components/music/artwork";
-import { CollectionPlayButton } from "@/components/music/collection-actions";
 import { EmptyState } from "@/components/music/empty-state";
 import { Equalizer } from "@/components/music/equalizer";
 import { PlaylistCard } from "@/components/music/playlist-card";
-import { QuickTrackTile } from "@/components/music/quick-track-tile";
 import { SectionHeader } from "@/components/music/section-header";
 import { LocalFilesSection } from "@/components/library/local-files-section";
 import { Input } from "@/components/ui/input";
@@ -58,30 +54,6 @@ interface OfflineEntry {
   sizeBytes: number;
   savedAt: number;
 }
-
-const quickLinks = [
-  {
-    href: "/liked",
-    title: "Liked Songs",
-    description: "Every track you have saved",
-    icon: Heart,
-    accent: "#8B5CF6",
-  },
-  {
-    href: "/recently-played",
-    title: "Recently Played",
-    description: "Pick up where you left off",
-    icon: Clock3,
-    accent: "#5E7CE2",
-  },
-  {
-    href: "/made-for-you",
-    title: "Sangeet mixes",
-    description: "Curated mixes and artist picks",
-    icon: Music2,
-    accent: "#C7A76C",
-  },
-];
 
 function formatMb(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) return "0.0 MB";
@@ -218,17 +190,6 @@ function LibraryContent() {
     [followedArtistIds],
   );
 
-  const recentTracks = useMemo(
-    () => getTracks(recentlyPlayed.slice(0, 6)),
-    [recentlyPlayed],
-  );
-
-  const likedTracks = useMemo(() => getTracks(likedTrackIds), [likedTrackIds]);
-  const likedDuration = useMemo(
-    () => likedTracks.reduce((total, track) => total + track.duration, 0),
-    [likedTracks],
-  );
-
   const normalizedQuery = query.trim().toLowerCase();
   const filteredPlaylists = useMemo(
     () =>
@@ -359,41 +320,42 @@ function LibraryContent() {
           </button>
         </div>
 
-        <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid min-w-0 grid-cols-1 gap-2.5 min-[420px]:grid-cols-2 sm:gap-3.5">
           <Link
             href="/liked"
-            className="group relative isolate flex min-h-[132px] min-w-0 flex-col justify-between overflow-hidden rounded-xl border border-primary/25 bg-primary/[.08] p-5 transition hover:border-primary/40 hover:bg-primary/[.12]"
+            className="group flex min-w-0 items-center gap-3.5 rounded-2xl border border-white/[.08] bg-card p-3.5 transition duration-200 hover:border-primary/35 hover:bg-elevated active:scale-[0.985] sm:p-4"
           >
-            <div className="flex items-start justify-between gap-3">
-              <Heart className="h-4 w-4 shrink-0 text-primary" fill="currentColor" />
-              <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40 transition group-hover:text-foreground" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 via-primary to-fuchsia-500 text-white shadow-[0_8px_20px_-6px_hsl(var(--primary)/0.55)]">
+              <Heart className="h-4.5 w-4.5 fill-current" />
             </div>
-            <div className="min-w-0">
-              <h2 className="truncate font-display text-2xl font-medium tracking-[-0.035em]">Liked Songs</h2>
-              <p className="mt-1 truncate text-[11px] text-muted-foreground">
-                {likedTrackIds.length} songs · {formatTotalDuration(likedDuration)}
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate font-display text-base font-medium tracking-[-0.02em] text-foreground sm:text-lg">
+                Liked Songs
+              </h2>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground tabular-nums">
+                {pluralize(likedTrackIds.length, "song")}
               </p>
             </div>
+            <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground/45 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground" />
           </Link>
-          {quickLinks.slice(1).map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="group relative isolate flex min-h-[132px] min-w-0 flex-col justify-between overflow-hidden rounded-xl border border-white/[.08] bg-card p-5 transition hover:border-white/[.15] hover:bg-elevated"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <Icon className="h-4 w-4 shrink-0" style={{ color: item.accent }} />
-                  <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40 transition group-hover:text-foreground" />
-                </div>
-                <div className="min-w-0">
-                  <h2 className="truncate font-display text-2xl font-medium tracking-[-0.035em]">{item.title}</h2>
-                  <p className="mt-1 truncate text-[11px] text-muted-foreground">{item.description}</p>
-                </div>
-              </Link>
-            );
-          })}
+
+          <Link
+            href="/recently-played"
+            className="group flex min-w-0 items-center gap-3.5 rounded-2xl border border-white/[.08] bg-card p-3.5 transition duration-200 hover:border-sky-400/35 hover:bg-elevated active:scale-[0.985] sm:p-4"
+          >
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-600 text-white shadow-[0_8px_20px_-6px_rgba(59,130,246,0.5)]">
+              <Clock3 className="h-4.5 w-4.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate font-display text-base font-medium tracking-[-0.02em] text-foreground sm:text-lg">
+                Recently Played
+              </h2>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground tabular-nums">
+                {pluralize(recentlyPlayed.length, "track")}
+              </p>
+            </div>
+            <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground/45 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground" />
+          </Link>
         </div>
 
         <div className="mt-10 flex min-w-0 flex-col gap-4 border-b border-white/[.06] pb-4 lg:flex-row lg:items-center lg:justify-between">
@@ -448,13 +410,18 @@ function LibraryContent() {
                     <CloudDownload className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="eyebrow mb-1">On this device</p>
-                    <h2 className="font-display text-xl font-medium tracking-[-0.03em] sm:text-2xl">
-                      Offline Downloads
-                    </h2>
+                    <p className="eyebrow mb-1">Saved for offline</p>
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <h2 className="font-display text-xl font-medium tracking-[-0.03em] sm:text-2xl">
+                        Offline Downloads
+                      </h2>
+                      <span className="inline-flex items-center rounded-full border border-border bg-elevated px-2.5 py-0.5 font-sans text-[11px] font-medium tabular-nums text-muted-foreground">
+                        {pluralize(offlineItems.length, "track")}
+                      </span>
+                    </div>
                     <p className="mt-1 font-sans text-xs text-muted-foreground">
                       {offlineItems.length > 0
-                        ? `${pluralize(offlineItems.length, "track")} · ${formatMb(totalOfflineBytes)} cached offline`
+                        ? `${formatMb(totalOfflineBytes)} cached on this device`
                         : "Download any track from the menu or track row to listen without an internet connection."}
                     </p>
                   </div>
@@ -610,14 +577,18 @@ function LibraryContent() {
 
         {showLocal && (
           <div className="min-w-0">
-            <LocalFilesSection searchQuery={query} onCountChange={setLocalCount} />
+            <LocalFilesSection
+              searchQuery={query}
+              onCountChange={setLocalCount}
+              className="mt-8 sm:mt-9"
+            />
           </div>
         )}
 
         {showPlaylists && (
-          <section className="mt-9 min-w-0">
+          <section className="section-space min-w-0">
             <SectionHeader
-              title="Playlists"
+              title="Your playlists"
               eyebrow="Made by you"
               action={
                 <button
@@ -652,7 +623,7 @@ function LibraryContent() {
                 }
               />
             ) : (
-              <div className="grid min-w-0 grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              <div className="grid min-w-0 grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 sm:gap-y-8 lg:grid-cols-4 xl:grid-cols-5">
                 {filteredPlaylists.map((playlist) => (
                   <PlaylistCard key={playlist.id} playlist={playlist} />
                 ))}
@@ -667,7 +638,7 @@ function LibraryContent() {
               title="Saved albums"
               eyebrow="On the shelf"
               action={
-                <span className="hidden items-center gap-1.5 text-[11px] text-muted-foreground sm:flex">
+                <span className="hidden items-center gap-1.5 text-[11px] text-muted-foreground tabular-nums sm:flex">
                   <Disc3 className="h-3.5 w-3.5" />
                   {savedAlbums.length}
                 </span>
@@ -693,7 +664,7 @@ function LibraryContent() {
                 }
               />
             ) : (
-              <div className="grid min-w-0 grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              <div className="grid min-w-0 grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 sm:gap-y-8 lg:grid-cols-4 xl:grid-cols-5">
                 {filteredAlbums.map((album) => (
                   <AlbumCard key={album.id} album={album} />
                 ))}
@@ -705,10 +676,10 @@ function LibraryContent() {
         {showArtists && (
           <section className="section-space min-w-0">
             <SectionHeader
-              title="Artists you follow"
+              title="Followed artists"
               eyebrow="In your orbit"
               action={
-                <span className="hidden items-center gap-1.5 text-[11px] text-muted-foreground sm:flex">
+                <span className="hidden items-center gap-1.5 text-[11px] text-muted-foreground tabular-nums sm:flex">
                   <UserRound className="h-3.5 w-3.5" />
                   {followedArtists.length}
                 </span>
@@ -734,7 +705,7 @@ function LibraryContent() {
                 }
               />
             ) : (
-              <div className="grid min-w-0 grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4 xl:grid-cols-6">
+              <div className="grid min-w-0 grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-8 lg:grid-cols-4 xl:grid-cols-6">
                 {filteredArtists.map((artist) => (
                   <ArtistCard key={artist.id} artist={artist} />
                 ))}
@@ -742,89 +713,6 @@ function LibraryContent() {
             )}
           </section>
         )}
-
-        <section className="section-space min-w-0">
-          <SectionHeader
-            title="Recently played"
-            eyebrow="Back to it"
-            href="/recently-played"
-            linkLabel="Full history"
-          />
-          {recentTracks.length === 0 ? (
-            <EmptyState
-              compact
-              icon={<Library className="h-5 w-5" />}
-              title="No listening history yet"
-              description="Press play on anything and it will appear here."
-              action={
-                <Link
-                  href="/home"
-                  className="rounded-full bg-primary px-5 py-2.5 text-xs font-medium text-primary-foreground transition hover:bg-secondary"
-                >
-                  Discover music
-                </Link>
-              }
-            />
-          ) : (
-            <>
-              <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                {recentTracks.map((track) => (
-                  <QuickTrackTile
-                    key={track.id}
-                    track={track}
-                    contextIds={recentlyPlayed.slice(0, 12)}
-                    contextLabel="Recently played"
-                  />
-                ))}
-              </div>
-              <div className="mt-5 flex flex-wrap items-center gap-3">
-                {recentTracks.length > 0 && (
-                  <CollectionPlayButton
-                    trackIds={recentlyPlayed.slice(0, 12)}
-                    label="Recently played"
-                    size="default"
-                  />
-                )}
-                <Link
-                  href="/recently-played"
-                  className="text-[11px] text-muted-foreground transition hover:text-foreground"
-                >
-                  See all listening history
-                </Link>
-              </div>
-            </>
-          )}
-        </section>
-
-        <section className="section-space min-w-0 pb-2">
-          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
-            {playlists.slice(0, 2).map((playlist) => (
-              <div
-                key={playlist.id}
-                className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-white/[.08] bg-card p-4 sm:gap-4"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="eyebrow mb-2">From Sangeet</p>
-                  <Link
-                    href={`/playlist/${playlist.id}`}
-                    className="block truncate font-display text-lg font-medium tracking-[-0.03em] transition hover:underline"
-                  >
-                    {playlist.title}
-                  </Link>
-                  <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground">
-                    {playlist.description}
-                  </p>
-                </div>
-                <CollectionPlayButton
-                  trackIds={playlist.trackIds}
-                  label="Play"
-                  size="default"
-                  className="shrink-0 px-4"
-                />
-              </div>
-            ))}
-          </div>
-        </section>
 
         {!nativeOffline && (
           <section className="section-space min-w-0 pb-2" aria-label="Offline listening in Sangeet apps">

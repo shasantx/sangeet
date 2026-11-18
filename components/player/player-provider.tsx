@@ -30,7 +30,7 @@ import {
 import { isTypingTarget } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 import { useLibraryStore } from "@/store/library-store";
-import { usePlayerStore } from "@/store/player-store";
+import { markYouTubeAudioProxyUnavailable, usePlayerStore } from "@/store/player-store";
 import { toast, useUIStore } from "@/store/ui-store";
 import { NowPlayingOverlay } from "./now-playing-overlay";
 import { YouTubeDock } from "./youtube-dock";
@@ -47,25 +47,32 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const track = currentTrackId ? getTrack(currentTrackId) : undefined;
     if (!track?.youtubeId || !isPlaying || !isLoading) return;
     if (isAndroidNativeApp() && !usePlayerStore.getState().videoMode) return;
+    // Never interrupt or reload a track that is already playing mid-song during a brief buffer.
+    if (usePlayerStore.getState().currentTime >= 1 || getYouTubeTime() >= 0.5) return;
     const retryTimer = window.setTimeout(() => {
       const state = usePlayerStore.getState();
       if (isAndroidNativeApp() && !state.videoMode) return;
       if (state.currentTrackId !== currentTrackId || !state.isLoading) return;
+      if (state.currentTime >= 1 || getYouTubeTime() >= 0.5) return;
       const audio = getAudioElement();
       if (!audio?.src) {
         loadYouTubeVideo(track.youtubeId!, true, state.currentTime);
       }
-    }, 3500);
+    }, 4500);
     const timer = window.setTimeout(() => {
       const state = usePlayerStore.getState();
       if (isAndroidNativeApp() && !state.videoMode) return;
       if (state.currentTrackId !== currentTrackId || !state.isLoading) return;
+      if (state.currentTime >= 1 || getYouTubeTime() >= 0.5) {
+        state.syncFromAudio({ isLoading: false });
+        return;
+      }
       state.syncFromAudio({
         isPlaying: false,
         isLoading: false,
         error: "Tap Play to start this track.",
       });
-    }, 10000);
+    }, 18000);
     return () => {
       window.clearTimeout(retryTimer);
       window.clearTimeout(timer);
@@ -180,6 +187,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       const track = state.currentTrackId ? getTrack(state.currentTrackId) : undefined;
       if (track?.youtubeId && source.includes("/api/youtube/audio")) {
         // Fallback to YouTube IFrame if direct audio stream extraction failed for this video.
+        markYouTubeAudioProxyUnavailable();
         audio.removeAttribute("src");
         loadYouTubeVideo(track.youtubeId, state.isPlaying);
         setYouTubePlaybackRate(state.playbackRate);

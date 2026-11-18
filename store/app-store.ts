@@ -9,15 +9,34 @@ import type { DemoProfile } from "@/lib/types";
 
 export type ThemePreference =
   | "dark"
-  | "midnight"
   | "onyx"
   | "blurple"
-  | "dusk"
+  | "midnight"
+  | "aurora-flow"
+  | "sunset-pulse"
+  | "cyber-drift"
   | "emerald"
   | "aurora"
   | "crimson"
+  | "dusk"
   | "cotton-candy"
   | "retro";
+
+const VALID_THEMES: readonly ThemePreference[] = [
+  "dark",
+  "onyx",
+  "blurple",
+  "midnight",
+  "aurora-flow",
+  "sunset-pulse",
+  "cyber-drift",
+  "emerald",
+  "aurora",
+  "crimson",
+  "dusk",
+  "cotton-candy",
+  "retro",
+];
 export type AccentPreference =
   | "green"
   | "red"
@@ -175,9 +194,7 @@ export const useAppStore = create<AppState>()(
           preferredArtistIds: Array.isArray(source.preferredArtistIds)
             ? Array.from(new Set(source.preferredArtistIds.filter((id): id is string => typeof id === "string"))).slice(0, 5)
             : current.preferredArtistIds,
-          theme: ["dark", "midnight", "dusk", "emerald", "aurora", "crimson"].includes(
-            source.theme as string,
-          )
+          theme: VALID_THEMES.includes(source.theme as ThemePreference)
             ? (source.theme as ThemePreference)
             : "dark",
           accent: ["green", "red", "yellow", "blue", "violet", "cyan"].includes(

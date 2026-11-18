@@ -17,6 +17,7 @@ export interface AudioEffectsState {
   trebleBoostDb: number;
   reverbMix: number;
   stereoWidth: number;
+  bandGains?: readonly [number, number, number, number, number];
 }
 
 export interface EqBand {
@@ -140,6 +141,20 @@ function isValidPresetId(value: unknown): value is EqPresetId {
   return EQ_PRESETS.some((preset) => preset.id === value);
 }
 
+function sanitizeBandGains(
+  value: unknown,
+): readonly [number, number, number, number, number] | undefined {
+  if (!Array.isArray(value) || value.length !== 5) return undefined;
+  if (!value.every((n) => typeof n === "number" && Number.isFinite(n))) return undefined;
+  return [
+    clamp(value[0], -10, 14),
+    clamp(value[1], -10, 14),
+    clamp(value[2], -10, 14),
+    clamp(value[3], -10, 14),
+    clamp(value[4], -10, 14),
+  ];
+}
+
 function hydrateEffectsState(): void {
   if (stateHydrated || typeof window === "undefined") return;
   stateHydrated = true;
@@ -149,6 +164,7 @@ function hydrateEffectsState(): void {
     const parsed = JSON.parse(raw) as Partial<AudioEffectsState>;
     const presetId = isValidPresetId(parsed.presetId) ? parsed.presetId : "flat";
     const preset = getEqPreset(presetId);
+    const bandGains = sanitizeBandGains(parsed.bandGains);
     effectsState = {
       presetId,
       bassBoostDb:
@@ -167,6 +183,7 @@ function hydrateEffectsState(): void {
         typeof parsed.stereoWidth === "number" && Number.isFinite(parsed.stereoWidth)
           ? clamp(parsed.stereoWidth, 0, 1)
           : preset.stereoWidth,
+      ...(bandGains ? { bandGains } : {}),
     };
   } catch {
     effectsState = { ...DEFAULT_STATE };
@@ -209,6 +226,15 @@ export function getCurrentEqPreset(): EqPresetId {
 export function getEffectiveEqGains(
   state: AudioEffectsState = getAudioEffectsState(),
 ): readonly [number, number, number, number, number] {
+  if (state.bandGains && state.bandGains.length === 5) {
+    return [
+      clamp(state.bandGains[0], -10, 14),
+      clamp(state.bandGains[1], -10, 14),
+      clamp(state.bandGains[2], -10, 14),
+      clamp(state.bandGains[3], -10, 14),
+      clamp(state.bandGains[4], -10, 14),
+    ];
+  }
   const preset = getEqPreset(state.presetId);
   const bassDelta = state.bassBoostDb - preset.gains[0];
   const trebleDelta = state.trebleBoostDb - preset.gains[4];
@@ -228,7 +254,8 @@ export function isPresetActive(): boolean {
     Math.abs(state.bassBoostDb) > 0.05 ||
     Math.abs(state.trebleBoostDb) > 0.05 ||
     state.reverbMix > 0.01 ||
-    state.stereoWidth > 0.01
+    state.stereoWidth > 0.01 ||
+    Boolean(state.bandGains?.some((gain) => Math.abs(gain) > 0.05))
   );
 }
 
@@ -260,11 +287,26 @@ function isCorsSafeForWebAudio(audio: HTMLAudioElement): boolean {
   const src = audio.currentSrc || audio.src || "";
   if (!src || src === window.location.href) return false;
   if (src.startsWith("blob:") || src.startsWith("data:")) return true;
+  if (audio.crossOrigin === "anonymous" || audio.crossOrigin === "use-credentials") {
+    return true;
+  }
   try {
     const parsed = new URL(src, window.location.href);
     return parsed.origin === window.location.origin;
   } catch {
     return false;
+  }
+}
+
+export function canUseWebAudioFx(): boolean {
+  const audio = getAudioElement();
+  if (!audio || audio.error) return false;
+  return isCorsSafeForWebAudio(audio);
+}
+
+export function resumeAudioEffectsContext(): void {
+  if (audioCtx && audioCtx.state === "suspended") {
+    void audioCtx.resume().catch(() => {});
   }
 }
 
@@ -293,6 +335,10 @@ function createStereoImpulseResponse(
 
 function ensureAudioGraph(audio: HTMLAudioElement): boolean {
   try {
+    if (audioCtx && audioCtx.state === "suspended") {
+      void audioCtx.resume().catch(() => {});
+    }
+
     if (!isCorsSafeForWebAudio(audio)) {
       return false;
     }
@@ -342,6 +388,10 @@ function ensureAudioGraph(audio: HTMLAudioElement): boolean {
       wetDamping.frequency.value = 6200;
 
       const reverbMixBus = audioCtx.createGain();
+      // Ensure mono sources up-mix to stereo before ChannelSplitter(2) so the right channel isn't silent.
+      reverbMixBus.channelCount = 2;
+      reverbMixBus.channelCountMode = "explicit";
+      reverbMixBus.channelInterpretation = "speakers";
       eqTail.connect(dryGainNode);
       dryGainNode.connect(reverbMixBus);
 
@@ -444,16 +494,43 @@ export function setAudioEffectsState(patch: Partial<AudioEffectsState>): AudioEf
     ? patch.presetId
     : effectsState.presetId;
 
+  const patchedBandGains = sanitizeBandGains(patch.bandGains);
+  let nextBandGains = patchedBandGains ?? effectsState.bandGains;
+
+  const hasBassPatch =
+    typeof patch.bassBoostDb === "number" && Number.isFinite(patch.bassBoostDb);
+  const hasTreblePatch =
+    typeof patch.trebleBoostDb === "number" && Number.isFinite(patch.trebleBoostDb);
+
+  const nextBassBoostDb = patchedBandGains
+    ? clamp(patchedBandGains[0], -8, 12)
+    : hasBassPatch
+      ? clamp(patch.bassBoostDb!, -8, 12)
+      : effectsState.bassBoostDb;
+
+  const nextTrebleBoostDb = patchedBandGains
+    ? clamp(patchedBandGains[4], -8, 12)
+    : hasTreblePatch
+      ? clamp(patch.trebleBoostDb!, -8, 12)
+      : effectsState.trebleBoostDb;
+
+  // Keep custom bandGains in sync when Bass/Treble sliders are dragged directly.
+  if (!patchedBandGains && nextBandGains && (hasBassPatch || hasTreblePatch)) {
+    const bassDelta = nextBassBoostDb - nextBandGains[0];
+    const trebleDelta = nextTrebleBoostDb - nextBandGains[4];
+    nextBandGains = [
+      nextBassBoostDb,
+      hasBassPatch ? clamp(nextBandGains[1] + bassDelta * 0.5, -10, 14) : nextBandGains[1],
+      nextBandGains[2],
+      hasTreblePatch ? clamp(nextBandGains[3] + trebleDelta * 0.5, -10, 14) : nextBandGains[3],
+      nextTrebleBoostDb,
+    ];
+  }
+
   effectsState = {
     presetId: nextPresetId,
-    bassBoostDb:
-      typeof patch.bassBoostDb === "number" && Number.isFinite(patch.bassBoostDb)
-        ? clamp(patch.bassBoostDb, -8, 12)
-        : effectsState.bassBoostDb,
-    trebleBoostDb:
-      typeof patch.trebleBoostDb === "number" && Number.isFinite(patch.trebleBoostDb)
-        ? clamp(patch.trebleBoostDb, -8, 12)
-        : effectsState.trebleBoostDb,
+    bassBoostDb: nextBassBoostDb,
+    trebleBoostDb: nextTrebleBoostDb,
     reverbMix:
       typeof patch.reverbMix === "number" && Number.isFinite(patch.reverbMix)
         ? clamp(patch.reverbMix, 0, 1)
@@ -462,6 +539,7 @@ export function setAudioEffectsState(patch: Partial<AudioEffectsState>): AudioEf
       typeof patch.stereoWidth === "number" && Number.isFinite(patch.stereoWidth)
         ? clamp(patch.stereoWidth, 0, 1)
         : effectsState.stereoWidth,
+    ...(nextBandGains ? { bandGains: nextBandGains } : {}),
   };
 
   persistEffectsState();

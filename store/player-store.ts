@@ -137,6 +137,16 @@ function youtubeAudioProxyUrl(videoId: string): string {
   return `/api/youtube/audio?videoId=${encodeURIComponent(videoId)}`;
 }
 
+let youtubeAudioProxyUnavailable = false;
+
+export function markYouTubeAudioProxyUnavailable(): void {
+  youtubeAudioProxyUnavailable = true;
+}
+
+export function isYouTubeAudioProxyUnavailable(): boolean {
+  return youtubeAudioProxyUnavailable;
+}
+
 function audiusStreamProxyUrl(trackId: string): string {
   return `/api/audius/stream?id=${encodeURIComponent(trackId.replace(/^aud-/, ""))}`;
 }
@@ -186,6 +196,9 @@ function resumeAudio(audio: HTMLAudioElement) {
       const source = audio.currentSrc || audio.src || "";
       if (error.name !== "NotAllowedError" && track?.youtubeId && (source.includes("/api/youtube/audio") || source === "")) {
         // Proxy audio unavailable (e.g. YouTube bot-check on server IP): seamlessly fall back to YouTube IFrame.
+        if (source.includes("/api/youtube/audio")) {
+          markYouTubeAudioProxyUnavailable();
+        }
         if (source) audio.removeAttribute("src");
         loadYouTubeVideo(track.youtubeId, true);
         setYouTubePlaybackRate(state.playbackRate);
@@ -302,7 +315,7 @@ export const usePlayerStore = create<PlayerState>()(
           }
 
           if (track.youtubeId) {
-            if (audio && !state.videoMode) {
+            if (audio && !state.videoMode && !isYouTubeAudioProxyUnavailable()) {
               try {
                 stopYouTube();
                 loadAndPlayAudioElement(
@@ -317,6 +330,9 @@ export const usePlayerStore = create<PlayerState>()(
               }
             }
             audio?.pause();
+            if (audio && audio.src) {
+              audio.removeAttribute("src");
+            }
             loadYouTubeVideo(track.youtubeId, shouldPlay);
             setYouTubePlaybackRate(state.playbackRate);
             return;
@@ -713,7 +729,7 @@ export const usePlayerStore = create<PlayerState>()(
             }
             loadYouTubeVideo(track.youtubeId, state.isPlaying, pos);
             setYouTubePlaybackRate(state.playbackRate);
-          } else if (audio) {
+          } else if (audio && !isYouTubeAudioProxyUnavailable()) {
             // Switching back to Compact audio mode: resume via <audio> for background support
             const pos = state.currentTime;
             stopYouTube();
@@ -914,7 +930,7 @@ export const usePlayerStore = create<PlayerState>()(
             }
 
             if (track.youtubeId) {
-              if (audio && !latest.videoMode) {
+              if (audio && !latest.videoMode && !isYouTubeAudioProxyUnavailable()) {
                 try {
                   if (!audio.src) {
                     audio.src = youtubeAudioProxyUrl(track.youtubeId);

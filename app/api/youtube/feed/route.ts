@@ -60,6 +60,42 @@ function cleanChannelArtist(channelTitle: string): string {
     .trim();
 }
 
+function normalizeArtistKey(artist: string): string {
+  return cleanChannelArtist(artist)
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isUsableArtistSeed(name: string): boolean {
+  const key = normalizeArtistKey(name);
+  return Boolean(key && key !== "youtube music" && key !== "various artists");
+}
+
+function capByArtist(tracks: YouTubeFeedTrack[], maxPerArtist: number): YouTubeFeedTrack[] {
+  const counts = new Map<string, number>();
+  const result: YouTubeFeedTrack[] = [];
+  for (const track of tracks) {
+    const key = normalizeArtistKey(track.artist) || track.videoId;
+    const count = counts.get(key) ?? 0;
+    if (count >= maxPerArtist) continue;
+    counts.set(key, count + 1);
+    result.push(track);
+  }
+  return result;
+}
+
+function extractTitleKeywordSeed(title: string): string {
+  const cleaned = title
+    .replace(/\([^)]*\)|\[[^\]]*\]/g, " ")
+    .replace(/\b(official|music|video|audio|lyric|lyrics|hd|4k|ft\.?|feat\.?)\b/gi, " ")
+    .replace(/[^\p{L}\p{N}\s-]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const words = cleaned.split(" ").filter((w) => w.length >= 3);
+  return words.slice(0, 3).join(" ");
+}
+
 async function refreshCookieToken(cookieTokens: YouTubeCookieTokens): Promise<YouTubeCookieTokens | null> {
   if (cookieTokens.expires_at > Date.now() + 60_000) {
     return cookieTokens;
@@ -219,9 +255,12 @@ export async function GET(request: NextRequest) {
       })
       .filter((p) => p.id && !p.id.startsWith("LL"));
 
-    // If user has few liked music tracks, also pull items from their first playlist.
+    // If user has few liked music tracks or low artist variety, also pull items from their first playlist.
+    const distinctLikedArtists = new Set(
+      liked.map((t) => normalizeArtistKey(t.artist)).filter(Boolean),
+    );
     let playlistTracks: YouTubeFeedTrack[] = [];
-    if (liked.length < 6 && playlists.length > 0) {
+    if ((liked.length < 6 || distinctLikedArtists.size < 5) && playlists.length > 0) {
       const firstPl = await ytGet(
         "playlistItems",
         { part: "snippet,contentDetails", playlistId: playlists[0].id, maxResults: "12" },
@@ -236,51 +275,102 @@ export async function GET(request: NextRequest) {
         .filter((t): t is YouTubeFeedTrack => t !== null);
     }
 
-    const seedSource = liked.length > 0 ? liked : playlistTracks;
-    const seeds = Array.from(
-      new Set(
-        seedSource
-          .map((t) => t.artist)
-          .filter((name) => name && name.toLowerCase() !== "youtube music"),
-      ),
-    ).slice(0, 2);
+    const seedMap = new Map<string, string>();
+    const addSeed = (rawName: string) => {
+      if (seedMap.size >= 5) return;
+      const cleaned = cleanChannelArtist(rawName);
+      if (!isUsableArtistSeed(cleaned)) return;
+      const key = normalizeArtistKey(cleaned);
+      if (!seedMap.has(key)) {
+        seedMap.set(key, cleaned);
+      }
+    };
+
+    for (const track of liked) addSeed(track.artist);
+    for (const track of playlistTracks) addSeed(track.artist);
+
+    if (seedMap.size < 5) {
+      const subsPayload = await ytGet(
+        "subscriptions",
+        { part: "snippet", mine: "true", maxResults: "15" },
+        accessToken,
+      );
+      for (const item of subsPayload?.items ?? []) {
+        const snippet = item.snippet as Record<string, unknown> | undefined;
+        if (typeof snippet?.title === "string") {
+          addSeed(snippet.title);
+        }
+      }
+    }
+
+    if (seedMap.size < 5) {
+      for (const track of [...liked, ...playlistTracks]) {
+        if (seedMap.size >= 5) break;
+        const keywordSeed = extractTitleKeywordSeed(track.title);
+        if (keywordSeed) {
+          const key = keywordSeed.toLowerCase();
+          if (!seedMap.has(key)) {
+            seedMap.set(key, keywordSeed);
+          }
+        }
+      }
+    }
+
+    const seeds = Array.from(seedMap.values()).slice(0, 5);
+    const searchSeeds = seeds.slice(0, 4);
 
     const likedIds = new Set(liked.map((t) => t.videoId));
-    const suggestedMap = new Map<string, YouTubeFeedTrack>();
+    const suggested: YouTubeFeedTrack[] = [];
 
-    if (seeds.length > 0) {
+    if (searchSeeds.length > 0) {
       const searchPayloads = await Promise.all(
-        seeds.map((seed) =>
+        searchSeeds.map((seed) =>
           ytGet(
             "search",
             {
               part: "snippet",
               type: "video",
               videoCategoryId: "10",
-              maxResults: "10",
+              maxResults: "6",
               q: `${seed} music`,
             },
             accessToken!,
           ),
         ),
       );
-      for (const payload of searchPayloads) {
-        for (const item of payload?.items ?? []) {
-          const mapped = mapVideoItem(item);
-          if (!mapped) continue;
-          if (!likedIds.has(mapped.track.videoId) && !suggestedMap.has(mapped.track.videoId)) {
-            suggestedMap.set(mapped.track.videoId, mapped.track);
-          }
+
+      const buckets = searchPayloads.map((payload) =>
+        (payload?.items ?? [])
+          .map((item) => mapVideoItem(item)?.track ?? null)
+          .filter((t): t is YouTubeFeedTrack => t !== null),
+      );
+
+      const seenIds = new Set<string>(likedIds);
+      const artistCounts = new Map<string, number>();
+      const maxBucketLen = Math.max(0, ...buckets.map((b) => b.length));
+
+      for (let round = 0; round < maxBucketLen && suggested.length < 16; round++) {
+        for (const bucket of buckets) {
+          if (suggested.length >= 16) break;
+          const track = bucket[round];
+          if (!track || seenIds.has(track.videoId)) continue;
+          const artistKey = normalizeArtistKey(track.artist) || track.videoId;
+          const count = artistCounts.get(artistKey) ?? 0;
+          if (count >= 2) continue;
+          seenIds.add(track.videoId);
+          artistCounts.set(artistKey, count + 1);
+          suggested.push(track);
         }
       }
     }
 
-    const suggested = Array.from(suggestedMap.values()).slice(0, 16);
+    const cappedLiked = capByArtist(liked, 2).slice(0, 16);
+    const fallbackSuggested = capByArtist(playlistTracks, 2).slice(0, 16);
     const response = NextResponse.json(
       {
         connected: true,
-        liked: liked.slice(0, 16),
-        suggested: suggested.length > 0 ? suggested : playlistTracks.slice(0, 16),
+        liked: cappedLiked,
+        suggested: suggested.length > 0 ? suggested : fallbackSuggested,
         playlists: playlists.slice(0, 8),
         seeds,
       },

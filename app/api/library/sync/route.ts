@@ -19,9 +19,13 @@ type Library = {
   )[];
 };
 
+function isLibraryStorageConfigured(): boolean {
+  return Boolean(process.env.SUPABASE_URL?.trim() && process.env.SUPABASE_SERVICE_ROLE_KEY?.trim());
+}
+
 function database() {
-  const base = process.env.SUPABASE_URL?.replace(/\/$/, "");
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, "");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!base || !key) throw new Error("Library storage is not configured");
   return { base, key };
 }
@@ -139,6 +143,13 @@ export async function GET(request: NextRequest) {
   const rateLimited = enforceRateLimit(request, "library:sync:get", 60, 60_000);
   if (rateLimited) return rateLimited;
 
+  if (!isLibraryStorageConfigured()) {
+    return NextResponse.json(
+      { library: null, syncEnabled: false },
+      { status: 200, headers: { "cache-control": "no-store" } },
+    );
+  }
+
   try {
     const userId = await authorized(request);
     if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: { "cache-control": "no-store" } });
@@ -161,6 +172,13 @@ export async function PUT(request: NextRequest) {
 
   if (!verifySameOrigin(request)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403, headers: { "cache-control": "no-store" } });
+  }
+
+  if (!isLibraryStorageConfigured()) {
+    return NextResponse.json(
+      { ok: false, syncEnabled: false },
+      { status: 200, headers: { "cache-control": "no-store" } },
+    );
   }
 
   try {
