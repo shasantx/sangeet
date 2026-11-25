@@ -45,12 +45,23 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - uses: softprops/action-gh-release@v2
-        with:
-          tag_name: desktop-build-${{ github.run_number }}
-          name: Sangeet Windows Desktop (Rust) · build ${{ github.run_number }}
-          make_latest: false
-          files: release/Sangeet.exe
+      - name: Publish Windows Desktop release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CURRENT_TAG="desktop-build-${{ github.run_number }}"
+          TITLE="Sangeet Windows Desktop (Rust) · build ${{ github.run_number }}"
+          FILE="release/Sangeet.exe"
+          if gh release view "$CURRENT_TAG" >/dev/null 2>&1; then
+            gh release upload "$CURRENT_TAG" "$FILE" --clobber
+          else
+            gh release create "$CURRENT_TAG" "$FILE" \
+              --target "${{ github.sha }}" \
+              --title "$TITLE" \
+              --notes "Automated Windows Rust (Tauri v2) build for commit ${{ github.sha }}." \
+              --latest=false
+          fi
 
       - name: Keep only the latest Windows release
         shell: bash

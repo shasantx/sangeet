@@ -37,12 +37,23 @@ jobs:
           path: android/app/build/outputs/apk/debug/sangeet-android.apk
           if-no-files-found: error
           retention-days: 14
-      - uses: softprops/action-gh-release@v2
-        with:
-          tag_name: android-build-${{ github.run_number }}
-          name: Sangeet Android · build ${{ github.run_number }}
-          make_latest: true
-          files: android/app/build/outputs/apk/debug/sangeet-android.apk
+      - name: Publish Android APK release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CURRENT_TAG="android-build-${{ github.run_number }}"
+          TITLE="Sangeet Android · build ${{ github.run_number }}"
+          FILE="android/app/build/outputs/apk/debug/sangeet-android.apk"
+          if gh release view "$CURRENT_TAG" >/dev/null 2>&1; then
+            gh release upload "$CURRENT_TAG" "$FILE" --clobber
+          else
+            gh release create "$CURRENT_TAG" "$FILE" \
+              --target "${{ github.sha }}" \
+              --title "$TITLE" \
+              --notes "Automated Android APK build for commit ${{ github.sha }}." \
+              --latest
+          fi
+
       - name: Keep only the latest Android release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
