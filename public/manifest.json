@@ -1,0 +1,48 @@
+{
+  "name": "Sangeet — Music Player",
+  "short_name": "Sangeet",
+  "description": "Free, open-source music discovery and streaming player with synced lyrics, SponsorBlock, and local audio.",
+  "start_url": "/home",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#000000",
+  "theme_color": "#121212",
+  "categories": ["music", "entertainment"],
+  "icons": [
+    {
+      "src": "/icons/sangeet-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/sangeet-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Search Music",
+      "short_name": "Search",
+      "url": "/search"
+    },
+    {
+      "name": "Liked Songs",
+      "short_name": "Liked",
+      "url": "/liked"
+    },
+    {
+      "name": "Explore",
+      "short_name": "Explore",
+      "url": "/explore"
+    },
+    {
+      "name": "Listening Stats",
+      "short_name": "Stats",
+      "url": "/stats"
+    }
+  ]
+}

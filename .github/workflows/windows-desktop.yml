@@ -1,0 +1,65 @@
+name: Build Windows Desktop App (Rust)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'desktop-rust/**'
+      - '.github/workflows/windows-desktop.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-rust:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Cache Cargo dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop-rust
+
+      - name: Build Sangeet Windows Executable (Rust / Tauri v2)
+        working-directory: desktop-rust
+        run: cargo build --release
+
+      - name: Package portable Sangeet.exe
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "release" | Out-Null
+          Copy-Item "desktop-rust\target\release\sangeet.exe" -Destination "release\Sangeet.exe" -Force
+          Get-Item "release\Sangeet.exe" | Select-Object Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sangeet-windows-exe
+          path: release/Sangeet.exe
+          if-no-files-found: error
+          retention-days: 14
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: desktop-build-${{ github.run_number }}
+          name: Sangeet Windows Desktop (Rust) · build ${{ github.run_number }}
+          make_latest: false
+          files: release/Sangeet.exe
+
+      - name: Keep only the latest Windows release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CURRENT_TAG="desktop-build-${{ github.run_number }}"
+          for row in $(gh release list --limit 100 --json tagName -q '.[].tagName'); do
+            if [[ "$row" == desktop-build-* && "$row" != "$CURRENT_TAG" ]]; then
+              gh release delete "$row" --yes --cleanup-tag || true
+            fi
+          done

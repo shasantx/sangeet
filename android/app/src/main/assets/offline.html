@@ -1,0 +1,1380 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#09090b" />
+  <title>Sangeet · Offline &amp; Local Player</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #09090b;
+      --surface: #111115;
+      --card: #141418;
+      --elevated: #1c1c22;
+      --border: rgba(255, 255, 255, 0.08);
+      --divider: rgba(255, 255, 255, 0.06);
+      --text: #f4f4f6;
+      --muted: #9898a6;
+      --primary: hsl(141, 75%, 47%);
+      --primary-tint: hsla(141, 75%, 47%, 0.08);
+      --primary-ring: hsla(141, 75%, 47%, 0.25);
+      --primary-fg: #031107;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-family: inherit;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      padding-bottom: 148px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button, input {
+      font: inherit;
+      color: inherit;
+    }
+    button {
+      cursor: pointer;
+      border: 0;
+      background: none;
+    }
+    svg {
+      display: block;
+      flex-shrink: 0;
+    }
+
+    /* Sticky frosted topbar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+      background: rgba(9, 9, 11, 0.84);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-inner {
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 650;
+      letter-spacing: -0.025em;
+      font-size: 15px;
+    }
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      background: hsla(141, 75%, 47%, 0.15);
+      border: 1px solid var(--primary-ring);
+      color: var(--primary);
+    }
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #f59e0b;
+    }
+    .status-dot.online {
+      background: var(--primary);
+    }
+
+    /* Main container & SwiftUI grouped header card */
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 20px 16px 28px;
+    }
+    .hero {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 22px;
+      border-radius: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+    .hero-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      min-width: 0;
+      flex: 1 1 300px;
+    }
+    .hero-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: hsla(141, 75%, 47%, 0.14);
+      border: 1px solid var(--primary-ring);
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .eyebrow {
+      margin: 0 0 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+    .title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 3.2vw, 28px);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+    .count-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+    .sub {
+      margin: 5px 0 0;
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 38px;
+      padding: 0 15px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 550;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      transition: filter 120ms ease, background-color 120ms ease, border-color 120ms ease, transform 100ms ease;
+    }
+    .btn:hover:not(:disabled) {
+      background: #24242c;
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+    .btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+    .btn:disabled {
+      opacity: 0.42;
+      cursor: default;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: var(--primary-fg);
+      border-color: transparent;
+      font-weight: 650;
+    }
+    .btn-primary:hover:not(:disabled) {
+      filter: brightness(1.08);
+      background: var(--primary);
+      border-color: transparent;
+    }
+    .btn-sm {
+      min-height: 32px;
+      padding: 0 11px;
+      font-size: 11px;
+    }
+    .btn-active {
+      background: hsla(141, 75%, 47%, 0.16);
+      border-color: var(--primary-ring);
+      color: var(--primary);
+    }
+
+    .folders {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
+    }
+    .folder-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      max-width: 100%;
+    }
+    .folder-pill span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Search & list count toolbar */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin: 18px 0 12px;
+    }
+    .search-wrap {
+      position: relative;
+      flex: 1 1 240px;
+      max-width: 380px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .search {
+      width: 100%;
+      min-height: 38px;
+      padding: 0 14px 0 36px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      font-size: 12.5px;
+      outline: none;
+      transition: border-color 140ms ease;
+    }
+    .search::placeholder {
+      color: var(--muted);
+    }
+    .search:focus {
+      border-color: var(--primary);
+    }
+    .count {
+      font-size: 12px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* SwiftUI inset grouped track list */
+    .list {
+      border-radius: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 28px 40px minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--divider);
+      text-align: left;
+      width: 100%;
+      transition: background-color 120ms ease;
+    }
+    .row:last-child {
+      border-bottom: 0;
+    }
+    .row:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .row.active {
+      background: var(--primary-tint);
+    }
+    .idx {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .row.active .idx {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .eq {
+      display: inline-flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      width: 13px;
+      height: 13px;
+      gap: 2px;
+    }
+    .eq i {
+      display: block;
+      width: 2.5px;
+      border-radius: 999px;
+      background: var(--primary);
+      animation: eq-bounce 0.9s ease-in-out infinite;
+    }
+    .eq i:nth-child(2) { animation-delay: 0.18s; }
+    .eq i:nth-child(3) { animation-delay: 0.36s; }
+    @keyframes eq-bounce {
+      0%, 100% { height: 35%; }
+      50% { height: 100%; }
+    }
+
+    .art {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .row.active .art,
+    .now .art.playing {
+      background: hsla(141, 75%, 47%, 0.14);
+      border-color: var(--primary-ring);
+      color: var(--primary);
+    }
+    .meta {
+      min-width: 0;
+    }
+    .title {
+      font-size: 13.5px;
+      font-weight: 550;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .row.active .title {
+      color: var(--primary);
+    }
+    .artist {
+      margin-top: 2px;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dur {
+      font-size: 12px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .badge {
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 550;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .empty {
+      padding: 46px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .empty-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      margin: 0 auto 12px;
+      display: grid;
+      place-items: center;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .empty-title {
+      margin: 0;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 550;
+    }
+    .empty-sub {
+      margin: 4px auto 0;
+      max-width: 400px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Bottom studio player dock */
+    .dock {
+      position: fixed;
+      inset: auto 0 0;
+      z-index: 30;
+      background: rgba(16, 16, 20, 0.9);
+      backdrop-filter: blur(22px) saturate(160%);
+      -webkit-backdrop-filter: blur(22px) saturate(160%);
+      border-top: 1px solid var(--border);
+      padding: 10px 16px max(12px, env(safe-area-inset-bottom));
+    }
+    .dock-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: grid;
+      gap: 9px;
+    }
+    .seek-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      flex: 1;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 999px;
+      background: var(--primary);
+      border: 0;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 13px;
+      height: 13px;
+      border-radius: 999px;
+      background: var(--primary);
+      border: 0;
+    }
+    .dock-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .now {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+      flex: 1;
+    }
+    .now-title {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .now-sub {
+      margin-top: 1px;
+      font-size: 11.5px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .icon-btn {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      transition: color 120ms ease, background-color 120ms ease;
+    }
+    .icon-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .icon-btn.on {
+      color: var(--primary);
+    }
+    .repeat-tag {
+      position: absolute;
+      bottom: 3px;
+      right: 3px;
+      font-size: 8.5px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--primary);
+    }
+    .play-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: var(--primary);
+      color: var(--primary-fg);
+      transition: filter 120ms ease, transform 100ms ease;
+    }
+    .play-btn:hover {
+      filter: brightness(1.08);
+    }
+    .play-btn:active {
+      transform: scale(0.95);
+    }
+    .fx-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .vol-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100px;
+      margin-left: 2px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 720px) {
+      .fx-group .vol-wrap { display: none; }
+      .row { grid-template-columns: 24px 38px minmax(0, 1fr) auto; gap: 10px; padding: 10px 12px; }
+      .badge { display: none; }
+    }
+    @media (max-width: 500px) {
+      .fx-group { display: none; }
+      .status-pill .status-text { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="18" r="4"/><path d="M12 18V2l7 4"/></svg>
+        </span>
+        <span>Sangeet Offline</span>
+      </div>
+      <div class="top-actions">
+        <span id="netPill" class="status-pill"><span id="netDot" class="status-dot"></span><span id="netLabel" class="status-text">Offline mode</span></span>
+        <button id="reconnectBtn" type="button" class="btn btn-sm">Reconnect</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-head">
+        <div class="hero-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </div>
+        <div style="min-width:0;">
+          <p class="eyebrow">On this device</p>
+          <div class="title-row">
+            <h1>Local &amp; Offline Music</h1>
+            <span id="heroCountPill" class="count-pill">Scanning...</span>
+          </div>
+          <p id="heroSub" class="sub">Automatically scans music stored on your device and saved offline downloads for uninterrupted playback.</p>
+          <div id="folderList" class="folders" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="playAllBtn" type="button" class="btn btn-primary" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4l15 8-15 8z"/></svg>
+          <span>Play all</span>
+        </button>
+        <button id="shuffleAllBtn" type="button" class="btn" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+          <span>Shuffle</span>
+        </button>
+        <button id="scanBtn" type="button" class="btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+          <span id="scanBtnLabel">Scan device</span>
+        </button>
+        <button id="folderBtn" type="button" class="btn" style="display:none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10v6"/><path d="M9 13h6"/><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+          <span>Add music folder</span>
+        </button>
+      </div>
+    </section>
+
+    <input id="webFolderInput" type="file" webkitdirectory multiple accept="audio/*" style="display:none;" />
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="searchInput" class="search" type="search" placeholder="Filter songs by title or artist..." aria-label="Filter songs" />
+      </div>
+      <span id="countLabel" class="count">Scanning library...</span>
+    </div>
+
+    <section class="list" id="trackList" aria-live="polite"></section>
+  </main>
+
+  <footer class="dock">
+    <div class="dock-inner">
+      <div class="seek-row">
+        <span id="timeCur">0:00</span>
+        <input id="seekRange" type="range" min="0" max="100" step="0.5" value="0" aria-label="Seek track" />
+        <span id="timeDur">0:00</span>
+      </div>
+      <div class="dock-main">
+        <div class="now">
+          <div class="art" id="nowArt" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          </div>
+          <div class="meta">
+            <div class="now-title" id="nowTitle">No track selected</div>
+            <div class="now-sub" id="nowArtist">Tap any local or offline song to play</div>
+          </div>
+        </div>
+        <div class="controls">
+          <button id="shuffleBtn" type="button" class="icon-btn" title="Shuffle" aria-label="Toggle shuffle">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+          </button>
+          <button id="prevBtn" type="button" class="icon-btn" title="Previous" aria-label="Previous track">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+          </button>
+          <button id="playPauseBtn" type="button" class="play-btn" title="Play / Pause" aria-label="Play or pause">
+            <svg id="playIcon" width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l15 8-15 8z"/></svg>
+          </button>
+          <button id="nextBtn" type="button" class="icon-btn" title="Next" aria-label="Next track">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg>
+          </button>
+          <button id="repeatBtn" type="button" class="icon-btn on" title="Repeat: All" aria-label="Cycle repeat mode">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+            <span id="repeatTag" class="repeat-tag"></span>
+          </button>
+        </div>
+        <div class="fx-group">
+          <button id="speedBtn" type="button" class="btn btn-sm" title="Playback speed">1x</button>
+          <button id="bassBtn" type="button" class="btn btn-sm" title="Bass boost EQ">Bass EQ</button>
+          <div class="vol-wrap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            <input id="volRange" type="range" min="0" max="1" step="0.02" value="0.9" aria-label="Volume" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <audio id="audio" preload="metadata" playsinline crossorigin="anonymous"></audio>
+
+  <script>
+    (function () {
+      const audio = document.getElementById("audio");
+      const listEl = document.getElementById("trackList");
+      const countEl = document.getElementById("countLabel");
+      const heroCountPill = document.getElementById("heroCountPill");
+      const folderListEl = document.getElementById("folderList");
+      const searchEl = document.getElementById("searchInput");
+      const scanBtn = document.getElementById("scanBtn");
+      const scanBtnLabel = document.getElementById("scanBtnLabel");
+      const folderBtn = document.getElementById("folderBtn");
+      const webFolderInput = document.getElementById("webFolderInput");
+      const playAllBtn = document.getElementById("playAllBtn");
+      const shuffleAllBtn = document.getElementById("shuffleAllBtn");
+      const reconnectBtn = document.getElementById("reconnectBtn");
+      const netDot = document.getElementById("netDot");
+      const netLabel = document.getElementById("netLabel");
+      const seekEl = document.getElementById("seekRange");
+      const timeCurEl = document.getElementById("timeCur");
+      const timeDurEl = document.getElementById("timeDur");
+      const nowTitleEl = document.getElementById("nowTitle");
+      const nowArtistEl = document.getElementById("nowArtist");
+      const nowArtEl = document.getElementById("nowArt");
+      const playPauseBtn = document.getElementById("playPauseBtn");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const shuffleBtn = document.getElementById("shuffleBtn");
+      const repeatBtn = document.getElementById("repeatBtn");
+      const repeatTag = document.getElementById("repeatTag");
+      const speedBtn = document.getElementById("speedBtn");
+      const bassBtn = document.getElementById("bassBtn");
+      const volRange = document.getElementById("volRange");
+
+      const PLAY_SVG = '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l15 8-15 8z"/></svg>';
+      const PAUSE_SVG = '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+      const NOTE_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+
+      const isAndroid = Boolean(window.SangeetAndroid);
+      const isDesktop = Boolean(window.sangeetDesktop && window.sangeetDesktop.isDesktop);
+
+      if (isDesktop) {
+        scanBtnLabel.textContent = "Rescan music library";
+        if (window.sangeetDesktop.pickMusicFolder) {
+          folderBtn.style.display = "inline-flex";
+        }
+      } else if (isAndroid) {
+        scanBtnLabel.textContent = "Scan phone audio";
+      } else {
+        scanBtnLabel.textContent = "Scan music folder";
+      }
+
+      let library = [];
+      let filtered = [];
+      let currentIdx = -1;
+      let isPlaying = false;
+      let shuffle = false;
+      let repeat = "all"; // off | all | one
+      const speeds = [1, 1.15, 0.85];
+      let speedIdx = 0;
+      let bassOn = false;
+      let audioCtx = null, bassFilter = null;
+      const objectUrls = [];
+      const AUDIO_EXT_RE = /\.(mp3|m4a|aac|wav|flac|ogg|opus|wma|aiff|alac|caf|webm|3gp|mp4)$/i;
+
+      function fmt(sec) {
+        if (!Number.isFinite(sec) || sec <= 0) return "0:00";
+        const s = Math.floor(sec);
+        return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+      }
+
+      function setPlayIcon(playing) {
+        playPauseBtn.innerHTML = playing ? PAUSE_SVG : PLAY_SVG;
+        nowArtEl.classList.toggle("playing", Boolean(playing && currentIdx >= 0));
+      }
+
+      function updateNetworkPill() {
+        const online = navigator.onLine;
+        netDot.className = "status-dot" + (online ? " online" : "");
+        netLabel.textContent = online ? "Connection restored" : "Offline mode";
+      }
+      updateNetworkPill();
+      window.addEventListener("online", updateNetworkPill);
+      window.addEventListener("offline", updateNetworkPill);
+
+      reconnectBtn.addEventListener("click", function () {
+        if (isAndroid && window.SangeetAndroid.reloadOnline) {
+          window.SangeetAndroid.reloadOnline();
+        } else if (isDesktop && window.sangeetDesktop.reconnectOnline) {
+          window.sangeetDesktop.reconnectOnline();
+        } else {
+          window.location.href = "/home";
+        }
+      });
+
+      function ensureBassGraph() {
+        if (audioCtx || !window.AudioContext) return;
+        try {
+          audioCtx = new window.AudioContext();
+          const src = audioCtx.createMediaElementSource(audio);
+          bassFilter = audioCtx.createBiquadFilter();
+          bassFilter.type = "lowshelf";
+          bassFilter.frequency.value = 110;
+          bassFilter.gain.value = bassOn ? 7 : 0;
+          src.connect(bassFilter);
+          bassFilter.connect(audioCtx.destination);
+        } catch {}
+      }
+
+      function safeText(value, fb) {
+        try { return decodeURIComponent(value || "") || fb; } catch { return fb; }
+      }
+
+      function openDbRows(name, storeName) {
+        return new Promise((resolve) => {
+          if (typeof indexedDB === "undefined") return resolve([]);
+          const req = indexedDB.open(name);
+          req.onupgradeneeded = () => { try { req.result.createObjectStore(storeName, { keyPath: "id" }); } catch {} };
+          req.onsuccess = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(storeName)) { db.close(); return resolve([]); }
+            const tx = db.transaction(storeName, "readonly");
+            const getAll = tx.objectStore(storeName).getAll();
+            getAll.onsuccess = () => { db.close(); resolve(Array.isArray(getAll.result) ? getAll.result : []); };
+            getAll.onerror = () => { db.close(); resolve([]); };
+          };
+          req.onerror = () => resolve([]);
+        });
+      }
+
+      async function storeWebFiles(files) {
+        if (typeof indexedDB === "undefined") return;
+        const audioFiles = files.filter((f) =>
+          f && f.size > 0 && (
+            (f.type && f.type.startsWith("audio/")) ||
+            f.type === "application/ogg" ||
+            AUDIO_EXT_RE.test(f.name || "")
+          )
+        );
+        if (!audioFiles.length) return;
+        await new Promise((resolve) => {
+          const req = indexedDB.open("sangeet-local-audio", 1);
+          req.onupgradeneeded = () => {
+            try { req.result.createObjectStore("files", { keyPath: "id" }); } catch {}
+          };
+          req.onsuccess = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains("files")) { db.close(); return resolve(); }
+            const tx = db.transaction("files", "readwrite");
+            const store = tx.objectStore("files");
+            for (const f of audioFiles) {
+              const id = "local-" + (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + "-" + Math.random().toString(36).slice(2)));
+              store.put({ id, blob: f, name: f.name, duration: 0 });
+            }
+            tx.oncomplete = () => { db.close(); resolve(); };
+            tx.onerror = () => { db.close(); resolve(); };
+          };
+          req.onerror = () => resolve();
+        });
+      }
+
+      async function collectDirFiles(dir) {
+        const out = [];
+        for await (const entry of dir.values()) {
+          if (entry.kind === "file") out.push(await entry.getFile());
+          else if (entry.kind === "directory") out.push(...await collectDirFiles(entry));
+        }
+        return out;
+      }
+
+      function renderFolders(folders) {
+        folderListEl.innerHTML = "";
+        if (!Array.isArray(folders) || !folders.length) {
+          folderListEl.style.display = "none";
+          return;
+        }
+        folderListEl.style.display = "flex";
+        folders.forEach((f) => {
+          const pill = document.createElement("span");
+          pill.className = "folder-pill";
+          const txt = document.createElement("span");
+          txt.textContent = f;
+          pill.appendChild(txt);
+          folderListEl.appendChild(pill);
+        });
+      }
+
+      async function collectLibrary() {
+        countEl.textContent = "Scanning device...";
+        while (objectUrls.length) { try { URL.revokeObjectURL(objectUrls.pop()); } catch {} }
+        const items = [];
+        const seen = new Set();
+
+        const pushItem = (item) => {
+          if (!item || !item.url || seen.has(item.id)) return;
+          seen.add(item.id);
+          items.push(item);
+        };
+
+        // 1. Native Desktop PC music folders
+        if (isDesktop && window.sangeetDesktop.scanMusicLibrary) {
+          try {
+            const res = await window.sangeetDesktop.scanMusicLibrary();
+            renderFolders(res && res.folders);
+            for (const t of (res && res.tracks) || []) {
+              if (!t || typeof t !== "object" || t.id === null || t.id === undefined || t.id === "" || !t.uri) continue;
+              pushItem({
+                id: "desk-" + String(t.id),
+                title: t.title || "Untitled",
+                artist: t.artist || "On this PC",
+                source: "PC Music",
+                url: t.uri,
+                duration: Number.isFinite(Number(t.duration)) ? Number(t.duration) : 0,
+                nativeUri: false,
+              });
+            }
+          } catch {}
+        }
+
+        // 2. Native Android MediaStore
+        if (
+          isAndroid &&
+          window.SangeetAndroid.hasAudioPermission &&
+          window.SangeetAndroid.hasAudioPermission() &&
+          window.SangeetAndroid.scanLocalAudio
+        ) {
+          scanBtnLabel.textContent = "Rescan phone audio";
+          try {
+            const raw = JSON.parse(window.SangeetAndroid.scanLocalAudio() || "[]");
+            if (Array.isArray(raw)) {
+              for (const t of raw) {
+                if (!t || typeof t !== "object") continue;
+                const rawId = t.id;
+                const hasValidId =
+                  typeof rawId === "string"
+                    ? rawId.length > 0
+                    : typeof rawId === "number" && Number.isFinite(rawId);
+                if (!hasValidId || typeof t.uri !== "string" || !t.uri) continue;
+                pushItem({
+                  id: "and-" + String(rawId),
+                  title: t.title || "Untitled",
+                  artist: t.artist || "On this phone",
+                  source: "Phone Audio",
+                  url: t.uri,
+                  duration: Number.isFinite(Number(t.duration)) ? Number(t.duration) : 0,
+                  nativeUri: true,
+                });
+              }
+            }
+          } catch {}
+        }
+
+        // 3. Offline saved downloads (IndexedDB)
+        const offlineRows = await openDbRows("sangeet-offline-downloads-v1", "tracks");
+        for (const r of offlineRows) {
+          if (r && r.blob) {
+            const url = URL.createObjectURL(r.blob);
+            objectUrls.push(url);
+            pushItem({
+              id: "off-" + r.id,
+              title: (r.track && r.track.title) || "Saved song",
+              artist: r.artistName || "Offline download",
+              source: "Downloaded",
+              url,
+              duration: (r.track && r.track.duration) || 0,
+              nativeUri: false,
+            });
+          }
+        }
+
+        // 4. Scanned local folder tracks (IndexedDB)
+        const localRows = await openDbRows("sangeet-local-audio", "files");
+        for (const r of localRows) {
+          if (r && r.blob) {
+            const url = URL.createObjectURL(r.blob);
+            objectUrls.push(url);
+            pushItem({
+              id: "loc-" + r.id,
+              title: String(r.name || "Local audio").replace(/\.[^.]+$/, ""),
+              artist: "On this device",
+              source: "Local",
+              url,
+              duration: r.duration || 0,
+              nativeUri: false,
+            });
+          }
+        }
+
+        // 5. CacheStorage /audio fallback
+        if ("caches" in window) {
+          try {
+            const cache = await caches.open("sangeet-offline-audio-v1");
+            const keys = await cache.keys();
+            for (const req of keys) {
+              if (new URL(req.url).pathname.startsWith("/audio/")) {
+                const res = await cache.match(req);
+                const h = res ? res.headers : null;
+                const slug = new URL(req.url).pathname.split("/").pop().replace(/\.mp3$/i, "");
+                pushItem({
+                  id: "cache-" + slug,
+                  title: safeText(h && h.get("x-sangeet-title"), slug),
+                  artist: safeText(h && h.get("x-sangeet-artist"), "Sangeet"),
+                  source: "Cached",
+                  url: req.url,
+                  duration: 0,
+                  nativeUri: false,
+                });
+              }
+            }
+          } catch {}
+        }
+
+        library = items;
+        applyFilter();
+      }
+
+      function applyFilter() {
+        const q = (searchEl.value || "").trim().toLowerCase();
+        filtered = q
+          ? library.filter((t) => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q))
+          : library.slice();
+        playAllBtn.disabled = filtered.length === 0;
+        shuffleAllBtn.disabled = filtered.length === 0;
+        const label = filtered.length + (filtered.length === 1 ? " song" : " songs");
+        countEl.textContent = label;
+        heroCountPill.textContent = library.length + (library.length === 1 ? " song" : " songs");
+        renderList();
+      }
+
+      function renderList() {
+        listEl.innerHTML = "";
+        if (filtered.length === 0) {
+          const box = document.createElement("div");
+          box.className = "empty";
+          const icon = document.createElement("div");
+          icon.className = "empty-icon";
+          icon.innerHTML = NOTE_SVG;
+          box.appendChild(icon);
+
+          if (isAndroid && window.SangeetAndroid.hasAudioPermission && !window.SangeetAndroid.hasAudioPermission()) {
+            const t = document.createElement("p");
+            t.className = "empty-title";
+            t.textContent = "Allow audio access to scan your phone";
+            const s = document.createElement("p");
+            s.className = "empty-sub";
+            s.textContent = "Sangeet reads songs from Android MediaStore so you can play local audio offline.";
+            const grant = document.createElement("button");
+            grant.className = "btn btn-primary";
+            grant.style.marginTop = "14px";
+            grant.textContent = "Scan phone audio";
+            grant.onclick = () => window.SangeetAndroid.requestAudioPermission();
+            box.appendChild(t);
+            box.appendChild(s);
+            box.appendChild(grant);
+          } else {
+            const t = document.createElement("p");
+            t.className = "empty-title";
+            t.textContent = library.length > 0 ? "No songs match your filter" : "No offline or local music found yet";
+            const s = document.createElement("p");
+            s.className = "empty-sub";
+            s.textContent = library.length > 0
+              ? "Try clearing the search box to see all scanned songs."
+              : isDesktop
+                ? "Click Add music folder to include a directory with MP3, FLAC, M4A, or WAV songs."
+                : "Scan a music folder or reconnect to download songs for offline listening.";
+            box.appendChild(t);
+            box.appendChild(s);
+          }
+          listEl.appendChild(box);
+          return;
+        }
+
+        const activeId = currentIdx >= 0 && library[currentIdx] ? library[currentIdx].id : null;
+        filtered.forEach((item, i) => {
+          const isActive = item.id === activeId;
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "row" + (isActive ? " active" : "");
+
+          const idxSpan = document.createElement("span");
+          idxSpan.className = "idx";
+          if (isActive && isPlaying) {
+            idxSpan.innerHTML = '<span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>';
+          } else if (isActive) {
+            idxSpan.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l15 8-15 8z"/></svg>';
+          } else {
+            idxSpan.textContent = String(i + 1);
+          }
+
+          const artSpan = document.createElement("span");
+          artSpan.className = "art";
+          artSpan.innerHTML = NOTE_SVG;
+
+          const metaSpan = document.createElement("span");
+          metaSpan.className = "meta";
+          const titleDiv = document.createElement("div");
+          titleDiv.className = "title";
+          titleDiv.textContent = item.title;
+          const artistDiv = document.createElement("div");
+          artistDiv.className = "artist";
+          artistDiv.textContent = item.artist;
+          metaSpan.appendChild(titleDiv);
+          metaSpan.appendChild(artistDiv);
+
+          const durSpan = document.createElement("span");
+          durSpan.className = "dur";
+          durSpan.textContent = item.duration > 0 ? fmt(item.duration) : "";
+
+          const badgeSpan = document.createElement("span");
+          badgeSpan.className = "badge";
+          badgeSpan.textContent = item.source;
+
+          btn.appendChild(idxSpan);
+          btn.appendChild(artSpan);
+          btn.appendChild(metaSpan);
+          btn.appendChild(durSpan);
+          btn.appendChild(badgeSpan);
+
+          btn.onclick = () => {
+            const realIdx = library.findIndex((x) => x.id === item.id);
+            if (realIdx === currentIdx) togglePlay();
+            else if (realIdx >= 0) playIndex(realIdx);
+          };
+          listEl.appendChild(btn);
+        });
+      }
+
+      function playIndex(idx) {
+        if (idx < 0 || idx >= library.length) return;
+        currentIdx = idx;
+        const track = library[idx];
+        nowTitleEl.textContent = track.title;
+        nowArtistEl.textContent = track.artist;
+        isPlaying = true;
+        setPlayIcon(true);
+
+        if (track.nativeUri && isAndroid && window.SangeetAndroid.playLocalContent) {
+          try { audio.pause(); } catch {}
+          window.SangeetAndroid.playLocalContent(track.url, track.title, track.artist);
+          if (window.SangeetAndroid.setPlaybackRate) window.SangeetAndroid.setPlaybackRate(speeds[speedIdx]);
+        } else {
+          if (isAndroid && window.SangeetAndroid.stop) {
+            try { window.SangeetAndroid.stop(); } catch {}
+          }
+          audio.src = track.url;
+          audio.playbackRate = speeds[speedIdx];
+          audio.volume = Number(volRange.value);
+          audio.play().catch(() => {});
+        }
+
+        if (isDesktop && window.sangeetDesktop.sendPlaybackState) {
+          window.sangeetDesktop.sendPlaybackState({ isPlaying: true, track: { title: track.title, artist: track.artist } });
+        }
+        if ("mediaSession" in navigator && "MediaMetadata" in window) {
+          try {
+            navigator.mediaSession.metadata = new MediaMetadata({ title: track.title, artist: track.artist });
+            navigator.mediaSession.setActionHandler("play", togglePlay);
+            navigator.mediaSession.setActionHandler("pause", togglePlay);
+            navigator.mediaSession.setActionHandler("previoustrack", prevTrack);
+            navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
+          } catch {}
+        }
+        renderList();
+      }
+
+      function togglePlay() {
+        if (currentIdx < 0) { if (library.length) playIndex(0); return; }
+        const track = library[currentIdx];
+        if (track.nativeUri && isAndroid) {
+          if (isPlaying) window.SangeetAndroid.pause(); else window.SangeetAndroid.resume();
+          isPlaying = !isPlaying;
+        } else {
+          if (audio.paused) { audio.play().catch(() => {}); isPlaying = true; }
+          else { audio.pause(); isPlaying = false; }
+        }
+        setPlayIcon(isPlaying);
+        if (isDesktop && window.sangeetDesktop.sendPlaybackState) {
+          window.sangeetDesktop.sendPlaybackState({ isPlaying, track: { title: track.title, artist: track.artist } });
+        }
+        renderList();
+      }
+
+      function nextTrack() {
+        if (!library.length) return;
+        if (repeat === "one" && currentIdx >= 0) { playIndex(currentIdx); return; }
+        if (shuffle && library.length > 1) {
+          let n = currentIdx;
+          while (n === currentIdx) n = Math.floor(Math.random() * library.length);
+          playIndex(n);
+          return;
+        }
+        const next = currentIdx + 1;
+        if (next < library.length) playIndex(next);
+        else if (repeat === "all") playIndex(0);
+        else { isPlaying = false; setPlayIcon(false); renderList(); }
+      }
+
+      function prevTrack() {
+        if (!library.length) return;
+        if (audio.currentTime > 3 && !(library[currentIdx] && library[currentIdx].nativeUri)) {
+          audio.currentTime = 0; return;
+        }
+        const prev = currentIdx - 1 >= 0 ? currentIdx - 1 : library.length - 1;
+        playIndex(prev);
+      }
+
+      audio.addEventListener("timeupdate", () => {
+        const track = library[currentIdx];
+        if (track && track.nativeUri) return;
+        const dur = audio.duration || 0;
+        timeCurEl.textContent = fmt(audio.currentTime);
+        timeDurEl.textContent = fmt(dur);
+        if (dur > 0) seekEl.value = String((audio.currentTime / dur) * 100);
+      });
+      audio.addEventListener("ended", nextTrack);
+
+      seekEl.addEventListener("input", () => {
+        const track = library[currentIdx];
+        if (!track) return;
+        const dur = track.nativeUri ? (track.duration || 0) : (audio.duration || 0);
+        const sec = (Number(seekEl.value) / 100) * dur;
+        if (track.nativeUri && isAndroid && window.SangeetAndroid.seekTo) window.SangeetAndroid.seekTo(sec);
+        else if (dur > 0) audio.currentTime = sec;
+      });
+
+      volRange.addEventListener("input", () => {
+        const v = Number(volRange.value);
+        audio.volume = v;
+        if (isAndroid && window.SangeetAndroid.setVolume) window.SangeetAndroid.setVolume(v);
+      });
+
+      playPauseBtn.addEventListener("click", togglePlay);
+      nextBtn.addEventListener("click", nextTrack);
+      prevBtn.addEventListener("click", prevTrack);
+      playAllBtn.addEventListener("click", () => {
+        if (!filtered.length) return;
+        const idx = library.findIndex((x) => x.id === filtered[0].id);
+        playIndex(idx >= 0 ? idx : 0);
+      });
+      shuffleAllBtn.addEventListener("click", () => {
+        if (!filtered.length) return;
+        shuffle = true; shuffleBtn.classList.add("on");
+        const pick = filtered[Math.floor(Math.random() * filtered.length)];
+        const idx = library.findIndex((x) => x.id === pick.id);
+        playIndex(idx >= 0 ? idx : 0);
+      });
+      shuffleBtn.addEventListener("click", () => {
+        shuffle = !shuffle;
+        shuffleBtn.classList.toggle("on", shuffle);
+      });
+      repeatBtn.addEventListener("click", () => {
+        repeat = repeat === "off" ? "all" : repeat === "all" ? "one" : "off";
+        repeatTag.textContent = repeat === "one" ? "1" : "";
+        repeatBtn.title = "Repeat: " + (repeat === "off" ? "Off" : repeat === "all" ? "All" : "One");
+        repeatBtn.classList.toggle("on", repeat !== "off");
+        audio.loop = repeat === "one";
+      });
+      speedBtn.addEventListener("click", () => {
+        speedIdx = (speedIdx + 1) % speeds.length;
+        const rate = speeds[speedIdx];
+        speedBtn.textContent = rate === 1 ? "1x" : rate + "x";
+        speedBtn.classList.toggle("btn-active", rate !== 1);
+        audio.playbackRate = rate;
+        if (isAndroid && window.SangeetAndroid.setPlaybackRate) window.SangeetAndroid.setPlaybackRate(rate);
+      });
+      bassBtn.addEventListener("click", () => {
+        bassOn = !bassOn;
+        bassBtn.classList.toggle("btn-active", bassOn);
+        ensureBassGraph();
+        if (bassFilter) bassFilter.gain.value = bassOn ? 7 : 0;
+      });
+      scanBtn.addEventListener("click", async () => {
+        if (isAndroid) {
+          if (window.SangeetAndroid.hasAudioPermission && !window.SangeetAndroid.hasAudioPermission()) {
+            window.SangeetAndroid.requestAudioPermission();
+            return;
+          }
+          await collectLibrary();
+          return;
+        }
+        if (isDesktop) {
+          await collectLibrary();
+          return;
+        }
+        if (typeof window.showDirectoryPicker === "function") {
+          try {
+            const dir = await window.showDirectoryPicker({ mode: "read" });
+            const files = await collectDirFiles(dir);
+            await storeWebFiles(files);
+            await collectLibrary();
+            return;
+          } catch (err) {
+            if (err && err.name === "AbortError") return;
+          }
+        }
+        webFolderInput.click();
+      });
+      webFolderInput.addEventListener("change", async () => {
+        const files = Array.from(webFolderInput.files || []);
+        webFolderInput.value = "";
+        if (files.length) {
+          await storeWebFiles(files);
+          await collectLibrary();
+        }
+      });
+      folderBtn.addEventListener("click", async () => {
+        if (isDesktop && window.sangeetDesktop.pickMusicFolder) {
+          await window.sangeetDesktop.pickMusicFolder();
+          await collectLibrary();
+        }
+      });
+      searchEl.addEventListener("input", applyFilter);
+
+      if (isAndroid) {
+        const prevHandler = window.__sangeetAndroidEvent;
+        window.__sangeetAndroidEvent = (type, payload) => {
+          if (typeof prevHandler === "function") prevHandler(type, payload);
+          if (type === "audio_permission" && (payload === "granted" || payload === "true")) void collectLibrary();
+          else if (type === "next") nextTrack();
+          else if (type === "previous") prevTrack();
+          else if (type === "state") {
+            if (payload === "ended") nextTrack();
+            else if (payload === "playing") { isPlaying = true; setPlayIcon(true); renderList(); }
+            else if (payload === "paused") { isPlaying = false; setPlayIcon(false); renderList(); }
+          } else if (type === "time" && payload) {
+            const parts = String(payload).split(":");
+            const cur = Number(parts[0]), dur = Number(parts[1]);
+            if (library[currentIdx]) library[currentIdx].duration = dur || library[currentIdx].duration;
+            timeCurEl.textContent = fmt(cur);
+            timeDurEl.textContent = fmt(dur);
+            if (dur > 0) seekEl.value = String((cur / dur) * 100);
+          }
+        };
+        window.addEventListener("focus", () => {
+          if (window.SangeetAndroid.hasAudioPermission && window.SangeetAndroid.hasAudioPermission() && library.length === 0) {
+            void collectLibrary();
+          }
+        });
+      }
+      if (isDesktop && window.sangeetDesktop.onMediaAction) {
+        window.sangeetDesktop.onMediaAction((action) => {
+          if (action === "play-pause") togglePlay();
+          else if (action === "next") nextTrack();
+          else if (action === "previous") prevTrack();
+        });
+      }
+
+      void collectLibrary();
+    })();
+  </script>
+</body>
+</html>
