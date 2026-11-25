@@ -16,11 +16,11 @@ export function SangeetLogo({
 }: SangeetLogoProps) {
   return (
     <img
-      src="/brand/sangeet-logo.png"
+      src="/brand/sangeet-logo.png?v=2"
       alt={alt}
       draggable={false}
       className={cn(
-        "shrink-0 select-none rounded-[22%] object-cover",
+        "shrink-0 select-none rounded-[23%] object-cover",
         className
       )}
     />
