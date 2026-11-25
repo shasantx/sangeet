@@ -57,6 +57,7 @@ export interface SangeetAndroidBridge {
   ) => boolean;
   pause?: () => void;
   resume?: () => void;
+  syncPlaybackState?: () => void;
   seekTo?: (seconds: number) => void;
   setVolume?: (volume: number) => void;
   hasAudioPermission?: () => boolean;

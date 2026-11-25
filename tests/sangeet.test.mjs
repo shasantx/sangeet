@@ -536,6 +536,21 @@ test("Zentra Cobalt-Obsidian theme, floating LiquidGlass refraction, and securit
   assert.match(uiStoreSrc, /rightTab:\s*null/);
   const landingSrc = fs.readFileSync(path.join(ROOT, "src/app/page.tsx"), "utf8");
   assert.match(landingSrc, /router\.replace\("\/home"\)/);
+
+  // Queue toggle, horizontal player swipe, brand logo, and Android sync/notification icon
+  assert.ok(fs.existsSync(path.join(ROOT, "src/components/ui/sangeet-logo.tsx")));
+  assert.ok(fs.existsSync(path.join(ROOT, "public/brand/sangeet-logo.png")));
+  assert.ok(
+    fs.existsSync(
+      path.join(ROOT, "android/app/src/main/res/drawable/ic_stat_sangeet.xml")
+    )
+  );
+  const playerStoreSrc = fs.readFileSync(
+    path.join(ROOT, "src/store/player-store.ts"),
+    "utf8"
+  );
+  assert.match(playerStoreSrc, /toggleQueueTrack/);
+  assert.match(mobileSheetSrc, /swipeX/);
 });
 
 test("Windows desktop client is implemented in Rust (Tauri v2) with icons and CI workflow", () => {

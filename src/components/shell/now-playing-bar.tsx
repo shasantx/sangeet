@@ -90,10 +90,84 @@ export function NowPlayingBar() {
   const [sleepMenuOpen, setSleepMenuOpen] = useState(false);
   const [scrubTime, setScrubTime] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [navSearching, setNavSearching] = useState(false);
+  const [mobileKeyboardOpen, setMobileKeyboardOpen] = useState(false);
 
   const sleepWrapRef = useRef<HTMLDivElement | null>(null);
   const closeSleep = useCallback(() => setSleepMenuOpen(false), []);
   useClickOutside(sleepWrapRef, sleepMenuOpen, closeSleep);
+
+  // Hide mobile floating mini-player when bottom FloatingNav search is expanded or soft keyboard is open
+  useEffect(() => {
+    const onNavSearchState = (e: Event) => {
+      const detail = (e as CustomEvent<{ searching?: boolean }>).detail;
+      setNavSearching(Boolean(detail?.searching));
+    };
+
+    const isTextField = (el: EventTarget | null) => {
+      if (!(el instanceof HTMLElement)) return false;
+      const tag = el.tagName;
+      if (tag === "TEXTAREA" || el.isContentEditable) return true;
+      if (tag === "INPUT") {
+        const type = (el as HTMLInputElement).type;
+        return (
+          type !== "range" &&
+          type !== "checkbox" &&
+          type !== "radio" &&
+          type !== "button" &&
+          type !== "submit"
+        );
+      }
+      return false;
+    };
+
+    let baselineHeight = window.visualViewport?.height ?? window.innerHeight;
+
+    const updateKeyboardState = () => {
+      if (window.innerWidth >= 768) {
+        setMobileKeyboardOpen(false);
+        return;
+      }
+      const vv = window.visualViewport;
+      const shrunk = vv != null && baselineHeight - vv.height > 140;
+      const focusedInput = isTextField(document.activeElement);
+      setMobileKeyboardOpen(shrunk || focusedInput);
+    };
+
+    const onFocusIn = (e: FocusEvent) => {
+      if (window.innerWidth < 768 && isTextField(e.target)) {
+        setMobileKeyboardOpen(true);
+      }
+    };
+
+    const onFocusOut = () => {
+      window.setTimeout(updateKeyboardState, 80);
+    };
+
+    const onResize = () => {
+      const currentH = window.visualViewport?.height ?? window.innerHeight;
+      if (currentH > baselineHeight) {
+        baselineHeight = currentH;
+      }
+      updateKeyboardState();
+    };
+
+    window.addEventListener("sangeet:nav-search-state", onNavSearchState);
+    window.addEventListener("focusin", onFocusIn);
+    window.addEventListener("focusout", onFocusOut);
+    window.addEventListener("resize", onResize);
+    window.visualViewport?.addEventListener("resize", onResize);
+
+    return () => {
+      window.removeEventListener("sangeet:nav-search-state", onNavSearchState);
+      window.removeEventListener("focusin", onFocusIn);
+      window.removeEventListener("focusout", onFocusOut);
+      window.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
+    };
+  }, []);
+
+  const hideMobileMiniPlayer = navSearching || mobileKeyboardOpen;
 
   useEffect(() => {
     if (!sleepTimerEndsAt) return;
@@ -169,7 +243,10 @@ export function NowPlayingBar() {
       {playbackError && currentTrack && (
         <div
           role="alert"
-          className="fixed inset-x-3 bottom-[calc(154px+env(safe-area-inset-bottom))] z-40 flex items-center justify-between gap-2 rounded-2xl border-0 bg-encore-elevated/95 px-3.5 py-2 text-xs text-encore-text shadow-[0_12px_32px_rgba(0,0,0,0.45)] backdrop-blur-xl md:static md:rounded-none md:px-4"
+          className={cn(
+            "fixed inset-x-3 bottom-[calc(154px+env(safe-area-inset-bottom))] z-40 flex items-center justify-between gap-2 rounded-2xl border-0 bg-encore-elevated/95 px-3.5 py-2 text-xs text-encore-text shadow-[0_12px_32px_rgba(0,0,0,0.45)] backdrop-blur-xl md:static md:rounded-none md:px-4",
+            hideMobileMiniPlayer && "max-md:hidden"
+          )}
         >
           <div className="flex min-w-0 items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0 text-encore-negative" />
@@ -197,8 +274,21 @@ export function NowPlayingBar() {
 
       {/* Floating Mobile Mini-Player (< md) hovering cleanly above LiquidGlass FloatingNav */}
       {currentTrack && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-[calc(86px+env(safe-area-inset-bottom))] z-30 flex justify-center px-3 md:hidden">
-          <div className="pointer-events-auto relative flex h-[60px] w-full max-w-[420px] items-center gap-1 overflow-hidden rounded-[18px] border-0 bg-encore-elevated px-2 shadow-[0_14px_36px_rgba(0,0,0,0.48)] backdrop-blur-2xl transition-transform duration-200">
+        <div
+          aria-hidden={hideMobileMiniPlayer}
+          className={cn(
+            "pointer-events-none fixed inset-x-0 bottom-[calc(86px+env(safe-area-inset-bottom))] z-30 flex justify-center px-3 transition-all duration-200 md:hidden",
+            hideMobileMiniPlayer
+              ? "translate-y-4 opacity-0"
+              : "translate-y-0 opacity-100"
+          )}
+        >
+          <div
+            className={cn(
+              "relative flex h-[60px] w-full max-w-[420px] items-center gap-1 overflow-hidden rounded-[18px] border-0 bg-encore-elevated px-2 shadow-[0_14px_36px_rgba(0,0,0,0.48)] backdrop-blur-2xl transition-transform duration-200",
+              hideMobileMiniPlayer ? "pointer-events-none" : "pointer-events-auto"
+            )}
+          >
             <button
               type="button"
               onClick={() =>

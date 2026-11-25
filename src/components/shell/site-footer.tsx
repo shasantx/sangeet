@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Github } from "lucide-react";
+import { SangeetLogo } from "@/components/ui/sangeet-logo";
 
 export function SiteFooter({ compact = false }: { compact?: boolean }) {
   if (compact) {
@@ -7,7 +8,10 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
       <footer className="mt-10 border-t border-encore-hairline px-4 py-6 text-xs text-encore-muted sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <span className="font-medium text-encore-text">Sangeet</span>
+            <span className="inline-flex items-center gap-1.5 font-medium text-encore-text">
+              <SangeetLogo className="h-4 w-4" />
+              Sangeet
+            </span>
             <span>•</span>
             <span>
               Crafted by{" "}
@@ -50,9 +54,7 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
           {/* Brand + Signature */}
           <div className="space-y-3">
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <span className="btn-cobalt flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold text-white">
-                S
-              </span>
+              <SangeetLogo className="h-8 w-8" />
               <span className="text-lg font-semibold tracking-tight text-encore-text">
                 Sangeet
               </span>

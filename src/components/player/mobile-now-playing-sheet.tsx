@@ -29,6 +29,7 @@ import { usePlatform } from "@/lib/platform";
 import { useClickOutside } from "@/lib/use-click-outside";
 import { getActiveLyricIndex } from "@/lib/lyrics-parser";
 import { TrackArtwork } from "@/components/music/track-artwork";
+import { SangeetLogo } from "@/components/ui/sangeet-logo";
 import { cn, formatTime, pickHeroColor } from "@/lib/utils";
 
 const SLEEP_OPTIONS = [
@@ -41,6 +42,8 @@ const SLEEP_OPTIONS = [
 
 type SheetTab = "player" | "lyrics" | "queue";
 type DesktopRightTab = "lyrics" | "queue";
+type GestureAxis = "none" | "vertical" | "horizontal";
+type SwipePhase = "idle" | "exiting" | "entering";
 
 export function MobileNowPlayingSheet() {
   const { isWeb } = usePlatform();
@@ -55,19 +58,27 @@ export function MobileNowPlayingSheet() {
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [swipeX, setSwipeX] = useState(0);
+  const [isSwipingX, setIsSwipingX] = useState(false);
+  const [swipePhase, setSwipePhase] = useState<SwipePhase>("idle");
 
   const activeLyricRef = useRef<HTMLButtonElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const sleepWrapRef = useRef<HTMLDivElement | null>(null);
   const dismissTimerRef = useRef<number | null>(null);
+  const swipeTimerRef = useRef<number | null>(null);
+  const swipeRafRef = useRef<number | null>(null);
+  const gestureAxisRef = useRef<GestureAxis>("none");
   const dragRef = useRef({
     active: false,
-    engaged: false,
-    startY: 0,
     startX: 0,
+    startY: 0,
     startTime: 0,
+    lastX: 0,
     lastY: 0,
-    fromHeader: false
+    fromHeader: false,
+    canSwipeHorizontal: false,
+    innerScrollEl: null as HTMLElement | null
   });
 
   const lyrics = useLyricsStore((s) => s.lyrics);
@@ -108,12 +119,27 @@ export function MobileNowPlayingSheet() {
   const closeSleep = useCallback(() => setSleepMenuOpen(false), []);
   useClickOutside(sleepWrapRef, sleepMenuOpen, closeSleep);
 
+  const clearSwipeTimers = useCallback(() => {
+    if (swipeTimerRef.current !== null) {
+      window.clearTimeout(swipeTimerRef.current);
+      swipeTimerRef.current = null;
+    }
+    if (swipeRafRef.current !== null) {
+      window.cancelAnimationFrame(swipeRafRef.current);
+      swipeRafRef.current = null;
+    }
+  }, []);
+
   const dismissAnimated = useCallback(() => {
     if (dismissTimerRef.current !== null) {
       window.clearTimeout(dismissTimerRef.current);
     }
+    clearSwipeTimers();
     setSleepMenuOpen(false);
     setIsDragging(false);
+    setIsSwipingX(false);
+    setSwipePhase("idle");
+    setSwipeX(0);
     setIsClosing(true);
     dismissTimerRef.current = window.setTimeout(() => {
       setOpen(false);
@@ -122,15 +148,16 @@ export function MobileNowPlayingSheet() {
       setDragY(0);
       dismissTimerRef.current = null;
     }, 260);
-  }, []);
+  }, [clearSwipeTimers]);
 
   useEffect(() => {
     return () => {
       if (dismissTimerRef.current !== null) {
         window.clearTimeout(dismissTimerRef.current);
       }
+      clearSwipeTimers();
     };
-  }, []);
+  }, [clearSwipeTimers]);
 
   useEffect(() => {
     if (!open) {
@@ -138,6 +165,10 @@ export function MobileNowPlayingSheet() {
       setDragY(0);
       setIsDragging(false);
       setIsClosing(false);
+      setSwipeX(0);
+      setIsSwipingX(false);
+      setSwipePhase("idle");
+      gestureAxisRef.current = "none";
       return;
     }
     const raf = window.requestAnimationFrame(() => setEntered(true));
@@ -157,8 +188,11 @@ export function MobileNowPlayingSheet() {
         window.clearTimeout(dismissTimerRef.current);
         dismissTimerRef.current = null;
       }
+      clearSwipeTimers();
       setIsClosing(false);
       setDragY(0);
+      setSwipeX(0);
+      setSwipePhase("idle");
       setOpen(true);
     };
     const onKeyDown = (e: KeyboardEvent) => {
@@ -175,7 +209,7 @@ export function MobileNowPlayingSheet() {
       window.removeEventListener("sangeet:open-mobile-player", onOpen);
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [dismissAnimated]);
+  }, [dismissAnimated, clearSwipeTimers]);
 
   const activeLyricIdx = getActiveLyricIndex(lyrics?.synced ?? [], currentTime);
 
@@ -188,88 +222,161 @@ export function MobileNowPlayingSheet() {
     }
   }, [activeLyricIdx, open, tab, desktopRightTab]);
 
-  const startDrag = useCallback(
+  const commitTrackSwipe = useCallback(
+    (direction: "next" | "prev") => {
+      clearSwipeTimers();
+      setIsSwipingX(false);
+      setSwipePhase("exiting");
+      setSwipeX(direction === "next" ? -320 : 320);
+
+      swipeTimerRef.current = window.setTimeout(() => {
+        if (direction === "next") {
+          void nextTrack();
+        } else {
+          prevTrack();
+        }
+        setSwipePhase("entering");
+        setSwipeX(direction === "next" ? 44 : -44);
+
+        swipeRafRef.current = window.requestAnimationFrame(() => {
+          swipeRafRef.current = window.requestAnimationFrame(() => {
+            setSwipePhase("idle");
+            setSwipeX(0);
+            swipeRafRef.current = null;
+          });
+        });
+        swipeTimerRef.current = null;
+      }, 180);
+    },
+    [clearSwipeTimers, nextTrack, prevTrack]
+  );
+
+  const startGesture = useCallback(
     (
       clientX: number,
       clientY: number,
       target: EventTarget | null,
       fromHeader: boolean
     ) => {
-      if (isClosing) return;
+      if (isClosing || swipePhase !== "idle") return;
       if (
         target instanceof HTMLElement &&
         (target.closest('input[type="range"]') ||
-          target.closest("[data-sleep-popover]"))
+          target.closest("[data-sleep-popover]") ||
+          (target.closest("button") && !target.closest("[data-artwork-stage]")))
       ) {
         return;
       }
-      if (!fromHeader && scrollRef.current && scrollRef.current.scrollTop > 0) {
-        return;
-      }
+
+      const innerScrollEl =
+        target instanceof HTMLElement
+          ? target.closest<HTMLElement>("[data-panel-scroll]")
+          : null;
+      const inRightPanel =
+        target instanceof HTMLElement &&
+        Boolean(target.closest("[data-right-panel]"));
+      const inPlayerArea =
+        target instanceof HTMLElement &&
+        Boolean(target.closest("[data-artwork-stage], [data-player-column]"));
+      const canSwipeHorizontal =
+        !fromHeader && !inRightPanel && (tab === "player" || inPlayerArea);
+
+      gestureAxisRef.current = "none";
       dragRef.current = {
         active: true,
-        engaged: false,
-        startY: clientY,
         startX: clientX,
+        startY: clientY,
         startTime: performance.now(),
+        lastX: 0,
         lastY: 0,
-        fromHeader
+        fromHeader,
+        canSwipeHorizontal,
+        innerScrollEl
       };
     },
-    [isClosing]
+    [isClosing, swipePhase, tab]
   );
 
-  const moveDrag = useCallback((clientX: number, clientY: number) => {
+  const moveGesture = useCallback((clientX: number, clientY: number) => {
     const state = dragRef.current;
     if (!state.active) return;
-    const deltaY = clientY - state.startY;
-    const deltaX = clientX - state.startX;
+    const dx = clientX - state.startX;
+    const dy = clientY - state.startY;
 
-    if (!state.engaged) {
-      if (deltaY > 6 && Math.abs(deltaY) > Math.abs(deltaX)) {
-        if (
-          !state.fromHeader &&
-          scrollRef.current &&
-          scrollRef.current.scrollTop > 0
-        ) {
+    if (gestureAxisRef.current === "none") {
+      if (Math.abs(dx) <= 10 && Math.abs(dy) <= 10) return;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (!state.canSwipeHorizontal) {
           state.active = false;
           return;
         }
-        state.engaged = true;
-        setIsDragging(true);
-        state.lastY = deltaY;
-        setDragY(deltaY);
-      } else if (deltaY < -6 || Math.abs(deltaX) > 14) {
-        state.active = false;
+        gestureAxisRef.current = "horizontal";
+        setIsSwipingX(true);
+      } else {
+        const atTop =
+          state.fromHeader ||
+          ((!scrollRef.current || scrollRef.current.scrollTop <= 0) &&
+            (!state.innerScrollEl || state.innerScrollEl.scrollTop <= 0));
+        if (dy > 0 && atTop) {
+          gestureAxisRef.current = "vertical";
+          setIsDragging(true);
+        } else {
+          state.active = false;
+          return;
+        }
+      }
+    }
+
+    if (gestureAxisRef.current === "horizontal") {
+      const clampedX = Math.max(-220, Math.min(220, dx));
+      state.lastX = clampedX;
+      setSwipeX(clampedX);
+      return;
+    }
+
+    if (gestureAxisRef.current === "vertical") {
+      const clampedY = Math.max(0, dy);
+      state.lastY = clampedY;
+      setDragY(clampedY);
+    }
+  }, []);
+
+  const endGesture = useCallback(() => {
+    const state = dragRef.current;
+    if (!state.active) return;
+
+    const axis = gestureAxisRef.current;
+    const finalX = state.lastX;
+    const finalY = state.lastY;
+    const elapsed = Math.max(1, performance.now() - state.startTime);
+
+    state.active = false;
+    gestureAxisRef.current = "none";
+
+    if (axis === "horizontal") {
+      const vx = finalX / elapsed;
+      if (finalX < -72 || (finalX < -28 && vx < -0.55)) {
+        commitTrackSwipe("next");
+      } else if (finalX > 72 || (finalX > 28 && vx > 0.55)) {
+        commitTrackSwipe("prev");
+      } else {
+        setIsSwipingX(false);
+        setSwipeX(0);
       }
       return;
     }
 
-    const clampedY = Math.max(0, deltaY);
-    state.lastY = clampedY;
-    setDragY(clampedY);
-  }, []);
-
-  const endDrag = useCallback(() => {
-    const state = dragRef.current;
-    if (!state.active) return;
-    const wasEngaged = state.engaged;
-    const finalY = state.lastY;
-    const elapsed = Math.max(1, performance.now() - state.startTime);
-    const velocity = finalY / elapsed;
-
-    state.active = false;
-    state.engaged = false;
-
-    if (!wasEngaged) return;
-
-    if (finalY > 105 || velocity > 0.55) {
-      dismissAnimated();
-    } else {
-      setIsDragging(false);
-      setDragY(0);
+    if (axis === "vertical") {
+      const vy = finalY / elapsed;
+      if (finalY > 105 || vy > 0.55) {
+        dismissAnimated();
+      } else {
+        setIsDragging(false);
+        setDragY(0);
+      }
     }
-  }, [dismissAnimated]);
+  }, [commitTrackSwipe, dismissAnimated]);
 
   if (!open || !currentTrack) return null;
 
@@ -286,6 +393,7 @@ export function MobileNowPlayingSheet() {
 
   const safeDuration = duration > 0 ? duration : currentTrack.duration || 0;
   const displayedTime = scrubTime !== null ? scrubTime : currentTime;
+  const remainingTime = Math.max(0, safeDuration - displayedTime);
   const progressPct =
     safeDuration > 0 ? Math.min(100, (displayedTime / safeDuration) * 100) : 0;
   const bg = pickHeroColor(currentTrack.id);
@@ -302,7 +410,7 @@ export function MobileNowPlayingSheet() {
 
   const progress = Math.min(1, dragY / 320);
   const blurPx = isClosing || !entered ? 0 : Math.round((1 - progress) * 28);
-  const veilAlpha = isClosing || !entered ? 0 : 0.72 * (1 - progress);
+  const veilAlpha = isClosing || !entered ? 0 : 0.74 * (1 - progress);
 
   const sheetTransform = isClosing
     ? "translate3d(0, 100%, 0) scale(0.92)"
@@ -321,6 +429,22 @@ export function MobileNowPlayingSheet() {
     : !entered
       ? 0.6
       : Number((1 - progress * 0.25).toFixed(3));
+
+  const artworkTransition =
+    isSwipingX || swipePhase === "entering"
+      ? "none"
+      : swipePhase === "exiting"
+        ? "transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease"
+        : "transform 280ms cubic-bezier(0.22, 1, 0.36, 1), opacity 240ms ease";
+  const artworkOpacity =
+    swipePhase === "exiting" || swipePhase === "entering"
+      ? 0
+      : Number(Math.max(0.45, 1 - Math.abs(swipeX) / 360).toFixed(3));
+  const artworkTransform = `translate3d(${swipeX}px, 0, 0) rotate(${(swipeX * 0.02).toFixed(2)}deg)`;
+  const swipeIndicatorOpacity = Math.min(
+    1,
+    Math.max(0, (Math.abs(swipeX) - 24) / 48)
+  );
 
   const handleDownload = async () => {
     if (isWeb) {
@@ -362,7 +486,7 @@ export function MobileNowPlayingSheet() {
         style={{
           backdropFilter: `blur(${blurPx}px)`,
           WebkitBackdropFilter: `blur(${blurPx}px)`,
-          backgroundColor: `rgba(7, 8, 12, ${veilAlpha.toFixed(2)})`,
+          backgroundColor: `rgba(5, 6, 11, ${veilAlpha.toFixed(2)})`,
           transition: isDragging
             ? "none"
             : "backdrop-filter 260ms ease, -webkit-backdrop-filter 260ms ease, background-color 260ms ease"
@@ -375,25 +499,29 @@ export function MobileNowPlayingSheet() {
         aria-label="Now Playing"
         onTouchStart={(e) => {
           const t = e.touches[0];
-          if (t) startDrag(t.clientX, t.clientY, e.target, false);
+          if (t) startGesture(t.clientX, t.clientY, e.target, false);
         }}
         onTouchMove={(e) => {
           const t = e.touches[0];
-          if (t) moveDrag(t.clientX, t.clientY);
+          if (t) moveGesture(t.clientX, t.clientY);
         }}
-        onTouchEnd={endDrag}
-        onTouchCancel={endDrag}
+        onTouchEnd={endGesture}
+        onTouchCancel={endGesture}
+        onPointerDown={(e) => {
+          if (e.pointerType === "touch" || e.button !== 0) return;
+          startGesture(e.clientX, e.clientY, e.target, false);
+        }}
         onPointerMove={(e) => {
           if (e.pointerType === "touch") return;
-          moveDrag(e.clientX, e.clientY);
+          moveGesture(e.clientX, e.clientY);
         }}
         onPointerUp={(e) => {
           if (e.pointerType === "touch") return;
-          endDrag();
+          endGesture();
         }}
         onPointerCancel={(e) => {
           if (e.pointerType === "touch") return;
-          endDrag();
+          endGesture();
         }}
         className="fixed inset-0 z-[85] flex flex-col overflow-hidden text-white will-change-transform"
         style={{
@@ -403,10 +531,10 @@ export function MobileNowPlayingSheet() {
           transition: isDragging
             ? "none"
             : "transform 280ms cubic-bezier(0.22, 1, 0.36, 1), border-radius 280ms ease, opacity 260ms ease",
-          backgroundColor: "#07080c"
+          backgroundColor: "#05060b"
         }}
       >
-        {/* Ambient blurred artwork backdrop */}
+        {/* Deep atmospheric radial cobalt-indigo-obsidian backdrop */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -416,12 +544,18 @@ export function MobileNowPlayingSheet() {
             trackId={currentTrack.id}
             alt=""
             loading="eager"
-            className="h-full w-full scale-125 opacity-25 blur-3xl saturate-150"
+            className="h-full w-full scale-125 opacity-[0.18] blur-3xl saturate-150"
           />
           <div
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(180deg, ${bg}cc 0%, rgba(13, 16, 28, 0.9) 52%, rgba(7, 8, 12, 0.98) 100%)`
+              background: `radial-gradient(ellipse 88% 62% at 50% 20%, rgba(23, 32, 82, 0.88) 0%, rgba(10, 12, 22, 0.94) 55%, rgba(5, 6, 11, 0.99) 100%)`
+            }}
+          />
+          <div
+            className="absolute inset-0 opacity-35"
+            style={{
+              background: `radial-gradient(circle at 50% 24%, ${bg}55 0%, transparent 62%)`
             }}
           />
         </div>
@@ -429,30 +563,31 @@ export function MobileNowPlayingSheet() {
         {/* Drag Pill + Balanced Header (NO duplicate Download button) */}
         <div
           onPointerDown={(e) => {
-            if (e.pointerType === "touch") return;
-            startDrag(e.clientX, e.clientY, e.target, true);
+            if (e.pointerType === "touch" || e.button !== 0) return;
+            e.stopPropagation();
+            startGesture(e.clientX, e.clientY, e.target, true);
           }}
           onTouchStart={(e) => {
             e.stopPropagation();
             const t = e.touches[0];
-            if (t) startDrag(t.clientX, t.clientY, e.target, true);
+            if (t) startGesture(t.clientX, t.clientY, e.target, true);
           }}
           className="relative z-10 shrink-0 select-none px-4 pb-2 pt-[max(12px,env(safe-area-inset-top))] sm:px-6"
         >
-          <div className="mx-auto mb-2.5 h-1 w-10 rounded-full bg-white/30" />
+          <div className="mx-auto mb-2.5 h-1 w-10 rounded-full bg-white/25" />
 
           <div className="flex items-center justify-between">
             <button
               type="button"
               onClick={dismissAnimated}
               aria-label="Close Now Playing"
-              className="flex h-11 w-11 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/[0.1] hover:text-white active:scale-90"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/[0.08] hover:text-white active:scale-90"
             >
               <ChevronDown className="h-6 w-6" />
             </button>
 
             {/* Centered Player | Lyrics | Queue pill on mobile/tablet (< lg) */}
-            <div className="flex items-center gap-1 rounded-full bg-white/[0.08] p-1 text-xs font-medium backdrop-blur-xl lg:hidden">
+            <div className="flex items-center gap-1 rounded-full bg-white/[0.07] p-1 text-xs font-medium backdrop-blur-xl lg:hidden">
               {(["player", "lyrics", "queue"] as const).map((t) => (
                 <button
                   key={t}
@@ -464,10 +599,10 @@ export function MobileNowPlayingSheet() {
                     }
                   }}
                   className={cn(
-                    "min-h-[40px] rounded-full px-3.5 capitalize transition-colors duration-150",
+                    "min-h-[38px] rounded-full px-3.5 capitalize transition-colors duration-150",
                     tab === t
-                      ? "bg-encore-accent font-semibold text-white"
-                      : "text-white/75 hover:text-white"
+                      ? "bg-white/[0.16] font-semibold text-white"
+                      : "text-white/65 hover:text-white"
                   )}
                 >
                   {t}
@@ -475,10 +610,13 @@ export function MobileNowPlayingSheet() {
               ))}
             </div>
 
-            {/* Subtle centered title on wide viewports (lg+) */}
-            <span className="hidden text-xs font-semibold uppercase tracking-widest text-white/60 lg:inline">
-              Now Playing
-            </span>
+            {/* Subtle brand mark + title on wide viewports (lg+) */}
+            <div className="hidden items-center gap-2.5 lg:flex">
+              <SangeetLogo className="h-8 w-8" />
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">
+                Now Playing
+              </span>
+            </div>
 
             {/* Invisible right spacer for dead-center alignment */}
             <div aria-hidden="true" className="h-11 w-11 shrink-0" />
@@ -492,55 +630,126 @@ export function MobileNowPlayingSheet() {
         >
           {/* Left / Player Column */}
           <div
+            data-player-column
             className={cn(
               "mx-auto flex w-full max-w-md flex-1 flex-col justify-between py-2 lg:mx-0 lg:max-w-none lg:flex-none",
               tab !== "player" && "hidden lg:flex"
             )}
           >
-            {/* Artwork — borderless with soft depth shadow */}
-            <div className="mx-auto aspect-square w-full max-w-[300px] overflow-hidden rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.68)] sm:max-w-[350px] lg:max-w-[370px]">
-              <TrackArtwork
-                src={currentTrack.thumbnail}
-                trackId={currentTrack.id}
-                alt={currentTrack.title}
-                loading="eager"
-                iconClassName="h-12 w-12"
-              />
+            {/* Swipeable Artwork Stage with Soft Ambient Aura & Directional Indicator */}
+            <div
+              data-artwork-stage
+              onDragStart={(e) => e.preventDefault()}
+              className="relative mx-auto w-full max-w-[300px] cursor-grab select-none touch-pan-y active:cursor-grabbing sm:max-w-[350px] lg:max-w-[376px]"
+            >
+              {/* Soft ambient aura glow behind the album artwork */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -inset-5 -z-10 overflow-hidden rounded-[36px] blur-3xl saturate-150"
+                style={{
+                  transform: `translate3d(${(swipeX * 0.45).toFixed(1)}px, 10px, 0) scale(0.94)`,
+                  opacity:
+                    swipePhase === "exiting" || swipePhase === "entering"
+                      ? 0.1
+                      : Number((0.5 * artworkOpacity).toFixed(3)),
+                  transition: artworkTransition
+                }}
+              >
+                <TrackArtwork
+                  src={currentTrack.thumbnail}
+                  trackId={currentTrack.id}
+                  alt=""
+                  loading="eager"
+                  className="h-full w-full"
+                />
+              </div>
+
+              {/* Floating directional swipe indicators */}
+              {swipeX < -24 && swipePhase !== "entering" && (
+                <div
+                  aria-hidden="true"
+                  className={cn(
+                    "pointer-events-none absolute right-2 top-1/2 z-20 flex -translate-y-1/2 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.48)] backdrop-blur-xl transition-colors duration-150",
+                    swipeX <= -72
+                      ? "bg-[#1d55ff]/90 text-white"
+                      : "bg-[#0c1020]/85 text-white/90"
+                  )}
+                  style={{ opacity: swipeIndicatorOpacity }}
+                >
+                  <span>Next</span>
+                  <SkipForward className="h-3.5 w-3.5 fill-current" />
+                </div>
+              )}
+
+              {swipeX > 24 && swipePhase !== "entering" && (
+                <div
+                  aria-hidden="true"
+                  className={cn(
+                    "pointer-events-none absolute left-2 top-1/2 z-20 flex -translate-y-1/2 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.48)] backdrop-blur-xl transition-colors duration-150",
+                    swipeX >= 72
+                      ? "bg-[#1d55ff]/90 text-white"
+                      : "bg-[#0c1020]/85 text-white/90"
+                  )}
+                  style={{ opacity: swipeIndicatorOpacity }}
+                >
+                  <SkipBack className="h-3.5 w-3.5 fill-current" />
+                  <span>Previous</span>
+                </div>
+              )}
+
+              {/* Centered rounded artwork — zero harsh border */}
+              <div
+                className="aspect-square w-full overflow-hidden rounded-[24px] shadow-[0_26px_70px_rgba(0,0,0,0.72)] will-change-transform"
+                style={{
+                  transform: artworkTransform,
+                  opacity: artworkOpacity,
+                  transition: artworkTransition
+                }}
+              >
+                <TrackArtwork
+                  src={currentTrack.thumbnail}
+                  trackId={currentTrack.id}
+                  alt={currentTrack.title}
+                  loading="eager"
+                  className="pointer-events-none h-full w-full"
+                  iconClassName="h-12 w-12"
+                />
+              </div>
             </div>
 
             {/* Track Info & Like */}
-            <div className="mt-5 flex items-center justify-between gap-3">
+            <div className="mt-6 flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="truncate text-xl font-semibold text-white sm:text-2xl">
+                <h2 className="truncate text-[22px] font-bold tracking-[-0.02em] text-white sm:text-2xl">
                   {currentTrack.title}
                 </h2>
-                <p className="truncate text-sm text-white/70">
+                <p className="mt-0.5 truncate text-sm font-medium text-white/65">
                   {currentTrack.artist}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => toggleLike(currentTrack)}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.06] transition-colors hover:bg-white/[0.12] active:scale-90"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/[0.08] active:scale-90"
                 aria-label="Toggle Like"
               >
                 <Heart
                   className={cn(
-                    "h-5 w-5",
+                    "h-5 w-5 transition-colors",
                     isLiked
-                      ? "fill-encore-accent text-encore-accent"
-                      : "text-white/80"
+                      ? "fill-[#7eabff] text-[#7eabff]"
+                      : "text-white/75 hover:text-white"
                   )}
                 />
               </button>
             </div>
 
-            {/* Drag-safe Seekbar */}
+            {/* Slim Drag-safe Seekbar with Elapsed & Remaining Time */}
             <div className="mt-4">
-              <div className="relative flex h-6 items-center">
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/20">
+              <div className="group relative flex h-6 items-center">
+                <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.18] transition-[height] duration-150 group-hover:h-1.5">
                   <div
-                    className="h-full rounded-full bg-encore-accent"
+                    className="h-full rounded-full bg-white transition-colors group-hover:bg-[#7eabff]"
                     style={{ width: `${progressPct}%` }}
                   />
                 </div>
@@ -566,13 +775,13 @@ export function MobileNowPlayingSheet() {
                   className="encore-slider absolute inset-0 h-full w-full"
                 />
               </div>
-              <div className="mt-1 flex justify-between font-mono text-xs tabular-nums text-white/65">
+              <div className="mt-1 flex justify-between font-mono text-[11px] font-medium tabular-nums text-white/55">
                 <span>{formatTime(displayedTime)}</span>
-                <span>{formatTime(safeDuration)}</span>
+                <span>-{formatTime(remainingTime)}</span>
               </div>
             </div>
 
-            {/* Main Transport Controls */}
+            {/* Crisp Transport Controls — zero messy outer halos */}
             <div className="mt-3 flex items-center justify-between">
               <button
                 type="button"
@@ -580,7 +789,7 @@ export function MobileNowPlayingSheet() {
                 aria-label="Shuffle"
                 className={cn(
                   "flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/[0.08] active:scale-90",
-                  shuffle ? "text-[#93c5fd]" : "text-white/75"
+                  shuffle ? "text-[#7eabff]" : "text-white/65 hover:text-white"
                 )}
               >
                 <Shuffle className="h-5 w-5" />
@@ -589,7 +798,7 @@ export function MobileNowPlayingSheet() {
                 type="button"
                 onClick={prevTrack}
                 aria-label="Previous"
-                className="flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/[0.08] active:scale-90"
+                className="flex h-12 w-12 items-center justify-center rounded-full text-white transition-colors hover:bg-white/[0.08] active:scale-90"
               >
                 <SkipBack className="h-7 w-7 fill-current" />
               </button>
@@ -597,7 +806,7 @@ export function MobileNowPlayingSheet() {
                 type="button"
                 onClick={togglePlay}
                 aria-label={isPlaying ? "Pause" : "Play"}
-                className="btn-cobalt flex h-16 w-16 items-center justify-center rounded-full text-white transition-transform active:scale-95"
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#07080c] shadow-[0_8px_24px_rgba(0,0,0,0.38)] transition-transform hover:scale-[1.03] active:scale-95"
               >
                 {isBuffering ? (
                   <Loader2 className="h-7 w-7 animate-spin" />
@@ -611,7 +820,7 @@ export function MobileNowPlayingSheet() {
                 type="button"
                 onClick={() => void nextTrack()}
                 aria-label="Next"
-                className="flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/[0.08] active:scale-90"
+                className="flex h-12 w-12 items-center justify-center rounded-full text-white transition-colors hover:bg-white/[0.08] active:scale-90"
               >
                 <SkipForward className="h-7 w-7 fill-current" />
               </button>
@@ -621,7 +830,9 @@ export function MobileNowPlayingSheet() {
                 aria-label={`Repeat: ${repeat}`}
                 className={cn(
                   "flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/[0.08] active:scale-90",
-                  repeat !== "off" ? "text-[#93c5fd]" : "text-white/75"
+                  repeat !== "off"
+                    ? "text-[#7eabff]"
+                    : "text-white/65 hover:text-white"
                 )}
               >
                 {repeat === "one" ? (
@@ -632,8 +843,21 @@ export function MobileNowPlayingSheet() {
               </button>
             </div>
 
-            {/* Clean borderless utility strip: Full Sleep Timer Popover & ONE Single Download */}
-            <div className="mt-4 flex items-center justify-center gap-3">
+            {/* Clean borderless utility strip: Sleek Lyrics Pill (mobile), Full Sleep Timer Popover & ONE Single Download */}
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setTab("lyrics");
+                  setDesktopRightTab("lyrics");
+                }}
+                aria-label="Open Lyrics"
+                className="inline-flex min-h-[42px] items-center gap-2 rounded-full bg-white/[0.07] px-4 py-2 text-xs font-medium text-white/85 transition-colors hover:bg-white/[0.13] active:scale-95 lg:hidden"
+              >
+                <Mic2 className="h-3.5 w-3.5 text-[#7eabff]" />
+                <span>Lyrics</span>
+              </button>
+
               <div ref={sleepWrapRef} className="relative">
                 <button
                   type="button"
@@ -641,10 +865,10 @@ export function MobileNowPlayingSheet() {
                   aria-label="Sleep timer"
                   aria-expanded={sleepMenuOpen}
                   className={cn(
-                    "inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-colors",
+                    "inline-flex min-h-[42px] items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-colors",
                     hasSleepTimer
                       ? "bg-[#3b82f6]/25 text-[#93c5fd]"
-                      : "bg-white/[0.07] text-white/85 hover:bg-white/[0.12]"
+                      : "bg-white/[0.07] text-white/85 hover:bg-white/[0.13]"
                   )}
                 >
                   <Moon className="h-3.5 w-3.5" />
@@ -656,7 +880,7 @@ export function MobileNowPlayingSheet() {
                 {sleepMenuOpen && (
                   <div
                     data-sleep-popover
-                    className="absolute bottom-14 left-1/2 z-50 w-48 -translate-x-1/2 rounded-2xl bg-[#131726]/95 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-2xl"
+                    className="absolute bottom-14 left-1/2 z-50 w-48 -translate-x-1/2 rounded-2xl bg-[#101424]/95 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.68)] backdrop-blur-2xl"
                   >
                     <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/50">
                       Sleep timer
@@ -672,7 +896,7 @@ export function MobileNowPlayingSheet() {
                     >
                       <span>End of track</span>
                       {sleepAtTrackEnd && (
-                        <Check className="h-3.5 w-3.5 text-[#93c5fd]" />
+                        <Check className="h-3.5 w-3.5 text-[#7eabff]" />
                       )}
                     </button>
                     {SLEEP_OPTIONS.map((opt) => (
@@ -696,7 +920,7 @@ export function MobileNowPlayingSheet() {
                       >
                         <span>{opt.label}</span>
                         {opt.minutes === null && !hasSleepTimer && (
-                          <Check className="h-3.5 w-3.5 text-[#93c5fd]" />
+                          <Check className="h-3.5 w-3.5 text-[#7eabff]" />
                         )}
                       </button>
                     ))}
@@ -710,22 +934,22 @@ export function MobileNowPlayingSheet() {
                 onClick={() => void handleDownload()}
                 aria-label="Download track"
                 className={cn(
-                  "inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-colors disabled:opacity-60",
+                  "inline-flex min-h-[42px] items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-colors disabled:opacity-60",
                   isOfflineSaved
                     ? "bg-[#3b82f6]/25 text-[#93c5fd]"
-                    : "bg-white/[0.07] text-white/85 hover:bg-white/[0.12]"
+                    : "bg-white/[0.07] text-white/85 hover:bg-white/[0.13]"
                 )}
               >
                 {isDownloading ? (
                   <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#93c5fd]" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#7eabff]" />
                     <span className="font-mono tabular-nums">
                       {activeDownload ? `${activeDownload.progress}%` : "Downloading"}
                     </span>
                   </>
                 ) : isOfflineSaved ? (
                   <>
-                    <Check className="h-3.5 w-3.5 text-[#93c5fd]" />
+                    <Check className="h-3.5 w-3.5 text-[#7eabff]" />
                     <span>Saved</span>
                   </>
                 ) : (
@@ -738,8 +962,9 @@ export function MobileNowPlayingSheet() {
             </div>
           </div>
 
-          {/* Right Column (Lyrics / Queue on desktop lg+, or active tab on mobile) */}
+          {/* Right Column (Synced Lyrics / Queue on desktop lg+, or active tab on mobile) */}
           <div
+            data-right-panel
             className={cn(
               "mx-auto flex w-full max-w-md flex-col overflow-hidden lg:mx-0 lg:h-full lg:max-h-[78vh] lg:max-w-none",
               tab === "player" ? "hidden lg:flex" : "flex"
@@ -747,15 +972,15 @@ export function MobileNowPlayingSheet() {
           >
             {/* Desktop Lyrics | Up Next Switcher */}
             <div className="mb-4 hidden lg:flex">
-              <div className="inline-flex items-center gap-1 rounded-full bg-white/[0.08] p-1 text-xs font-medium backdrop-blur-xl">
+              <div className="inline-flex items-center gap-1 rounded-full bg-white/[0.07] p-1 text-xs font-medium backdrop-blur-xl">
                 <button
                   type="button"
                   onClick={() => setDesktopRightTab("lyrics")}
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full px-4 py-2 transition-colors",
                     desktopRightTab === "lyrics"
-                      ? "bg-encore-accent font-semibold text-white"
-                      : "text-white/70 hover:text-white"
+                      ? "bg-white/[0.16] font-semibold text-white"
+                      : "text-white/65 hover:text-white"
                   )}
                 >
                   <Mic2 className="h-3.5 w-3.5" />
@@ -767,8 +992,8 @@ export function MobileNowPlayingSheet() {
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full px-4 py-2 transition-colors",
                     desktopRightTab === "queue"
-                      ? "bg-encore-accent font-semibold text-white"
-                      : "text-white/70 hover:text-white"
+                      ? "bg-white/[0.16] font-semibold text-white"
+                      : "text-white/65 hover:text-white"
                   )}
                 >
                   <ListMusic className="h-3.5 w-3.5" />
@@ -778,10 +1003,13 @@ export function MobileNowPlayingSheet() {
             </div>
 
             {/* Lyrics / Queue Content */}
-            <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            <div
+              data-panel-scroll
+              className="min-h-0 flex-1 overflow-y-auto pr-1 sm:pr-2"
+            >
               {(desktopRightTab === "lyrics" && tab !== "queue") ||
               tab === "lyrics" ? (
-                <div className="space-y-3 py-4">
+                <div className="space-y-5 py-6 sm:py-8">
                   {lyrics?.synced && lyrics.synced.length > 0 ? (
                     lyrics.synced.map((line, idx) => (
                       <button
@@ -790,25 +1018,25 @@ export function MobileNowPlayingSheet() {
                         type="button"
                         onClick={() => requestSeek(line.time)}
                         className={cn(
-                          "block min-h-[44px] w-full py-1 text-left text-xl font-bold leading-snug transition-all duration-200 sm:text-2xl",
+                          "block min-h-[44px] w-full origin-left py-0.5 text-left text-[22px] font-bold leading-[1.28] tracking-[-0.02em] transition-all duration-300 sm:text-[26px]",
                           idx === activeLyricIdx
-                            ? "text-white drop-shadow-[0_0_20px_rgba(147,197,253,0.45)]"
+                            ? "scale-[1.01] bg-gradient-to-r from-white via-white to-[#7eabff] bg-clip-text text-transparent"
                             : idx < activeLyricIdx
-                              ? "text-white/35"
-                              : "text-white/65 hover:text-white/90"
+                              ? "text-white/25 hover:text-white/60"
+                              : "text-white/40 hover:text-white/70"
                         )}
                       >
                         {line.text}
                       </button>
                     ))
                   ) : lyrics?.plain ? (
-                    <pre className="whitespace-pre-wrap font-sans text-base font-medium leading-relaxed text-white/90">
+                    <pre className="whitespace-pre-wrap font-sans text-lg font-semibold leading-relaxed text-white/85">
                       {lyrics.plain}
                     </pre>
                   ) : (
-                    <div className="flex flex-col items-center py-20 text-white/65">
-                      <Mic2 className="mb-3 h-8 w-8 opacity-50" />
-                      <p className="text-sm">
+                    <div className="flex flex-col items-center py-20 text-white/55">
+                      <Mic2 className="mb-3 h-8 w-8 opacity-45" />
+                      <p className="text-sm font-medium">
                         No lyrics available for this track.
                       </p>
                     </div>
@@ -816,13 +1044,13 @@ export function MobileNowPlayingSheet() {
                 </div>
               ) : (
                 <div className="space-y-2 py-4">
-                  <p className="text-xs font-medium text-white/65 lg:hidden">
+                  <p className="text-xs font-medium text-white/60 lg:hidden">
                     Next up ({queue.length})
                   </p>
                   {queue.length === 0 ? (
-                    <div className="flex flex-col items-center py-16 text-white/65">
-                      <ListMusic className="mb-3 h-8 w-8 opacity-50" />
-                      <p className="text-sm">Queue is empty.</p>
+                    <div className="flex flex-col items-center py-16 text-white/55">
+                      <ListMusic className="mb-3 h-8 w-8 opacity-45" />
+                      <p className="text-sm font-medium">Queue is empty.</p>
                     </div>
                   ) : (
                     queue.map((t, idx) => (
@@ -845,7 +1073,7 @@ export function MobileNowPlayingSheet() {
                             <p className="truncate text-sm font-medium text-white">
                               {t.title}
                             </p>
-                            <p className="truncate text-xs text-white/65">
+                            <p className="truncate text-xs text-white/60">
                               {t.artist}
                             </p>
                           </div>
@@ -854,7 +1082,7 @@ export function MobileNowPlayingSheet() {
                           type="button"
                           onClick={() => removeFromQueue(idx)}
                           aria-label={`Remove ${t.title} from queue`}
-                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white/60 transition-colors hover:bg-white/[0.1] hover:text-encore-negative"
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white/55 transition-colors hover:bg-white/[0.1] hover:text-encore-negative"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

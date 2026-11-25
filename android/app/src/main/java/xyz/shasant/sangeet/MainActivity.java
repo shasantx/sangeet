@@ -150,8 +150,8 @@ public final class MainActivity extends AppCompatActivity {
 
         WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         requestMaxDisplayRefreshRate();
-        getWindow().setStatusBarColor(0xFF070A08);
-        getWindow().setNavigationBarColor(0xFF070A08);
+        getWindow().setStatusBarColor(0xFF07080C);
+        getWindow().setNavigationBarColor(0xFF07080C);
         WindowInsetsControllerCompat insetsController =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         if (insetsController != null) {
@@ -160,9 +160,9 @@ public final class MainActivity extends AppCompatActivity {
         }
 
         rootContainer = new FrameLayout(this);
-        rootContainer.setBackgroundColor(0xFF070A08);
+        rootContainer.setBackgroundColor(0xFF07080C);
         webView = new WebView(this);
-        webView.setBackgroundColor(0xFF070A08);
+        webView.setBackgroundColor(0xFF07080C);
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
         wasAudioPermissionGranted = hasAudioPermissionInternal();
@@ -336,8 +336,8 @@ public final class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onTime(double currentSec, double durationSec) {
-                dispatchToWeb("time", currentSec + ":" + durationSec);
+            public void onTime(double currentSec, double durationSec, boolean isPlaying) {
+                dispatchToWeb("time", currentSec + ":" + durationSec + ":" + (isPlaying ? "1" : "0"));
             }
 
             @Override
@@ -412,6 +412,9 @@ public final class MainActivity extends AppCompatActivity {
         }
         // Sync active track & playback state back to WebView if native service auto-advanced in background
         SangeetAudioService.syncCurrentTrackToListener();
+        if (webView != null) {
+            webView.postDelayed(SangeetAudioService::syncCurrentTrackToListener, 350);
+        }
         boolean grantedNow = hasAudioPermissionInternal();
         if (!wasAudioPermissionGranted && grantedNow) {
             dispatchToWeb("audio_permission", "granted");
@@ -541,7 +544,7 @@ public final class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public void setSystemTheme(String theme) {
             final boolean isLight = "light".equalsIgnoreCase(theme);
-            final int bgColor = isLight ? 0xFFEEF7F1 : 0xFF070A08;
+            final int bgColor = isLight ? 0xFFEEF2FA : 0xFF07080C;
             runOnUiThread(() -> {
                 if (isFinishing() || isDestroyed()) return;
                 getWindow().setStatusBarColor(bgColor);
@@ -936,6 +939,11 @@ public final class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, SangeetAudioService.class);
             intent.setAction(SangeetAudioService.ACTION_RESUME);
             sendServiceAction(intent);
+        }
+
+        @JavascriptInterface
+        public void syncPlaybackState() {
+            SangeetAudioService.syncCurrentTrackToListener();
         }
 
         @JavascriptInterface

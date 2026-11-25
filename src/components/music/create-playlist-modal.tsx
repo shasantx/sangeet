@@ -145,14 +145,14 @@ export function CreatePlaylistModal() {
       aria-modal="true"
       aria-labelledby="create-playlist-title"
       onClick={() => setOpen(false)}
-      className="fixed inset-0 z-[96] flex items-center justify-center bg-black/70 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-[96] flex items-end justify-center bg-black/70 p-0 backdrop-blur-md sm:items-center sm:p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="studio-enter flex max-h-[88dvh] w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-encore-base/95 shadow-[0_28px_80px_rgba(0,0,0,0.65)] backdrop-blur-2xl"
+        className="studio-enter flex max-h-[82dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-encore-base/95 shadow-[0_28px_80px_rgba(0,0,0,0.65)] backdrop-blur-2xl sm:max-h-[88dvh] sm:rounded-3xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pb-4 pt-5">
+        <div className="flex shrink-0 items-center justify-between px-5 pb-3 pt-4 sm:px-6 sm:pb-4 sm:pt-5">
           <div>
             <h2
               id="create-playlist-title"
@@ -175,14 +175,14 @@ export function CreatePlaylistModal() {
         </div>
 
         <form onSubmit={handleCreate} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex-1 space-y-5 overflow-y-auto px-6 pb-4">
+          <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pb-4 sm:space-y-5 sm:px-6">
             {/* Cover preview + Name & Description */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div className="flex flex-col gap-3.5 sm:flex-row sm:items-start sm:gap-4">
               <ArtworkMosaic
                 tracks={selectedTracks}
                 alt={trimmedName || "New playlist"}
-                icon={<ListMusic className="h-8 w-8 text-white" strokeWidth={1.5} />}
-                className="mx-auto h-28 w-28 shrink-0 rounded-2xl sm:mx-0"
+                icon={<ListMusic className="h-7 w-7 text-white sm:h-8 sm:w-8" strokeWidth={1.5} />}
+                className="mx-auto h-20 w-20 shrink-0 rounded-2xl sm:mx-0 sm:h-28 sm:w-28"
               />
               <div className="min-w-0 flex-1 space-y-3">
                 <div>
@@ -331,8 +331,8 @@ export function CreatePlaylistModal() {
             </div>
           </div>
 
-          {/* Footer actions */}
-          <div className="flex items-center justify-end gap-2.5 bg-encore-elevated/50 px-6 py-4">
+          {/* Sticky Footer actions (Android soft-keyboard friendly) */}
+          <div className="sticky bottom-0 flex shrink-0 items-center justify-end gap-2.5 border-t border-encore-hairline bg-encore-base/95 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl sm:bg-encore-elevated/50 sm:px-6 sm:py-4">
             <button
               type="button"
               onClick={() => setOpen(false)}

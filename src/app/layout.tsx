@@ -28,8 +28,8 @@ export const metadata: Metadata = {
     "Free, open-source music streaming studio with synced lyrics, SponsorBlock auto-skip, 5-band equalizer, offline audio, and native Android & Rust Windows apps.",
   manifest: "/manifest.json",
   icons: {
-    icon: "/icons/sangeet-icon.svg",
-    apple: "/icons/sangeet-icon.svg"
+    icon: "/brand/sangeet-logo.png",
+    apple: "/brand/sangeet-icon-512.png"
   },
   appleWebApp: {
     capable: true,

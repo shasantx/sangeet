@@ -42,6 +42,7 @@ export function PlaybackEngine() {
   const hasEnteredPlayingRef = useRef<boolean>(false);
   const lastLoadNonceRef = useRef<number>(-1);
   const lastTrackLoadAtRef = useRef<number>(0);
+  const lastUserPlayToggleAtRef = useRef<number>(0);
   const androidSyncedTrackIdRef = useRef<string | null>(null);
 
   const currentTrack = usePlayerStore((s) => s.currentTrack);
@@ -106,6 +107,9 @@ export function PlaybackEngine() {
       if (type === "state") {
         if (payload === "playing") {
           hasEnteredPlayingRef.current = true;
+          if (store.currentTrack && !loadedVideoIdRef.current) {
+            loadedVideoIdRef.current = store.currentTrack.id;
+          }
           store.setIsBuffering(false);
           if (store.playbackError) store.setPlaybackError(null);
           if (!usePlayerStore.getState().isPlaying) {
@@ -134,16 +138,49 @@ export function PlaybackEngine() {
           });
         }
       } else if (type === "time") {
-        const [curStr, durStr] = payload.split(":");
+        const [curStr, durStr, playingFlag] = payload.split(":");
         const cur = Number(curStr);
         const dur = Number(durStr);
         if (Number.isFinite(cur)) {
           store.setProgress(cur, Number.isFinite(dur) && dur > 0 ? dur : undefined);
         }
+        const now = Date.now();
+        if (
+          playingFlag === "1" &&
+          !store.isPlaying &&
+          now > lastUserPlayToggleAtRef.current + 900
+        ) {
+          hasEnteredPlayingRef.current = true;
+          if (store.currentTrack && !loadedVideoIdRef.current) {
+            loadedVideoIdRef.current = store.currentTrack.id;
+          }
+          store.setIsBuffering(false);
+          store.setIsPlaying(true);
+        } else if (
+          playingFlag === "0" &&
+          store.isPlaying &&
+          now > loadGraceUntilRef.current &&
+          now > lastUserPlayToggleAtRef.current + 1200 &&
+          hasEnteredPlayingRef.current
+        ) {
+          store.setIsPlaying(false);
+        }
       } else if (type === "next") {
         void store.nextTrack();
-      } else if (type === "prev") {
+      } else if (type === "prev" || type === "previous") {
         store.prevTrack();
+      } else if (
+        type === "repeat_off" ||
+        type === "repeat_all" ||
+        type === "repeat_one"
+      ) {
+        const nextRepeat =
+          type === "repeat_one"
+            ? "one"
+            : type === "repeat_all"
+              ? "all"
+              : "off";
+        usePlayerStore.setState({ repeat: nextRepeat });
       } else if (type === "track_changed" && payload) {
         let changedId = payload.trim();
         let meta: Partial<{
@@ -225,8 +262,81 @@ export function PlaybackEngine() {
       }
     };
 
+    bridge.syncPlaybackState?.();
+    const syncTimer = window.setTimeout(() => {
+      bridge.syncPlaybackState?.();
+    }, 250);
+
     return () => {
+      window.clearTimeout(syncTimer);
       delete window.__sangeetAndroidEvent;
+    };
+  }, []);
+
+  // Resync play/pause icon whenever user returns from background, Recents, or back-navigation
+  useEffect(() => {
+    const resyncPlaybackState = () => {
+      if (document.visibilityState === "hidden") return;
+      const bridge = getAndroidBridge();
+      if (bridge) {
+        bridge.syncPlaybackState?.();
+        return;
+      }
+      const store = usePlayerStore.getState();
+      if (!store.currentTrack) return;
+      const now = Date.now();
+      if (now <= lastUserPlayToggleAtRef.current + 900) return;
+
+      const isDirect = Boolean(
+        store.currentTrack.offlineId ||
+          (store.currentTrack.localUrl &&
+            !store.currentTrack.localUrl.startsWith("content://")) ||
+          store.currentTrack.streamUrl
+      );
+      if (isDirect) {
+        const audio = audioRef.current;
+        if (!audio || !audio.src) return;
+        const actuallyPlaying = !audio.paused && !audio.ended;
+        if (actuallyPlaying && !store.isPlaying) {
+          hasEnteredPlayingRef.current = true;
+          store.setIsBuffering(false);
+          store.setIsPlaying(true);
+        } else if (
+          !actuallyPlaying &&
+          store.isPlaying &&
+          now > loadGraceUntilRef.current &&
+          hasEnteredPlayingRef.current
+        ) {
+          store.setIsPlaying(false);
+        }
+      } else if (readyRef.current && playerRef.current) {
+        try {
+          const ytState = playerRef.current.getPlayerState?.();
+          const YTState = window.YT?.PlayerState;
+          if (!YTState) return;
+          if (ytState === YTState.PLAYING && !store.isPlaying) {
+            hasEnteredPlayingRef.current = true;
+            store.setIsBuffering(false);
+            store.setIsPlaying(true);
+          } else if (
+            (ytState === YTState.PAUSED || ytState === YTState.CUED) &&
+            store.isPlaying &&
+            now > loadGraceUntilRef.current &&
+            hasEnteredPlayingRef.current
+          ) {
+            store.setIsPlaying(false);
+          }
+        } catch {}
+      }
+    };
+
+    document.addEventListener("visibilitychange", resyncPlaybackState);
+    window.addEventListener("focus", resyncPlaybackState);
+    window.addEventListener("pageshow", resyncPlaybackState);
+    return () => {
+      document.removeEventListener("visibilitychange", resyncPlaybackState);
+      window.removeEventListener("focus", resyncPlaybackState);
+      window.removeEventListener("pageshow", resyncPlaybackState);
     };
   }, []);
 
@@ -751,6 +861,8 @@ export function PlaybackEngine() {
     if (isPlaying && Date.now() - lastTrackLoadAtRef.current < 150) {
       return;
     }
+
+    lastUserPlayToggleAtRef.current = Date.now();
 
     if (isAudioElementTrack) {
       const audio = audioRef.current;

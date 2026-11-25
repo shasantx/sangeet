@@ -355,6 +355,14 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
   font-size: 15px;
 }
 
+.sangeet-glass-navbar.sangeet-nav-searching.stage-tone-dark .ios-search-expanded .lg-backdrop {
+  background: rgba(10, 13, 24, 0.92);
+}
+
+.sangeet-glass-navbar.sangeet-nav-searching.stage-tone-light .ios-search-expanded .lg-backdrop {
+  background: rgba(255, 255, 255, 0.94);
+}
+
 @media (max-width: 360px) {
   .sangeet-glass-navbar .ios-tabbar-row {
     gap: 6px;

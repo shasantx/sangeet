@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Heart, ListPlus, Pause, Play } from "lucide-react";
+import { ChevronRight, Heart, ListCheck, ListPlus, Pause, Play } from "lucide-react";
 import type { HomeShelf, Track } from "@/types/music";
 import { MediaCard } from "@/components/music/media-card";
 import { MediaShelf } from "@/components/music/media-shelf";
@@ -28,10 +28,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   const currentTrack = usePlayerStore((s) => s.currentTrack);
+  const queue = usePlayerStore((s) => s.queue);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
   const playTrack = usePlayerStore((s) => s.playTrack);
   const togglePlay = usePlayerStore((s) => s.togglePlay);
-  const addToQueue = usePlayerStore((s) => s.addToQueue);
+  const toggleQueueTrack = usePlayerStore((s) => s.toggleQueueTrack);
   const fetchRadioForTrack = usePlayerStore((s) => s.fetchRadioForTrack);
 
   const recentlyPlayed = useLibraryStore((s) => s.recentlyPlayed);
@@ -213,6 +214,7 @@ export default function HomePage() {
                   {col.map((track) => {
                     const isCurrent = currentTrack?.id === track.id;
                     const isLiked = likedTracks.some((t) => t.id === track.id);
+                    const inQueue = queue.some((q) => q.id === track.id);
                     return (
                       <div
                         key={track.id}
@@ -271,7 +273,14 @@ export default function HomePage() {
                           </div>
                         </button>
 
-                        <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity duration-150 sm:opacity-0 sm:group-hover:opacity-100">
+                        <div
+                          className={cn(
+                            "flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity duration-150",
+                            inQueue || isLiked
+                              ? "sm:opacity-100"
+                              : "sm:opacity-0 sm:group-hover:opacity-100"
+                          )}
+                        >
                           <button
                             type="button"
                             onClick={() => {
@@ -302,13 +311,31 @@ export default function HomePage() {
                           <button
                             type="button"
                             onClick={() => {
-                              addToQueue(track);
-                              showToast("Added to queue", "success");
+                              const added = toggleQueueTrack(track);
+                              showToast(
+                                added ? "Added to queue" : "Removed from queue",
+                                added ? "success" : "default"
+                              );
                             }}
-                            aria-label="Add to queue"
-                            className="flex h-9 w-9 items-center justify-center rounded-full text-encore-muted transition-colors hover:bg-encore-elevated-highlight hover:text-encore-text"
+                            aria-label={
+                              inQueue ? "Remove from queue" : "Add to queue"
+                            }
+                            aria-pressed={inQueue}
+                            title={
+                              inQueue ? "Remove from queue" : "Add to queue"
+                            }
+                            className={cn(
+                              "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
+                              inQueue
+                                ? "bg-encore-tinted text-encore-accent hover:bg-encore-tinted-highlight"
+                                : "text-encore-muted hover:bg-encore-elevated-highlight hover:text-encore-text"
+                            )}
                           >
-                            <ListPlus className="h-4 w-4" strokeWidth={1.6} />
+                            {inQueue ? (
+                              <ListCheck className="h-4 w-4" strokeWidth={2} />
+                            ) : (
+                              <ListPlus className="h-4 w-4" strokeWidth={1.6} />
+                            )}
                           </button>
                         </div>
                       </div>

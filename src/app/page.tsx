@@ -34,6 +34,7 @@ import { usePlatform } from "@/lib/platform";
 import { MediaShelf } from "@/components/music/media-shelf";
 import { TrackArtwork } from "@/components/music/track-artwork";
 import { SiteFooter } from "@/components/shell/site-footer";
+import { SangeetLogo } from "@/components/ui/sangeet-logo";
 import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -237,9 +238,7 @@ export default function LandingPage() {
         <div className="mx-auto grid h-full max-w-6xl grid-cols-[1fr_auto] items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
           {/* Left: Brand Mark */}
           <Link href="/" className="inline-flex w-fit items-center gap-2.5">
-            <span className="btn-cobalt flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
-              S
-            </span>
+            <SangeetLogo className="h-8 w-8" />
             <span className="text-base font-semibold tracking-tight text-encore-text">
               Sangeet
             </span>

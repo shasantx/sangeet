@@ -40,6 +40,7 @@ interface PlayerState {
   prevTrack: () => void;
   playNext: (track: Track) => void;
   addToQueue: (track: Track) => void;
+  toggleQueueTrack: (track: Track) => boolean;
   removeFromQueue: (index: number) => void;
   moveQueueItem: (from: number, to: number) => void;
   shuffleQueue: () => void;
@@ -323,6 +324,20 @@ export const usePlayerStore = create<PlayerState>()(
         set((s) => ({
           queue: [...s.queue.filter((t) => t.id !== track.id), track]
         })),
+
+      toggleQueueTrack: (track) => {
+        const exists = get().queue.some((t) => t.id === track.id);
+        if (exists) {
+          set((s) => ({
+            queue: s.queue.filter((t) => t.id !== track.id)
+          }));
+          return false;
+        }
+        set((s) => ({
+          queue: [...s.queue, track]
+        }));
+        return true;
+      },
 
       removeFromQueue: (index) =>
         set((s) => ({

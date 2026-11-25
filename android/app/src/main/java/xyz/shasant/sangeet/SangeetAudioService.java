@@ -68,6 +68,7 @@ public final class SangeetAudioService extends MediaSessionService {
     public static final String ACTION_STOP = "xyz.shasant.sangeet.STOP";
     public static final String ACTION_VOLUME = "xyz.shasant.sangeet.VOLUME";
     public static final String ACTION_SPEED = "xyz.shasant.sangeet.SPEED";
+    public static final String ACTION_TOGGLE_REPEAT = "xyz.shasant.sangeet.TOGGLE_REPEAT";
 
     public static final String EXTRA_VIDEO_ID = "videoId";
     public static final String EXTRA_URL = "url";
@@ -115,13 +116,13 @@ public final class SangeetAudioService extends MediaSessionService {
     private static final int NOTIFICATION_ID = 1001;
     private static final int ARTWORK_CONNECT_TIMEOUT_MS = 4500;
     private static final int ARTWORK_READ_TIMEOUT_MS = 4500;
-    private static final int MAX_ARTWORK_DIMENSION = 256;
+    private static final int MAX_ARTWORK_DIMENSION = 512;
     private static final int MAX_ARTWORK_BYTES = 5 * 1024 * 1024;
     private static final int MAX_FALLBACK_RETRIES = 2;
 
     public interface EventListener {
         void onState(String state);
-        void onTime(double currentSec, double durationSec);
+        void onTime(double currentSec, double durationSec, boolean isPlaying);
         void onAction(String action);
         void onError(String message);
         void onTrackChanged(String trackId, int queueIndex);
@@ -148,17 +149,22 @@ public final class SangeetAudioService extends MediaSessionService {
                 l.onTrackChanged(service.activeTrackId, service.nativeQueueIndex);
             }
             if (service.player != null) {
-                if (service.player.isPlaying()) {
+                int playbackState = service.player.getPlaybackState();
+                boolean playing = service.player.isPlaying();
+                if (playing) {
                     l.onState("playing");
-                } else if (service.player.getPlayWhenReady()) {
+                } else if (service.player.getPlayWhenReady() && playbackState == Player.STATE_BUFFERING) {
                     l.onState("buffering");
-                } else if (service.player.getPlaybackState() != Player.STATE_IDLE) {
+                } else if (service.player.getPlayWhenReady() && playbackState == Player.STATE_READY) {
+                    l.onState("playing");
+                } else if (playbackState != Player.STATE_IDLE) {
                     l.onState("paused");
                 }
-                long posMs = Math.max(0, service.player.getCurrentPosition());
-                long durMs = Math.max(0, service.player.getDuration());
-                if (durMs != C.TIME_UNSET && durMs > 0) {
-                    l.onTime(posMs / 1000.0, durMs / 1000.0);
+                if (playbackState != Player.STATE_IDLE) {
+                    long posMs = Math.max(0, service.player.getCurrentPosition());
+                    long rawDurMs = service.player.getDuration();
+                    double durSec = (rawDurMs != C.TIME_UNSET && rawDurMs > 0) ? (rawDurMs / 1000.0) : 0.0;
+                    l.onTime(posMs / 1000.0, durSec, playing);
                 }
             }
         });
@@ -173,6 +179,8 @@ public final class SangeetAudioService extends MediaSessionService {
     private final ExecutorService artworkExecutor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final LruCache<String, Bitmap> artworkCache = new LruCache<>(16);
+    private final LruCache<String, byte[]> artworkBytesCache = new LruCache<>(16);
+    private final Set<Player.Listener> sessionListeners = new HashSet<>();
     private volatile long activeRequestToken = 0;
     private volatile Future<?> activeExtractionTask;
     private volatile boolean isForeground = false;
@@ -188,6 +196,7 @@ public final class SangeetAudioService extends MediaSessionService {
     @Nullable private String currentArtist;
     @Nullable private String currentArtworkUrl;
     @Nullable private Bitmap currentArtworkBitmap;
+    @Nullable private byte[] currentArtworkBytes;
     @Nullable private String inFlightArtworkUrl;
 
     public static void setEventListener(@Nullable EventListener l) {
@@ -214,10 +223,11 @@ public final class SangeetAudioService extends MediaSessionService {
             if (player != null && player.getPlaybackState() != Player.STATE_IDLE
                     && player.getPlaybackState() != Player.STATE_ENDED) {
                 long posMs = Math.max(0, player.getCurrentPosition());
-                long durMs = Math.max(0, player.getDuration());
+                long rawDurMs = player.getDuration();
+                double durSec = (rawDurMs != C.TIME_UNSET && rawDurMs > 0) ? (rawDurMs / 1000.0) : 0.0;
                 EventListener l = listener;
                 if (l != null) {
-                    l.onTime(posMs / 1000.0, durMs == C.TIME_UNSET ? 0.0 : durMs / 1000.0);
+                    l.onTime(posMs / 1000.0, durSec, player.isPlaying());
                 }
             }
             mainHandler.postDelayed(this, 500);
@@ -300,10 +310,12 @@ public final class SangeetAudioService extends MediaSessionService {
                     l.onState("ended");
                 } else if (playbackState == Player.STATE_READY) {
                     isAutoAdvancing = false;
-                    long durMs = Math.max(0, player.getDuration());
+                    long rawDurMs = player.getDuration();
+                    double durSec = (rawDurMs != C.TIME_UNSET && rawDurMs > 0) ? (rawDurMs / 1000.0) : 0.0;
                     long posMs = Math.max(0, player.getCurrentPosition());
-                    l.onTime(posMs / 1000.0, durMs == C.TIME_UNSET ? 0.0 : durMs / 1000.0);
-                    l.onState(player.isPlaying() || player.getPlayWhenReady() ? "playing" : "paused");
+                    boolean playing = player.isPlaying() || player.getPlayWhenReady();
+                    l.onTime(posMs / 1000.0, durSec, playing);
+                    l.onState(playing ? "playing" : "paused");
                 }
             }
 
@@ -348,18 +360,55 @@ public final class SangeetAudioService extends MediaSessionService {
         });
 
         ForwardingPlayer forwardingPlayer = new ForwardingPlayer(player) {
+            @Override
+            public void addListener(@NonNull Player.Listener listener) {
+                sessionListeners.add(listener);
+                super.addListener(listener);
+            }
+
+            @Override
+            public void removeListener(@NonNull Player.Listener listener) {
+                sessionListeners.remove(listener);
+                super.removeListener(listener);
+            }
+
+            @NonNull
+            @Override
+            public MediaMetadata getMediaMetadata() {
+                return buildLiveMediaMetadata();
+            }
+
+            @Nullable
+            @Override
+            public MediaItem getCurrentMediaItem() {
+                MediaItem item = super.getCurrentMediaItem();
+                if (item == null) return null;
+                return item.buildUpon()
+                        .setMediaMetadata(buildLiveMediaMetadata())
+                        .build();
+            }
+
             @NonNull
             @Override
             public Player.Commands getAvailableCommands() {
                 return super.getAvailableCommands().buildUpon()
+                        .add(COMMAND_PLAY_PAUSE)
+                        .add(COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
                         .add(COMMAND_SEEK_TO_NEXT)
                         .add(COMMAND_SEEK_TO_PREVIOUS)
+                        .add(COMMAND_GET_CURRENT_MEDIA_ITEM)
+                        .add(COMMAND_GET_METADATA)
                         .build();
             }
 
             @Override
             public boolean isCommandAvailable(int command) {
-                if (command == COMMAND_SEEK_TO_NEXT || command == COMMAND_SEEK_TO_PREVIOUS) {
+                if (command == COMMAND_PLAY_PAUSE
+                        || command == COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM
+                        || command == COMMAND_SEEK_TO_NEXT
+                        || command == COMMAND_SEEK_TO_PREVIOUS
+                        || command == COMMAND_GET_CURRENT_MEDIA_ITEM
+                        || command == COMMAND_GET_METADATA) {
                     return true;
                 }
                 return super.isCommandAvailable(command);
@@ -386,7 +435,9 @@ public final class SangeetAudioService extends MediaSessionService {
             }
         };
 
-        mediaSession = new MediaSession.Builder(this, forwardingPlayer).build();
+        mediaSession = new MediaSession.Builder(this, forwardingPlayer)
+                .setSessionActivity(createContentIntent())
+                .build();
         mainHandler.post(progressRunnable);
     }
 
@@ -417,6 +468,25 @@ public final class SangeetAudioService extends MediaSessionService {
                 repeatAll = intent.getBooleanExtra(EXTRA_REPEAT_ALL, false);
                 sleepAfterTrack = intent.getBooleanExtra(EXTRA_SLEEP_AFTER_TRACK, false);
                 updateNativeQueue(queueJson, idx);
+                refreshNotificationIfForeground();
+                break;
+            }
+            case ACTION_TOGGLE_REPEAT: {
+                if (!repeatAll && !repeatOne) {
+                    repeatAll = true;
+                    repeatOne = false;
+                } else if (repeatAll && !repeatOne) {
+                    repeatAll = false;
+                    repeatOne = true;
+                } else {
+                    repeatAll = false;
+                    repeatOne = false;
+                }
+                EventListener l = listener;
+                if (l != null) {
+                    l.onAction(repeatOne ? "repeat_one" : (repeatAll ? "repeat_all" : "repeat_off"));
+                }
+                refreshNotificationIfForeground();
                 break;
             }
             case ACTION_PREFETCH_YOUTUBE: {
@@ -435,6 +505,7 @@ public final class SangeetAudioService extends MediaSessionService {
                     currentTitle = title;
                     currentArtist = artist;
                     prepareTrackArtwork(artwork);
+                    notifyMediaMetadataChanged();
                     if (player != null) player.play();
                     ensureForegroundNotification(title, artist);
                     playYouTubeVideo(videoId, title, artist, artwork);
@@ -454,6 +525,7 @@ public final class SangeetAudioService extends MediaSessionService {
                     currentTitle = title;
                     currentArtist = artist;
                     prepareTrackArtwork(artwork);
+                    notifyMediaMetadataChanged();
                     if (player != null) player.play();
                     ensureForegroundNotification(title, artist);
                     playDirectUrl(url, null, false, title, artist, artwork);
@@ -518,6 +590,7 @@ public final class SangeetAudioService extends MediaSessionService {
                 currentArtist = null;
                 currentArtworkUrl = null;
                 currentArtworkBitmap = null;
+                currentArtworkBytes = null;
                 releaseWakeLock();
                 if (player != null) {
                     player.stop();
@@ -642,6 +715,7 @@ public final class SangeetAudioService extends MediaSessionService {
         currentTitle = target.title;
         currentArtist = target.artist;
         prepareTrackArtwork(target.artwork);
+        notifyMediaMetadataChanged();
         ensureForegroundNotification(target.title, target.artist);
 
         EventListener l = listener;
@@ -715,14 +789,62 @@ public final class SangeetAudioService extends MediaSessionService {
         return PendingIntent.getService(this, requestCode, actionIntent, piFlags);
     }
 
-    private Notification buildNotification(@Nullable String title, @Nullable String artist) {
+    private PendingIntent createContentIntent() {
         Intent openIntent = new Intent(this, MainActivity.class);
         openIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         int piFlags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             piFlags |= PendingIntent.FLAG_IMMUTABLE;
         }
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, openIntent, piFlags);
+        return PendingIntent.getActivity(this, 0, openIntent, piFlags);
+    }
+
+    private MediaMetadata buildLiveMediaMetadata() {
+        String safeTitle = (currentTitle != null && !currentTitle.isEmpty()) ? currentTitle : "Sangeet";
+        String safeArtist = (currentArtist != null && !currentArtist.isEmpty()) ? currentArtist : "Sangeet";
+        MediaMetadata.Builder builder = new MediaMetadata.Builder()
+                .setTitle(safeTitle)
+                .setArtist(safeArtist)
+                .setDisplayTitle(safeTitle)
+                .setSubtitle(safeArtist);
+        if (currentArtworkUrl != null && !currentArtworkUrl.isEmpty()) {
+            try {
+                builder.setArtworkUri(Uri.parse(currentArtworkUrl));
+            } catch (Exception ignored) {
+            }
+        }
+        if (currentArtworkBytes != null && currentArtworkBytes.length > 0) {
+            builder.setArtworkData(currentArtworkBytes, MediaMetadata.PICTURE_TYPE_FRONT_COVER);
+        }
+        return builder.build();
+    }
+
+    private void notifyMediaMetadataChanged() {
+        if (isStopping || sessionListeners.isEmpty()) return;
+        MediaMetadata metadata = buildLiveMediaMetadata();
+        for (Player.Listener l : new ArrayList<>(sessionListeners)) {
+            try {
+                l.onMediaMetadataChanged(metadata);
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    @Nullable
+    private static byte[] compressBitmapToJpeg(@Nullable Bitmap bitmap) {
+        if (bitmap == null || bitmap.isRecycled()) return null;
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            if (bitmap.compress(Bitmap.CompressFormat.JPEG, 88, out)) {
+                byte[] bytes = out.toByteArray();
+                return bytes.length > 0 ? bytes : null;
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private Notification buildNotification(@Nullable String title, @Nullable String artist) {
+        PendingIntent contentIntent = createContentIntent();
 
         String safeTitle = (title != null && !title.isEmpty()) ? title : "Sangeet";
         String safeArtist = (artist != null && !artist.isEmpty()) ? artist : "Playing audio";
@@ -734,12 +856,16 @@ public final class SangeetAudioService extends MediaSessionService {
                 isPlaying ? 102 : 103
         );
         PendingIntent nextPendingIntent = createActionPendingIntent(ACTION_NEXT, 104);
+        PendingIntent repeatPendingIntent = createActionPendingIntent(ACTION_TOGGLE_REPEAT, 105);
+        String repeatLabel = repeatOne ? "Repeat One" : (repeatAll ? "Repeat All" : "Repeat Off");
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.sangeet_icon)
+                .setSmallIcon(R.drawable.ic_stat_sangeet)
                 .setContentTitle(safeTitle)
                 .setContentText(safeArtist)
                 .setContentIntent(contentIntent)
+                .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
+                .setColorized(true)
                 .setOngoing(isPlaying)
                 .setOnlyAlertOnce(true)
                 .setSilent(true)
@@ -751,7 +877,8 @@ public final class SangeetAudioService extends MediaSessionService {
                         isPlaying ? "Pause" : "Play",
                         playPausePendingIntent
                 )
-                .addAction(android.R.drawable.ic_media_next, "Next", nextPendingIntent);
+                .addAction(android.R.drawable.ic_media_next, "Next", nextPendingIntent)
+                .addAction(android.R.drawable.ic_menu_rotate, repeatLabel, repeatPendingIntent);
 
         if (currentArtworkBitmap != null && !currentArtworkBitmap.isRecycled()) {
             builder.setLargeIcon(currentArtworkBitmap);
@@ -795,17 +922,39 @@ public final class SangeetAudioService extends MediaSessionService {
 
         if (normalizedUrl == null) {
             currentArtworkBitmap = null;
+            currentArtworkBytes = null;
+            notifyMediaMetadataChanged();
             return;
         }
 
         Bitmap cached = artworkCache.get(normalizedUrl);
+        byte[] cachedBytes = artworkBytesCache.get(normalizedUrl);
         if (cached != null && !cached.isRecycled()) {
             currentArtworkBitmap = cached;
+            currentArtworkBytes = cachedBytes;
+            if (cachedBytes != null) {
+                notifyMediaMetadataChanged();
+            } else {
+                artworkExecutor.execute(() -> {
+                    byte[] encoded = compressBitmapToJpeg(cached);
+                    mainHandler.post(() -> {
+                        if (encoded != null) {
+                            artworkBytesCache.put(normalizedUrl, encoded);
+                        }
+                        if (isStopping || activeService != SangeetAudioService.this) return;
+                        if (!Objects.equals(currentArtworkUrl, normalizedUrl)) return;
+                        currentArtworkBytes = encoded;
+                        notifyMediaMetadataChanged();
+                        refreshNotificationIfForeground();
+                    });
+                });
+            }
             return;
         }
 
         if (urlChanged) {
             currentArtworkBitmap = null;
+            currentArtworkBytes = null;
         }
 
         if (normalizedUrl.equals(inFlightArtworkUrl)) {
@@ -815,12 +964,16 @@ public final class SangeetAudioService extends MediaSessionService {
 
         artworkExecutor.execute(() -> {
             Bitmap decoded = decodeArtworkBitmap(normalizedUrl);
+            byte[] encoded = compressBitmapToJpeg(decoded);
             mainHandler.post(() -> {
                 if (normalizedUrl.equals(inFlightArtworkUrl)) {
                     inFlightArtworkUrl = null;
                 }
                 if (decoded != null) {
                     artworkCache.put(normalizedUrl, decoded);
+                }
+                if (encoded != null) {
+                    artworkBytesCache.put(normalizedUrl, encoded);
                 }
                 if (isStopping || activeService != SangeetAudioService.this) {
                     return;
@@ -829,6 +982,8 @@ public final class SangeetAudioService extends MediaSessionService {
                     return;
                 }
                 currentArtworkBitmap = decoded;
+                currentArtworkBytes = encoded;
+                notifyMediaMetadataChanged();
                 refreshNotificationIfForeground();
             });
         });
@@ -974,6 +1129,13 @@ public final class SangeetAudioService extends MediaSessionService {
             } catch (Exception ignored) {
             }
         }
+        byte[] artBytes = currentArtworkBytes;
+        if (artBytes == null && artwork != null && !artwork.trim().isEmpty()) {
+            artBytes = artworkBytesCache.get(artwork.trim());
+        }
+        if (artBytes != null && artBytes.length > 0) {
+            meta.setArtworkData(artBytes, MediaMetadata.PICTURE_TYPE_FRONT_COVER);
+        }
         MediaItem.Builder itemBuilder = new MediaItem.Builder()
                 .setUri(Uri.parse(url))
                 .setMediaMetadata(meta.build());
@@ -1033,7 +1195,10 @@ public final class SangeetAudioService extends MediaSessionService {
         executor.shutdownNow();
         artworkExecutor.shutdownNow();
         artworkCache.evictAll();
+        artworkBytesCache.evictAll();
+        sessionListeners.clear();
         currentArtworkBitmap = null;
+        currentArtworkBytes = null;
         currentArtworkUrl = null;
         inFlightArtworkUrl = null;
         if (mediaSession != null) {

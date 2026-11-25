@@ -107,6 +107,25 @@ export function FloatingNav() {
     return () => observer.disconnect();
   }, []);
 
+  // Broadcast search state so mobile mini-player can yield cleanly above soft keyboard
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("sangeet:nav-search-state", {
+        detail: { searching: isSearching }
+      })
+    );
+  }, [isSearching]);
+
+  useEffect(() => {
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent("sangeet:nav-search-state", {
+          detail: { searching: false }
+        })
+      );
+    };
+  }, []);
+
   const collapseExpandedSearch = useCallback(() => {
     const root = navWrapRef.current;
     if (!root) return;
@@ -170,8 +189,10 @@ export function FloatingNav() {
   return (
     <div
       className={cn(
-        "sangeet-glass-navbar pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-2.5 pb-[max(12px,env(safe-area-inset-bottom))] sm:px-3 md:hidden",
-        theme === "dark" ? "stage-tone-dark" : "stage-tone-light"
+        "sangeet-glass-navbar pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-2.5 pb-[max(12px,env(safe-area-inset-bottom))] transition-all duration-200 sm:px-3 md:hidden",
+        theme === "dark" ? "stage-tone-dark" : "stage-tone-light",
+        isSearching &&
+          "sangeet-nav-searching bg-gradient-to-t from-encore-shell via-encore-shell/95 to-transparent pt-3"
       )}
       aria-label="Primary navigation"
       onKeyDown={handleKeyDown}
@@ -181,7 +202,13 @@ export function FloatingNav() {
         ref={navWrapRef}
         className="pointer-events-auto flex w-full max-w-[430px] min-w-0 items-center justify-center gap-2"
       >
-        <div className="min-w-0 flex-1">
+        <div
+          className={cn(
+            "min-w-0 flex-1",
+            isSearching &&
+              "[&_.lg-backdrop]:!bg-none [&_.lg-backdrop]:!bg-encore-base/95 [&_.lg-backdrop]:!backdrop-blur-2xl [&_.ios-search-expanded]:rounded-full [&_.ios-search-expanded]:bg-encore-base/95 [&_.ios-search-expanded]:shadow-[0_12px_32px_rgba(0,0,0,0.5)] [&_.ios-tabbar-search-btn]:bg-encore-base/95"
+          )}
+        >
           <GlassTabBar
             items={items}
             activeIndex={activeIndex}

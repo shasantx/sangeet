@@ -14,6 +14,7 @@ import {
 import { useAuthStore } from "@/store/auth-store";
 import { useUIStore } from "@/store/ui-store";
 import { usePlatform } from "@/lib/platform";
+import { SangeetLogo } from "@/components/ui/sangeet-logo";
 import { cn } from "@/lib/utils";
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -127,9 +128,7 @@ function AuthContent() {
         >
           {/* Brand Mark + Heading */}
           <div className="flex flex-col items-center text-center">
-            <span className="btn-cobalt flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-black tracking-tight text-white">
-              S
-            </span>
+            <SangeetLogo className="h-12 w-12 shadow-[0_10px_28px_rgba(37,99,235,0.28)]" />
             <h1 className="mt-5 text-2xl font-semibold tracking-[-0.025em] text-encore-text sm:text-[28px]">
               Welcome to Sangeet
             </h1>

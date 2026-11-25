@@ -7,6 +7,7 @@ import {
   Flame,
   Keyboard,
   Laptop,
+  ListPlus,
   Maximize2,
   Moon,
   Radio,
@@ -100,6 +101,33 @@ export default function MoreHubPage() {
           strokeWidth={1.5}
         />
       </Link>
+
+      {/* Quick Create Playlist CTA for mobile & desktop */}
+      <button
+        type="button"
+        onClick={() =>
+          window.dispatchEvent(new Event("sangeet:create-playlist"))
+        }
+        className="flex min-h-[58px] w-full items-center justify-between gap-3 rounded-2xl border border-encore-accent/25 bg-encore-tinted/60 px-4 py-3 text-left transition-colors duration-150 hover:bg-encore-tinted active:scale-[0.99]"
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="btn-cobalt flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white">
+            <ListPlus className="h-5 w-5" strokeWidth={2} />
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-semibold text-encore-text">
+              Create playlist
+            </span>
+            <span className="block truncate text-xs text-encore-subdued">
+              Name your playlist and pick songs to add
+            </span>
+          </span>
+        </span>
+        <ChevronRight
+          className="h-4 w-4 shrink-0 text-encore-accent"
+          strokeWidth={1.8}
+        />
+      </button>
 
       {/* Group 1: Curated Discovery (Explore lives in the top bar) */}
       <section className="space-y-2">

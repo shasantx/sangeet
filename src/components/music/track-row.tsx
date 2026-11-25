@@ -58,11 +58,12 @@ export function TrackRow({
 }: TrackRowProps) {
   const { isWeb, isNative } = usePlatform();
   const currentTrack = usePlayerStore((s) => s.currentTrack);
+  const queue = usePlayerStore((s) => s.queue);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
   const playTrack = usePlayerStore((s) => s.playTrack);
   const togglePlay = usePlayerStore((s) => s.togglePlay);
   const playNext = usePlayerStore((s) => s.playNext);
-  const addToQueue = usePlayerStore((s) => s.addToQueue);
+  const toggleQueueTrack = usePlayerStore((s) => s.toggleQueueTrack);
   const fetchRadioForTrack = usePlayerStore((s) => s.fetchRadioForTrack);
 
   const likedTracks = useLibraryStore((s) => s.likedTracks);
@@ -85,6 +86,7 @@ export function TrackRow({
   useClickOutside(menuWrapRef, menuOpen, closeMenu);
 
   const isCurrent = currentTrack?.id === track.id;
+  const inQueue = queue.some((q) => q.id === track.id);
   const isLiked = likedTracks.some((t) => t.id === track.id);
   const savedOfflineRecord = offlineItems.find(
     (i) => i.id === track.offlineId || i.id === `dl_${track.id}`
@@ -369,14 +371,31 @@ export function TrackRow({
               <button
                 type="button"
                 onClick={() => {
-                  addToQueue(track);
-                  showToast("Added to queue", "success");
+                  const added = toggleQueueTrack(track);
+                  showToast(
+                    added ? "Added to queue" : "Removed from queue",
+                    added ? "success" : "default"
+                  );
                   setMenuOpen(false);
                 }}
                 className="flex min-h-[40px] w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs text-encore-text hover:bg-encore-elevated-highlight"
               >
-                <ListPlus className="h-3.5 w-3.5 text-encore-accent" />
-                Add to queue
+                {inQueue ? (
+                  <>
+                    <Check
+                      className="h-3.5 w-3.5 text-encore-accent"
+                      strokeWidth={2.2}
+                    />
+                    <span className="font-medium text-encore-accent">
+                      Remove from queue
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <ListPlus className="h-3.5 w-3.5 text-encore-accent" />
+                    Add to queue
+                  </>
+                )}
               </button>
               <button
                 type="button"
