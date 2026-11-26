@@ -6,20 +6,21 @@ import { MediaCard } from "@/components/music/media-card";
 import { MediaShelf } from "@/components/music/media-shelf";
 import { SiteFooter } from "@/components/shell/site-footer";
 import { cn } from "@/lib/utils";
+import { setListeningContextFromText } from "@/store/listening-store";
 
 const GENRES = [
-  { id: "all", label: "For you", tint: "bg-[#c41e2e]" },
-  { id: "music", label: "Pop & Rock", tint: "bg-[#9b1c1c]" },
+  { id: "all", label: "For you", tint: "bg-gradient-to-br from-[#c41e2e] to-[#c41e2e]/70" },
+  { id: "music", label: "Pop & Rock", tint: "bg-gradient-to-br from-[#9b1c1c] to-[#9b1c1c]/70" },
   {
     id: "desi",
     label: "Hindi, Nepali & Punjabi",
-    tint: "bg-[#8f1d3b]"
+    tint: "bg-gradient-to-br from-[#8f1d3b] to-[#8f1d3b]/70"
   },
-  { id: "chill", label: "Chill & Lo-Fi", tint: "bg-[#b7791f]" },
+  { id: "chill", label: "Chill & Lo-Fi", tint: "bg-gradient-to-br from-[#b7791f] to-[#b7791f]/70" },
   {
     id: "workout",
     label: "Workout & Energy",
-    tint: "bg-[#c42a31]"
+    tint: "bg-gradient-to-br from-[#c42a31] to-[#c42a31]/70"
   }
 ];
 
@@ -28,6 +29,11 @@ export default function ExplorePage() {
   const [shelves, setShelves] = useState<HomeShelf[]>([]);
   const [genreCovers, setGenreCovers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const label = GENRES.find((g) => g.id === selected)?.label ?? "";
+    if (selected !== "all") setListeningContextFromText(label, "explore");
+  }, [selected]);
 
   useEffect(() => {
     let cancelled = false;

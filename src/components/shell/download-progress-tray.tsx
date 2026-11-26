@@ -46,7 +46,7 @@ export function DownloadProgressTray() {
     <aside
       aria-label="Active downloads"
       className={cn(
-        "studio-enter fixed right-3 z-40 w-[min(350px,calc(100vw-24px))] overflow-hidden rounded-2xl bg-encore-elevated shadow-[var(--shadow-elevated)] md:bottom-24 md:right-4",
+        "studio-enter fixed right-3 z-40 w-[min(350px,calc(100vw-24px))] overflow-hidden rounded-2xl bg-encore-elevated/95 backdrop-blur-2xl shadow-[var(--shadow-elevated)] md:bottom-24 md:right-4",
         hasTrack
           ? "bottom-[calc(158px+env(safe-area-inset-bottom))]"
           : "bottom-[calc(88px+env(safe-area-inset-bottom))]"
@@ -117,7 +117,7 @@ export function DownloadProgressTray() {
             return (
               <div
                 key={dl.track.id}
-                className="rounded-xl bg-encore-base p-2.5"
+                className="rounded-xl bg-encore-base/80 p-2.5"
               >
                 <div className="flex items-center gap-2.5">
                   <TrackArtwork

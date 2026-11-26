@@ -45,12 +45,12 @@ export function LiquidGlassProvider({
       defaultSettings={{
         renderMode: "css",
         useSvgRefraction: false,
-        refraction: 0,
-        blur: 0,
-        bezelWidth: 0,
-        specular: 0,
-        aberration: 0,
-        saturation: 1,
+        refraction: 0.42,
+        blur: 4.0,
+        bezelWidth: 16,
+        specular: 0.8,
+        aberration: 0.12,
+        saturation: 1.75,
         siteTheme: "dark"
       }}
     >

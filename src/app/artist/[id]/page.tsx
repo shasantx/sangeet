@@ -84,7 +84,7 @@ function ArtistPageInner({ id }: { id: string }) {
       <div
         className="relative flex min-h-[260px] flex-col justify-end overflow-hidden border-b border-encore-hairline p-4 pt-14 sm:min-h-[280px] sm:p-6 sm:pt-16"
         style={{
-          backgroundColor: heroColor
+          background: `linear-gradient(180deg, ${heroColor} 0%, #0d0c0b 100%)`
         }}
       >
         {artist.banner && (
@@ -96,7 +96,7 @@ function ArtistPageInner({ id }: { id: string }) {
         )}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-black/55"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d0c0b]/90 via-[#0d0c0b]/35 to-transparent"
         />
         <div className="relative z-10">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-white">

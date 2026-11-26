@@ -48,7 +48,7 @@ export function MediaShelf({ children, className }: MediaShelfProps) {
           type="button"
           onClick={() => scrollByAmount(-1)}
           aria-label="Scroll left"
-          className="absolute left-1 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/80 text-white transition hover:scale-105 hover:bg-black md:flex md:opacity-0 md:group-hover/shelf:opacity-100"
+          className="absolute left-1 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/80 text-white backdrop-blur-md transition hover:scale-105 hover:bg-black md:flex md:opacity-0 md:group-hover/shelf:opacity-100"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
@@ -70,7 +70,7 @@ export function MediaShelf({ children, className }: MediaShelfProps) {
           type="button"
           onClick={() => scrollByAmount(1)}
           aria-label="Scroll right"
-          className="absolute right-1 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/80 text-white transition hover:scale-105 hover:bg-black md:flex md:opacity-0 md:group-hover/shelf:opacity-100"
+          className="absolute right-1 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/80 text-white backdrop-blur-md transition hover:scale-105 hover:bg-black md:flex md:opacity-0 md:group-hover/shelf:opacity-100"
         >
           <ChevronRight className="h-5 w-5" />
         </button>

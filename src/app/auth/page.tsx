@@ -96,7 +96,7 @@ function AuthContent() {
           aria-label={
             isDark ? "Switch to light theme" : "Switch to dark theme"
           }
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-encore-base/70 text-encore-accent transition-colors duration-150 hover:bg-encore-elevated-highlight"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-encore-base/70 text-encore-accent backdrop-blur-md transition-colors duration-150 hover:bg-encore-elevated-highlight"
         >
           {isDark ? (
             <Sun className="h-[18px] w-[18px]" strokeWidth={1.75} />
@@ -110,7 +110,7 @@ function AuthContent() {
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-12 pt-4 sm:px-6">
         <div
           className={cn(
-            "studio-enter w-full max-w-[428px] rounded-2xl bg-encore-base p-7 sm:p-9",
+            "studio-enter w-full max-w-[428px] rounded-2xl bg-encore-base/85 p-7 backdrop-blur-2xl sm:p-9",
             isDark
               ? "shadow-[var(--shadow-elevated)]"
               : "shadow-[var(--shadow-elevated)]"

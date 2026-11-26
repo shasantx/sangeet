@@ -231,7 +231,7 @@ export default function LandingPage() {
       {/* Clean Sticky Header with Compact Floating Center LiquidGlass Nav Pill */}
       <header
         className={cn(
-          "sangeet-glass-navbar sticky top-0 z-30 h-16 border-b border-encore-hairline bg-encore-shell px-4 sm:px-6",
+          "sangeet-glass-navbar sticky top-0 z-30 h-16 bg-gradient-to-b from-encore-shell/90 via-encore-shell/55 to-transparent px-4 sm:px-6",
           isDark ? "stage-tone-dark" : "stage-tone-light"
         )}
       >
@@ -294,7 +294,7 @@ export default function LandingPage() {
               aria-label={
                 isDark ? "Switch to light theme" : "Switch to dark theme"
               }
-              className="flex h-9 w-9 items-center justify-center rounded-full text-encore-accent transition-colors duration-150 hover:bg-encore-elevated"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-encore-accent transition-colors duration-150 hover:bg-encore-elevated/80"
             >
               {isDark ? (
                 <Sun className="h-4 w-4" strokeWidth={1.75} />
@@ -352,7 +352,7 @@ export default function LandingPage() {
             <a
               href="#apps"
               className={cn(
-                "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-encore-elevated px-7 text-sm font-medium text-encore-text transition-colors duration-150 hover:bg-encore-elevated-highlight active:scale-[0.98]",
+                "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-encore-elevated/85 px-7 text-sm font-medium text-encore-text backdrop-blur-xl transition-colors duration-150 hover:bg-encore-elevated-highlight active:scale-[0.98]",
                 isDark
                   ? "shadow-[var(--shadow-elevated)]"
                   : "shadow-[var(--shadow-elevated)]"
@@ -367,7 +367,7 @@ export default function LandingPage() {
           <form
             onSubmit={handleSearch}
             className={cn(
-              "hero-stagger mt-9 flex h-[52px] w-full max-w-md items-center gap-2 rounded-full bg-encore-base pl-4 pr-2 transition-shadow duration-150 focus-within:ring-2 focus-within:ring-encore-accent/45",
+              "hero-stagger mt-9 flex h-[52px] w-full max-w-md items-center gap-2 rounded-full bg-encore-base/85 pl-4 pr-2 backdrop-blur-xl transition-shadow duration-150 focus-within:ring-2 focus-within:ring-encore-accent/45",
               isDark
                 ? "shadow-[var(--shadow-elevated)]"
                 : "shadow-[var(--shadow-elevated)]"
@@ -403,7 +403,9 @@ export default function LandingPage() {
         id="offline"
         className={cn(
           "relative overflow-hidden px-6 py-20 sm:py-28",
-          isDark ? "bg-encore-base text-white" : "bg-encore-base text-[#1a1716]"
+          isDark
+            ? "bg-gradient-to-br from-[#231012] via-[#160e0e] to-[#0d0c0b] text-white"
+            : "bg-gradient-to-br from-[#f8ece2] via-[#fbf5ef] to-[#fffdfb] text-[#1a1716]"
         )}
       >
 
@@ -675,7 +677,7 @@ export default function LandingPage() {
               </div>
 
               {/* Synced Lyrics Lines with Glowing Cobalt Active Line */}
-              <div className="mt-3.5 space-y-1.5 rounded-2xl bg-encore-base p-3 text-xs">
+              <div className="mt-3.5 space-y-1.5 rounded-2xl bg-encore-base/90 p-3 text-xs">
                 <div className="flex items-baseline gap-2.5 px-2 py-1 text-encore-muted">
                   <span className="tabular-nums">01:12</span>
                   <span>Static fades out after midnight</span>
@@ -746,7 +748,7 @@ export default function LandingPage() {
               ].map(({ icon: Icon, title, desc }) => (
                 <div
                   key={title}
-                  className="rounded-2xl bg-encore-elevated p-4 transition-colors duration-150 hover:bg-encore-elevated-highlight"
+                  className="rounded-2xl bg-encore-elevated/80 p-4 transition-colors duration-150 hover:bg-encore-elevated-highlight"
                 >
                   <Icon
                     className="h-4 w-4 text-encore-accent"
@@ -791,7 +793,9 @@ export default function LandingPage() {
               <div
                 className={cn(
                   "px-6 pb-11 pt-8 text-center",
-                  "border-b border-encore-hairline"
+                  isDark
+                    ? "bg-gradient-to-b from-[#2a1214]/70 to-transparent"
+                    : "bg-gradient-to-b from-[#f6e6d8] to-transparent"
                 )}
               >
                 <Globe
@@ -835,7 +839,9 @@ export default function LandingPage() {
               <div
                 className={cn(
                   "px-6 pb-11 pt-8 text-center",
-                  "border-b border-encore-hairline"
+                  isDark
+                    ? "bg-gradient-to-b from-[#2a1214]/70 to-transparent"
+                    : "bg-gradient-to-b from-[#f6e6d8] to-transparent"
                 )}
               >
                 <Smartphone
@@ -882,7 +888,9 @@ export default function LandingPage() {
               <div
                 className={cn(
                   "px-6 pb-11 pt-8 text-center",
-                  "border-b border-encore-hairline"
+                  isDark
+                    ? "bg-gradient-to-b from-[#2a1214]/70 to-transparent"
+                    : "bg-gradient-to-b from-[#f6e6d8] to-transparent"
                 )}
               >
                 <Laptop

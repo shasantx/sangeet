@@ -352,7 +352,7 @@ export function TrackRow({
           {menuOpen && (
             <div
               className={cn(
-                "absolute right-0 z-50 w-56 rounded-2xl bg-encore-elevated p-1.5 shadow-[var(--shadow-elevated)]",
+                "absolute right-0 z-50 w-56 rounded-2xl bg-encore-elevated/95 p-1.5 shadow-[var(--shadow-elevated)] backdrop-blur-2xl",
                 openUpward ? "bottom-10" : "top-10"
               )}
             >

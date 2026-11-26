@@ -558,13 +558,30 @@ export function FullscreenPlayer() {
           backgroundColor: "#0a0908"
         }}
       >
-        {/* Flat backdrop: shell colour with a light wash of the track colour */}
+        {/* Deep atmospheric radial cobalt-indigo-obsidian backdrop */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 overflow-hidden"
         >
-          <div className="absolute inset-0 bg-[#0d0c0b]" />
-          <div className="absolute inset-0 opacity-[0.16]" style={{ backgroundColor: bg }} />
+          <TrackArtwork
+            src={currentTrack.thumbnail}
+            trackId={currentTrack.id}
+            alt=""
+            loading="eager"
+            className="h-full w-full scale-125 opacity-[0.2] blur-3xl saturate-150"
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `radial-gradient(ellipse 84% 64% at 28% 24%, rgba(82, 14, 22, 0.88) 0%, rgba(20, 8, 9, 0.94) 55%, rgba(8, 4, 4, 0.99) 100%)`
+            }}
+          />
+          <div
+            className="absolute inset-0 opacity-35"
+            style={{
+              background: `radial-gradient(circle at 26% 28%, ${bg}55 0%, transparent 58%)`
+            }}
+          />
         </div>
 
         {/* Top Bar & Mobile Drag Handle */}
@@ -592,7 +609,7 @@ export function FullscreenPlayer() {
             </div>
 
             {/* Mobile segmented switcher (< lg) */}
-            <div className="flex items-center gap-1 rounded-full bg-white/[0.07] p-1 text-xs font-medium lg:hidden">
+            <div className="flex items-center gap-1 rounded-full bg-white/[0.07] p-1 text-xs font-medium backdrop-blur-xl lg:hidden">
               {(
                 [
                   { id: "player", label: "Player" },
@@ -625,7 +642,7 @@ export function FullscreenPlayer() {
               type="button"
               onClick={dismissAnimated}
               aria-label="Exit fullscreen"
-              className="inline-flex h-10 items-center gap-2 rounded-full bg-white/[0.07] px-3.5 text-xs font-semibold text-white transition-colors hover:bg-white/[0.14] active:scale-95 sm:px-4"
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-white/[0.07] px-3.5 text-xs font-semibold text-white backdrop-blur-xl transition-colors hover:bg-white/[0.14] active:scale-95 sm:px-4"
             >
               <ChevronDown className="h-5 w-5 lg:hidden" />
               <Minimize2 className="hidden h-4 w-4 lg:inline" />
@@ -653,13 +670,34 @@ export function FullscreenPlayer() {
               onDragStart={(e) => e.preventDefault()}
               className="relative mx-auto w-full max-w-[300px] cursor-grab select-none touch-pan-y active:cursor-grabbing sm:max-w-[360px] lg:max-w-[380px]"
             >
+              {/* Soft ambient aura glow behind the album artwork */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -inset-5 -z-10 overflow-hidden rounded-[36px] blur-3xl saturate-150"
+                style={{
+                  transform: `translate3d(${(swipeX * 0.45).toFixed(1)}px, 10px, 0) scale(0.94)`,
+                  opacity:
+                    swipePhase === "exiting" || swipePhase === "entering"
+                      ? 0.1
+                      : Number((0.52 * artworkOpacity).toFixed(3)),
+                  transition: artworkTransition
+                }}
+              >
+                <TrackArtwork
+                  src={currentTrack.thumbnail}
+                  trackId={currentTrack.id}
+                  alt=""
+                  loading="eager"
+                  className="h-full w-full"
+                />
+              </div>
 
               {/* Floating directional swipe indicators */}
               {swipeX < -24 && swipePhase !== "entering" && (
                 <div
                   aria-hidden="true"
                   className={cn(
-                    "pointer-events-none absolute right-2 top-1/2 z-20 flex -translate-y-1/2 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold shadow-[var(--shadow-elevated)] transition-colors duration-150",
+                    "pointer-events-none absolute right-2 top-1/2 z-20 flex -translate-y-1/2 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold shadow-[var(--shadow-elevated)] backdrop-blur-xl transition-colors duration-150",
                     swipeX <= -72
                       ? "bg-[#e2363e]/90 text-white"
                       : "bg-[#181716]/85 text-white/90"
@@ -675,7 +713,7 @@ export function FullscreenPlayer() {
                 <div
                   aria-hidden="true"
                   className={cn(
-                    "pointer-events-none absolute left-2 top-1/2 z-20 flex -translate-y-1/2 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold shadow-[var(--shadow-elevated)] transition-colors duration-150",
+                    "pointer-events-none absolute left-2 top-1/2 z-20 flex -translate-y-1/2 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold shadow-[var(--shadow-elevated)] backdrop-blur-xl transition-colors duration-150",
                     swipeX >= 72
                       ? "bg-[#e2363e]/90 text-white"
                       : "bg-[#181716]/85 text-white/90"
@@ -908,7 +946,7 @@ export function FullscreenPlayer() {
                 {sleepMenuOpen && (
                   <div
                     data-sleep-popover
-                    className="absolute bottom-12 left-1/2 z-50 w-48 -translate-x-1/2 rounded-2xl bg-[#181716]/95 p-1.5 shadow-[var(--shadow-elevated)]"
+                    className="absolute bottom-12 left-1/2 z-50 w-48 -translate-x-1/2 rounded-2xl bg-[#181716]/95 p-1.5 shadow-[var(--shadow-elevated)] backdrop-blur-2xl"
                   >
                     <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/50">
                       Sleep timer
@@ -1000,7 +1038,7 @@ export function FullscreenPlayer() {
           >
             {/* Desktop Segmented Switcher (lg+) */}
             <div className="mb-4 hidden items-center justify-between lg:flex">
-              <div className="inline-flex items-center gap-1 rounded-full bg-white/[0.07] p-1 text-xs font-medium">
+              <div className="inline-flex items-center gap-1 rounded-full bg-white/[0.07] p-1 text-xs font-medium backdrop-blur-xl">
                 <button
                   type="button"
                   onClick={() => setRightTab("lyrics")}

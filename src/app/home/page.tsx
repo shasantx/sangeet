@@ -6,6 +6,7 @@ import { ChevronRight, Heart, ListCheck, ListPlus, Pause, Play } from "lucide-re
 import type { HomeShelf, Track } from "@/types/music";
 import { MediaCard } from "@/components/music/media-card";
 import { MediaShelf } from "@/components/music/media-shelf";
+import { MoodShelf } from "@/components/music/mood-shelf";
 import { TrackArtwork } from "@/components/music/track-artwork";
 import { SiteFooter } from "@/components/shell/site-footer";
 import { usePlayerStore } from "@/store/player-store";
@@ -346,6 +347,9 @@ export default function HomePage() {
             </MediaShelf>
           )}
         </section>
+
+        {/* Time-of-day mood picks (on-device listening model) */}
+        <MoodShelf />
 
         {/* Recently Played shelf */}
         {recentlyPlayed.length > 0 && (

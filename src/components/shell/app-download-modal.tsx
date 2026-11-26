@@ -102,7 +102,7 @@ export function AppDownloadModal() {
           role="region"
           aria-label="Download Dhun native app"
           className={cn(
-            "studio-enter fixed right-3 z-40 w-[min(340px,calc(100vw-24px))] rounded-2xl bg-encore-elevated p-4 shadow-[var(--shadow-elevated)] md:bottom-24 md:right-4",
+            "studio-enter fixed right-3 z-40 w-[min(340px,calc(100vw-24px))] rounded-2xl bg-encore-elevated/95 backdrop-blur-xl p-4 shadow-[var(--shadow-elevated)] md:bottom-24 md:right-4",
             hasTrack
               ? "bottom-[calc(154px+env(safe-area-inset-bottom))]"
               : "bottom-[calc(86px+env(safe-area-inset-bottom))]"
@@ -148,7 +148,7 @@ export function AppDownloadModal() {
                 dismissPrompt();
                 openModal();
               }}
-              className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full bg-encore-base px-3.5 text-xs font-medium text-encore-text transition hover:bg-encore-elevated-highlight"
+              className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full bg-encore-base/85 px-3.5 text-xs font-medium text-encore-text transition hover:bg-encore-elevated-highlight"
             >
               <Laptop className="h-3.5 w-3.5 text-encore-accent" />
               Windows
@@ -164,13 +164,13 @@ export function AppDownloadModal() {
           aria-modal="true"
           aria-labelledby="sangeet-app-modal-title"
           onClick={closeModal}
-          className="fixed inset-0 z-[96] flex items-center justify-center bg-black/70 p-4"
+          className="fixed inset-0 z-[96] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
         >
           <div
             onClick={(e) => e.stopPropagation()}
             className="studio-enter w-full max-w-md overflow-hidden rounded-2xl bg-encore-base shadow-[var(--shadow-elevated)]"
           >
-            <div className="relative border-b border-encore-hairline bg-encore-elevated p-6 pb-5">
+            <div className="relative bg-gradient-to-br from-encore-tinted via-encore-elevated to-encore-base p-6 pb-5 dark:from-[#4a0f17]/80 dark:via-encore-elevated/95 dark:to-encore-base">
               <button
                 type="button"
                 onClick={closeModal}
@@ -199,7 +199,7 @@ export function AppDownloadModal() {
 
             <div className="space-y-3 p-6 pt-4">
               <div className="grid grid-cols-2 gap-2.5 text-xs">
-                <div className="rounded-xl bg-encore-elevated p-3">
+                <div className="rounded-xl bg-encore-elevated/85 p-3">
                   <Zap className="h-4 w-4 text-encore-accent" />
                   <p className="mt-1.5 font-semibold text-encore-text">
                     1-Click Fast Download
@@ -208,7 +208,7 @@ export function AppDownloadModal() {
                     Parallel segmented downloads straight to offline storage
                   </p>
                 </div>
-                <div className="rounded-xl bg-encore-elevated p-3">
+                <div className="rounded-xl bg-encore-elevated/85 p-3">
                   <FolderSearch className="h-4 w-4 text-encore-accent" />
                   <p className="mt-1.5 font-semibold text-encore-text">
                     Smart Local Scan
@@ -241,7 +241,7 @@ export function AppDownloadModal() {
                   href="/api/download/windows"
                   download="Dhun.exe"
                   onClick={closeModal}
-                  className="flex min-h-[48px] w-full items-center justify-between rounded-2xl bg-encore-elevated px-4 py-3 text-sm font-semibold text-encore-text shadow-[var(--shadow-elevated)] transition hover:bg-encore-elevated-highlight active:scale-[0.98]"
+                  className="flex min-h-[48px] w-full items-center justify-between rounded-2xl bg-encore-elevated/85 px-4 py-3 text-sm font-semibold text-encore-text shadow-[var(--shadow-elevated)] transition hover:bg-encore-elevated-highlight active:scale-[0.98]"
                 >
                   <span className="flex items-center gap-2.5">
                     <Laptop

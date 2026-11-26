@@ -11,6 +11,7 @@ import { usePlayerStore } from "@/store/player-store";
 import { useOfflineStore } from "@/store/offline-store";
 import { useToastStore } from "@/store/toast-store";
 import { cn } from "@/lib/utils";
+import { setListeningContextFromText } from "@/store/listening-store";
 
 const BROWSE_CATEGORIES = [
   { label: "Pop", query: "top pop hits", color: "#c41e2e" },
@@ -31,6 +32,11 @@ function SearchContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const query = (searchParams.get("q") ?? "").trim();
+
+  // Songs played from these results inherit the query's mood/genre (e.g. "lofi study beats").
+  useEffect(() => {
+    if (query) setListeningContextFromText(query, "search");
+  }, [query]);
 
   const [result, setResult] = useState<SearchResult | null>(null);
   const [openAudio, setOpenAudio] = useState<Track[]>([]);
@@ -113,7 +119,7 @@ function SearchContent() {
                   router.push(`/search?q=${encodeURIComponent(cat.query)}`)
                 }
                 style={{
-                  backgroundColor: `color-mix(in srgb, ${cat.color} 62%, #131211)`
+                  background: `linear-gradient(135deg, color-mix(in srgb, ${cat.color} 70%, #131211) 0%, color-mix(in srgb, ${cat.color} 45%, #131211) 100%)`
                 }}
                 className="group relative flex h-32 flex-col justify-between overflow-hidden rounded-[14px] border border-white/15 p-4 text-left transition-all duration-200 ease-studio hover:-translate-y-0.5 hover:brightness-110 active:scale-[0.98]"
               >

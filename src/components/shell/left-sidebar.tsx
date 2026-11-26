@@ -136,7 +136,7 @@ export function LeftSidebar() {
       id="library-sidebar"
       aria-label="Library"
       style={{ width: leftCollapsed ? 68 : leftWidth }}
-      className="relative hidden h-full shrink-0 flex-col rounded-panel bg-encore-base shadow-[var(--shadow-elevated)] select-none dark:shadow-[var(--shadow-elevated)] md:flex"
+      className="relative hidden h-full shrink-0 flex-col rounded-panel bg-encore-base/90 shadow-[var(--shadow-elevated)] select-none dark:shadow-[var(--shadow-elevated)] md:flex"
     >
       {/* Header */}
       <div

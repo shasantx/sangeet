@@ -59,7 +59,7 @@ export function ShortcutsModal() {
       aria-modal="true"
       aria-label="Keyboard Shortcuts"
       onClick={() => setOpen(false)}
-      className="fixed inset-0 z-[92] flex items-center justify-center bg-black/70 p-4"
+      className="fixed inset-0 z-[92] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
     >
       <div
         onClick={(e) => e.stopPropagation()}

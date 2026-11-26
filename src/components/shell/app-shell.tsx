@@ -11,6 +11,7 @@ import { AppDownloadModal } from "@/components/shell/app-download-modal";
 import { DownloadProgressTray } from "@/components/shell/download-progress-tray";
 import { CreatePlaylistModal } from "@/components/music/create-playlist-modal";
 import { PlaybackEngine } from "@/components/player/playback-engine";
+import { ListeningTracker } from "@/components/player/listening-tracker";
 import { CommandPalette } from "@/components/shell/command-palette";
 import { MobileNowPlayingSheet } from "@/components/player/mobile-now-playing-sheet";
 import { FullscreenPlayer } from "@/components/player/fullscreen-player";
@@ -20,7 +21,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { usePlayerStore } from "@/store/player-store";
 import { useUIStore } from "@/store/ui-store";
 import { useHydrated } from "@/lib/use-hydrated";
-import { cn } from "@/lib/utils";
+import { cn, pickHeroColor } from "@/lib/utils";
 
 const STANDALONE_ROUTES = new Set(["/", "/auth"]);
 
@@ -32,6 +33,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const hasTrack = Boolean(currentTrack);
 
   const isStandalone = STANDALONE_ROUTES.has(pathname);
+  const ambientColor = currentTrack
+    ? pickHeroColor(currentTrack.id)
+    : "#e2363e";
 
   return (
     <>
@@ -61,7 +65,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {hydrated ? (
                 <LeftSidebar />
               ) : (
-                <div className="h-full w-[280px] shrink-0 rounded-panel bg-encore-base" />
+                <div className="h-full w-[280px] shrink-0 rounded-panel bg-encore-base/85" />
               )}
             </div>
 
@@ -72,6 +76,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 hydrated && hasTrack ? "pb-44" : "pb-28"
               )}
             >
+              {/* Subtle dynamic album-art ambient glow (GPU static, transitions only on track change) */}
+              {hydrated && hasTrack && (
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 top-0 h-64 opacity-25 blur-3xl transition-colors duration-700"
+                  style={{
+                    background: `radial-gradient(ellipse 68% 82% at 50% 0%, ${ambientColor} 0%, transparent 75%)`
+                  }}
+                />
+              )}
               <div className="relative z-10 min-h-full pt-[68px]">
                 {children}
               </div>
@@ -114,6 +128,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Mounted ONCE globally so navigating / -> /home NEVER destroys or stops playback */}
       <PlaybackEngine />
+      <ListeningTracker />
     </>
   );
 }

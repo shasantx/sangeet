@@ -82,7 +82,7 @@ function AlbumPageInner({ id }: { id: string }) {
         className="flex flex-col gap-5 border-b border-encore-hairline p-4 pt-6 sm:flex-row sm:items-end sm:gap-6 sm:p-6 sm:pt-10"
         style={{
           background:
-            "var(--background-base)"
+            "linear-gradient(180deg, var(--background-tinted-highlight) 0%, var(--background-base) 100%)"
         }}
       >
         <img

@@ -192,7 +192,7 @@ export function FloatingNav() {
         "sangeet-glass-navbar pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-2.5 pb-[max(12px,env(safe-area-inset-bottom))] transition-all duration-200 sm:px-3 md:hidden",
         theme === "dark" ? "stage-tone-dark" : "stage-tone-light",
         isSearching &&
-          "sangeet-nav-searching bg-encore-shell pt-3"
+          "sangeet-nav-searching bg-gradient-to-t from-encore-shell via-encore-shell/95 to-transparent pt-3"
       )}
       aria-label="Primary navigation"
       onKeyDown={handleKeyDown}
@@ -206,7 +206,7 @@ export function FloatingNav() {
           className={cn(
             "min-w-0 flex-1",
             isSearching &&
-              "[&_.lg-backdrop]:!bg-none [&_.lg-backdrop]:!bg-encore-base [&_.ios-search-expanded]:rounded-full [&_.ios-search-expanded]:bg-encore-base [&_.ios-search-expanded]:shadow-[0_12px_32px_rgba(0,0,0,0.5)] [&_.ios-tabbar-search-btn]:bg-encore-base"
+              "[&_.lg-backdrop]:!bg-none [&_.lg-backdrop]:!bg-encore-base/95 [&_.lg-backdrop]:!backdrop-blur-2xl [&_.ios-search-expanded]:rounded-full [&_.ios-search-expanded]:bg-encore-base/95 [&_.ios-search-expanded]:shadow-[0_12px_32px_rgba(0,0,0,0.5)] [&_.ios-tabbar-search-btn]:bg-encore-base/95"
           )}
         >
           <GlassTabBar

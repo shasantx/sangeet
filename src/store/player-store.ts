@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { RepeatMode, Track } from "@/types/music";
+import { rankForCurrentMood } from "@/store/listening-store";
 
 interface PlayerState {
   currentTrack: Track | null;
@@ -411,7 +412,10 @@ export const usePlayerStore = create<PlayerState>()(
               get().currentTrack?.id,
               ...get().queue.map((t) => t.id)
             ]);
-            const fresh = incoming.filter((t) => !existingIds.has(t.id));
+            // Radio order re-ranked for this profile's time-of-day taste (skipped songs drop out).
+            const fresh = rankForCurrentMood(
+              incoming.filter((t) => !existingIds.has(t.id))
+            );
             if (fresh.length > 0) {
               set((s) => ({ queue: [...s.queue, ...fresh] }));
             }

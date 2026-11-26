@@ -4,8 +4,8 @@
 
 /*
  * Dhun design tokens — flat, quiet, red & gold.
- * No gradients, glows or glass: solid surfaces separated by hairlines.
- * Red is reserved for play / active state, gold for small highlights.
+ * Liquid-glass bars and frosted panels over a soft red & gold atmosphere.
+ * Gradients stay subtle; red marks play / active state, gold small highlights.
  */
 :root,
 html.dark,
@@ -111,27 +111,38 @@ body {
   transition: background-color 220ms var(--ease-studio), color 220ms var(--ease-studio);
 }
 
-/* Primary action: one solid accent, no gradient, no glow */
+/* Primary action: gentle red gradient, no glow */
 .btn-cobalt {
-  background: var(--essential-bright-accent);
+  background: linear-gradient(180deg, var(--accent-hover) 0%, var(--essential-bright-accent) 55%, var(--accent-press) 100%);
   color: #ffffff;
   transition:
-    background-color 140ms var(--ease-studio),
+    filter 140ms var(--ease-studio),
     transform 120ms var(--ease-studio);
 }
 
 .btn-cobalt:hover {
-  background: var(--accent-hover);
+  filter: brightness(1.06);
 }
 
 .btn-cobalt:active {
   transform: scale(0.98);
-  background: var(--accent-press);
+  filter: brightness(0.96);
 }
 
-/* App background: flat shell colour (kept as a class so existing markup still works) */
+/* App background: soft red & gold atmosphere behind the liquid glass (about half the original strength) */
 .zentra-aurora-mesh {
   background-color: var(--background-shell);
+  background-image:
+    radial-gradient(ellipse 68% 44% at 50% -8%, rgba(226, 54, 62, 0.2) 0%, rgba(226, 54, 62, 0.06) 44%, transparent 76%),
+    radial-gradient(ellipse 46% 34% at 22% 4%, rgba(214, 166, 72, 0.1) 0%, transparent 68%),
+    radial-gradient(ellipse 74% 40% at 50% 108%, rgba(196, 30, 46, 0.06) 0%, transparent 70%);
+}
+
+html.light .zentra-aurora-mesh,
+html[data-theme="light"] .zentra-aurora-mesh {
+  background-image:
+    radial-gradient(ellipse 70% 44% at 50% -10%, rgba(226, 54, 62, 0.1) 0%, rgba(214, 166, 72, 0.06) 45%, transparent 76%),
+    radial-gradient(ellipse 48% 36% at 18% 6%, rgba(214, 166, 72, 0.12) 0%, transparent 68%);
 }
 
 /* Scrollbars */
@@ -256,7 +267,8 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
 }
 
 /* ==========================================================================
-   NAVBAR (glasskit-liquid-glass components, rendered flat — see overrides below)
+   LIQUID GLASS NAVBAR ONLY (glasskit-liquid-glass integration)
+   Real background refraction + refined cobalt Fresnel specular optics
    (NOTE: Never set position: relative here — it would override Tailwind fixed/sticky!)
    ========================================================================== */
 .sangeet-glass-navbar .demo-tabbar-wrap {
@@ -291,8 +303,12 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
   white-space: nowrap;
 }
 
-.sangeet-glass-navbar .ios-tab-item.is-active {
-  color: var(--essential-bright-accent);
+.sangeet-glass-navbar.stage-tone-dark .ios-tab-item.is-active {
+  color: #f7d27a;
+}
+
+.sangeet-glass-navbar.stage-tone-light .ios-tab-item.is-active {
+  color: #c8102e;
 }
 
 .sangeet-glass-navbar .ios-tabbar-search-btn-wrap {
@@ -328,7 +344,13 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
   font-size: 15px;
 }
 
+.sangeet-glass-navbar.sangeet-nav-searching.stage-tone-dark .ios-search-expanded .lg-backdrop {
+  background: rgba(24, 10, 11, 0.92);
+}
 
+.sangeet-glass-navbar.sangeet-nav-searching.stage-tone-light .ios-search-expanded .lg-backdrop {
+  background: rgba(255, 255, 255, 0.94);
+}
 
 @media (max-width: 360px) {
   .sangeet-glass-navbar .ios-tabbar-row {
@@ -351,37 +373,112 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
   }
 }
 
-/* Glass library surfaces flattened: solid fill + hairline, no refraction, sheen or rim light */
-.sangeet-glass-navbar .lg-surface,
-.sangeet-topbar-glass .lg-surface {
-  box-shadow: 0 0 0 1px var(--hairline) !important;
+.sangeet-glass-navbar.stage-tone-dark .lg-surface {
+  box-shadow:
+    0 12px 32px rgba(12, 4, 4, 0.46),
+    inset 0 1px 0.5px rgba(255, 228, 170, 0.22);
 }
 
-.sangeet-glass-navbar .lg-backdrop,
-.sangeet-topbar-glass .lg-backdrop {
-  background: var(--background-elevated-base) !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
+.sangeet-glass-navbar.stage-tone-dark .lg-variant-dark .lg-backdrop {
+  background: linear-gradient(
+    145deg,
+    rgba(38, 14, 16, 0.52),
+    rgba(26, 10, 11, 0.44)
+  );
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
 }
 
-.sangeet-glass-navbar .lg-rim-highlight,
-.sangeet-glass-navbar .lg-pointer-sheen,
-.sangeet-topbar-glass .lg-rim-highlight,
-.sangeet-topbar-glass .lg-pointer-sheen {
-  display: none !important;
+.sangeet-glass-navbar.stage-tone-dark .lg-rim-highlight {
+  opacity: 0.45;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 228, 170, 0.46) 0%,
+    rgba(240, 180, 60, 0.18) 38%,
+    rgba(229, 48, 63, 0.08) 66%,
+    rgba(255, 228, 170, 0.26) 100%
+  );
 }
 
-.sangeet-glass-navbar .ios-tabbar-indicator-pill {
-  background: var(--background-elevated-highlight) !important;
-  box-shadow: none !important;
+.sangeet-glass-navbar.stage-tone-dark .lg-pointer-sheen {
+  background: radial-gradient(
+    200px circle at var(--lg-mx, 50%) var(--lg-my, 25%),
+    rgba(255, 228, 170, 0.24) 0%,
+    rgba(240, 180, 60, 0.08) 42%,
+    transparent 72%
+  );
 }
 
+.sangeet-glass-navbar.stage-tone-dark .ios-tabbar-indicator-pill {
+  background: linear-gradient(
+    180deg,
+    rgba(229, 48, 63, 0.26),
+    rgba(200, 16, 46, 0.14)
+  );
+  box-shadow:
+    inset 0 1px 0.8px rgba(255, 228, 170, 0.42),
+    0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.sangeet-glass-navbar.stage-tone-light .lg-surface {
+  box-shadow:
+    0 10px 28px rgba(42, 15, 15, 0.12),
+    inset 0 1px 1px rgba(255, 255, 255, 0.94);
+}
+
+.sangeet-glass-navbar.stage-tone-light .lg-variant-clear .lg-backdrop {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.56),
+    rgba(255, 244, 230, 0.46)
+  );
+  -webkit-backdrop-filter: blur(24px) saturate(185%) !important;
+  backdrop-filter: blur(24px) saturate(185%) !important;
+}
+
+.sangeet-glass-navbar.stage-tone-light .lg-rim-highlight {
+  opacity: 0.9;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(247, 210, 122, 0.42) 40%,
+    rgba(229, 48, 63, 0.16) 68%,
+    rgba(255, 255, 255, 0.82) 100%
+  );
+}
+
+.sangeet-glass-navbar.stage-tone-light .lg-pointer-sheen {
+  background: radial-gradient(
+    220px circle at var(--lg-mx, 50%) var(--lg-my, 25%),
+    rgba(255, 255, 255, 0.68) 0%,
+    rgba(247, 210, 122, 0.2) 42%,
+    transparent 72%
+  );
+}
+
+.sangeet-glass-navbar.stage-tone-light .ios-tabbar-indicator-pill {
+  background: linear-gradient(
+    180deg,
+    rgba(229, 48, 63, 0.2),
+    rgba(200, 16, 46, 0.1)
+  );
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.94),
+    0 2px 8px rgba(42, 15, 15, 0.08);
+}
+
+/* Desktop & mobile floating topbar glass shell (GPU-accelerated frosted refraction, 120 FPS) */
 .sangeet-topbar-glass {
   width: 100%;
 }
 
 .sangeet-topbar-glass .lg-content {
   width: 100%;
+}
+
+.sangeet-topbar-glass .lg-backdrop {
+  -webkit-backdrop-filter: blur(22px) saturate(185%);
+  backdrop-filter: blur(22px) saturate(185%);
 }
 
 /* Landing hero backdrop: flat (starfield removed) */

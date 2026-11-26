@@ -14,7 +14,8 @@ import {
   Sun,
   Trash2,
   Upload,
-  User
+  User,
+  Clock3
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { usePlayerStore } from "@/store/player-store";
@@ -22,6 +23,8 @@ import { useLibraryStore } from "@/store/library-store";
 import { useUIStore } from "@/store/ui-store";
 import { EQ_LABELS, EQ_PRESETS, useEQStore } from "@/store/eq-store";
 import { useAudioFormat } from "@/store/audio-format-store";
+import { getCurrentMoodProfile, useMoodLearning } from "@/store/listening-store";
+import { SLOT_LABEL, describeProfile } from "@/lib/mood-engine";
 import {
   offlineMetaToTrack,
   useOfflineStore
@@ -41,6 +44,7 @@ const SANGEET_STORAGE_KEYS = [
   "sangeet-v2-auth",
   "sangeet-v2-eq",
   "sangeet-v2-audio-format",
+  "sangeet-v2-listening",
   "sangeet-v2-lyrics-cache",
   "sangeet-v2-native-offline"
 ];
@@ -53,6 +57,8 @@ export default function SettingsPage() {
   const theme = useUIStore((s) => s.theme);
   const setTheme = useUIStore((s) => s.setTheme);
   const [audioFormat, setAudioFormat] = useAudioFormat();
+  const moodLearning = useMoodLearning();
+  const moodNow = moodLearning.enabled ? getCurrentMoodProfile() : null;
   const openDownloadAppModal = useUIStore((s) => s.openDownloadAppModal);
 
   const eqEnabled = useEQStore((s) => s.enabled);
@@ -308,6 +314,73 @@ export default function SettingsPage() {
           Streams load in small chunks and only ~30 seconds ahead to save data.
           YouTube on the web plays inside YouTube&apos;s own player, so its format can&apos;t be changed there.
         </p>
+      </section>
+
+      {/* Mood picks: on-device time-of-day listening model */}
+      <section className="space-y-4 rounded-2xl bg-encore-elevated p-5 shadow-[var(--shadow-elevated)]">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <Clock3 className="h-5 w-5 text-encore-accent" strokeWidth={1.6} />
+            <div>
+              <h2 className="text-base font-semibold text-encore-text">Mood picks</h2>
+              <p className="text-xs text-encore-subdued">
+                Learns what you like at different times of day · stays on this device
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={moodLearning.enabled}
+            aria-label="Learn from my listening"
+            onClick={() => {
+              moodLearning.setEnabled(!moodLearning.enabled);
+              showToast(moodLearning.enabled ? "Mood learning paused" : "Mood learning on", "success");
+            }}
+            className={cn(
+              "relative h-7 w-12 shrink-0 rounded-full transition-colors duration-150",
+              moodLearning.enabled ? "bg-encore-accent" : "bg-encore-highlight"
+            )}
+          >
+            <span
+              className={cn(
+                "absolute top-1 h-5 w-5 rounded-full bg-white transition-transform duration-150",
+                moodLearning.enabled ? "translate-x-6" : "translate-x-1"
+              )}
+            />
+          </button>
+        </div>
+
+        <div className="rounded-xl bg-encore-base p-3.5 text-sm">
+          {moodNow ? (
+            <>
+              <p className="font-medium text-encore-text">
+                Right now: {SLOT_LABEL[moodNow.slot]}
+                {describeProfile(moodNow) ? ` · ${describeProfile(moodNow)}` : ""}
+              </p>
+              <p className="mt-0.5 text-[11px] text-encore-subdued">
+                {moodLearning.count} plays remembered for {user?.name ? user.name : "this profile"}
+                {moodNow.evidence < 3 ? " · using starter picks until you've played a few more songs" : ""}
+              </p>
+            </>
+          ) : (
+            <p className="text-encore-subdued">
+              Paused. Home shows no time-of-day picks and autoplay keeps the normal radio order.
+            </p>
+          )}
+        </div>
+
+        <button
+          type="button"
+          disabled={moodLearning.count === 0}
+          onClick={() => {
+            moodLearning.clear();
+            showToast("Listening history cleared", "success");
+          }}
+          className="rounded-full bg-encore-base px-4 py-2 text-xs font-semibold text-encore-text transition-colors hover:bg-encore-elevated-highlight disabled:opacity-40"
+        >
+          Clear listening history
+        </button>
       </section>
 
       {/* 5-Band Graphic Equalizer */}

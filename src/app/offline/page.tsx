@@ -130,7 +130,7 @@ function OfflinePageContent() {
   if (isWeb) {
     return (
       <div className="studio-enter mx-auto max-w-3xl overflow-x-hidden space-y-6 p-4 pb-12 sm:p-6">
-        <div className="rounded-2xl border-b border-encore-hairline bg-encore-elevated p-6 shadow-[var(--shadow-elevated)] dark:shadow-[var(--shadow-elevated)] sm:p-8">
+        <div className="rounded-3xl bg-gradient-to-br from-encore-tinted via-encore-elevated to-encore-base p-6 shadow-[0_24px_64px_rgba(12,4,4,0.45)] dark:from-[#4a0f17]/80 dark:via-encore-elevated/95 dark:to-encore-base dark:shadow-[0_24px_64px_rgba(12,4,4,0.6)] sm:p-8">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-encore-tinted px-3 py-1 text-xs font-semibold text-encore-accent">
             <HardDrive className="h-3.5 w-3.5" />
             Native Offline Features
@@ -168,7 +168,7 @@ function OfflinePageContent() {
             <a
               href="/api/download/windows"
               download="Dhun.exe"
-              className="flex min-h-[56px] items-center justify-between gap-3 rounded-2xl bg-encore-elevated px-5 py-3.5 text-sm font-semibold text-encore-text shadow-[var(--shadow-elevated)] transition hover:bg-encore-elevated-highlight active:scale-[0.98]"
+              className="flex min-h-[56px] items-center justify-between gap-3 rounded-2xl bg-encore-elevated/90 px-5 py-3.5 text-sm font-semibold text-encore-text shadow-[var(--shadow-elevated)] transition hover:bg-encore-elevated-highlight active:scale-[0.98]"
             >
               <span className="flex items-center gap-3">
                 <Laptop
@@ -247,7 +247,7 @@ function OfflinePageContent() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-encore-elevated px-4 text-xs font-medium text-encore-text transition hover:bg-encore-elevated-highlight"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-encore-elevated/85 px-4 text-xs font-medium text-encore-text transition hover:bg-encore-elevated-highlight"
           >
             <FileAudio className="h-4 w-4 text-encore-accent" strokeWidth={1.6} />
             Import files
@@ -319,7 +319,7 @@ function OfflinePageContent() {
             return (
               <div
                 key={dl.track.id}
-                className="flex items-center justify-between gap-3 rounded-xl bg-encore-base p-3 shadow-[var(--shadow-elevated)]"
+                className="flex items-center justify-between gap-3 rounded-xl bg-encore-base/80 p-3 shadow-[var(--shadow-elevated)]"
               >
                 <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg">
                   <TrackArtwork
@@ -373,7 +373,7 @@ function OfflinePageContent() {
                     <button
                       type="button"
                       onClick={() => void retryDownload(dl.track.id)}
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-encore-elevated text-encore-text transition hover:bg-encore-elevated-highlight"
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-encore-elevated/85 text-encore-text transition hover:bg-encore-elevated-highlight"
                       aria-label="Retry download"
                     >
                       <RefreshCw className="h-4 w-4" strokeWidth={1.6} />
@@ -382,7 +382,7 @@ function OfflinePageContent() {
                   <button
                     type="button"
                     onClick={() => cancelDownload(dl.track.id)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-encore-elevated text-encore-subdued transition hover:bg-encore-elevated-highlight hover:text-encore-text"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-encore-elevated/85 text-encore-subdued transition hover:bg-encore-elevated-highlight hover:text-encore-text"
                     aria-label="Cancel download"
                   >
                     <X className="h-4 w-4" strokeWidth={1.6} />
@@ -443,7 +443,7 @@ function OfflinePageContent() {
                     showToast("Added to queue", "success");
                   }}
                   aria-label={`Add ${track.title} to queue`}
-                  className="flex h-10 w-10 items-center justify-center rounded-full text-encore-subdued hover:bg-encore-base hover:text-encore-text"
+                  className="flex h-10 w-10 items-center justify-center rounded-full text-encore-subdued hover:bg-encore-base/80 hover:text-encore-text"
                 >
                   <ListPlus className="h-4 w-4" />
                 </button>
@@ -535,7 +535,7 @@ function OfflinePageContent() {
                       );
                     }}
                     aria-label={`Export ${entry.track.title}`}
-                    className="flex h-10 w-10 items-center justify-center rounded-full text-encore-accent hover:bg-encore-base"
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-encore-accent hover:bg-encore-base/80"
                   >
                     <Download className="h-4 w-4" />
                   </button>
@@ -546,7 +546,7 @@ function OfflinePageContent() {
                       showToast(`Removed "${entry.track.title}"`);
                     }}
                     aria-label={`Remove ${entry.track.title}`}
-                    className="flex h-10 w-10 items-center justify-center rounded-full text-encore-subdued hover:bg-encore-base hover:text-encore-negative"
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-encore-subdued hover:bg-encore-base/80 hover:text-encore-negative"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -598,7 +598,7 @@ function OfflinePageContent() {
                       }}
                       title="Save audio file to device"
                       aria-label={`Save ${item.title} to device`}
-                      className="flex h-10 w-10 items-center justify-center rounded-full text-encore-accent transition-colors hover:bg-encore-base"
+                      className="flex h-10 w-10 items-center justify-center rounded-full text-encore-accent transition-colors hover:bg-encore-base/80"
                     >
                       <Download className="h-4 w-4" strokeWidth={1.6} />
                     </button>
@@ -609,7 +609,7 @@ function OfflinePageContent() {
                         showToast("Added to queue", "success");
                       }}
                       aria-label={`Add ${item.title} to queue`}
-                      className="flex h-10 w-10 items-center justify-center rounded-full text-encore-subdued transition-colors hover:bg-encore-base hover:text-encore-text"
+                      className="flex h-10 w-10 items-center justify-center rounded-full text-encore-subdued transition-colors hover:bg-encore-base/80 hover:text-encore-text"
                     >
                       <ListPlus className="h-4 w-4" strokeWidth={1.6} />
                     </button>
@@ -620,7 +620,7 @@ function OfflinePageContent() {
                         showToast(`Removed "${item.title}"`);
                       }}
                       aria-label={`Remove ${item.title}`}
-                      className="flex h-10 w-10 items-center justify-center rounded-full text-encore-subdued transition-colors hover:bg-encore-base hover:text-encore-negative"
+                      className="flex h-10 w-10 items-center justify-center rounded-full text-encore-subdued transition-colors hover:bg-encore-base/80 hover:text-encore-negative"
                     >
                       <Trash2 className="h-4 w-4" strokeWidth={1.6} />
                     </button>

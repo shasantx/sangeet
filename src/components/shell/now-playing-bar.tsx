@@ -244,7 +244,7 @@ export function NowPlayingBar() {
         <div
           role="alert"
           className={cn(
-            "fixed inset-x-3 bottom-[calc(154px+env(safe-area-inset-bottom))] z-40 flex items-center justify-between gap-2 rounded-2xl border-0 bg-encore-elevated px-3.5 py-2 text-xs text-encore-text shadow-[var(--shadow-elevated)] md:static md:rounded-none md:px-4",
+            "fixed inset-x-3 bottom-[calc(154px+env(safe-area-inset-bottom))] z-40 flex items-center justify-between gap-2 rounded-2xl border-0 bg-encore-elevated/95 backdrop-blur-xl px-3.5 py-2 text-xs text-encore-text shadow-[var(--shadow-elevated)] md:static md:rounded-none md:px-4",
             hideMobileMiniPlayer && "max-md:hidden"
           )}
         >
@@ -285,7 +285,7 @@ export function NowPlayingBar() {
         >
           <div
             className={cn(
-              "relative flex h-[60px] w-full max-w-[420px] items-center gap-1 overflow-hidden rounded-[18px] border-0 bg-encore-elevated px-2 shadow-[var(--shadow-elevated)] transition-transform duration-200",
+              "relative flex h-[60px] w-full max-w-[420px] items-center gap-1 overflow-hidden rounded-[18px] border-0 bg-encore-elevated px-2 shadow-[var(--shadow-elevated)] backdrop-blur-2xl transition-transform duration-200",
               hideMobileMiniPlayer ? "pointer-events-none" : "pointer-events-auto"
             )}
           >
@@ -365,7 +365,7 @@ export function NowPlayingBar() {
       {/* Desktop & Tablet Studio Now Playing Bar (>= md) */}
       <footer
         data-testid="now-playing-bar"
-        className="hidden h-[72px] shrink-0 items-center justify-between gap-2 bg-encore-shell px-3 shadow-[0_-1px_0_var(--hairline)] select-none md:flex lg:gap-4 lg:px-4"
+        className="hidden h-[72px] shrink-0 items-center justify-between gap-2 bg-encore-shell/95 px-3 shadow-[0_-1px_0_var(--hairline)] backdrop-blur-xl select-none md:flex lg:gap-4 lg:px-4"
       >
         {/* Left: Now Playing Widget */}
         <div
@@ -426,7 +426,7 @@ export function NowPlayingBar() {
             </>
           ) : (
             <div className="flex items-center gap-3 opacity-55">
-              <div className="h-12 w-12 rounded-[8px] bg-encore-elevated lg:h-14 lg:w-14" />
+              <div className="h-12 w-12 rounded-[8px] bg-encore-elevated/80 lg:h-14 lg:w-14" />
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-encore-text">
                   Dhun
@@ -650,7 +650,7 @@ export function NowPlayingBar() {
             </button>
 
             {sleepMenuOpen && (
-              <div className="absolute bottom-11 right-0 z-50 w-44 rounded-2xl border-0 bg-encore-elevated p-1.5 shadow-[var(--shadow-elevated)]">
+              <div className="absolute bottom-11 right-0 z-50 w-44 rounded-2xl border-0 bg-encore-elevated/95 backdrop-blur-xl p-1.5 shadow-[var(--shadow-elevated)]">
                 <p className="px-2.5 py-1 text-xs font-medium text-encore-muted">
                   Sleep timer
                 </p>
