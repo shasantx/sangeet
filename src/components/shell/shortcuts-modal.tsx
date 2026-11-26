@@ -7,7 +7,7 @@ const SHORTCUTS = [
   { keys: "Space", desc: "Play / Pause active track" },
   { keys: "Ctrl + K", desc: "Open Command Palette & instant search" },
   { keys: "/", desc: "Focus top Search bar" },
-  { keys: "T", desc: "Toggle Dark / Light Cobalt theme" },
+  { keys: "T", desc: "Toggle dark / light theme" },
   { keys: "← / →", desc: "Seek backward / forward 5 seconds" },
   { keys: "Shift + → / ←", desc: "Next / Previous track" },
   { keys: "Shift + ↑ / ↓", desc: "Volume up / down 5%" },
@@ -59,7 +59,7 @@ export function ShortcutsModal() {
       aria-modal="true"
       aria-label="Keyboard Shortcuts"
       onClick={() => setOpen(false)}
-      className="fixed inset-0 z-[92] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[92] flex items-center justify-center bg-black/70 p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}

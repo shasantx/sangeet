@@ -224,7 +224,7 @@ export function TopBar() {
   return (
     <header
       className={cn(
-        "sangeet-glass-navbar fixed inset-x-0 top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-2 bg-gradient-to-b from-encore-shell/95 via-encore-shell/80 to-transparent px-2.5 select-none sm:px-4",
+        "sangeet-glass-navbar fixed inset-x-0 top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-2 bg-encore-shell px-2.5 select-none sm:px-4",
         theme === "dark" ? "stage-tone-dark" : "stage-tone-light"
       )}
     >
@@ -233,11 +233,11 @@ export function TopBar() {
         <Link
           href="/home"
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-encore-text transition-opacity duration-150 hover:opacity-90 md:w-auto md:gap-2 md:px-2"
-          title="Sangeet"
+          title="Dhun"
         >
-          <SangeetLogo className="h-8 w-8 shadow-[0_2px_10px_rgba(0,0,0,0.28)]" />
+          <SangeetLogo className="h-8 w-8" />
           <span className="hidden text-[15px] font-semibold tracking-tight text-encore-text md:inline">
-            Sangeet
+            Dhun
           </span>
         </Link>
 
@@ -246,7 +246,7 @@ export function TopBar() {
             type="button"
             onClick={() => router.back()}
             aria-label="Go back"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-encore-base/80 text-encore-text shadow-[0_2px_10px_rgba(0,0,0,0.28)] backdrop-blur-xl transition-colors duration-150 hover:bg-encore-elevated"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-encore-base text-encore-text transition-colors duration-150 hover:bg-encore-elevated"
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.8} />
           </button>
@@ -254,7 +254,7 @@ export function TopBar() {
             type="button"
             onClick={() => router.forward()}
             aria-label="Go forward"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-encore-base/80 text-encore-text shadow-[0_2px_10px_rgba(0,0,0,0.28)] backdrop-blur-xl transition-colors duration-150 hover:bg-encore-elevated"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-encore-base text-encore-text transition-colors duration-150 hover:bg-encore-elevated"
           >
             <ChevronRight className="h-4 w-4" strokeWidth={1.8} />
           </button>
@@ -374,7 +374,7 @@ export function TopBar() {
             type="button"
             onClick={() =>
               openDownloadAppModal(
-                "Get 1-click offline downloads & local music scanning with Sangeet for Android and Windows."
+                "Get 1-click offline downloads & local music scanning with Dhun for Android and Windows."
               )
             }
             title="Download Android APK or Windows App"
@@ -391,10 +391,10 @@ export function TopBar() {
           aria-label="Explore"
           aria-current={pathname === "/explore" ? "page" : undefined}
           className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-full backdrop-blur-xl shadow-[0_2px_10px_rgba(0,0,0,0.28)] transition-colors duration-150 sm:hidden",
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors duration-150 sm:hidden",
             pathname === "/explore"
-              ? "bg-encore-base/90 text-encore-accent ring-1 ring-encore-accent/40"
-              : "bg-encore-base/80 text-encore-text hover:bg-encore-elevated"
+              ? "bg-encore-base text-encore-accent ring-1 ring-encore-accent/40"
+              : "bg-encore-base text-encore-text hover:bg-encore-elevated"
           )}
         >
           <Compass className="h-4 w-4" strokeWidth={1.75} />
@@ -413,7 +413,7 @@ export function TopBar() {
               ? "Switch to light theme (T)"
               : "Switch to dark theme (T)"
           }
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-encore-base/80 text-encore-accent shadow-[0_2px_10px_rgba(0,0,0,0.28)] backdrop-blur-xl transition-all duration-200 hover:bg-encore-elevated active:scale-90"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-encore-base text-encore-accent transition-all duration-200 hover:bg-encore-elevated active:scale-90"
         >
           {theme === "dark" ? (
             <Sun
@@ -434,7 +434,7 @@ export function TopBar() {
           onClick={() => setProfileOpen((o) => !o)}
           aria-expanded={profileOpen}
           aria-label="Profile menu"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-encore-base/80 text-xs font-medium text-encore-text shadow-[0_2px_10px_rgba(0,0,0,0.28)] backdrop-blur-xl transition-colors duration-150 hover:bg-encore-elevated sm:w-auto sm:gap-2.5 sm:pl-1.5 sm:pr-4"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-encore-base text-xs font-medium text-encore-text transition-colors duration-150 hover:bg-encore-elevated sm:w-auto sm:gap-2.5 sm:pl-1.5 sm:pr-4"
         >
           {user?.avatar ? (
             <img

@@ -84,7 +84,7 @@ function ArtistPageInner({ id }: { id: string }) {
       <div
         className="relative flex min-h-[260px] flex-col justify-end overflow-hidden border-b border-encore-hairline p-4 pt-14 sm:min-h-[280px] sm:p-6 sm:pt-16"
         style={{
-          background: `linear-gradient(180deg, ${heroColor} 0%, #0d0808 100%)`
+          backgroundColor: heroColor
         }}
       >
         {artist.banner && (
@@ -96,14 +96,14 @@ function ArtistPageInner({ id }: { id: string }) {
         )}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0a0606]/90 via-[#0a0606]/35 to-transparent"
+          className="pointer-events-none absolute inset-0 bg-black/55"
         />
         <div className="relative z-10">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-            <BadgeCheck className="h-5 w-5 fill-[#e5303f] text-white" />
+            <BadgeCheck className="h-5 w-5 fill-[#e2363e] text-white" />
             <span>Verified Artist</span>
           </div>
-          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.02em] text-white drop-shadow sm:text-5xl">
+          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.02em] text-white sm:text-5xl">
             {artist.name}
           </h1>
           {artist.subscribers && (
@@ -118,7 +118,7 @@ function ArtistPageInner({ id }: { id: string }) {
           type="button"
           disabled={artist.topTracks.length === 0}
           onClick={() => playTrack(artist.topTracks[0], artist.topTracks)}
-          className="btn-cobalt flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition hover:scale-105 disabled:opacity-40"
+          className="btn-cobalt flex h-14 w-14 items-center justify-center rounded-full transition hover:scale-105 disabled:opacity-40"
           aria-label={`Play ${artist.name}`}
         >
           <Play className="h-6 w-6 translate-x-0.5 fill-current" />

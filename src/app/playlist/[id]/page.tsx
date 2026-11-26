@@ -202,7 +202,7 @@ export default function PlaylistPage({
         className="flex flex-col gap-5 p-4 pt-6 sm:flex-row sm:items-end sm:gap-6 sm:p-6 sm:pt-10"
         style={{
           background:
-            "linear-gradient(180deg, var(--background-tinted-highlight) 0%, var(--background-base) 100%)"
+            "var(--background-base)"
         }}
       >
         <ArtworkMosaic
@@ -225,14 +225,14 @@ export default function PlaylistPage({
                 value={nameDraft}
                 onChange={(e) => setNameDraft(e.target.value)}
                 placeholder="Playlist name"
-                className="w-full rounded-xl bg-encore-elevated/85 px-3.5 py-2 text-xl font-bold text-encore-text placeholder:text-encore-muted outline-none transition focus:ring-2 focus:ring-encore-accent/55 sm:text-2xl"
+                className="w-full rounded-xl bg-encore-elevated px-3.5 py-2 text-xl font-bold text-encore-text placeholder:text-encore-muted outline-none transition focus:ring-2 focus:ring-encore-accent/55 sm:text-2xl"
               />
               <input
                 type="text"
                 value={descDraft}
                 onChange={(e) => setDescDraft(e.target.value)}
                 placeholder="Optional description"
-                className="w-full rounded-xl bg-encore-elevated/85 px-3.5 py-2 text-sm text-encore-text placeholder:text-encore-muted outline-none transition focus:ring-2 focus:ring-encore-accent/55"
+                className="w-full rounded-xl bg-encore-elevated px-3.5 py-2 text-sm text-encore-text placeholder:text-encore-muted outline-none transition focus:ring-2 focus:ring-encore-accent/55"
               />
               <div className="flex items-center gap-2 pt-1">
                 <button
@@ -246,7 +246,7 @@ export default function PlaylistPage({
                 <button
                   type="button"
                   onClick={() => setEditing(false)}
-                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full bg-encore-elevated/80 px-4 text-xs font-semibold text-encore-text transition hover:bg-encore-elevated-highlight"
+                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full bg-encore-elevated px-4 text-xs font-semibold text-encore-text transition hover:bg-encore-elevated-highlight"
                 >
                   <X className="h-3.5 w-3.5" />
                   Cancel
@@ -279,7 +279,7 @@ export default function PlaylistPage({
             type="button"
             disabled={displayedTracks.length === 0}
             onClick={handlePrimaryPlay}
-            className="btn-cobalt flex h-12 w-12 items-center justify-center rounded-full shadow-xl transition hover:scale-105 disabled:opacity-40 sm:h-14 sm:w-14"
+            className="btn-cobalt flex h-12 w-12 items-center justify-center rounded-full transition hover:scale-105 disabled:opacity-40 sm:h-14 sm:w-14"
             aria-label={isPlaylistPlaying ? "Pause playlist" : "Play playlist"}
           >
             {isPlaylistPlaying ? (
@@ -438,7 +438,7 @@ export default function PlaylistPage({
         {/* Inline "Let's find something for your playlist" finder */}
         <div
           ref={findSectionRef}
-          className="mt-10 rounded-3xl bg-encore-elevated/60 p-5 sm:p-6"
+          className="mt-10 rounded-2xl bg-encore-elevated/60 p-5 sm:p-6"
         >
           <h2 className="text-lg font-bold text-encore-text">
             Let&apos;s find something for your playlist
@@ -451,7 +451,7 @@ export default function PlaylistPage({
               value={findQuery}
               onChange={(e) => setFindQuery(e.target.value)}
               placeholder="Search for songs to add..."
-              className="h-11 w-full rounded-full bg-encore-base/80 pl-10 pr-10 text-sm text-encore-text placeholder:text-encore-muted outline-none transition focus:ring-2 focus:ring-encore-accent/55"
+              className="h-11 w-full rounded-full bg-encore-base pl-10 pr-10 text-sm text-encore-text placeholder:text-encore-muted outline-none transition focus:ring-2 focus:ring-encore-accent/55"
             />
             {searching ? (
               <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-encore-accent" />

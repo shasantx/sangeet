@@ -82,13 +82,13 @@ function AlbumPageInner({ id }: { id: string }) {
         className="flex flex-col gap-5 border-b border-encore-hairline p-4 pt-6 sm:flex-row sm:items-end sm:gap-6 sm:p-6 sm:pt-10"
         style={{
           background:
-            "linear-gradient(180deg, var(--background-tinted-highlight) 0%, var(--background-base) 100%)"
+            "var(--background-base)"
         }}
       >
         <img
           src={album.cover}
           alt={album.title}
-          className="h-36 w-36 shrink-0 rounded-[14px] object-cover shadow-lg sm:h-44 sm:w-44"
+          className="h-36 w-36 shrink-0 rounded-[14px] object-cover sm:h-44 sm:w-44"
         />
         <div className="min-w-0">
           <p className="text-xs font-medium text-encore-muted">Album</p>
@@ -123,7 +123,7 @@ function AlbumPageInner({ id }: { id: string }) {
           type="button"
           disabled={album.tracks.length === 0}
           onClick={() => playTrack(album.tracks[0], album.tracks)}
-          className="btn-cobalt flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition hover:scale-105 disabled:opacity-40"
+          className="btn-cobalt flex h-14 w-14 items-center justify-center rounded-full transition hover:scale-105 disabled:opacity-40"
           aria-label={`Play ${album.title}`}
         >
           <Play className="h-6 w-6 translate-x-0.5 fill-current" />

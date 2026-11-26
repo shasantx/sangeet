@@ -270,11 +270,11 @@ export function CommandPalette() {
       aria-modal="true"
       aria-label="Command Palette"
       onClick={() => setOpen(false)}
-      className="fixed inset-0 z-[90] flex items-start justify-center bg-black/70 px-3 pt-14 backdrop-blur-sm sm:px-4 sm:pt-20"
+      className="fixed inset-0 z-[90] flex items-start justify-center bg-black/70 px-3 pt-14 sm:px-4 sm:pt-20"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-xl overflow-hidden rounded-[20px] bg-encore-base/95 shadow-[0_24px_70px_rgba(0,0,0,0.6)] backdrop-blur-2xl"
+        className="w-full max-w-xl overflow-hidden rounded-[20px] bg-encore-base shadow-[var(--shadow-elevated)]"
       >
         {/* Input */}
         <div className="flex items-center gap-3 bg-encore-elevated/45 px-4 py-3.5">

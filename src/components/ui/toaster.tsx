@@ -18,13 +18,13 @@ export function Toaster() {
           type="button"
           onClick={() => dismissToast(toast.id)}
           className={cn(
-            "studio-enter pointer-events-auto flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold shadow-[var(--shadow-elevated)] backdrop-blur-md transition",
+            "studio-enter pointer-events-auto flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold shadow-[var(--shadow-elevated)] transition",
             toast.tone === "success" &&
-              "border-encore-accent/45 bg-encore-elevated/95 text-encore-text",
+              "border-encore-accent/45 bg-encore-elevated text-encore-text",
             toast.tone === "error" &&
-              "border-encore-negative/45 bg-encore-elevated/95 text-encore-negative",
+              "border-encore-negative/45 bg-encore-elevated text-encore-negative",
             (!toast.tone || toast.tone === "default") &&
-              "border-encore-hairline bg-encore-elevated/95 text-encore-text"
+              "border-encore-hairline bg-encore-elevated text-encore-text"
           )}
         >
           {toast.tone === "success" ? (

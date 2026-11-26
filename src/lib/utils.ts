@@ -26,11 +26,11 @@ export function parseDurationToSeconds(text?: string): number {
 }
 
 const ACCENT_PALETTE = [
-  "#d4142a",
-  "#c8102e",
+  "#e2363e",
+  "#c41e2e",
   "#6e0b17",
   "#5a0f18",
-  "#a50e22",
+  "#c42a31",
   "#74121e",
   "#8a0c1c",
   "#7a4f08",

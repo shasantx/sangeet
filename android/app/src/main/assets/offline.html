@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#09090b" />
-  <title>Sangeet · Offline &amp; Local Player</title>
+  <title>Dhun · Offline &amp; Local Player</title>
   <style>
     :root {
       color-scheme: dark;
@@ -620,7 +620,7 @@
         <span class="brand-mark" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="18" r="4"/><path d="M12 18V2l7 4"/></svg>
         </span>
-        <span>Sangeet Offline</span>
+        <span>Dhun Offline</span>
       </div>
       <div class="top-actions">
         <span id="netPill" class="status-pill"><span id="netDot" class="status-dot"></span><span id="netLabel" class="status-text">Offline mode</span></span>
@@ -1027,7 +1027,7 @@
                 pushItem({
                   id: "cache-" + slug,
                   title: safeText(h && h.get("x-sangeet-title"), slug),
-                  artist: safeText(h && h.get("x-sangeet-artist"), "Sangeet"),
+                  artist: safeText(h && h.get("x-sangeet-artist"), "Dhun"),
                   source: "Cached",
                   url: req.url,
                   duration: 0,
@@ -1071,7 +1071,7 @@
             t.textContent = "Allow audio access to scan your phone";
             const s = document.createElement("p");
             s.className = "empty-sub";
-            s.textContent = "Sangeet reads songs from Android MediaStore so you can play local audio offline.";
+            s.textContent = "Dhun reads songs from Android MediaStore so you can play local audio offline.";
             const grant = document.createElement("button");
             grant.className = "btn btn-primary";
             grant.style.marginTop = "14px";

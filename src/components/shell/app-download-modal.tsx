@@ -100,9 +100,9 @@ export function AppDownloadModal() {
       {showFloatingPrompt && !open && (
         <div
           role="region"
-          aria-label="Download Sangeet native app"
+          aria-label="Download Dhun native app"
           className={cn(
-            "studio-enter fixed right-3 z-40 w-[min(340px,calc(100vw-24px))] rounded-2xl bg-encore-elevated/95 p-4 shadow-[0_24px_70px_rgba(12,4,4,0.55)] backdrop-blur-xl md:bottom-24 md:right-4",
+            "studio-enter fixed right-3 z-40 w-[min(340px,calc(100vw-24px))] rounded-2xl bg-encore-elevated p-4 shadow-[var(--shadow-elevated)] md:bottom-24 md:right-4",
             hasTrack
               ? "bottom-[calc(154px+env(safe-area-inset-bottom))]"
               : "bottom-[calc(86px+env(safe-area-inset-bottom))]"
@@ -115,7 +115,7 @@ export function AppDownloadModal() {
               </span>
               <div>
                 <p className="text-xs font-semibold text-encore-text">
-                  Get Sangeet Native App
+                  Get Dhun Native App
                 </p>
                 <p className="text-[11px] text-encore-subdued">
                   1-click offline downloads &amp; local music scan
@@ -148,7 +148,7 @@ export function AppDownloadModal() {
                 dismissPrompt();
                 openModal();
               }}
-              className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full bg-encore-base/85 px-3.5 text-xs font-medium text-encore-text shadow-[0_4px_14px_rgba(0,0,0,0.18)] transition hover:bg-encore-elevated-highlight"
+              className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full bg-encore-base px-3.5 text-xs font-medium text-encore-text transition hover:bg-encore-elevated-highlight"
             >
               <Laptop className="h-3.5 w-3.5 text-encore-accent" />
               Windows
@@ -164,13 +164,13 @@ export function AppDownloadModal() {
           aria-modal="true"
           aria-labelledby="sangeet-app-modal-title"
           onClick={closeModal}
-          className="fixed inset-0 z-[96] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[96] flex items-center justify-center bg-black/70 p-4"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="studio-enter w-full max-w-md overflow-hidden rounded-3xl bg-encore-base shadow-[0_24px_70px_rgba(12,4,4,0.55)]"
+            className="studio-enter w-full max-w-md overflow-hidden rounded-2xl bg-encore-base shadow-[var(--shadow-elevated)]"
           >
-            <div className="relative bg-gradient-to-br from-encore-tinted via-encore-elevated to-encore-base p-6 pb-5 dark:from-[#4a0f17]/80 dark:via-encore-elevated/95 dark:to-encore-base">
+            <div className="relative border-b border-encore-hairline bg-encore-elevated p-6 pb-5">
               <button
                 type="button"
                 onClick={closeModal}
@@ -182,14 +182,14 @@ export function AppDownloadModal() {
 
               <div className="inline-flex items-center gap-1.5 rounded-full bg-encore-tinted px-3 py-1 text-[11px] font-semibold text-encore-accent">
                 <Sparkles className="h-3.5 w-3.5" />
-                Native Sangeet Experience
+                Native Dhun Experience
               </div>
 
               <h2
                 id="sangeet-app-modal-title"
                 className="mt-3 text-xl font-bold tracking-tight text-encore-text"
               >
-                Download Sangeet App
+                Download Dhun App
               </h2>
               <p className="mt-1.5 text-xs leading-relaxed text-encore-subdued">
                 {reason ||
@@ -199,7 +199,7 @@ export function AppDownloadModal() {
 
             <div className="space-y-3 p-6 pt-4">
               <div className="grid grid-cols-2 gap-2.5 text-xs">
-                <div className="rounded-xl bg-encore-elevated/85 p-3">
+                <div className="rounded-xl bg-encore-elevated p-3">
                   <Zap className="h-4 w-4 text-encore-accent" />
                   <p className="mt-1.5 font-semibold text-encore-text">
                     1-Click Fast Download
@@ -208,7 +208,7 @@ export function AppDownloadModal() {
                     Parallel segmented downloads straight to offline storage
                   </p>
                 </div>
-                <div className="rounded-xl bg-encore-elevated/85 p-3">
+                <div className="rounded-xl bg-encore-elevated p-3">
                   <FolderSearch className="h-4 w-4 text-encore-accent" />
                   <p className="mt-1.5 font-semibold text-encore-text">
                     Smart Local Scan
@@ -239,9 +239,9 @@ export function AppDownloadModal() {
 
                 <a
                   href="/api/download/windows"
-                  download="Sangeet.exe"
+                  download="Dhun.exe"
                   onClick={closeModal}
-                  className="flex min-h-[48px] w-full items-center justify-between rounded-2xl bg-encore-elevated/85 px-4 py-3 text-sm font-semibold text-encore-text shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition hover:bg-encore-elevated-highlight active:scale-[0.98]"
+                  className="flex min-h-[48px] w-full items-center justify-between rounded-2xl bg-encore-elevated px-4 py-3 text-sm font-semibold text-encore-text shadow-[var(--shadow-elevated)] transition hover:bg-encore-elevated-highlight active:scale-[0.98]"
                 >
                   <span className="flex items-center gap-2.5">
                     <Laptop

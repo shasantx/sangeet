@@ -6,16 +6,16 @@ export default function PrivacyPage() {
       <div className="mx-auto max-w-3xl space-y-6 p-4 pb-16 text-sm leading-relaxed text-encore-subdued sm:p-6">
         <div>
           <Link href="/" className="text-xs font-semibold text-encore-accent hover:underline">
-            ← Back to Sangeet
+            ← Back to Dhun
           </Link>
           <h1 className="mt-3 text-3xl font-black text-encore-text">Privacy Policy</h1>
-          <p className="mt-1 text-xs text-encore-muted">Effective: 2026 • Sangeet Open-Source Project</p>
+          <p className="mt-1 text-xs text-encore-muted">Effective: 2026 • Dhun Open-Source Project</p>
         </div>
 
         <section className="space-y-2 rounded-2xl border border-encore-hairline bg-encore-elevated p-5">
           <h2 className="text-base font-bold text-encore-text">1. Local-First Storage</h2>
           <p>
-            Sangeet works in Guest and Local Profile modes without requiring an
+            Dhun works in Guest and Local Profile modes without requiring an
             account. Your liked songs, custom playlists, listening statistics, EQ
             settings, and offline audio files are stored locally in your browser
             (localStorage and IndexedDB) and can be exported or cleared at any
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
           <h2 className="text-base font-bold text-encore-text">2. Optional Google Sign-In</h2>
           <p>
             If you choose to sign in with Google on a deployment where OAuth is
-            configured, Sangeet reads only your basic profile (name, email, avatar)
+            configured, Dhun reads only your basic profile (name, email, avatar)
             to store an HTTP-only session cookie. No external database is used—your
             music library, suggestions cache, and offline audio stay strictly on
             your device.

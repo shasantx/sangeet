@@ -10,8 +10,33 @@ android {
         applicationId 'xyz.shasant.sangeet'
         minSdk 24
         targetSdk 35
-        versionCode 21
-        versionName '2.3.0'
+        versionCode 22
+        versionName '2.4.0'
+    }
+
+    // Release builds are signed with ONE permanent key (kept in GitHub Secrets, never in git).
+    // A stable signature is what lets Android install updates over the previous version,
+    // and a non-debuggable, properly signed release APK is what Play Protect expects.
+    def keystorePath = System.getenv('DHUN_KEYSTORE_PATH')
+    signingConfigs {
+        release {
+            if (keystorePath) {
+                storeFile file(keystorePath)
+                storePassword System.getenv('DHUN_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('DHUN_KEY_ALIAS')
+                keyPassword System.getenv('DHUN_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            debuggable false
+            if (keystorePath) {
+                signingConfig signingConfigs.release
+            }
+        }
     }
 
     compileOptions {

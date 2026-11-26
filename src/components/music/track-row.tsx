@@ -128,7 +128,7 @@ export function TrackRow({
     setMenuOpen(false);
     if (isWeb) {
       openDownloadAppModal(
-        `1-click fast offline downloads are available in the Sangeet Android APK and Windows Rust app.`
+        `1-click fast offline downloads are available in the Dhun Android APK and Windows Rust app.`
       );
       return;
     }
@@ -352,7 +352,7 @@ export function TrackRow({
           {menuOpen && (
             <div
               className={cn(
-                "absolute right-0 z-50 w-56 rounded-2xl bg-encore-elevated/95 p-1.5 shadow-[var(--shadow-elevated)] backdrop-blur-2xl",
+                "absolute right-0 z-50 w-56 rounded-2xl bg-encore-elevated p-1.5 shadow-[var(--shadow-elevated)]",
                 openUpward ? "bottom-10" : "top-10"
               )}
             >

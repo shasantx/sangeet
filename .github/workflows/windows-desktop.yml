@@ -27,21 +27,21 @@ jobs:
         with:
           workspaces: desktop-rust
 
-      - name: Build Sangeet Windows Executable (Rust / Tauri v2)
+      - name: Build Dhun Windows Executable (Rust / Tauri v2)
         working-directory: desktop-rust
         run: cargo build --release
 
-      - name: Package portable Sangeet.exe
+      - name: Package portable Dhun.exe
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path "release" | Out-Null
-          Copy-Item "desktop-rust\target\release\sangeet.exe" -Destination "release\Sangeet.exe" -Force
-          Get-Item "release\Sangeet.exe" | Select-Object Name, Length
+          Copy-Item "desktop-rust\target\release\sangeet.exe" -Destination "release\Dhun.exe" -Force
+          Get-Item "release\Dhun.exe" | Select-Object Name, Length
 
       - uses: actions/upload-artifact@v4
         with:
           name: sangeet-windows-exe
-          path: release/Sangeet.exe
+          path: release/Dhun.exe
           if-no-files-found: error
           retention-days: 14
 
@@ -51,8 +51,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           CURRENT_TAG="desktop-build-${{ github.run_number }}"
-          TITLE="Sangeet Windows Desktop (Rust) · build ${{ github.run_number }}"
-          FILE="release/Sangeet.exe"
+          TITLE="Dhun Windows Desktop (Rust) · build ${{ github.run_number }}"
+          FILE="release/Dhun.exe"
           if gh release view "$CURRENT_TAG" >/dev/null 2>&1; then
             gh release upload "$CURRENT_TAG" "$FILE" --clobber
           else

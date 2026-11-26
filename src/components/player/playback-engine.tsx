@@ -913,7 +913,7 @@ export function PlaybackEngine() {
         navigator.mediaSession.metadata = new MediaMetadata({
           title: currentTrack.title,
           artist: currentTrack.artist,
-          album: currentTrack.album || "Sangeet",
+          album: currentTrack.album || "Dhun",
           artwork: [
             { src: currentTrack.thumbnail, sizes: "512x512", type: "image/jpeg" }
           ]

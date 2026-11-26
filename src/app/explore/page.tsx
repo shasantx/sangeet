@@ -8,18 +8,18 @@ import { SiteFooter } from "@/components/shell/site-footer";
 import { cn } from "@/lib/utils";
 
 const GENRES = [
-  { id: "all", label: "For you", tint: "from-[#c8102e] to-[#2a0a0e]" },
-  { id: "music", label: "Pop & Rock", tint: "from-[#9b1c1c] to-[#2a0b10]" },
+  { id: "all", label: "For you", tint: "bg-[#c41e2e]" },
+  { id: "music", label: "Pop & Rock", tint: "bg-[#9b1c1c]" },
   {
     id: "desi",
     label: "Hindi, Nepali & Punjabi",
-    tint: "from-[#8f1d3b] to-[#2b0c16]"
+    tint: "bg-[#8f1d3b]"
   },
-  { id: "chill", label: "Chill & Lo-Fi", tint: "from-[#b7791f] to-[#2a1a06]" },
+  { id: "chill", label: "Chill & Lo-Fi", tint: "bg-[#b7791f]" },
   {
     id: "workout",
     label: "Workout & Energy",
-    tint: "from-[#a50e22] to-[#1f0a0c]"
+    tint: "bg-[#c42a31]"
   }
 ];
 
@@ -84,14 +84,14 @@ export default function ExplorePage() {
               onClick={() => setSelected(g.id)}
               aria-pressed={active}
               className={cn(
-                "group relative min-h-[96px] overflow-hidden rounded-xl border bg-gradient-to-br p-3.5 text-left transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]",
+                "group relative min-h-[96px] overflow-hidden rounded-xl border p-3.5 text-left transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]",
                 g.tint,
                 active
-                  ? "border-encore-accent ring-2 ring-encore-accent/40 shadow-lg"
+                  ? "border-encore-accent ring-2 ring-encore-accent/40"
                   : "border-white/15 hover:border-white/30"
               )}
             >
-              <span className="relative z-10 block max-w-[75%] text-sm font-bold leading-snug text-white drop-shadow-sm">
+              <span className="relative z-10 block max-w-[75%] text-sm font-bold leading-snug text-white">
                 {g.label}
               </span>
               {active && (
@@ -104,7 +104,7 @@ export default function ExplorePage() {
                   src={cover}
                   alt=""
                   aria-hidden="true"
-                  className="pointer-events-none absolute -bottom-2 -right-2 h-16 w-16 rotate-[18deg] rounded-lg object-cover shadow-lg ring-1 ring-white/20 transition-transform duration-300 group-hover:rotate-[12deg] group-hover:scale-110"
+                  className="pointer-events-none absolute -bottom-2 -right-2 h-16 w-16 rotate-[18deg] rounded-lg object-cover ring-1 ring-white/20 transition-transform duration-300 group-hover:rotate-[12deg] group-hover:scale-110"
                 />
               )}
             </button>

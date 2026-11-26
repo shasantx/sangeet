@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Sangeet",
+  "productName": "Dhun",
   "version": "2.3.0",
   "identifier": "xyz.shasant.sangeet",
   "build": {

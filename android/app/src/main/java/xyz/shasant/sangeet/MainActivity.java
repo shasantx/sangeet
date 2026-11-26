@@ -229,19 +229,8 @@ public final class MainActivity extends AppCompatActivity {
 
             @Override
             public void onPermissionRequest(PermissionRequest request) {
-                runOnUiThread(() -> {
-                    for (String res : request.getResources()) {
-                        if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(res)) {
-                            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
-                                    != PackageManager.PERMISSION_GRANTED) {
-                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 102);
-                            }
-                            request.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
-                            return;
-                        }
-                    }
-                    request.deny();
-                });
+                // The player never needs camera or microphone; never grant them to web content.
+                runOnUiThread(request::deny);
             }
         });
 
@@ -292,7 +281,7 @@ public final class MainActivity extends AppCompatActivity {
                     : "";
             if (!"http".equals(scheme) && !"https".equals(scheme)) {
                 String message = "blob".equals(scheme)
-                        ? "Use Download for offline in Sangeet to save songs on Android."
+                        ? "Use Download for offline in Dhun to save songs on Android."
                         : "Direct download for this link type is not supported on Android.";
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show();
                 return;
@@ -628,7 +617,7 @@ public final class MainActivity extends AppCompatActivity {
                     DownloadManager.Request request = new DownloadManager.Request(source);
                     request.setMimeType(type);
                     request.setTitle(downloadName);
-                    request.setDescription("Downloading with Sangeet");
+                    request.setDescription("Downloading with Dhun");
                     request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                     request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Sangeet/" + downloadName);
                     String cookies = CookieManager.getInstance().getCookie(url);

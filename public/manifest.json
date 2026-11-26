@@ -1,13 +1,13 @@
 {
-  "name": "Sangeet — Music Player",
-  "short_name": "Sangeet",
+  "name": "Dhun — Music Player",
+  "short_name": "Dhun",
   "description": "Free, open-source music discovery and streaming player with synced lyrics, SponsorBlock, and local audio.",
   "start_url": "/home",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0a0606",
-  "theme_color": "#0a0606",
+  "background_color": "#0d0c0b",
+  "theme_color": "#0d0c0b",
   "categories": ["music", "entertainment"],
   "icons": [
     {

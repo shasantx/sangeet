@@ -57,7 +57,7 @@ export const useLibraryStore = create<LibraryState>()(
       playlists: [
         {
           id: "discover-mix",
-          name: "My Sangeet Mix",
+          name: "My Dhun Mix",
           description:
             "Your personal playlist — add any song to start building it.",
           tracks: [],

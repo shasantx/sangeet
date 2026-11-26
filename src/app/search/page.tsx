@@ -13,7 +13,7 @@ import { useToastStore } from "@/store/toast-store";
 import { cn } from "@/lib/utils";
 
 const BROWSE_CATEGORIES = [
-  { label: "Pop", query: "top pop hits", color: "#c8102e" },
+  { label: "Pop", query: "top pop hits", color: "#c41e2e" },
   { label: "Hindi", query: "Arijit Singh latest hindi hits", color: "#e11d48" },
   { label: "Nepali", query: "Sajjan Raj Vaidya nepali songs", color: "#6e0b17" },
   { label: "Hip-Hop", query: "hip hop rap hits", color: "#c2410c" },
@@ -113,11 +113,11 @@ function SearchContent() {
                   router.push(`/search?q=${encodeURIComponent(cat.query)}`)
                 }
                 style={{
-                  background: `linear-gradient(135deg, ${cat.color}d9 0%, #0f0909 100%)`
+                  backgroundColor: `color-mix(in srgb, ${cat.color} 62%, #131211)`
                 }}
                 className="group relative flex h-32 flex-col justify-between overflow-hidden rounded-[14px] border border-white/15 p-4 text-left transition-all duration-200 ease-studio hover:-translate-y-0.5 hover:brightness-110 active:scale-[0.98]"
               >
-                <span className="relative z-10 text-lg font-semibold tracking-tight text-white drop-shadow">
+                <span className="relative z-10 text-lg font-semibold tracking-tight text-white">
                   {cat.label}
                 </span>
                 {cover ? (
@@ -126,7 +126,7 @@ function SearchContent() {
                     alt=""
                     aria-hidden="true"
                     loading="lazy"
-                    className="pointer-events-none absolute -bottom-3 -right-3 h-20 w-20 rotate-[18deg] rounded-[10px] object-cover shadow-2xl ring-1 ring-white/20 transition-transform duration-300 ease-studio group-hover:rotate-[12deg] group-hover:scale-105"
+                    className="pointer-events-none absolute -bottom-3 -right-3 h-20 w-20 rotate-[18deg] rounded-[10px] object-cover ring-1 ring-white/20 transition-transform duration-300 ease-studio group-hover:rotate-[12deg] group-hover:scale-105"
                   />
                 ) : (
                   <div className="pointer-events-none absolute -bottom-4 -right-4 h-20 w-20 rotate-[20deg] rounded-[10px] bg-black/25" />
@@ -195,7 +195,7 @@ function SearchContent() {
               <img
                 src={top.thumbnail}
                 alt={top.title}
-                className="h-24 w-24 rounded-xl object-cover shadow-lg"
+                className="h-24 w-24 rounded-xl object-cover"
               />
               <div className="pr-14">
                 <h3 className="truncate text-2xl font-extrabold text-encore-text">
@@ -209,7 +209,7 @@ function SearchContent() {
                 type="button"
                 aria-label="Play top result"
                 className={cn(
-                  "btn-cobalt absolute bottom-5 right-5 flex h-12 w-12 items-center justify-center rounded-full shadow-xl transition",
+                  "btn-cobalt absolute bottom-5 right-5 flex h-12 w-12 items-center justify-center rounded-full transition",
                   isTopCurrent && isPlaying
                     ? "translate-y-0 opacity-100"
                     : "opacity-100 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100"

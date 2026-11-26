@@ -8,15 +8,15 @@ interface SangeetLogoProps {
 }
 
 /**
- * Official Sangeet Cobalt Glass App Logo.
+ * Dhun app mark (a lowercase "d" whose bowl is a record). Component name kept for existing imports.
  */
 export function SangeetLogo({
   className = "h-8 w-8",
-  alt = "Sangeet"
+  alt = "Dhun"
 }: SangeetLogoProps) {
   return (
     <img
-      src="/brand/sangeet-logo.png?v=2"
+      src="/brand/sangeet-logo.png?v=3"
       alt={alt}
       draggable={false}
       className={cn(

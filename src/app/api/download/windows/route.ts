@@ -107,7 +107,7 @@ async function resolveLatestWindowsInstaller(): Promise<ResolvedWindows | null> 
 
     const resolved: ResolvedWindows = {
       tag: sanitizeReleaseTag(release.tag_name),
-      filename: exe.name ?? "Sangeet.exe",
+      filename: exe.name ?? "Dhun.exe",
       sizeBytes: exe.size ?? 0,
       publishedAt: release.published_at ?? null,
       url: target.toString()

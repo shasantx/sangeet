@@ -48,7 +48,7 @@ export function MediaCard({
     >
       <div
         className={cn(
-          "relative mb-3 aspect-square w-full overflow-hidden bg-encore-base shadow-[0_8px_24px_rgba(0,0,0,0.35)]",
+          "relative mb-3 aspect-square w-full overflow-hidden bg-encore-base shadow-[var(--shadow-elevated)]",
           rounded === "circle" ? "rounded-full" : "rounded-xl"
         )}
       >

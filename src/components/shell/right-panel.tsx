@@ -118,10 +118,10 @@ export function RightPanel() {
       <div
         onClick={() => setRightTab(null)}
         aria-hidden="true"
-        className="fixed inset-0 z-40 hidden bg-black/55 backdrop-blur-[2px] md:block xl:hidden"
+        className="fixed inset-0 z-40 hidden bg-black/55 md:block xl:hidden"
       />
 
-      <aside className="animate-drawer-in fixed bottom-2 right-2 top-[68px] z-50 hidden w-[min(350px,calc(100vw-16px))] shrink-0 flex-col rounded-panel bg-encore-base/95 shadow-[var(--shadow-elevated)] backdrop-blur-xl md:flex xl:static xl:inset-auto xl:z-auto xl:h-full xl:w-[320px] xl:bg-encore-base/90 xl:shadow-[0_8px_28px_rgba(0,0,0,0.22)] dark:xl:shadow-[0_8px_28px_rgba(0,0,0,0.35)]">
+      <aside className="animate-drawer-in fixed bottom-2 right-2 top-[68px] z-50 hidden w-[min(350px,calc(100vw-16px))] shrink-0 flex-col rounded-panel bg-encore-base shadow-[var(--shadow-elevated)] md:flex xl:static xl:inset-auto xl:z-auto xl:h-full xl:w-[320px] xl:bg-encore-base xl:shadow-[var(--shadow-elevated)] dark:xl:shadow-[var(--shadow-elevated)]">
         {/* Header */}
         <div className="flex items-center justify-between px-3.5 py-2.5">
           <div className="flex items-center gap-1">
@@ -174,7 +174,7 @@ export function RightPanel() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="overflow-hidden rounded-xl bg-encore-elevated shadow-[0_12px_32px_rgba(0,0,0,0.4)]">
+                  <div className="overflow-hidden rounded-xl bg-encore-elevated shadow-[var(--shadow-elevated)]">
                     <TrackArtwork
                       src={currentTrack.thumbnail}
                       trackId={currentTrack.id}

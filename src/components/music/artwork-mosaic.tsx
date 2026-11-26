@@ -44,7 +44,7 @@ export function ArtworkMosaic({
     return (
       <div
         className={cn(
-          "relative grid grid-cols-2 grid-rows-2 overflow-hidden bg-encore-elevated shadow-lg ring-1 ring-white/10",
+          "relative grid grid-cols-2 grid-rows-2 overflow-hidden bg-encore-elevated ring-1 ring-white/10",
           className
         )}
       >
@@ -57,7 +57,6 @@ export function ArtworkMosaic({
             className="h-full w-full object-cover transition-transform duration-500 ease-studio group-hover:scale-105"
           />
         ))}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/5" />
       </div>
     );
   }
@@ -66,7 +65,7 @@ export function ArtworkMosaic({
     return (
       <div
         className={cn(
-          "relative grid grid-cols-2 overflow-hidden bg-encore-elevated shadow-lg ring-1 ring-white/10",
+          "relative grid grid-cols-2 overflow-hidden bg-encore-elevated ring-1 ring-white/10",
           className
         )}
       >
@@ -79,7 +78,6 @@ export function ArtworkMosaic({
             className="h-full w-full object-cover transition-transform duration-500 ease-studio group-hover:scale-105"
           />
         ))}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/5" />
       </div>
     );
   }
@@ -89,7 +87,7 @@ export function ArtworkMosaic({
     return (
       <div
         className={cn(
-          "relative overflow-hidden bg-encore-elevated shadow-lg ring-1 ring-white/10",
+          "relative overflow-hidden bg-encore-elevated ring-1 ring-white/10",
           className
         )}
       >
@@ -99,24 +97,23 @@ export function ArtworkMosaic({
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-500 ease-studio group-hover:scale-105"
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/5" />
       </div>
     );
   }
 
   const gradientClass =
     accent === "mint" || accent === "sapphire"
-      ? "from-[#ec4a4f] via-[#c8102e] to-[#3a0d14]"
+      ? "bg-[#c41e2e]"
       : accent === "forest" || accent === "midnight"
-        ? "from-[#6e0b17] via-[#3d0a10] to-[#140607]"
+        ? "bg-[#2a2624]"
         : accent === "indigo"
-          ? "from-[#f5c451] via-[#b7791f] to-[#2a1a06]"
-          : "from-[#e5303f] via-[#a50e22] to-[#220a0e]";
+          ? "bg-[#8f6406]"
+          : "bg-[#e2363e]";
 
   return (
     <div
       className={cn(
-        "relative flex items-center justify-center overflow-hidden bg-gradient-to-br shadow-lg ring-1 ring-white/10",
+        "relative flex items-center justify-center overflow-hidden",
         gradientClass,
         className
       )}
@@ -130,7 +127,7 @@ export function ArtworkMosaic({
         aria-hidden="true"
         className="pointer-events-none absolute h-[58%] w-[58%] rounded-full border border-white/10"
       />
-      <span className="relative z-10 text-white drop-shadow">
+      <span className="relative z-10 text-white">
         {icon ?? <Disc3 className="h-7 w-7 opacity-90" strokeWidth={1.6} />}
       </span>
     </div>

@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
 
     const token = signSession({
       id: profileId.slice(0, 128),
-      name: String(profile?.name || "Sangeet Listener").slice(0, 120),
+      name: String(profile?.name || "Dhun Listener").slice(0, 120),
       email:
         typeof profile?.email === "string"
           ? profile.email.slice(0, 254)
@@ -143,19 +143,19 @@ export async function GET(request: NextRequest) {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="refresh" content="0;url=${escapedHref}" />
-  <title>Returning to Sangeet</title>
+  <title>Returning to Dhun</title>
   <style>
-    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#0a0606; color:#fdf3ec; font-family:system-ui,-apple-system,sans-serif; padding:24px; text-align:center; }
+    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#0d0c0b; color:#f5f3f1; font-family:system-ui,-apple-system,sans-serif; padding:24px; text-align:center; }
     .card { max-width:340px; width:100%; background:#1a0f0f; border:1px solid rgba(245,196,81,0.12); border-radius:16px; padding:24px; }
-    .btn { display:inline-block; margin-top:16px; padding:12px 24px; border-radius:999px; background:#e5303f; color:#ffffff; font-weight:600; font-size:14px; text-decoration:none; }
-    p { margin:8px 0 0; color:#bfaaa4; font-size:13px; }
+    .btn { display:inline-block; margin-top:16px; padding:12px 24px; border-radius:999px; background:#e2363e; color:#ffffff; font-weight:600; font-size:14px; text-decoration:none; }
+    p { margin:8px 0 0; color:#a8a29e; font-size:13px; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1 style="margin:0;font-size:18px;font-weight:600;">Signed in to Sangeet</h1>
-    <p>Returning to the Sangeet Android app...</p>
-    <a class="btn" href="${escapedHref}">Open Sangeet App</a>
+    <h1 style="margin:0;font-size:18px;font-weight:600;">Signed in to Dhun</h1>
+    <p>Returning to the Dhun Android app...</p>
+    <a class="btn" href="${escapedHref}">Open Dhun App</a>
   </div>
   <script>window.location.replace(${safeJsDeepLink});</script>
 </body>

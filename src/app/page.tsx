@@ -50,7 +50,7 @@ const FALLBACK_TRACKS: Track[] = [
   {
     id: "preview-1",
     title: "Midnight Sessions",
-    artist: "Sangeet Radio",
+    artist: "Dhun Radio",
     thumbnail: "",
     duration: 214,
     source: "youtube"
@@ -231,7 +231,7 @@ export default function LandingPage() {
       {/* Clean Sticky Header with Compact Floating Center LiquidGlass Nav Pill */}
       <header
         className={cn(
-          "sangeet-glass-navbar sticky top-0 z-30 h-16 bg-gradient-to-b from-encore-shell/90 via-encore-shell/55 to-transparent px-4 sm:px-6",
+          "sangeet-glass-navbar sticky top-0 z-30 h-16 border-b border-encore-hairline bg-encore-shell px-4 sm:px-6",
           isDark ? "stage-tone-dark" : "stage-tone-light"
         )}
       >
@@ -240,7 +240,7 @@ export default function LandingPage() {
           <Link href="/" className="inline-flex w-fit items-center gap-2.5">
             <SangeetLogo className="h-8 w-8" />
             <span className="text-base font-semibold tracking-tight text-encore-text">
-              Sangeet
+              Dhun
             </span>
           </Link>
 
@@ -294,7 +294,7 @@ export default function LandingPage() {
               aria-label={
                 isDark ? "Switch to light theme" : "Switch to dark theme"
               }
-              className="flex h-9 w-9 items-center justify-center rounded-full text-encore-accent transition-colors duration-150 hover:bg-encore-elevated/80"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-encore-accent transition-colors duration-150 hover:bg-encore-elevated"
             >
               {isDark ? (
                 <Sun className="h-4 w-4" strokeWidth={1.75} />
@@ -323,21 +323,14 @@ export default function LandingPage() {
 
       {/* Band 1: Zentra Cobalt Aurora Hero */}
       <section className="zentra-aurora-mesh relative overflow-hidden px-6 pb-20 pt-16 sm:pb-28 sm:pt-24">
-        <div
-          aria-hidden="true"
-          className="sangeet-starfield pointer-events-none absolute inset-0 opacity-65"
-        />
 
         <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center text-center">
           <h1
             className={cn(
-              "hero-stagger bg-clip-text text-[42px] font-semibold leading-[1.04] tracking-[-0.035em] text-transparent sm:text-[66px]",
-              isDark
-                ? "bg-gradient-to-b from-white via-[#f9eadb] to-[#f3c76a]"
-                : "bg-gradient-to-b from-[#200709] via-[#540f1a] to-[#c8102e]"
+              "hero-stagger text-[40px] font-semibold leading-[1.05] tracking-[-0.03em] text-encore-text sm:text-[60px]"
             )}
           >
-            Your music, your way
+            Free music, on every device
           </h1>
 
           <p className="hero-stagger mt-5 max-w-xl text-base leading-7 text-encore-subdued sm:text-lg">
@@ -353,16 +346,16 @@ export default function LandingPage() {
               className="btn-cobalt inline-flex h-12 items-center justify-center gap-2 rounded-full px-7 text-sm font-semibold text-white"
             >
               <Play className="h-4 w-4 fill-current" />
-              <span>Launch Sangeet free</span>
+              <span>Launch Dhun free</span>
             </button>
 
             <a
               href="#apps"
               className={cn(
-                "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-encore-elevated/85 px-7 text-sm font-medium text-encore-text backdrop-blur-xl transition-colors duration-150 hover:bg-encore-elevated-highlight active:scale-[0.98]",
+                "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-encore-elevated px-7 text-sm font-medium text-encore-text transition-colors duration-150 hover:bg-encore-elevated-highlight active:scale-[0.98]",
                 isDark
-                  ? "shadow-[0_10px_28px_rgba(0,0,0,0.3)]"
-                  : "shadow-[0_8px_22px_rgba(42,15,15,0.08)]"
+                  ? "shadow-[var(--shadow-elevated)]"
+                  : "shadow-[var(--shadow-elevated)]"
               )}
             >
               <Download className="h-4 w-4 text-encore-accent" strokeWidth={1.7} />
@@ -374,10 +367,10 @@ export default function LandingPage() {
           <form
             onSubmit={handleSearch}
             className={cn(
-              "hero-stagger mt-9 flex h-[52px] w-full max-w-md items-center gap-2 rounded-full bg-encore-base/85 pl-4 pr-2 backdrop-blur-xl transition-shadow duration-150 focus-within:ring-2 focus-within:ring-encore-accent/45",
+              "hero-stagger mt-9 flex h-[52px] w-full max-w-md items-center gap-2 rounded-full bg-encore-base pl-4 pr-2 transition-shadow duration-150 focus-within:ring-2 focus-within:ring-encore-accent/45",
               isDark
-                ? "shadow-[0_12px_36px_rgba(0,0,0,0.35)]"
-                : "shadow-[0_12px_32px_rgba(42,15,15,0.1)]"
+                ? "shadow-[var(--shadow-elevated)]"
+                : "shadow-[var(--shadow-elevated)]"
             )}
           >
             <Search
@@ -410,27 +403,18 @@ export default function LandingPage() {
         id="offline"
         className={cn(
           "relative overflow-hidden px-6 py-20 sm:py-28",
-          isDark
-            ? "bg-gradient-to-br from-[#4c0e17] via-[#250a0e] to-[#0d0707] text-white"
-            : "bg-gradient-to-br from-[#f8e7d6] via-[#fcf1e5] to-[#fffaf3] text-[#1c0a0a]"
+          isDark ? "bg-encore-base text-white" : "bg-encore-base text-[#1a1716]"
         )}
       >
-        <div
-          aria-hidden="true"
-          className={cn(
-            "pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full blur-[110px]",
-            isDark ? "bg-[#c8102e]/30" : "bg-[#f2b84b]/25"
-          )}
-        />
 
         <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
           {/* Overlapping Matte Obsidian Phone Mockups */}
           <div className="relative mx-auto flex h-[390px] w-full max-w-[448px] items-end justify-center sm:h-[430px]">
             {/* Back Phone: Quick Picks */}
-            <div className="absolute bottom-0 left-2 w-[206px] overflow-hidden rounded-[28px] bg-[#0f0909] text-white shadow-[0_24px_56px_rgba(14,4,5,0.45)] ring-1 ring-[#f7d27a]/15 sm:left-4 sm:w-[232px]">
-              <div className="flex items-center justify-between px-4 py-3 text-xs text-[#bfaaa4]">
-                <span className="font-medium text-white/90">Sangeet</span>
-                <span className="font-medium text-[#f0b43c]">Quick picks</span>
+            <div className="absolute bottom-0 left-2 w-[206px] overflow-hidden rounded-[28px] bg-[#0d0c0b] text-white shadow-[var(--shadow-elevated)] ring-1 ring-white/10 sm:left-4 sm:w-[232px]">
+              <div className="flex items-center justify-between px-4 py-3 text-xs text-[#a8a29e]">
+                <span className="font-medium text-white/90">Dhun</span>
+                <span className="font-medium text-[#d6a648]">Quick picks</span>
               </div>
               <div className="space-y-1 px-2 pb-2.5">
                 {showcaseTracks.slice(0, 5).map((t) => (
@@ -466,17 +450,17 @@ export default function LandingPage() {
             </div>
 
             {/* Front Phone: Offline Player Preview */}
-            <div className="relative z-10 ml-24 w-[228px] overflow-hidden rounded-[30px] bg-[#140b0b] text-white shadow-[0_28px_68px_rgba(12,4,4,0.62)] ring-1 ring-[#f7d27a]/18 sm:ml-28 sm:w-[260px]">
-              <div className="flex items-center justify-between px-4 pb-2 pt-3.5 text-[11px] text-[#bfaaa4]">
+            <div className="relative z-10 ml-24 w-[228px] overflow-hidden rounded-[30px] bg-[#181716] text-white shadow-[var(--shadow-elevated)] ring-1 ring-white/10 sm:ml-28 sm:w-[260px]">
+              <div className="flex items-center justify-between px-4 pb-2 pt-3.5 text-[11px] text-[#a8a29e]">
                 <span>Offline library</span>
-                <span className="inline-flex items-center gap-1 font-medium text-[#f0b43c]">
+                <span className="inline-flex items-center gap-1 font-medium text-[#d6a648]">
                   <Check className="h-3.5 w-3.5" strokeWidth={2} />
                   Saved
                 </span>
               </div>
 
               <div className="px-4 pb-4 pt-1">
-                <div className="aspect-square w-full overflow-hidden rounded-2xl bg-[#1f1414] shadow-inner">
+                <div className="aspect-square w-full overflow-hidden rounded-2xl bg-[#1f1414]">
                   <TrackArtwork
                     src={featuredTrack.thumbnail}
                     trackId={featuredTrack.id}
@@ -490,7 +474,7 @@ export default function LandingPage() {
                   <p className="truncate text-sm font-semibold text-white">
                     {featuredTrack.title}
                   </p>
-                  <p className="mt-0.5 truncate text-xs text-[#bfaaa4]">
+                  <p className="mt-0.5 truncate text-xs text-[#a8a29e]">
                     {featuredTrack.artist}
                   </p>
                 </div>
@@ -498,12 +482,12 @@ export default function LandingPage() {
                 <div className="mt-3 flex items-center justify-between rounded-xl bg-white/[0.06] px-3 py-2 text-xs text-[#e8d5c8]">
                   <span className="inline-flex items-center gap-1.5">
                     <HardDriveDownload
-                      className="h-3.5 w-3.5 text-[#f0b43c]"
+                      className="h-3.5 w-3.5 text-[#d6a648]"
                       strokeWidth={1.7}
                     />
                     Saved locally
                   </span>
-                  <span className="h-4 w-7 rounded-full bg-[#e5303f] p-0.5">
+                  <span className="h-4 w-7 rounded-full bg-[#e2363e] p-0.5">
                     <span className="block h-3 w-3 translate-x-3 rounded-full bg-white" />
                   </span>
                 </div>
@@ -529,7 +513,7 @@ export default function LandingPage() {
             <h2
               className={cn(
                 "text-3xl font-semibold leading-[1.1] tracking-[-0.025em] sm:text-[44px]",
-                isDark ? "text-white" : "text-[#1c0a0a]"
+                isDark ? "text-white" : "text-[#1a1716]"
               )}
             >
               Download music, listen offline
@@ -550,7 +534,7 @@ export default function LandingPage() {
               <span
                 className={cn(
                   "h-[2px] w-8 rounded-full",
-                  isDark ? "bg-[#f0b43c]" : "bg-[#c8102e]"
+                  isDark ? "bg-[#d6a648]" : "bg-[#c41e2e]"
                 )}
               />
               <div className="flex items-center gap-2.5">
@@ -564,8 +548,8 @@ export default function LandingPage() {
                       "h-2.5 rounded-full transition-all duration-200",
                       phoneSlide % 3 === idx
                         ? isDark
-                          ? "w-6 bg-[#f0b43c]"
-                          : "w-6 bg-[#c8102e]"
+                          ? "w-6 bg-[#d6a648]"
+                          : "w-6 bg-[#c41e2e]"
                         : isDark
                           ? "w-2.5 bg-white/30 hover:bg-white/55"
                           : "w-2.5 bg-[#6e0b17]/25 hover:bg-[#6e0b17]/50"
@@ -667,8 +651,8 @@ export default function LandingPage() {
               className={cn(
                 "overflow-hidden rounded-[32px] bg-encore-elevated p-4",
                 isDark
-                  ? "shadow-[0_24px_60px_rgba(0,0,0,0.48)]"
-                  : "shadow-[0_20px_52px_rgba(42,15,15,0.12)]"
+                  ? "shadow-[var(--shadow-elevated)]"
+                  : "shadow-[var(--shadow-elevated)]"
               )}
             >
               <div className="aspect-square w-full overflow-hidden rounded-2xl bg-encore-shell">
@@ -691,7 +675,7 @@ export default function LandingPage() {
               </div>
 
               {/* Synced Lyrics Lines with Glowing Cobalt Active Line */}
-              <div className="mt-3.5 space-y-1.5 rounded-2xl bg-encore-base/90 p-3 text-xs">
+              <div className="mt-3.5 space-y-1.5 rounded-2xl bg-encore-base p-3 text-xs">
                 <div className="flex items-baseline gap-2.5 px-2 py-1 text-encore-muted">
                   <span className="tabular-nums">01:12</span>
                   <span>Static fades out after midnight</span>
@@ -762,7 +746,7 @@ export default function LandingPage() {
               ].map(({ icon: Icon, title, desc }) => (
                 <div
                   key={title}
-                  className="rounded-2xl bg-encore-elevated/80 p-4 transition-colors duration-150 hover:bg-encore-elevated-highlight"
+                  className="rounded-2xl bg-encore-elevated p-4 transition-colors duration-150 hover:bg-encore-elevated-highlight"
                 >
                   <Icon
                     className="h-4 w-4 text-encore-accent"
@@ -781,12 +765,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Band 5: Sangeet on Every Device — 3 Cobalt Device Cards */}
+      {/* Band 5: Dhun on Every Device — 3 Cobalt Device Cards */}
       <section id="apps" className="bg-encore-shell px-6 py-20 sm:py-28">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-2xl font-semibold tracking-[-0.02em] text-encore-text sm:text-3xl">
-              Sangeet on every device
+              Dhun on every device
             </h2>
             <p className="mt-2.5 text-sm leading-6 text-encore-subdued">
               Free and open-source across Web, Android, and native Rust for
@@ -798,18 +782,16 @@ export default function LandingPage() {
             {/* Card 1: Web Studio */}
             <div
               className={cn(
-                "flex flex-col overflow-hidden rounded-3xl bg-encore-base transition-transform duration-200 hover:-translate-y-0.5",
+                "flex flex-col overflow-hidden rounded-2xl bg-encore-base transition-transform duration-200 hover:-translate-y-0.5",
                 isDark
-                  ? "shadow-[0_18px_48px_rgba(12,4,4,0.45)]"
-                  : "shadow-[0_14px_36px_rgba(42,15,15,0.08)]"
+                  ? "shadow-[var(--shadow-elevated)]"
+                  : "shadow-[var(--shadow-elevated)]"
               )}
             >
               <div
                 className={cn(
                   "px-6 pb-11 pt-8 text-center",
-                  isDark
-                    ? "bg-gradient-to-b from-[#4f0f18]/85 via-[#2e0c10]/70 to-transparent"
-                    : "bg-gradient-to-b from-[#f5e0cb] via-[#fbefe2] to-transparent"
+                  "border-b border-encore-hairline"
                 )}
               >
                 <Globe
@@ -844,18 +826,16 @@ export default function LandingPage() {
             {/* Card 2: Android App */}
             <div
               className={cn(
-                "flex flex-col overflow-hidden rounded-3xl bg-encore-base transition-transform duration-200 hover:-translate-y-0.5",
+                "flex flex-col overflow-hidden rounded-2xl bg-encore-base transition-transform duration-200 hover:-translate-y-0.5",
                 isDark
-                  ? "shadow-[0_18px_48px_rgba(10,3,3,0.5)]"
-                  : "shadow-[0_14px_36px_rgba(42,15,15,0.08)]"
+                  ? "shadow-[var(--shadow-elevated)]"
+                  : "shadow-[var(--shadow-elevated)]"
               )}
             >
               <div
                 className={cn(
                   "px-6 pb-11 pt-8 text-center",
-                  isDark
-                    ? "bg-gradient-to-b from-[#9e1020]/90 via-[#4a0e16]/75 to-transparent"
-                    : "bg-gradient-to-b from-[#f1d6bb] via-[#f9e9da] to-transparent"
+                  "border-b border-encore-hairline"
                 )}
               >
                 <Smartphone
@@ -893,18 +873,16 @@ export default function LandingPage() {
             {/* Card 3: Windows Desktop in Rust */}
             <div
               className={cn(
-                "flex flex-col overflow-hidden rounded-3xl bg-encore-base transition-transform duration-200 hover:-translate-y-0.5",
+                "flex flex-col overflow-hidden rounded-2xl bg-encore-base transition-transform duration-200 hover:-translate-y-0.5",
                 isDark
-                  ? "shadow-[0_18px_48px_rgba(12,4,4,0.45)]"
-                  : "shadow-[0_14px_36px_rgba(42,15,15,0.08)]"
+                  ? "shadow-[var(--shadow-elevated)]"
+                  : "shadow-[var(--shadow-elevated)]"
               )}
             >
               <div
                 className={cn(
                   "px-6 pb-11 pt-8 text-center",
-                  isDark
-                    ? "bg-gradient-to-b from-[#3d0d13]/85 via-[#280b0f]/70 to-transparent"
-                    : "bg-gradient-to-b from-[#f6e3d0] via-[#fdf3e7] to-transparent"
+                  "border-b border-encore-hairline"
                 )}
               >
                 <Laptop
@@ -926,7 +904,7 @@ export default function LandingPage() {
               <div className="-mt-5 flex flex-1 flex-col items-center px-6 pb-8 text-center">
                 <a
                   href="/api/download/windows"
-                  download="Sangeet.exe"
+                  download="Dhun.exe"
                   className="btn-cobalt inline-flex h-10 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold text-white"
                 >
                   <Download className="h-4 w-4" strokeWidth={1.8} />

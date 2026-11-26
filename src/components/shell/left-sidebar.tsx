@@ -136,7 +136,7 @@ export function LeftSidebar() {
       id="library-sidebar"
       aria-label="Library"
       style={{ width: leftCollapsed ? 68 : leftWidth }}
-      className="relative hidden h-full shrink-0 flex-col rounded-panel bg-encore-base/90 shadow-[0_8px_28px_rgba(0,0,0,0.22)] select-none dark:shadow-[0_8px_28px_rgba(0,0,0,0.35)] md:flex"
+      className="relative hidden h-full shrink-0 flex-col rounded-panel bg-encore-base shadow-[var(--shadow-elevated)] select-none dark:shadow-[var(--shadow-elevated)] md:flex"
     >
       {/* Header */}
       <div
@@ -268,7 +268,7 @@ export function LeftSidebar() {
                     "flex min-h-[44px] items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors duration-150",
                     leftCollapsed && "justify-center px-0",
                     active
-                      ? "bg-encore-elevated-highlight font-medium text-encore-text shadow-[inset_0_1px_0_rgba(247,210,122,0.14)]"
+                      ? "bg-encore-elevated-highlight font-medium text-encore-text"
                       : "text-encore-subdued hover:bg-encore-elevated hover:text-encore-text"
                   )}
                 >
@@ -315,7 +315,7 @@ export function LeftSidebar() {
                     "flex min-h-[48px] items-center gap-2.5 rounded-lg p-1.5 transition-colors duration-150",
                     leftCollapsed && "justify-center",
                     active
-                      ? "bg-encore-elevated-highlight shadow-[inset_0_1px_0_rgba(247,210,122,0.14)]"
+                      ? "bg-encore-elevated-highlight"
                       : "hover:bg-encore-elevated"
                   )}
                   title={pl.name}

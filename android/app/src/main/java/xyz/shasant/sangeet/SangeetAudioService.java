@@ -617,8 +617,8 @@ public final class SangeetAudioService extends MediaSessionService {
                         id,
                         obj.optString("youtubeId", ""),
                         obj.optString("audioUrl", ""),
-                        obj.optString("title", "Sangeet"),
-                        obj.optString("artist", "Sangeet"),
+                        obj.optString("title", "Dhun"),
+                        obj.optString("artist", "Dhun"),
                         obj.optString("artwork", ""),
                         obj.optString("offlineTrackId", "")
                 ));
@@ -762,7 +762,7 @@ public final class SangeetAudioService extends MediaSessionService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Sangeet Playback",
+                    "Dhun Playback",
                     NotificationManager.IMPORTANCE_LOW
             );
             channel.setDescription("Background audio playback controls");
@@ -800,8 +800,8 @@ public final class SangeetAudioService extends MediaSessionService {
     }
 
     private MediaMetadata buildLiveMediaMetadata() {
-        String safeTitle = (currentTitle != null && !currentTitle.isEmpty()) ? currentTitle : "Sangeet";
-        String safeArtist = (currentArtist != null && !currentArtist.isEmpty()) ? currentArtist : "Sangeet";
+        String safeTitle = (currentTitle != null && !currentTitle.isEmpty()) ? currentTitle : "Dhun";
+        String safeArtist = (currentArtist != null && !currentArtist.isEmpty()) ? currentArtist : "Dhun";
         MediaMetadata.Builder builder = new MediaMetadata.Builder()
                 .setTitle(safeTitle)
                 .setArtist(safeArtist)
@@ -846,7 +846,7 @@ public final class SangeetAudioService extends MediaSessionService {
     private Notification buildNotification(@Nullable String title, @Nullable String artist) {
         PendingIntent contentIntent = createContentIntent();
 
-        String safeTitle = (title != null && !title.isEmpty()) ? title : "Sangeet";
+        String safeTitle = (title != null && !title.isEmpty()) ? title : "Dhun";
         String safeArtist = (artist != null && !artist.isEmpty()) ? artist : "Playing audio";
         boolean isPlaying = isPlaybackActive();
 
@@ -1121,8 +1121,8 @@ public final class SangeetAudioService extends MediaSessionService {
             httpFactory.setDefaultRequestProperties(headers);
         }
         MediaMetadata.Builder meta = new MediaMetadata.Builder()
-                .setTitle(title != null && !title.isEmpty() ? title : "Sangeet")
-                .setArtist(artist != null && !artist.isEmpty() ? artist : "Sangeet");
+                .setTitle(title != null && !title.isEmpty() ? title : "Dhun")
+                .setArtist(artist != null && !artist.isEmpty() ? artist : "Dhun");
         if (artwork != null && !artwork.isEmpty()) {
             try {
                 meta.setArtworkUri(Uri.parse(artwork));

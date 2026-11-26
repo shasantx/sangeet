@@ -130,12 +130,13 @@ export default function FullLyricsPage() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Gradient background
-    const grad = ctx.createLinearGradient(0, 0, 1080, 1350);
-    grad.addColorStop(0, bg);
-    grad.addColorStop(1, "#0a0606");
-    ctx.fillStyle = grad;
+    // Flat background: shell colour with a wash of the track colour
+    ctx.fillStyle = "#0d0c0b";
     ctx.fillRect(0, 0, 1080, 1350);
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 1080, 1350);
+    ctx.globalAlpha = 1;
 
     // Subtle card frame
     ctx.fillStyle = "rgba(10, 6, 6, 0.35)";
@@ -163,8 +164,8 @@ export default function FullLyricsPage() {
       y += 28;
     }
 
-    // Footer Sangeet badge (Zentra Cobalt)
-    ctx.fillStyle = "#e5303f";
+    // Footer Dhun badge
+    ctx.fillStyle = "#e2363e";
     ctx.beginPath();
     ctx.arc(146, 1188, 24, 0, Math.PI * 2);
     ctx.fill();
@@ -175,7 +176,7 @@ export default function FullLyricsPage() {
 
     ctx.fillStyle = "rgba(255,255,255,0.9)";
     ctx.font = "700 28px system-ui, -apple-system, sans-serif";
-    ctx.fillText("Sangeet", 186, 1198);
+    ctx.fillText("Dhun", 186, 1198);
 
     const url = canvas.toDataURL("image/png");
     const a = document.createElement("a");
@@ -196,7 +197,7 @@ export default function FullLyricsPage() {
             <img
               src={currentTrack.thumbnail}
               alt={currentTrack.title}
-              className="h-14 w-14 shrink-0 rounded-lg object-cover shadow-lg"
+              className="h-14 w-14 shrink-0 rounded-lg object-cover"
             />
             <div className="min-w-0">
               <h1 className="truncate text-lg font-bold text-encore-text">

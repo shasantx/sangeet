@@ -614,7 +614,7 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
     if (!track.streamUrl || !track.downloadable) {
       set({
         error:
-          "Use the Sangeet Android or Windows app for 1-click offline downloads."
+          "Use the Dhun Android or Windows app for 1-click offline downloads."
       });
       return false;
     }

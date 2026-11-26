@@ -62,7 +62,7 @@ export default function LikedSongsPage() {
         className="flex flex-col gap-5 border-b border-encore-hairline p-4 pt-6 sm:flex-row sm:items-end sm:gap-6 sm:p-6 sm:pt-10"
         style={{
           background:
-            "linear-gradient(180deg, var(--background-tinted-highlight) 0%, var(--background-base) 100%)"
+            "var(--background-base)"
         }}
       >
         <ArtworkMosaic
@@ -91,7 +91,7 @@ export default function LikedSongsPage() {
             type="button"
             onClick={handlePlayAll}
             disabled={displayedTracks.length === 0}
-            className="btn-cobalt flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform duration-150 hover:scale-105 active:scale-[0.97] disabled:opacity-40"
+            className="btn-cobalt flex h-12 w-12 items-center justify-center rounded-full transition-transform duration-150 hover:scale-105 active:scale-[0.97] disabled:opacity-40"
             aria-label={isLikedPlaying ? "Pause Liked Songs" : "Play Liked Songs"}
           >
             {isLikedPlaying ? (

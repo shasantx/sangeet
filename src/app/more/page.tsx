@@ -184,7 +184,7 @@ export default function MoreHubPage() {
 
             <a
               href="/api/download/windows"
-              download="Sangeet.exe"
+              download="Dhun.exe"
               className={rowBase}
             >
               <span className="flex items-center gap-3">

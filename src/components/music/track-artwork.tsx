@@ -18,7 +18,7 @@ const YT_ID_RE = /^[A-Za-z0-9_-]{11}$/;
 
 /**
  * Resilient album/track artwork image that gracefully cascades through
- * fallback YouTube resolutions and ends on a clean Zentra cobalt gradient tile
+ * fallback YouTube resolutions and ends on a flat placeholder tile
  * so broken image icons or overflowing alt text NEVER appear.
  */
 export function TrackArtwork({
@@ -55,7 +55,7 @@ export function TrackArtwork({
         role="img"
         aria-label={alt}
         className={cn(
-          "flex h-full w-full items-center justify-center bg-gradient-to-br from-[#c8102e]/35 via-[#2a0e12] to-[#110809] text-encore-mint/80",
+          "flex h-full w-full items-center justify-center bg-encore-highlight text-encore-muted",
           className
         )}
       >

@@ -460,7 +460,7 @@ fn main() {
                 "main",
                 WebviewUrl::External(app_url.clone()),
             )
-            .title("Sangeet")
+            .title("Dhun")
             .inner_size(1280.0, 820.0)
             .min_inner_size(420.0, 620.0)
             .background_color(Color(6, 9, 7, 255))
@@ -492,14 +492,14 @@ fn main() {
             });
 
             // Build native system tray menu for background playback control
-            let show_item = MenuItem::with_id(app, "show", "Open Sangeet", true, None::<&str>)?;
+            let show_item = MenuItem::with_id(app, "show", "Open Dhun", true, None::<&str>)?;
             let sep1 = PredefinedMenuItem::separator(app)?;
             let play_pause_item =
                 MenuItem::with_id(app, "play_pause", "Play / Pause", true, None::<&str>)?;
             let next_item = MenuItem::with_id(app, "next", "Next Track", true, None::<&str>)?;
             let prev_item = MenuItem::with_id(app, "prev", "Previous Track", true, None::<&str>)?;
             let sep2 = PredefinedMenuItem::separator(app)?;
-            let quit_item = MenuItem::with_id(app, "quit", "Quit Sangeet", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "Quit Dhun", true, None::<&str>)?;
 
             let tray_menu = Menu::with_items(
                 app,
@@ -515,7 +515,7 @@ fn main() {
             )?;
 
             let mut tray_builder = TrayIconBuilder::new()
-                .tooltip("Sangeet — Music Studio")
+                .tooltip("Dhun — Music Studio")
                 .menu(&tray_menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {

@@ -79,16 +79,6 @@ function AuthContent() {
 
   return (
     <div className="zentra-aurora-mesh relative flex min-h-[100dvh] w-full flex-col overflow-hidden text-encore-text">
-      {/* Subtle static ambient atmospheric cobalt backdrop */}
-      <div
-        aria-hidden="true"
-        className={cn(
-          "pointer-events-none absolute left-1/2 top-1/2 -z-0 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px]",
-          isDark
-            ? "bg-[radial-gradient(circle,rgba(200,16,46,0.2)_0%,rgba(245,196,81,0.06)_48%,transparent_72%)]"
-            : "bg-[radial-gradient(circle,rgba(229,48,63,0.14)_0%,rgba(247,210,122,0.1)_48%,transparent_72%)]"
-        )}
-      />
 
       {/* Minimal Top Bar */}
       <header className="relative z-10 mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
@@ -97,7 +87,7 @@ function AuthContent() {
           className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-medium text-encore-subdued transition-colors duration-150 hover:bg-encore-hover hover:text-encore-text"
         >
           <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-          <span>{isNative ? "Back to Home" : "Back to Sangeet"}</span>
+          <span>{isNative ? "Back to Home" : "Back to Dhun"}</span>
         </Link>
 
         <button
@@ -106,7 +96,7 @@ function AuthContent() {
           aria-label={
             isDark ? "Switch to light theme" : "Switch to dark theme"
           }
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-encore-base/70 text-encore-accent backdrop-blur-md transition-colors duration-150 hover:bg-encore-elevated-highlight"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-encore-base/70 text-encore-accent transition-colors duration-150 hover:bg-encore-elevated-highlight"
         >
           {isDark ? (
             <Sun className="h-[18px] w-[18px]" strokeWidth={1.75} />
@@ -120,17 +110,17 @@ function AuthContent() {
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-12 pt-4 sm:px-6">
         <div
           className={cn(
-            "studio-enter w-full max-w-[428px] rounded-3xl bg-encore-base/85 p-7 backdrop-blur-2xl sm:p-9",
+            "studio-enter w-full max-w-[428px] rounded-2xl bg-encore-base p-7 sm:p-9",
             isDark
-              ? "shadow-[0_24px_70px_rgba(0,0,0,0.45)]"
-              : "shadow-[0_24px_64px_rgba(42,15,15,0.12)]"
+              ? "shadow-[var(--shadow-elevated)]"
+              : "shadow-[var(--shadow-elevated)]"
           )}
         >
           {/* Brand Mark + Heading */}
           <div className="flex flex-col items-center text-center">
-            <SangeetLogo className="h-12 w-12 shadow-[0_10px_28px_rgba(200,16,46,0.28)]" />
+            <SangeetLogo className="h-12 w-12 shadow-[var(--shadow-elevated)]" />
             <h1 className="mt-5 text-2xl font-semibold tracking-[-0.025em] text-encore-text sm:text-[28px]">
-              Welcome to Sangeet
+              Welcome to Dhun
             </h1>
             <p className="mt-2 max-w-[300px] text-sm leading-6 text-encore-subdued">
               Stream ad-free audio, read synced lyrics, and keep your music

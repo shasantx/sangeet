@@ -10,7 +10,7 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
             <span className="inline-flex items-center gap-1.5 font-medium text-encore-text">
               <SangeetLogo className="h-4 w-4" />
-              Sangeet
+              Dhun
             </span>
             <span>•</span>
             <span>
@@ -56,7 +56,7 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
             <Link href="/" className="inline-flex items-center gap-2.5">
               <SangeetLogo className="h-8 w-8" />
               <span className="text-lg font-semibold tracking-tight text-encore-text">
-                Sangeet
+                Dhun
               </span>
             </Link>
             <p className="max-w-xs text-xs leading-relaxed text-encore-muted">
@@ -179,7 +179,7 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
               href="https://github.com/shasantx/sangeet"
               target="_blank"
               rel="noreferrer"
-              aria-label="Sangeet on GitHub"
+              aria-label="Dhun on GitHub"
               className="flex h-10 w-10 items-center justify-center rounded-full border border-encore-hairline bg-encore-elevated text-encore-text transition-colors duration-150 hover:border-encore-accent hover:bg-encore-accent hover:text-encore-on-accent"
             >
               <Github className="h-4 w-4" strokeWidth={1.8} />

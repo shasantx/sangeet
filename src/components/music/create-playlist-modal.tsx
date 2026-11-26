@@ -145,11 +145,11 @@ export function CreatePlaylistModal() {
       aria-modal="true"
       aria-labelledby="create-playlist-title"
       onClick={() => setOpen(false)}
-      className="fixed inset-0 z-[96] flex items-end justify-center bg-black/70 p-0 backdrop-blur-md sm:items-center sm:p-4"
+      className="fixed inset-0 z-[96] flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="studio-enter flex max-h-[82dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-encore-base/95 shadow-[0_28px_80px_rgba(0,0,0,0.65)] backdrop-blur-2xl sm:max-h-[88dvh] sm:rounded-3xl"
+        className="studio-enter flex max-h-[82dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-encore-base shadow-[var(--shadow-elevated)] sm:max-h-[88dvh] sm:rounded-2xl"
       >
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between px-5 pb-3 pt-4 sm:px-6 sm:pb-4 sm:pt-5">
@@ -332,7 +332,7 @@ export function CreatePlaylistModal() {
           </div>
 
           {/* Sticky Footer actions (Android soft-keyboard friendly) */}
-          <div className="sticky bottom-0 flex shrink-0 items-center justify-end gap-2.5 border-t border-encore-hairline bg-encore-base/95 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl sm:bg-encore-elevated/50 sm:px-6 sm:py-4">
+          <div className="sticky bottom-0 flex shrink-0 items-center justify-end gap-2.5 border-t border-encore-hairline bg-encore-base px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:bg-encore-elevated/50 sm:px-6 sm:py-4">
             <button
               type="button"
               onClick={() => setOpen(false)}

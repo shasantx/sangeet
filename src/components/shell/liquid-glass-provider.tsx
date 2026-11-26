@@ -20,7 +20,7 @@ function ThemeAndGlassSync({ children }: { children: React.ReactNode }) {
 
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      meta.setAttribute("content", theme === "light" ? "#faf4ec" : "#0a0606");
+      meta.setAttribute("content", theme === "light" ? "#f6f4f1" : "#0d0c0b");
     }
 
     updateSetting("siteTheme", theme);
@@ -45,12 +45,12 @@ export function LiquidGlassProvider({
       defaultSettings={{
         renderMode: "css",
         useSvgRefraction: false,
-        refraction: 0.42,
-        blur: 4.0,
-        bezelWidth: 16,
-        specular: 0.8,
-        aberration: 0.12,
-        saturation: 1.75,
+        refraction: 0,
+        blur: 0,
+        bezelWidth: 0,
+        specular: 0,
+        aberration: 0,
+        saturation: 1,
         siteTheme: "dark"
       }}
     >

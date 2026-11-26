@@ -26,15 +26,33 @@ jobs:
       - uses: android-actions/setup-android@v4
       - name: Install Android SDK
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
-      - name: Build installable debug APK
+      - name: Restore release signing key
+        env:
+          DHUN_KEYSTORE_BASE64: ${{ secrets.DHUN_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$DHUN_KEYSTORE_BASE64" ]; then
+            echo "::error::Missing DHUN_KEYSTORE_BASE64 secret. Release APKs must be signed with the permanent Dhun key."
+            exit 1
+          fi
+          echo "$DHUN_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/dhun-release.jks"
+          echo "DHUN_KEYSTORE_PATH=$RUNNER_TEMP/dhun-release.jks" >> "$GITHUB_ENV"
+      - name: Build signed release APK
         working-directory: android
-        run: gradle --no-daemon :app:assembleDebug
-      - name: Prepare public download
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/sangeet-android.apk
+        env:
+          DHUN_KEYSTORE_PASSWORD: ${{ secrets.DHUN_KEYSTORE_PASSWORD }}
+          DHUN_KEY_ALIAS: ${{ secrets.DHUN_KEY_ALIAS }}
+          DHUN_KEY_PASSWORD: ${{ secrets.DHUN_KEY_PASSWORD }}
+        run: gradle --no-daemon :app:assembleRelease
+      - name: Verify signature and prepare public download
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK"
+          cp "$APK" android/app/build/outputs/apk/release/sangeet-android.apk
+          rm -f "$RUNNER_TEMP/dhun-release.jks"
       - uses: actions/upload-artifact@v4
         with:
-          name: sangeet-android-debug-apk
-          path: android/app/build/outputs/apk/debug/sangeet-android.apk
+          name: sangeet-android-release-apk
+          path: android/app/build/outputs/apk/release/sangeet-android.apk
           if-no-files-found: error
           retention-days: 14
       - name: Publish Android APK release
@@ -42,8 +60,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           CURRENT_TAG="android-build-${{ github.run_number }}"
-          TITLE="Sangeet Android · build ${{ github.run_number }}"
-          FILE="android/app/build/outputs/apk/debug/sangeet-android.apk"
+          TITLE="Dhun Android · build ${{ github.run_number }}"
+          FILE="android/app/build/outputs/apk/release/sangeet-android.apk"
           if gh release view "$CURRENT_TAG" >/dev/null 2>&1; then
             gh release upload "$CURRENT_TAG" "$FILE" --clobber
           else

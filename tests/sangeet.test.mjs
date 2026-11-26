@@ -461,7 +461,7 @@ test("Zentra Cobalt-Obsidian theme, floating LiquidGlass refraction, and securit
     path.join(ROOT, "src/app/globals.css"),
     "utf8"
   );
-  assert.match(cssSrc, /#e5303f/);
+  assert.match(cssSrc, /#e2363e/);
   assert.match(cssSrc, /\.btn-cobalt/);
   assert.match(cssSrc, /\.zentra-aurora-mesh/);
 

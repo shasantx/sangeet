@@ -107,7 +107,7 @@ export default function SettingsPage() {
         `Imported ${res.addedLikes} liked songs and ${res.addedPlaylists} playlists.`
       );
     } catch {
-      showToast("Invalid Sangeet JSON backup file", "error");
+      showToast("Invalid Dhun JSON backup file", "error");
     }
     e.target.value = "";
   };
@@ -173,7 +173,7 @@ export default function SettingsPage() {
       )}
 
       {/* Appearance: Dark & Light Zentra Cobalt Theme */}
-      <section className="space-y-4 rounded-2xl bg-encore-elevated p-5 shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+      <section className="space-y-4 rounded-2xl bg-encore-elevated p-5 shadow-[var(--shadow-elevated)]">
         <div className="flex items-center gap-2.5">
           {theme === "dark" ? (
             <Moon className="h-5 w-5 text-encore-accent" strokeWidth={1.6} />
@@ -185,7 +185,7 @@ export default function SettingsPage() {
               Appearance
             </h2>
             <p className="text-xs text-encore-subdued">
-              Switch between Obsidian Cobalt Dark and Porcelain Light themes
+              Choose a dark or light theme
             </p>
           </div>
         </div>
@@ -195,23 +195,23 @@ export default function SettingsPage() {
             type="button"
             onClick={() => {
               setTheme("dark");
-              showToast("Obsidian & Cobalt dark theme enabled", "success");
+              showToast("Dark theme on", "success");
             }}
             aria-pressed={theme === "dark"}
             className={cn(
               "flex min-h-[72px] items-center gap-3 rounded-2xl p-3.5 text-left transition-all duration-150",
               theme === "dark"
-                ? "bg-encore-tinted ring-2 ring-[#e5303f]/50"
+                ? "bg-encore-tinted ring-2 ring-[#e2363e]/50"
                 : "bg-encore-base hover:bg-encore-elevated-highlight"
             )}
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0a0606] text-[#e5303f] shadow-inner">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0d0c0b] text-[#e2363e]">
               <Moon className="h-5 w-5" />
             </span>
             <div>
               <p className="text-sm font-semibold text-encore-text">Dark</p>
               <p className="text-[11px] text-encore-subdued">
-                Obsidian &amp; Cobalt
+                Charcoal &amp; red
               </p>
             </div>
           </button>
@@ -220,23 +220,23 @@ export default function SettingsPage() {
             type="button"
             onClick={() => {
               setTheme("light");
-              showToast("Porcelain & Cobalt light theme enabled", "success");
+              showToast("Light theme on", "success");
             }}
             aria-pressed={theme === "light"}
             className={cn(
               "flex min-h-[72px] items-center gap-3 rounded-2xl p-3.5 text-left transition-all duration-150",
               theme === "light"
-                ? "bg-encore-tinted ring-2 ring-[#e5303f]/50"
+                ? "bg-encore-tinted ring-2 ring-[#e2363e]/50"
                 : "bg-encore-base hover:bg-encore-elevated-highlight"
             )}
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#faf4ec] text-[#c8102e] shadow-inner">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f6f4f1] text-[#c41e2e]">
               <Sun className="h-5 w-5" />
             </span>
             <div>
               <p className="text-sm font-semibold text-encore-text">Light</p>
               <p className="text-[11px] text-encore-subdued">
-                Porcelain &amp; Cobalt
+                Paper &amp; red
               </p>
             </div>
           </button>
@@ -244,7 +244,7 @@ export default function SettingsPage() {
       </section>
 
       {/* Audio format: AAC (source-first, else on-device streaming transcode) or Original */}
-      <section className="space-y-4 rounded-2xl bg-encore-elevated p-5 shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+      <section className="space-y-4 rounded-2xl bg-encore-elevated p-5 shadow-[var(--shadow-elevated)]">
         <div className="flex items-center gap-2.5">
           <FileAudio className="h-5 w-5 text-encore-accent" strokeWidth={1.6} />
           <div>
@@ -288,7 +288,7 @@ export default function SettingsPage() {
               className={cn(
                 "flex min-h-[72px] flex-col justify-center rounded-2xl p-3.5 text-left transition-all duration-150",
                 audioFormat === opt.value
-                  ? "bg-encore-tinted ring-2 ring-[#e5303f]/50"
+                  ? "bg-encore-tinted ring-2 ring-[#e2363e]/50"
                   : "bg-encore-base hover:bg-encore-elevated-highlight"
               )}
             >
@@ -313,7 +313,7 @@ export default function SettingsPage() {
       {/* 5-Band Graphic Equalizer */}
       <section
         id="equalizer"
-        className="space-y-4 rounded-2xl bg-encore-elevated p-5 shadow-[0_4px_20px_rgba(0,0,0,0.12)]"
+        className="space-y-4 rounded-2xl bg-encore-elevated p-5 shadow-[var(--shadow-elevated)]"
       >
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
@@ -404,7 +404,7 @@ export default function SettingsPage() {
       </section>
 
       {/* Profile */}
-      <section className="rounded-2xl bg-encore-elevated p-5 shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+      <section className="rounded-2xl bg-encore-elevated p-5 shadow-[var(--shadow-elevated)]">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <User className="h-5 w-5 text-encore-accent" strokeWidth={1.6} />
@@ -425,7 +425,7 @@ export default function SettingsPage() {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Your display name"
-            className="h-11 w-full min-w-0 rounded-full bg-encore-base px-4 text-sm text-encore-text outline-none placeholder:text-encore-muted focus:ring-2 focus:ring-[#e5303f]/50 sm:w-auto sm:min-w-[200px] sm:flex-1"
+            className="h-11 w-full min-w-0 rounded-full bg-encore-base px-4 text-sm text-encore-text outline-none placeholder:text-encore-muted focus:ring-2 focus:ring-[#e2363e]/50 sm:w-auto sm:min-w-[200px] sm:flex-1"
           />
           <button
             type="submit"
@@ -437,7 +437,7 @@ export default function SettingsPage() {
       </section>
 
       {/* Playback Preferences (Sleep timer lives cleanly inside the Player UI) */}
-      <section className="space-y-4 rounded-2xl bg-encore-elevated p-5 shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+      <section className="space-y-4 rounded-2xl bg-encore-elevated p-5 shadow-[var(--shadow-elevated)]">
         <div className="flex items-center gap-2.5">
           <Radio className="h-5 w-5 text-encore-accent" strokeWidth={1.6} />
           <h2 className="text-base font-semibold text-encore-text">Playback</h2>
@@ -502,7 +502,7 @@ export default function SettingsPage() {
 
       {/* Local Audio & Device Scan (Native Android/Windows only; Web promotes native app) */}
       {isNative ? (
-        <section className="space-y-4 rounded-2xl bg-encore-elevated p-5 shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+        <section className="space-y-4 rounded-2xl bg-encore-elevated p-5 shadow-[var(--shadow-elevated)]">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
               <FileAudio
@@ -578,7 +578,7 @@ export default function SettingsPage() {
           )}
         </section>
       ) : (
-        <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-encore-tinted p-5 shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+        <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-encore-tinted p-5 shadow-[var(--shadow-elevated)]">
           <div className="flex items-center gap-3">
             <FolderSearch
               className="h-5 w-5 text-encore-accent"
@@ -589,7 +589,7 @@ export default function SettingsPage() {
                 1-Click Downloads &amp; Device Music Scanner
               </p>
               <p className="text-xs text-encore-subdued">
-                Available in the native Sangeet Android APK and Windows Rust app
+                Available in the native Dhun Android APK and Windows Rust app
               </p>
             </div>
           </div>
@@ -605,7 +605,7 @@ export default function SettingsPage() {
       )}
 
       {/* Library Backup & Reset */}
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-encore-elevated p-5 shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+      <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-encore-elevated p-5 shadow-[var(--shadow-elevated)]">
         <div className="flex items-center gap-2.5">
           <ShieldCheck
             className="h-5 w-5 text-encore-accent"
@@ -649,7 +649,7 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setConfirmReset(true)}
-            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#ff6b81]/15 px-4 text-xs font-semibold text-encore-negative transition-colors hover:bg-[#ff6b81]/25"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#f87171]/15 px-4 text-xs font-semibold text-encore-negative transition-colors hover:bg-[#f87171]/25"
           >
             <Trash2 className="h-3.5 w-3.5" />
             Reset data
@@ -661,7 +661,7 @@ export default function SettingsPage() {
 
       <ConfirmDialog
         open={confirmReset}
-        title="Reset all Sangeet data?"
+        title="Reset all Dhun data?"
         description="This will remove your liked songs, playlists, settings, cached lyrics, and offline audio from this browser. Export a JSON backup first if you want to keep your library."
         confirmLabel="Reset everything"
         onCancel={() => setConfirmReset(false)}
