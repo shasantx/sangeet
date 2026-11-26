@@ -34,7 +34,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isStandalone = STANDALONE_ROUTES.has(pathname);
   const ambientColor = currentTrack
     ? pickHeroColor(currentTrack.id)
-    : "#3b82f6";
+    : "#e5303f";
 
   return (
     <>

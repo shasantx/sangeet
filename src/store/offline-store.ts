@@ -22,6 +22,8 @@ import {
   type ScannedDeviceTrack
 } from "@/lib/platform";
 import { formatTime } from "@/lib/utils";
+import { convertBlobToAac } from "@/lib/aac-transcoder";
+import { getPreferredAudioFormat } from "@/store/audio-format-store";
 
 export interface ActiveDownload {
   track: Track;
@@ -460,13 +462,45 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
         const absUrl = track.streamUrl.startsWith("http")
           ? track.streamUrl
           : `${window.location.origin}${track.streamUrl}`;
-        const res = await win.downloadAudioTrack({
-          trackId: track.id,
-          url: absUrl,
-          title: track.title,
-          artist: track.artist,
-          filename: `${safeName || track.id}.mp3`
-        });
+        const setWinProgress = (progress: number) =>
+          set((s) => {
+            const cur = s.downloads[track.id];
+            if (!cur || cur.status !== "downloading") return s;
+            return { downloads: { ...s.downloads, [track.id]: { ...cur, progress } } };
+          });
+
+        let res: Awaited<ReturnType<NonNullable<typeof win.downloadAudioTrack>>> | null =
+          null;
+        // AAC mode: keep native AAC as-is, otherwise convert on-device, then save via the Rust bridge.
+        if (getPreferredAudioFormat() === "aac" && typeof win.saveAudioBytes === "function") {
+          try {
+            const fetched = await fetch(absUrl);
+            if (fetched.ok) {
+              setWinProgress(55);
+              const converted = await convertBlobToAac(await fetched.blob(), (f) =>
+                setWinProgress(55 + Math.round(f * 40))
+              );
+              res = await win.saveAudioBytes(
+                {
+                  trackId: track.id,
+                  filename: `${safeName || track.id}.${converted.extension}`
+                },
+                new Uint8Array(await converted.blob.arrayBuffer())
+              );
+            }
+          } catch {
+            res = null;
+          }
+        }
+        if (!res?.ok) {
+          res = await win.downloadAudioTrack({
+            trackId: track.id,
+            url: absUrl,
+            title: track.title,
+            artist: track.artist,
+            filename: `${safeName || track.id}.mp3`
+          });
+        }
         if (res?.ok) {
           const existing = readNativeOfflineCatalog().filter(
             (e) => e.id !== track.id
@@ -608,8 +642,11 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
       }
 
       const contentLength = Number(res.headers.get("content-length") || 0);
-      const mimeType = res.headers.get("content-type") || "audio/mpeg";
+      let mimeType = res.headers.get("content-type") || "audio/mpeg";
       let blob: Blob;
+      const wantsAac = getPreferredAudioFormat() === "aac";
+      // In AAC mode the download fills 0-80% and on-device conversion the rest.
+      const downloadScale = wantsAac ? 0.8 : 1;
 
       if (res.body) {
         const reader = res.body.getReader();
@@ -621,10 +658,11 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
           if (value) {
             chunks.push(value);
             received += value.byteLength;
-            const pct =
-              contentLength > 0
-                ? Math.min(99, Math.round((received / contentLength) * 100))
-                : Math.min(95, Math.round(received / 40000));
+            const pct = Math.round(
+              (contentLength > 0
+                ? Math.min(99, (received / contentLength) * 100)
+                : Math.min(95, received / 40000)) * downloadScale
+            );
             set((s) => {
               const cur = s.downloads[track.id];
               if (!cur) return s;
@@ -649,6 +687,23 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
 
       if (blob.size < 1024) {
         throw new Error("Downloaded audio stream was empty.");
+      }
+
+      if (wantsAac) {
+        const converted = await convertBlobToAac(blob, (f) =>
+          set((s) => {
+            const cur = s.downloads[track.id];
+            if (!cur) return s;
+            return {
+              downloads: {
+                ...s.downloads,
+                [track.id]: { ...cur, progress: 80 + Math.round(f * 19) }
+              }
+            };
+          })
+        );
+        blob = converted.blob;
+        mimeType = converted.mimeType;
       }
 
       const offlineId = `dl_${track.id}`;

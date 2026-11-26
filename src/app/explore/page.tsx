@@ -8,18 +8,18 @@ import { SiteFooter } from "@/components/shell/site-footer";
 import { cn } from "@/lib/utils";
 
 const GENRES = [
-  { id: "all", label: "For you", tint: "from-[#2563eb] to-[#0b132b]" },
-  { id: "music", label: "Pop & Rock", tint: "from-[#4f46e5] to-[#111533]" },
+  { id: "all", label: "For you", tint: "from-[#c8102e] to-[#2a0a0e]" },
+  { id: "music", label: "Pop & Rock", tint: "from-[#9b1c1c] to-[#2a0b10]" },
   {
     id: "desi",
     label: "Hindi, Nepali & Punjabi",
-    tint: "from-[#7c3aed] to-[#1a1038]"
+    tint: "from-[#8f1d3b] to-[#2b0c16]"
   },
-  { id: "chill", label: "Chill & Lo-Fi", tint: "from-[#0284c7] to-[#0a1d33]" },
+  { id: "chill", label: "Chill & Lo-Fi", tint: "from-[#b7791f] to-[#2a1a06]" },
   {
     id: "workout",
     label: "Workout & Energy",
-    tint: "from-[#1d4ed8] to-[#0f172a]"
+    tint: "from-[#a50e22] to-[#1f0a0c]"
   }
 ];
 

@@ -78,6 +78,18 @@ public final class YouTubeInnerTubeExtractor {
     private static final ConcurrentHashMap<String, CacheEntry> STREAM_CACHE = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, CompletableFuture<StreamResult>> IN_FLIGHT = new ConcurrentHashMap<>();
 
+    /** "aac": prefer native AAC (audio/mp4). "original": highest-bitrate stream in any codec. */
+    private static volatile String preferredAudioFormat = "aac";
+
+    public static void setPreferredAudioFormat(String format) {
+        String next = "original".equalsIgnoreCase(format) ? "original" : "aac";
+        if (!next.equals(preferredAudioFormat)) {
+            preferredAudioFormat = next;
+            // Cached stream URLs were chosen for the old format.
+            STREAM_CACHE.clear();
+        }
+    }
+
     private static Dispatcher createDispatcher(int maxRequests, int maxPerHost) {
         Dispatcher d = new Dispatcher();
         d.setMaxRequests(maxRequests);
@@ -657,7 +669,15 @@ public final class YouTubeInnerTubeExtractor {
                     }
                 }
 
-                if (bestMp4 != null && !bestMp4.isEmpty()) {
+                boolean hasMp4 = bestMp4 != null && !bestMp4.isEmpty();
+                boolean hasWebm = bestWebm != null && !bestWebm.isEmpty();
+                // Original mode: take the higher-bitrate stream (usually Opus) instead of forcing AAC.
+                if ("original".equals(preferredAudioFormat) && hasWebm
+                        && (!hasMp4 || bestWebmBitrate > bestMp4Bitrate)) {
+                    return new StreamResult(bestWebm, attempt.userAgent, attempt.name, "audio/webm", bestWebmLength);
+                }
+                // AAC mode (default): YouTube's own AAC stream — no re-encoding needed.
+                if (hasMp4) {
                     return new StreamResult(bestMp4, attempt.userAgent, attempt.name, "audio/mp4", bestMp4Length);
                 }
                 if (bestWebm != null && !bestWebm.isEmpty()) {

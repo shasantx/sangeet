@@ -13,17 +13,17 @@ import { useToastStore } from "@/store/toast-store";
 import { cn } from "@/lib/utils";
 
 const BROWSE_CATEGORIES = [
-  { label: "Pop", query: "top pop hits", color: "#2563eb" },
+  { label: "Pop", query: "top pop hits", color: "#c8102e" },
   { label: "Hindi", query: "Arijit Singh latest hindi hits", color: "#e11d48" },
-  { label: "Nepali", query: "Sajjan Raj Vaidya nepali songs", color: "#1e3a8a" },
+  { label: "Nepali", query: "Sajjan Raj Vaidya nepali songs", color: "#6e0b17" },
   { label: "Hip-Hop", query: "hip hop rap hits", color: "#c2410c" },
-  { label: "Indie", query: "indie alternative songs", color: "#7c3aed" },
-  { label: "Chill", query: "chill lofi r&b songs", color: "#0284c7" },
-  { label: "Workout", query: "workout gym energy music", color: "#475569" },
-  { label: "Rock", query: "classic rock anthems", color: "#4f46e5" },
+  { label: "Indie", query: "indie alternative songs", color: "#8f1d3b" },
+  { label: "Chill", query: "chill lofi r&b songs", color: "#b7791f" },
+  { label: "Workout", query: "workout gym energy music", color: "#57534e" },
+  { label: "Rock", query: "classic rock anthems", color: "#9b1c1c" },
   { label: "R&B", query: "The Weeknd SZA R&B", color: "#be185d" },
-  { label: "Electronic", query: "electronic dance edm hits", color: "#0ea5e9" },
-  { label: "Lo-Fi", query: "lofi study beats", color: "#6d28d9" },
+  { label: "Electronic", query: "electronic dance edm hits", color: "#d4a017" },
+  { label: "Lo-Fi", query: "lofi study beats", color: "#7a1f2b" },
   { label: "Punjabi", query: "Diljit Dosanjh Karan Aujla punjabi", color: "#ea580c" }
 ];
 
@@ -113,7 +113,7 @@ function SearchContent() {
                   router.push(`/search?q=${encodeURIComponent(cat.query)}`)
                 }
                 style={{
-                  background: `linear-gradient(135deg, ${cat.color}d9 0%, #0b0e18 100%)`
+                  background: `linear-gradient(135deg, ${cat.color}d9 0%, #0f0909 100%)`
                 }}
                 className="group relative flex h-32 flex-col justify-between overflow-hidden rounded-[14px] border border-white/15 p-4 text-left transition-all duration-200 ease-studio hover:-translate-y-0.5 hover:brightness-110 active:scale-[0.98]"
               >

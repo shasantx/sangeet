@@ -696,7 +696,7 @@ function createMainWindow() {
     height: 840,
     minWidth: 960,
     minHeight: 620,
-    backgroundColor: "#090b09",
+    backgroundColor: "#0a0606",
     title: "Sangeet - Music for every mood",
     icon: icon || undefined,
     autoHideMenuBar: true,

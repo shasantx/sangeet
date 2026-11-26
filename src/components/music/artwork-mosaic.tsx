@@ -106,12 +106,12 @@ export function ArtworkMosaic({
 
   const gradientClass =
     accent === "mint" || accent === "sapphire"
-      ? "from-[#4b86ff] via-[#2563eb] to-[#101c42]"
+      ? "from-[#ec4a4f] via-[#c8102e] to-[#3a0d14]"
       : accent === "forest" || accent === "midnight"
-        ? "from-[#1e3a8a] via-[#172554] to-[#080d1e]"
+        ? "from-[#6e0b17] via-[#3d0a10] to-[#140607]"
         : accent === "indigo"
-          ? "from-[#4f46e5] via-[#2563eb] to-[#0d1430]"
-          : "from-[#3b82f6] via-[#1d4ed8] to-[#0c1430]";
+          ? "from-[#f5c451] via-[#b7791f] to-[#2a1a06]"
+          : "from-[#e5303f] via-[#a50e22] to-[#220a0e]";
 
   return (
     <div

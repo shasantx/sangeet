@@ -18,11 +18,11 @@ const MAX_SCANNED_TRACKS: usize = 1500;
 const DESKTOP_BRIDGE_INIT_SCRIPT: &str = r#"
 (function() {
   if (window.SangeetDesktop) return;
-  const invoke = (cmd, args) => {
+  const invoke = (cmd, args, options) => {
     const fn = (window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke)
       || (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke);
     if (typeof fn !== 'function') return Promise.reject(new Error('Tauri bridge unavailable'));
-    return fn(cmd, args || {});
+    return options ? fn(cmd, args || {}, options) : fn(cmd, args || {});
   };
   window.SangeetDesktop = {
     isNativeApp: () => true,
@@ -30,6 +30,12 @@ const DESKTOP_BRIDGE_INIT_SCRIPT: &str = r#"
     setSystemTheme: () => {},
     scanLocalAudio: () => invoke('scan_local_audio'),
     downloadAudioTrack: (payload) => invoke('download_audio_track', { payload }),
+    saveAudioBytes: (meta, bytes) => invoke('save_audio_bytes', bytes, {
+      headers: {
+        'x-sangeet-track-id': encodeURIComponent(meta.trackId || ''),
+        'x-sangeet-filename': encodeURIComponent(meta.filename || '')
+      }
+    }),
     openDownloadsFolder: () => invoke('open_downloads_folder')
   };
 })();
@@ -268,6 +274,100 @@ fn download_audio_track(payload: DownloadPayload) -> DownloadResult {
     }
 }
 
+const MAX_SAVED_AUDIO_BYTES: usize = 200 * 1024 * 1024;
+
+fn save_error(message: &str) -> DownloadResult {
+    DownloadResult {
+        ok: false,
+        path: None,
+        size_bytes: None,
+        error: Some(message.to_string()),
+    }
+}
+
+fn percent_decode(input: &str) -> String {
+    fn hex(b: u8) -> Option<u8> {
+        match b {
+            b'0'..=b'9' => Some(b - b'0'),
+            b'a'..=b'f' => Some(b - b'a' + 10),
+            b'A'..=b'F' => Some(b - b'A' + 10),
+            _ => None,
+        }
+    }
+    let bytes = input.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' && i + 2 < bytes.len() {
+            if let (Some(h), Some(l)) = (hex(bytes[i + 1]), hex(bytes[i + 2])) {
+                out.push(h * 16 + l);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(bytes[i]);
+        i += 1;
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
+/// Saves audio bytes that were already converted in the WebView (e.g. AAC `.m4a`)
+/// into Music/Sangeet. The body is the raw file; name and id come in headers.
+#[tauri::command]
+fn save_audio_bytes(request: tauri::ipc::Request<'_>) -> DownloadResult {
+    let tauri::ipc::InvokeBody::Raw(data) = request.body() else {
+        return save_error("Expected raw audio bytes.");
+    };
+    if data.is_empty() || data.len() > MAX_SAVED_AUDIO_BYTES {
+        return save_error("Audio file is empty or too large.");
+    }
+    let header = |name: &str| {
+        request
+            .headers()
+            .get(name)
+            .and_then(|v| v.to_str().ok())
+            .map(percent_decode)
+            .unwrap_or_default()
+    };
+    let track_id = header("x-sangeet-track-id");
+    let requested = header("x-sangeet-filename");
+
+    let sanitized: String = requested
+        .chars()
+        .map(|c| match c {
+            '\\' | '/' | ':' | '*' | '?' | '"' | '<' | '>' | '|' => '_',
+            c if c.is_control() => '_',
+            _ => c,
+        })
+        .collect();
+    let mut filename = sanitized.trim().trim_start_matches('.').to_string();
+    if filename.is_empty() {
+        filename = format!("{}.m4a", if track_id.is_empty() { "track" } else { &track_id });
+    }
+    let lower = filename.to_lowercase();
+    if !(lower.ends_with(".m4a") || lower.ends_with(".aac") || lower.ends_with(".mp3")) {
+        filename.push_str(".m4a");
+    }
+
+    let target_dir = resolve_sangeet_music_dir();
+    if let Err(err) = fs::create_dir_all(&target_dir) {
+        return save_error(&format!("Could not create Music/Sangeet folder: {err}"));
+    }
+    let dest = target_dir.join(&filename);
+    match fs::write(&dest, data) {
+        Ok(()) => DownloadResult {
+            ok: true,
+            path: Some(dest.to_string_lossy().to_string()),
+            size_bytes: Some(data.len() as u64),
+            error: None,
+        },
+        Err(err) => {
+            let _ = fs::remove_file(&dest);
+            save_error(&format!("Could not save {filename}: {err}"))
+        }
+    }
+}
+
 #[tauri::command]
 fn open_downloads_folder() {
     let dir = resolve_sangeet_music_dir();
@@ -351,6 +451,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             scan_local_audio,
             download_audio_track,
+            save_audio_bytes,
             open_downloads_folder
         ])
         .setup(move |app| {

@@ -11,39 +11,39 @@
 html.dark,
 html[data-theme="dark"] {
   color-scheme: dark;
-  --background-shell: #07080c;
-  --background-base: #0c0e14;
-  --background-highlight: #151822;
-  --background-press: #090b10;
-  --background-elevated-base: #131620;
-  --background-elevated-highlight: #1c2130;
-  --background-elevated-press: #0e1118;
-  --background-tinted-base: rgba(59, 130, 246, 0.12);
-  --background-tinted-highlight: rgba(59, 130, 246, 0.22);
-  --background-tinted-press: rgba(59, 130, 246, 0.3);
+  --background-shell: #0a0606;
+  --background-base: #100a0a;
+  --background-highlight: #1c1212;
+  --background-press: #0c0707;
+  --background-elevated-base: #170f0f;
+  --background-elevated-highlight: #241717;
+  --background-elevated-press: #120b0b;
+  --background-tinted-base: rgba(229, 48, 63, 0.12);
+  --background-tinted-highlight: rgba(229, 48, 63, 0.22);
+  --background-tinted-press: rgba(229, 48, 63, 0.3);
 
   --text-base: #ffffff;
-  --text-subdued: #9ca6be;
-  --text-muted: #69738c;
-  --text-bright-accent: #3b82f6;
-  --accent-mint: #93c5fd;
-  --accent-hover: #5b9bff;
-  --accent-press: #2563eb;
+  --text-subdued: #bfaaa4;
+  --text-muted: #85726d;
+  --text-bright-accent: #e5303f;
+  --accent-mint: #f5c451;
+  --accent-hover: #f0525e;
+  --accent-press: #c8102e;
   --accent-foreground: #ffffff;
-  --text-negative: #f0656d;
-  --text-warning: #f0b24a;
-  --text-positive: #3b82f6;
-  --text-announcement: #93c5fd;
+  --text-negative: #ff6b81;
+  --text-warning: #fb923c;
+  --text-positive: #f5c451;
+  --text-announcement: #f5c451;
 
   --essential-base: #ffffff;
-  --essential-subdued: #69738c;
-  --essential-bright-accent: #3b82f6;
-  --essential-negative: #f0656d;
+  --essential-subdued: #85726d;
+  --essential-bright-accent: #e5303f;
+  --essential-negative: #ff6b81;
   --decorative-subdued: rgba(255, 255, 255, 0.08);
   --hairline: rgba(255, 255, 255, 0.045);
   --surface-hover: rgba(255, 255, 255, 0.06);
   --track-rail: rgba(255, 255, 255, 0.14);
-  --shadow-elevated: 0 20px 48px rgba(2, 4, 12, 0.72);
+  --shadow-elevated: 0 20px 48px rgba(10, 3, 3, 0.72);
 
   --panel-gap: 8px;
   --encore-corner-radius-smaller: 6px;
@@ -57,39 +57,39 @@ html[data-theme="dark"] {
 html.light,
 html[data-theme="light"] {
   color-scheme: light;
-  --background-shell: #eef2fa;
+  --background-shell: #faf4ec;
   --background-base: #ffffff;
-  --background-highlight: #e8eefb;
-  --background-press: #dae4fa;
-  --background-elevated-base: #f6f8fd;
-  --background-elevated-highlight: #e6edfc;
-  --background-elevated-press: #dae4fa;
-  --background-tinted-base: rgba(37, 99, 235, 0.1);
-  --background-tinted-highlight: rgba(37, 99, 235, 0.18);
-  --background-tinted-press: rgba(37, 99, 235, 0.26);
+  --background-highlight: #f8ebe3;
+  --background-press: #f2dccf;
+  --background-elevated-base: #fdf8f2;
+  --background-elevated-highlight: #f7e9df;
+  --background-elevated-press: #f2dccf;
+  --background-tinted-base: rgba(200, 16, 46, 0.1);
+  --background-tinted-highlight: rgba(200, 16, 46, 0.18);
+  --background-tinted-press: rgba(200, 16, 46, 0.26);
 
-  --text-base: #0a0f1e;
-  --text-subdued: #46536b;
-  --text-muted: #64748b;
-  --text-bright-accent: #2563eb;
-  --accent-mint: #1d4ed8;
-  --accent-hover: #1d4ed8;
-  --accent-press: #1e40af;
+  --text-base: #1c0a0a;
+  --text-subdued: #5e4540;
+  --text-muted: #7d6660;
+  --text-bright-accent: #c8102e;
+  --accent-mint: #a87408;
+  --accent-hover: #a50e22;
+  --accent-press: #8a0c1c;
   --accent-foreground: #ffffff;
-  --text-negative: #dc2626;
-  --text-warning: #d97706;
-  --text-positive: #2563eb;
-  --text-announcement: #1d4ed8;
+  --text-negative: #be123c;
+  --text-warning: #c2410c;
+  --text-positive: #a87408;
+  --text-announcement: #a87408;
 
-  --essential-base: #0a0f1e;
-  --essential-subdued: #64748b;
-  --essential-bright-accent: #2563eb;
-  --essential-negative: #dc2626;
-  --decorative-subdued: rgba(15, 23, 42, 0.14);
-  --hairline: rgba(15, 23, 42, 0.09);
-  --surface-hover: rgba(15, 23, 42, 0.05);
-  --track-rail: rgba(15, 23, 42, 0.14);
-  --shadow-elevated: 0 14px 36px rgba(15, 23, 42, 0.12);
+  --essential-base: #1c0a0a;
+  --essential-subdued: #7d6660;
+  --essential-bright-accent: #c8102e;
+  --essential-negative: #be123c;
+  --decorative-subdued: rgba(42, 15, 15, 0.14);
+  --hairline: rgba(42, 15, 15, 0.09);
+  --surface-hover: rgba(42, 15, 15, 0.05);
+  --track-rail: rgba(42, 15, 15, 0.14);
+  --shadow-elevated: 0 14px 36px rgba(42, 15, 15, 0.12);
 }
 
 * {
@@ -113,10 +113,10 @@ body {
 
 /* Signature Zentra Electric Cobalt CTA utility (crisp, zero fuzzy outer halo glow) */
 .btn-cobalt {
-  background: linear-gradient(135deg, #1d55ff 0%, #4b86ff 54%, #7eabff 100%);
+  background: linear-gradient(135deg, #a50e22 0%, #d4142a 52%, #e8553a 100%);
   color: #ffffff;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 1px 0 rgba(255, 220, 140, 0.38),
     0 2px 6px rgba(0, 0, 0, 0.22);
   transition:
     filter 160ms var(--ease-studio),
@@ -127,7 +127,7 @@ body {
 .btn-cobalt:hover {
   filter: brightness(1.07);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 1px 0 rgba(255, 220, 140, 0.48),
     0 4px 12px rgba(0, 0, 0, 0.28);
 }
 
@@ -138,22 +138,22 @@ body {
 
 /* Signature Zentra Atmospheric Cobalt-Periwinkle Aurora Mesh */
 .zentra-aurora-mesh {
-  background-color: #07080c;
+  background-color: #0a0606;
   background-image:
-    radial-gradient(ellipse 68% 44% at 50% -8%, rgba(29, 85, 255, 0.42) 0%, rgba(29, 85, 255, 0.14) 44%, transparent 76%),
-    radial-gradient(ellipse 46% 34% at 22% 4%, rgba(110, 168, 255, 0.24) 0%, transparent 68%),
-    radial-gradient(ellipse 44% 32% at 78% 2%, rgba(199, 220, 255, 0.16) 0%, transparent 66%),
-    radial-gradient(ellipse 74% 40% at 50% 108%, rgba(37, 99, 235, 0.12) 0%, transparent 70%);
+    radial-gradient(ellipse 68% 44% at 50% -8%, rgba(212, 20, 42, 0.42) 0%, rgba(212, 20, 42, 0.14) 44%, transparent 76%),
+    radial-gradient(ellipse 46% 34% at 22% 4%, rgba(240, 180, 60, 0.24) 0%, transparent 68%),
+    radial-gradient(ellipse 44% 32% at 78% 2%, rgba(255, 228, 170, 0.16) 0%, transparent 66%),
+    radial-gradient(ellipse 74% 40% at 50% 108%, rgba(200, 16, 46, 0.12) 0%, transparent 70%);
 }
 
 html.light .zentra-aurora-mesh,
 html[data-theme="light"] .zentra-aurora-mesh {
-  background-color: #eef2fa;
+  background-color: #faf4ec;
   background-image:
-    radial-gradient(ellipse 70% 44% at 50% -10%, rgba(29, 85, 255, 0.2) 0%, rgba(110, 168, 255, 0.12) 45%, transparent 76%),
-    radial-gradient(ellipse 48% 36% at 18% 6%, rgba(110, 168, 255, 0.26) 0%, transparent 68%),
-    radial-gradient(ellipse 48% 34% at 82% 4%, rgba(199, 220, 255, 0.48) 0%, transparent 68%),
-    radial-gradient(ellipse 68% 38% at 50% 108%, rgba(59, 130, 246, 0.1) 0%, transparent 72%);
+    radial-gradient(ellipse 70% 44% at 50% -10%, rgba(212, 20, 42, 0.2) 0%, rgba(240, 180, 60, 0.12) 45%, transparent 76%),
+    radial-gradient(ellipse 48% 36% at 18% 6%, rgba(240, 180, 60, 0.26) 0%, transparent 68%),
+    radial-gradient(ellipse 48% 34% at 82% 4%, rgba(255, 228, 170, 0.48) 0%, transparent 68%),
+    radial-gradient(ellipse 68% 38% at 50% 108%, rgba(229, 48, 63, 0.1) 0%, transparent 72%);
 }
 
 /* Smooth theme-aware cobalt scrollbars */
@@ -315,11 +315,11 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
 }
 
 .sangeet-glass-navbar.stage-tone-dark .ios-tab-item.is-active {
-  color: #93c5fd;
+  color: #f7d27a;
 }
 
 .sangeet-glass-navbar.stage-tone-light .ios-tab-item.is-active {
-  color: #2563eb;
+  color: #c8102e;
 }
 
 .sangeet-glass-navbar .ios-tabbar-search-btn-wrap {
@@ -356,7 +356,7 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
 }
 
 .sangeet-glass-navbar.sangeet-nav-searching.stage-tone-dark .ios-search-expanded .lg-backdrop {
-  background: rgba(10, 13, 24, 0.92);
+  background: rgba(24, 10, 11, 0.92);
 }
 
 .sangeet-glass-navbar.sangeet-nav-searching.stage-tone-light .ios-search-expanded .lg-backdrop {
@@ -386,15 +386,15 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
 
 .sangeet-glass-navbar.stage-tone-dark .lg-surface {
   box-shadow:
-    0 12px 32px rgba(2, 6, 18, 0.46),
-    inset 0 1px 0.5px rgba(199, 220, 255, 0.22);
+    0 12px 32px rgba(12, 4, 4, 0.46),
+    inset 0 1px 0.5px rgba(255, 228, 170, 0.22);
 }
 
 .sangeet-glass-navbar.stage-tone-dark .lg-variant-dark .lg-backdrop {
   background: linear-gradient(
     145deg,
-    rgba(16, 22, 38, 0.52),
-    rgba(10, 14, 26, 0.44)
+    rgba(38, 14, 16, 0.52),
+    rgba(26, 10, 11, 0.44)
   );
   -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
   backdrop-filter: blur(24px) saturate(190%) !important;
@@ -404,18 +404,18 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
   opacity: 0.45;
   background: linear-gradient(
     135deg,
-    rgba(199, 220, 255, 0.46) 0%,
-    rgba(110, 168, 255, 0.18) 38%,
-    rgba(59, 130, 246, 0.08) 66%,
-    rgba(199, 220, 255, 0.26) 100%
+    rgba(255, 228, 170, 0.46) 0%,
+    rgba(240, 180, 60, 0.18) 38%,
+    rgba(229, 48, 63, 0.08) 66%,
+    rgba(255, 228, 170, 0.26) 100%
   );
 }
 
 .sangeet-glass-navbar.stage-tone-dark .lg-pointer-sheen {
   background: radial-gradient(
     200px circle at var(--lg-mx, 50%) var(--lg-my, 25%),
-    rgba(199, 220, 255, 0.24) 0%,
-    rgba(110, 168, 255, 0.08) 42%,
+    rgba(255, 228, 170, 0.24) 0%,
+    rgba(240, 180, 60, 0.08) 42%,
     transparent 72%
   );
 }
@@ -423,17 +423,17 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
 .sangeet-glass-navbar.stage-tone-dark .ios-tabbar-indicator-pill {
   background: linear-gradient(
     180deg,
-    rgba(59, 130, 246, 0.26),
-    rgba(37, 99, 235, 0.14)
+    rgba(229, 48, 63, 0.26),
+    rgba(200, 16, 46, 0.14)
   );
   box-shadow:
-    inset 0 1px 0.8px rgba(199, 220, 255, 0.42),
+    inset 0 1px 0.8px rgba(255, 228, 170, 0.42),
     0 2px 8px rgba(0, 0, 0, 0.28);
 }
 
 .sangeet-glass-navbar.stage-tone-light .lg-surface {
   box-shadow:
-    0 10px 28px rgba(15, 23, 42, 0.12),
+    0 10px 28px rgba(42, 15, 15, 0.12),
     inset 0 1px 1px rgba(255, 255, 255, 0.94);
 }
 
@@ -441,7 +441,7 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
   background: linear-gradient(
     145deg,
     rgba(255, 255, 255, 0.56),
-    rgba(235, 242, 255, 0.46)
+    rgba(255, 244, 230, 0.46)
   );
   -webkit-backdrop-filter: blur(24px) saturate(185%) !important;
   backdrop-filter: blur(24px) saturate(185%) !important;
@@ -452,8 +452,8 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.96) 0%,
-    rgba(147, 197, 253, 0.42) 40%,
-    rgba(59, 130, 246, 0.16) 68%,
+    rgba(247, 210, 122, 0.42) 40%,
+    rgba(229, 48, 63, 0.16) 68%,
     rgba(255, 255, 255, 0.82) 100%
   );
 }
@@ -462,7 +462,7 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
   background: radial-gradient(
     220px circle at var(--lg-mx, 50%) var(--lg-my, 25%),
     rgba(255, 255, 255, 0.68) 0%,
-    rgba(147, 197, 253, 0.2) 42%,
+    rgba(247, 210, 122, 0.2) 42%,
     transparent 72%
   );
 }
@@ -470,12 +470,12 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
 .sangeet-glass-navbar.stage-tone-light .ios-tabbar-indicator-pill {
   background: linear-gradient(
     180deg,
-    rgba(59, 130, 246, 0.2),
-    rgba(37, 99, 235, 0.1)
+    rgba(229, 48, 63, 0.2),
+    rgba(200, 16, 46, 0.1)
   );
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.94),
-    0 2px 8px rgba(15, 23, 42, 0.08);
+    0 2px 8px rgba(42, 15, 15, 0.08);
 }
 
 /* Desktop & mobile floating topbar glass shell (GPU-accelerated frosted refraction, 120 FPS) */
@@ -494,31 +494,31 @@ input[type="range"].encore-slider:focus::-webkit-slider-thumb {
 
 /* Zentra cobalt-periwinkle atmospheric backdrop for landing hero (adapts to light & dark) */
 .sangeet-starfield {
-  background-color: #07080c;
+  background-color: #0a0606;
   background-image:
-    radial-gradient(ellipse 68% 42% at 50% -4%, rgba(29, 85, 255, 0.42), transparent 72%),
-    radial-gradient(ellipse 46% 34% at 76% 12%, rgba(199, 220, 255, 0.16), transparent 64%),
-    radial-gradient(1px 1px at 14% 22%, rgba(199, 220, 255, 0.65), transparent),
+    radial-gradient(ellipse 68% 42% at 50% -4%, rgba(212, 20, 42, 0.42), transparent 72%),
+    radial-gradient(ellipse 46% 34% at 76% 12%, rgba(255, 228, 170, 0.16), transparent 64%),
+    radial-gradient(1px 1px at 14% 22%, rgba(255, 228, 170, 0.65), transparent),
     radial-gradient(1.5px 1.5px at 28% 68%, rgba(255, 255, 255, 0.45), transparent),
-    radial-gradient(1px 1px at 42% 16%, rgba(110, 168, 255, 0.65), transparent),
+    radial-gradient(1px 1px at 42% 16%, rgba(240, 180, 60, 0.65), transparent),
     radial-gradient(1.5px 1.5px at 58% 42%, rgba(255, 255, 255, 0.45), transparent),
-    radial-gradient(1px 1px at 73% 26%, rgba(199, 220, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 73% 26%, rgba(255, 228, 170, 0.55), transparent),
     radial-gradient(1.5px 1.5px at 86% 64%, rgba(255, 255, 255, 0.5), transparent),
-    radial-gradient(1px 1px at 19% 84%, rgba(59, 130, 246, 0.55), transparent),
+    radial-gradient(1px 1px at 19% 84%, rgba(229, 48, 63, 0.55), transparent),
     radial-gradient(1px 1px at 64% 82%, rgba(255, 255, 255, 0.4), transparent),
-    radial-gradient(1px 1px at 91% 18%, rgba(147, 197, 253, 0.55), transparent);
+    radial-gradient(1px 1px at 91% 18%, rgba(247, 210, 122, 0.55), transparent);
   background-size: 100% 100%, 100% 100%, 320px 320px, 410px 410px, 290px 290px, 380px 380px, 340px 340px, 460px 460px, 310px 310px, 390px 390px, 280px 280px;
 }
 
 html.light .sangeet-starfield,
 html[data-theme="light"] .sangeet-starfield {
-  background-color: #eef2fa;
+  background-color: #faf4ec;
   background-image:
-    radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.16), transparent 45%),
-    radial-gradient(circle at 80% 30%, rgba(110, 168, 255, 0.2), transparent 48%),
-    radial-gradient(1.5px 1.5px at 18% 28%, rgba(37, 99, 235, 0.35), transparent),
-    radial-gradient(1.5px 1.5px at 72% 24%, rgba(37, 99, 235, 0.3), transparent),
-    radial-gradient(1.5px 1.5px at 85% 68%, rgba(59, 130, 246, 0.25), transparent);
+    radial-gradient(circle at 20% 20%, rgba(229, 48, 63, 0.16), transparent 45%),
+    radial-gradient(circle at 80% 30%, rgba(240, 180, 60, 0.2), transparent 48%),
+    radial-gradient(1.5px 1.5px at 18% 28%, rgba(200, 16, 46, 0.35), transparent),
+    radial-gradient(1.5px 1.5px at 72% 24%, rgba(200, 16, 46, 0.3), transparent),
+    radial-gradient(1.5px 1.5px at 85% 68%, rgba(229, 48, 63, 0.25), transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -133,12 +133,12 @@ export default function FullLyricsPage() {
     // Gradient background
     const grad = ctx.createLinearGradient(0, 0, 1080, 1350);
     grad.addColorStop(0, bg);
-    grad.addColorStop(1, "#07080c");
+    grad.addColorStop(1, "#0a0606");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 1080, 1350);
 
     // Subtle card frame
-    ctx.fillStyle = "rgba(7, 8, 12, 0.35)";
+    ctx.fillStyle = "rgba(10, 6, 6, 0.35)";
     ctx.fillRect(72, 72, 936, 1206);
 
     // Header: Track + Artist
@@ -164,7 +164,7 @@ export default function FullLyricsPage() {
     }
 
     // Footer Sangeet badge (Zentra Cobalt)
-    ctx.fillStyle = "#3b82f6";
+    ctx.fillStyle = "#e5303f";
     ctx.beginPath();
     ctx.arc(146, 1188, 24, 0, Math.PI * 2);
     ctx.fill();

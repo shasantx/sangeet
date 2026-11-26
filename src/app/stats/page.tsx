@@ -55,30 +55,30 @@ export default function StatsPage() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.fillStyle = "#07080c";
+    ctx.fillStyle = "#0a0606";
     ctx.fillRect(0, 0, 1080, 1350);
 
-    ctx.strokeStyle = "rgba(59,130,246,0.24)";
+    ctx.strokeStyle = "rgba(229,48,63,0.24)";
     ctx.lineWidth = 2;
     ctx.strokeRect(56, 56, 968, 1238);
 
-    ctx.fillStyle = "#3b82f6";
+    ctx.fillStyle = "#e5303f";
     ctx.font = "600 26px monospace";
     ctx.fillText("Sangeet listening summary", 96, 130);
 
-    ctx.fillStyle = "#f8fafc";
+    ctx.fillStyle = "#fdf8f3";
     ctx.font = "600 72px system-ui, sans-serif";
     ctx.fillText(`${minutes} min listened`, 96, 226);
 
-    ctx.fillStyle = "#94a3b8";
+    ctx.fillStyle = "#c4b1aa";
     ctx.font = "400 30px monospace";
     ctx.fillText(`${totalPlays} plays • ${likedTracks.length} liked`, 96, 286);
 
-    ctx.fillStyle = "#64748b";
+    ctx.fillStyle = "#7d6660";
     ctx.font = "500 26px system-ui, sans-serif";
     ctx.fillText("Top artists", 96, 396);
 
-    ctx.fillStyle = "#f8fafc";
+    ctx.fillStyle = "#fdf8f3";
     ctx.font = "500 38px system-ui, sans-serif";
     topArtists.slice(0, 5).forEach((a, idx) => {
       ctx.fillText(
@@ -88,11 +88,11 @@ export default function StatsPage() {
       );
     });
 
-    ctx.fillStyle = "#64748b";
+    ctx.fillStyle = "#7d6660";
     ctx.font = "500 26px system-ui, sans-serif";
     ctx.fillText("Top tracks", 96, 840);
 
-    ctx.fillStyle = "#f8fafc";
+    ctx.fillStyle = "#fdf8f3";
     ctx.font = "500 34px system-ui, sans-serif";
     topTracks.slice(0, 5).forEach((item, idx) => {
       ctx.fillText(
@@ -102,7 +102,7 @@ export default function StatsPage() {
       );
     });
 
-    ctx.fillStyle = "#64748b";
+    ctx.fillStyle = "#7d6660";
     ctx.font = "400 24px monospace";
     ctx.fillText("sangeet.shasant.xyz", 96, 1245);
 

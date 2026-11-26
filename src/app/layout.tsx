@@ -17,8 +17,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#07080c" },
-    { media: "(prefers-color-scheme: light)", color: "#eef2fa" }
+    { media: "(prefers-color-scheme: dark)", color: "#0a0606" },
+    { media: "(prefers-color-scheme: light)", color: "#faf4ec" }
   ]
 };
 
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   }
 };
 
-const THEME_INIT_SCRIPT = `(function(){try{var raw=localStorage.getItem("sangeet-v2-ui");var t="dark";if(raw){var p=JSON.parse(raw);if(p&&p.state&&(p.state.theme==="light"||p.state.theme==="dark")){t=p.state.theme;}}var r=document.documentElement;r.classList.remove("dark","light");r.classList.add(t);r.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute("content",t==="light"?"#eef2fa":"#07080c");}}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var raw=localStorage.getItem("sangeet-v2-ui");var t="dark";if(raw){var p=JSON.parse(raw);if(p&&p.state&&(p.state.theme==="light"||p.state.theme==="dark")){t=p.state.theme;}}var r=document.documentElement;r.classList.remove("dark","light");r.classList.add(t);r.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute("content",t==="light"?"#faf4ec":"#0a0606");}}catch(e){}})();`;
 
 export default function RootLayout({
   children

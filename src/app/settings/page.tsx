@@ -21,6 +21,7 @@ import { usePlayerStore } from "@/store/player-store";
 import { useLibraryStore } from "@/store/library-store";
 import { useUIStore } from "@/store/ui-store";
 import { EQ_LABELS, EQ_PRESETS, useEQStore } from "@/store/eq-store";
+import { useAudioFormat } from "@/store/audio-format-store";
 import {
   offlineMetaToTrack,
   useOfflineStore
@@ -39,6 +40,7 @@ const SANGEET_STORAGE_KEYS = [
   "sangeet-v2-ui",
   "sangeet-v2-auth",
   "sangeet-v2-eq",
+  "sangeet-v2-audio-format",
   "sangeet-v2-lyrics-cache",
   "sangeet-v2-native-offline"
 ];
@@ -50,6 +52,7 @@ export default function SettingsPage() {
 
   const theme = useUIStore((s) => s.theme);
   const setTheme = useUIStore((s) => s.setTheme);
+  const [audioFormat, setAudioFormat] = useAudioFormat();
   const openDownloadAppModal = useUIStore((s) => s.openDownloadAppModal);
 
   const eqEnabled = useEQStore((s) => s.enabled);
@@ -198,11 +201,11 @@ export default function SettingsPage() {
             className={cn(
               "flex min-h-[72px] items-center gap-3 rounded-2xl p-3.5 text-left transition-all duration-150",
               theme === "dark"
-                ? "bg-encore-tinted ring-2 ring-[#3b82f6]/50"
+                ? "bg-encore-tinted ring-2 ring-[#e5303f]/50"
                 : "bg-encore-base hover:bg-encore-elevated-highlight"
             )}
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#07080c] text-[#3b82f6] shadow-inner">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0a0606] text-[#e5303f] shadow-inner">
               <Moon className="h-5 w-5" />
             </span>
             <div>
@@ -223,11 +226,11 @@ export default function SettingsPage() {
             className={cn(
               "flex min-h-[72px] items-center gap-3 rounded-2xl p-3.5 text-left transition-all duration-150",
               theme === "light"
-                ? "bg-encore-tinted ring-2 ring-[#3b82f6]/50"
+                ? "bg-encore-tinted ring-2 ring-[#e5303f]/50"
                 : "bg-encore-base hover:bg-encore-elevated-highlight"
             )}
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eef2fa] text-[#2563eb] shadow-inner">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#faf4ec] text-[#c8102e] shadow-inner">
               <Sun className="h-5 w-5" />
             </span>
             <div>
@@ -238,6 +241,73 @@ export default function SettingsPage() {
             </div>
           </button>
         </div>
+      </section>
+
+      {/* Audio format: AAC (source-first, else on-device streaming transcode) or Original */}
+      <section className="space-y-4 rounded-2xl bg-encore-elevated p-5 shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+        <div className="flex items-center gap-2.5">
+          <FileAudio className="h-5 w-5 text-encore-accent" strokeWidth={1.6} />
+          <div>
+            <h2 className="text-base font-semibold text-encore-text">
+              Audio format
+            </h2>
+            <p className="text-xs text-encore-subdued">
+              Saved for {user?.name ? user.name : "this profile"} · applies from the next song
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {(
+            [
+              {
+                value: "aac",
+                title: "AAC",
+                sub: "Uses the source's own AAC when available, otherwise converts on your device while streaming"
+              },
+              {
+                value: "original",
+                title: "Original",
+                sub: "Plays exactly what the source sends (MP3, Opus, AAC…)"
+              }
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setAudioFormat(opt.value);
+                showToast(
+                  opt.value === "aac"
+                    ? "AAC audio enabled"
+                    : "Original audio format enabled",
+                  "success"
+                );
+              }}
+              aria-pressed={audioFormat === opt.value}
+              className={cn(
+                "flex min-h-[72px] flex-col justify-center rounded-2xl p-3.5 text-left transition-all duration-150",
+                audioFormat === opt.value
+                  ? "bg-encore-tinted ring-2 ring-[#e5303f]/50"
+                  : "bg-encore-base hover:bg-encore-elevated-highlight"
+              )}
+            >
+              <p className="text-sm font-semibold text-encore-text">
+                {opt.title}
+                {opt.value === "aac" && (
+                  <span className="ml-2 rounded-full bg-encore-tinted px-2 py-0.5 text-[10px] font-semibold text-encore-mint">
+                    Default
+                  </span>
+                )}
+              </p>
+              <p className="mt-0.5 text-[11px] text-encore-subdued">{opt.sub}</p>
+            </button>
+          ))}
+        </div>
+        <p className="text-[11px] text-encore-muted">
+          Streams load in small chunks and only ~30 seconds ahead to save data.
+          YouTube on the web plays inside YouTube&apos;s own player, so its format can&apos;t be changed there.
+        </p>
       </section>
 
       {/* 5-Band Graphic Equalizer */}
@@ -355,7 +425,7 @@ export default function SettingsPage() {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Your display name"
-            className="h-11 w-full min-w-0 rounded-full bg-encore-base px-4 text-sm text-encore-text outline-none placeholder:text-encore-muted focus:ring-2 focus:ring-[#3b82f6]/50 sm:w-auto sm:min-w-[200px] sm:flex-1"
+            className="h-11 w-full min-w-0 rounded-full bg-encore-base px-4 text-sm text-encore-text outline-none placeholder:text-encore-muted focus:ring-2 focus:ring-[#e5303f]/50 sm:w-auto sm:min-w-[200px] sm:flex-1"
           />
           <button
             type="submit"
@@ -579,7 +649,7 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setConfirmReset(true)}
-            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#f0656d]/15 px-4 text-xs font-semibold text-encore-negative transition-colors hover:bg-[#f0656d]/25"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#ff6b81]/15 px-4 text-xs font-semibold text-encore-negative transition-colors hover:bg-[#ff6b81]/25"
           >
             <Trash2 className="h-3.5 w-3.5" />
             Reset data

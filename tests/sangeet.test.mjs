@@ -461,7 +461,7 @@ test("Zentra Cobalt-Obsidian theme, floating LiquidGlass refraction, and securit
     path.join(ROOT, "src/app/globals.css"),
     "utf8"
   );
-  assert.match(cssSrc, /#3b82f6/);
+  assert.match(cssSrc, /#e5303f/);
   assert.match(cssSrc, /\.btn-cobalt/);
   assert.match(cssSrc, /\.zentra-aurora-mesh/);
 
@@ -569,4 +569,44 @@ test("Windows desktop client is implemented in Rust (Tauri v2) with icons and CI
   );
   assert.match(ciSrc, /dtolnay\/rust-toolchain/);
   assert.match(ciSrc, /cargo build --release/);
+});
+
+test("Audio format switcher defaults to AAC, is saved per user, and is wired on every platform", () => {
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+
+  const storeSrc = read("src/store/audio-format-store.ts");
+  assert.match(storeSrc, /DEFAULT_AUDIO_FORMAT: AudioFormat = "aac"/);
+  assert.match(storeSrc, /byUser: Record<string, AudioFormat>/);
+  assert.match(storeSrc, /name: "sangeet-v2-audio-format"/);
+
+  const transcoderSrc = read("src/lib/aac-transcoder.ts");
+  // Source-first: native AAC (MP4/ADTS) is played untouched before any encoding.
+  assert.match(transcoderSrc, /container === "mp4" \|\| container === "adts"\) return originalSource\(url, "native-aac"\)/);
+  // Chunked, data-saving streaming transcode via MediaSource + WebCodecs.
+  assert.match(transcoderSrc, /BUFFER_AHEAD_SECONDS = 30/);
+  assert.match(transcoderSrc, /fastStart: "fragmented"/);
+  assert.match(transcoderSrc, /Range: `bytes=\$\{start\}-\$\{endInclusive\}`/);
+  assert.match(transcoderSrc, /codec: "mp3"/);
+
+  const engineSrc = read("src/components/player/playback-engine.tsx");
+  assert.match(engineSrc, /prepareAacSource\(/);
+  assert.match(engineSrc, /prefetchStreamHead\(/);
+  assert.match(engineSrc, /setPreferredAudioFormat\?\.\(audioFormat\)/);
+
+  assert.match(read("src/app/settings/page.tsx"), /Audio format/);
+  assert.match(read("src/store/offline-store.ts"), /convertBlobToAac\(/);
+
+  const extractorSrc = read(
+    "android/app/src/main/java/xyz/shasant/sangeet/YouTubeInnerTubeExtractor.java"
+  );
+  assert.match(extractorSrc, /public static void setPreferredAudioFormat/);
+  assert.match(
+    read("android/app/src/main/java/xyz/shasant/sangeet/MainActivity.java"),
+    /public void setPreferredAudioFormat\(String format\)/
+  );
+
+  const rustSrc = read("desktop-rust/src/main.rs");
+  assert.match(rustSrc, /fn save_audio_bytes\(request: tauri::ipc::Request/);
+  assert.match(rustSrc, /save_audio_bytes,/);
+  assert.match(rustSrc, /saveAudioBytes: \(meta, bytes\)/);
 });

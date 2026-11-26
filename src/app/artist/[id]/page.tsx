@@ -84,7 +84,7 @@ function ArtistPageInner({ id }: { id: string }) {
       <div
         className="relative flex min-h-[260px] flex-col justify-end overflow-hidden border-b border-encore-hairline p-4 pt-14 sm:min-h-[280px] sm:p-6 sm:pt-16"
         style={{
-          background: `linear-gradient(180deg, ${heroColor} 0%, #090c14 100%)`
+          background: `linear-gradient(180deg, ${heroColor} 0%, #0d0808 100%)`
         }}
       >
         {artist.banner && (
@@ -96,11 +96,11 @@ function ArtistPageInner({ id }: { id: string }) {
         )}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#07080c]/90 via-[#07080c]/35 to-transparent"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0a0606]/90 via-[#0a0606]/35 to-transparent"
         />
         <div className="relative z-10">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-            <BadgeCheck className="h-5 w-5 fill-[#3b82f6] text-white" />
+            <BadgeCheck className="h-5 w-5 fill-[#e5303f] text-white" />
             <span>Verified Artist</span>
           </div>
           <h1 className="mt-2 text-3xl font-semibold tracking-[-0.02em] text-white drop-shadow sm:text-5xl">

@@ -130,7 +130,7 @@ function OfflinePageContent() {
   if (isWeb) {
     return (
       <div className="studio-enter mx-auto max-w-3xl overflow-x-hidden space-y-6 p-4 pb-12 sm:p-6">
-        <div className="rounded-3xl bg-gradient-to-br from-encore-tinted via-encore-elevated to-encore-base p-6 shadow-[0_24px_64px_rgba(2,6,18,0.45)] dark:from-[#142554]/80 dark:via-encore-elevated/95 dark:to-encore-base dark:shadow-[0_24px_64px_rgba(2,6,18,0.6)] sm:p-8">
+        <div className="rounded-3xl bg-gradient-to-br from-encore-tinted via-encore-elevated to-encore-base p-6 shadow-[0_24px_64px_rgba(12,4,4,0.45)] dark:from-[#4a0f17]/80 dark:via-encore-elevated/95 dark:to-encore-base dark:shadow-[0_24px_64px_rgba(12,4,4,0.6)] sm:p-8">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-encore-tinted px-3 py-1 text-xs font-semibold text-encore-accent">
             <HardDrive className="h-3.5 w-3.5" />
             Native Offline Features
@@ -267,7 +267,7 @@ function OfflinePageContent() {
       </div>
 
       {/* Smart Local Scan Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-encore-elevated/75 p-4 text-xs shadow-[0_12px_32px_rgba(2,6,18,0.18)]">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-encore-elevated/75 p-4 text-xs shadow-[0_12px_32px_rgba(12,4,4,0.18)]">
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-encore-tinted text-encore-accent">
             <ShieldCheck className="h-5 w-5" strokeWidth={1.7} />
@@ -305,7 +305,7 @@ function OfflinePageContent() {
 
       {/* Active Fast Transfers */}
       {activeDownloadList.length > 0 && (
-        <section className="space-y-2.5 rounded-2xl bg-encore-elevated/75 p-4 shadow-[0_16px_40px_rgba(2,6,18,0.22)]">
+        <section className="space-y-2.5 rounded-2xl bg-encore-elevated/75 p-4 shadow-[0_16px_40px_rgba(12,4,4,0.22)]">
           <h2 className="text-xs font-semibold text-encore-accent">
             Active transfers ({activeDownloadList.length})
           </h2>
@@ -319,7 +319,7 @@ function OfflinePageContent() {
             return (
               <div
                 key={dl.track.id}
-                className="flex items-center justify-between gap-3 rounded-xl bg-encore-base/80 p-3 shadow-[0_6px_20px_rgba(2,6,18,0.16)]"
+                className="flex items-center justify-between gap-3 rounded-xl bg-encore-base/80 p-3 shadow-[0_6px_20px_rgba(12,4,4,0.16)]"
               >
                 <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg">
                   <TrackArtwork
@@ -341,7 +341,7 @@ function OfflinePageContent() {
                       <div className="flex items-center gap-2.5">
                         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-encore-rail">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#1d55ff] via-[#4b86ff] to-[#93c5fd] transition-[width] duration-200"
+                            className="h-full rounded-full bg-gradient-to-r from-[#d4142a] via-[#ec4a4f] to-[#f7d27a] transition-[width] duration-200"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -357,7 +357,7 @@ function OfflinePageContent() {
                       )}
                     </div>
                   ) : dl.status === "completed" ? (
-                    <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
                       <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
                       Saved offline
                     </span>

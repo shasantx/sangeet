@@ -102,7 +102,7 @@ export function AppDownloadModal() {
           role="region"
           aria-label="Download Sangeet native app"
           className={cn(
-            "studio-enter fixed right-3 z-40 w-[min(340px,calc(100vw-24px))] rounded-2xl bg-encore-elevated/95 p-4 shadow-[0_24px_70px_rgba(2,6,18,0.55)] backdrop-blur-xl md:bottom-24 md:right-4",
+            "studio-enter fixed right-3 z-40 w-[min(340px,calc(100vw-24px))] rounded-2xl bg-encore-elevated/95 p-4 shadow-[0_24px_70px_rgba(12,4,4,0.55)] backdrop-blur-xl md:bottom-24 md:right-4",
             hasTrack
               ? "bottom-[calc(154px+env(safe-area-inset-bottom))]"
               : "bottom-[calc(86px+env(safe-area-inset-bottom))]"
@@ -168,9 +168,9 @@ export function AppDownloadModal() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="studio-enter w-full max-w-md overflow-hidden rounded-3xl bg-encore-base shadow-[0_24px_70px_rgba(2,6,18,0.55)]"
+            className="studio-enter w-full max-w-md overflow-hidden rounded-3xl bg-encore-base shadow-[0_24px_70px_rgba(12,4,4,0.55)]"
           >
-            <div className="relative bg-gradient-to-br from-encore-tinted via-encore-elevated to-encore-base p-6 pb-5 dark:from-[#142554]/80 dark:via-encore-elevated/95 dark:to-encore-base">
+            <div className="relative bg-gradient-to-br from-encore-tinted via-encore-elevated to-encore-base p-6 pb-5 dark:from-[#4a0f17]/80 dark:via-encore-elevated/95 dark:to-encore-base">
               <button
                 type="button"
                 onClick={closeModal}

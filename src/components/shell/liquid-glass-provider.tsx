@@ -20,7 +20,7 @@ function ThemeAndGlassSync({ children }: { children: React.ReactNode }) {
 
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      meta.setAttribute("content", theme === "light" ? "#eef2fa" : "#07080c");
+      meta.setAttribute("content", theme === "light" ? "#faf4ec" : "#0a0606");
     }
 
     updateSetting("siteTheme", theme);

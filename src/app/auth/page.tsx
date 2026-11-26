@@ -85,8 +85,8 @@ function AuthContent() {
         className={cn(
           "pointer-events-none absolute left-1/2 top-1/2 -z-0 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px]",
           isDark
-            ? "bg-[radial-gradient(circle,rgba(37,99,235,0.2)_0%,rgba(126,171,255,0.06)_48%,transparent_72%)]"
-            : "bg-[radial-gradient(circle,rgba(59,130,246,0.14)_0%,rgba(147,197,253,0.1)_48%,transparent_72%)]"
+            ? "bg-[radial-gradient(circle,rgba(200,16,46,0.2)_0%,rgba(245,196,81,0.06)_48%,transparent_72%)]"
+            : "bg-[radial-gradient(circle,rgba(229,48,63,0.14)_0%,rgba(247,210,122,0.1)_48%,transparent_72%)]"
         )}
       />
 
@@ -123,12 +123,12 @@ function AuthContent() {
             "studio-enter w-full max-w-[428px] rounded-3xl bg-encore-base/85 p-7 backdrop-blur-2xl sm:p-9",
             isDark
               ? "shadow-[0_24px_70px_rgba(0,0,0,0.45)]"
-              : "shadow-[0_24px_64px_rgba(15,23,42,0.12)]"
+              : "shadow-[0_24px_64px_rgba(42,15,15,0.12)]"
           )}
         >
           {/* Brand Mark + Heading */}
           <div className="flex flex-col items-center text-center">
-            <SangeetLogo className="h-12 w-12 shadow-[0_10px_28px_rgba(37,99,235,0.28)]" />
+            <SangeetLogo className="h-12 w-12 shadow-[0_10px_28px_rgba(200,16,46,0.28)]" />
             <h1 className="mt-5 text-2xl font-semibold tracking-[-0.025em] text-encore-text sm:text-[28px]">
               Welcome to Sangeet
             </h1>

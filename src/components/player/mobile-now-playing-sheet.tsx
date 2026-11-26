@@ -486,7 +486,7 @@ export function MobileNowPlayingSheet() {
         style={{
           backdropFilter: `blur(${blurPx}px)`,
           WebkitBackdropFilter: `blur(${blurPx}px)`,
-          backgroundColor: `rgba(5, 6, 11, ${veilAlpha.toFixed(2)})`,
+          backgroundColor: `rgba(8, 4, 4, ${veilAlpha.toFixed(2)})`,
           transition: isDragging
             ? "none"
             : "backdrop-filter 260ms ease, -webkit-backdrop-filter 260ms ease, background-color 260ms ease"
@@ -531,7 +531,7 @@ export function MobileNowPlayingSheet() {
           transition: isDragging
             ? "none"
             : "transform 280ms cubic-bezier(0.22, 1, 0.36, 1), border-radius 280ms ease, opacity 260ms ease",
-          backgroundColor: "#05060b"
+          backgroundColor: "#070404"
         }}
       >
         {/* Deep atmospheric radial cobalt-indigo-obsidian backdrop */}
@@ -549,7 +549,7 @@ export function MobileNowPlayingSheet() {
           <div
             className="absolute inset-0"
             style={{
-              background: `radial-gradient(ellipse 88% 62% at 50% 20%, rgba(23, 32, 82, 0.88) 0%, rgba(10, 12, 22, 0.94) 55%, rgba(5, 6, 11, 0.99) 100%)`
+              background: `radial-gradient(ellipse 88% 62% at 50% 20%, rgba(82, 14, 22, 0.88) 0%, rgba(20, 8, 9, 0.94) 55%, rgba(8, 4, 4, 0.99) 100%)`
             }}
           />
           <div
@@ -671,8 +671,8 @@ export function MobileNowPlayingSheet() {
                   className={cn(
                     "pointer-events-none absolute right-2 top-1/2 z-20 flex -translate-y-1/2 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.48)] backdrop-blur-xl transition-colors duration-150",
                     swipeX <= -72
-                      ? "bg-[#1d55ff]/90 text-white"
-                      : "bg-[#0c1020]/85 text-white/90"
+                      ? "bg-[#d4142a]/90 text-white"
+                      : "bg-[#170c0c]/85 text-white/90"
                   )}
                   style={{ opacity: swipeIndicatorOpacity }}
                 >
@@ -687,8 +687,8 @@ export function MobileNowPlayingSheet() {
                   className={cn(
                     "pointer-events-none absolute left-2 top-1/2 z-20 flex -translate-y-1/2 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.48)] backdrop-blur-xl transition-colors duration-150",
                     swipeX >= 72
-                      ? "bg-[#1d55ff]/90 text-white"
-                      : "bg-[#0c1020]/85 text-white/90"
+                      ? "bg-[#d4142a]/90 text-white"
+                      : "bg-[#170c0c]/85 text-white/90"
                   )}
                   style={{ opacity: swipeIndicatorOpacity }}
                 >
@@ -737,7 +737,7 @@ export function MobileNowPlayingSheet() {
                   className={cn(
                     "h-5 w-5 transition-colors",
                     isLiked
-                      ? "fill-[#7eabff] text-[#7eabff]"
+                      ? "fill-[#f5c451] text-[#f5c451]"
                       : "text-white/75 hover:text-white"
                   )}
                 />
@@ -749,7 +749,7 @@ export function MobileNowPlayingSheet() {
               <div className="group relative flex h-6 items-center">
                 <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.18] transition-[height] duration-150 group-hover:h-1.5">
                   <div
-                    className="h-full rounded-full bg-white transition-colors group-hover:bg-[#7eabff]"
+                    className="h-full rounded-full bg-white transition-colors group-hover:bg-[#f5c451]"
                     style={{ width: `${progressPct}%` }}
                   />
                 </div>
@@ -789,7 +789,7 @@ export function MobileNowPlayingSheet() {
                 aria-label="Shuffle"
                 className={cn(
                   "flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/[0.08] active:scale-90",
-                  shuffle ? "text-[#7eabff]" : "text-white/65 hover:text-white"
+                  shuffle ? "text-[#f5c451]" : "text-white/65 hover:text-white"
                 )}
               >
                 <Shuffle className="h-5 w-5" />
@@ -806,7 +806,7 @@ export function MobileNowPlayingSheet() {
                 type="button"
                 onClick={togglePlay}
                 aria-label={isPlaying ? "Pause" : "Play"}
-                className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#07080c] shadow-[0_8px_24px_rgba(0,0,0,0.38)] transition-transform hover:scale-[1.03] active:scale-95"
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#0a0606] shadow-[0_8px_24px_rgba(0,0,0,0.38)] transition-transform hover:scale-[1.03] active:scale-95"
               >
                 {isBuffering ? (
                   <Loader2 className="h-7 w-7 animate-spin" />
@@ -831,7 +831,7 @@ export function MobileNowPlayingSheet() {
                 className={cn(
                   "flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/[0.08] active:scale-90",
                   repeat !== "off"
-                    ? "text-[#7eabff]"
+                    ? "text-[#f5c451]"
                     : "text-white/65 hover:text-white"
                 )}
               >
@@ -854,7 +854,7 @@ export function MobileNowPlayingSheet() {
                 aria-label="Open Lyrics"
                 className="inline-flex min-h-[42px] items-center gap-2 rounded-full bg-white/[0.07] px-4 py-2 text-xs font-medium text-white/85 transition-colors hover:bg-white/[0.13] active:scale-95 lg:hidden"
               >
-                <Mic2 className="h-3.5 w-3.5 text-[#7eabff]" />
+                <Mic2 className="h-3.5 w-3.5 text-[#f5c451]" />
                 <span>Lyrics</span>
               </button>
 
@@ -867,7 +867,7 @@ export function MobileNowPlayingSheet() {
                   className={cn(
                     "inline-flex min-h-[42px] items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-colors",
                     hasSleepTimer
-                      ? "bg-[#3b82f6]/25 text-[#93c5fd]"
+                      ? "bg-[#e5303f]/25 text-[#f7d27a]"
                       : "bg-white/[0.07] text-white/85 hover:bg-white/[0.13]"
                   )}
                 >
@@ -880,7 +880,7 @@ export function MobileNowPlayingSheet() {
                 {sleepMenuOpen && (
                   <div
                     data-sleep-popover
-                    className="absolute bottom-14 left-1/2 z-50 w-48 -translate-x-1/2 rounded-2xl bg-[#101424]/95 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.68)] backdrop-blur-2xl"
+                    className="absolute bottom-14 left-1/2 z-50 w-48 -translate-x-1/2 rounded-2xl bg-[#1a0c0c]/95 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.68)] backdrop-blur-2xl"
                   >
                     <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/50">
                       Sleep timer
@@ -896,7 +896,7 @@ export function MobileNowPlayingSheet() {
                     >
                       <span>End of track</span>
                       {sleepAtTrackEnd && (
-                        <Check className="h-3.5 w-3.5 text-[#7eabff]" />
+                        <Check className="h-3.5 w-3.5 text-[#f5c451]" />
                       )}
                     </button>
                     {SLEEP_OPTIONS.map((opt) => (
@@ -920,7 +920,7 @@ export function MobileNowPlayingSheet() {
                       >
                         <span>{opt.label}</span>
                         {opt.minutes === null && !hasSleepTimer && (
-                          <Check className="h-3.5 w-3.5 text-[#7eabff]" />
+                          <Check className="h-3.5 w-3.5 text-[#f5c451]" />
                         )}
                       </button>
                     ))}
@@ -936,20 +936,20 @@ export function MobileNowPlayingSheet() {
                 className={cn(
                   "inline-flex min-h-[42px] items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-colors disabled:opacity-60",
                   isOfflineSaved
-                    ? "bg-[#3b82f6]/25 text-[#93c5fd]"
+                    ? "bg-[#e5303f]/25 text-[#f7d27a]"
                     : "bg-white/[0.07] text-white/85 hover:bg-white/[0.13]"
                 )}
               >
                 {isDownloading ? (
                   <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#7eabff]" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#f5c451]" />
                     <span className="font-mono tabular-nums">
                       {activeDownload ? `${activeDownload.progress}%` : "Downloading"}
                     </span>
                   </>
                 ) : isOfflineSaved ? (
                   <>
-                    <Check className="h-3.5 w-3.5 text-[#7eabff]" />
+                    <Check className="h-3.5 w-3.5 text-[#f5c451]" />
                     <span>Saved</span>
                   </>
                 ) : (
@@ -1020,7 +1020,7 @@ export function MobileNowPlayingSheet() {
                         className={cn(
                           "block min-h-[44px] w-full origin-left py-0.5 text-left text-[22px] font-bold leading-[1.28] tracking-[-0.02em] transition-all duration-300 sm:text-[26px]",
                           idx === activeLyricIdx
-                            ? "scale-[1.01] bg-gradient-to-r from-white via-white to-[#7eabff] bg-clip-text text-transparent"
+                            ? "scale-[1.01] bg-gradient-to-r from-white via-white to-[#f5c451] bg-clip-text text-transparent"
                             : idx < activeLyricIdx
                               ? "text-white/25 hover:text-white/60"
                               : "text-white/40 hover:text-white/70"

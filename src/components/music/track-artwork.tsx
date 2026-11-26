@@ -55,7 +55,7 @@ export function TrackArtwork({
         role="img"
         aria-label={alt}
         className={cn(
-          "flex h-full w-full items-center justify-center bg-gradient-to-br from-[#2563eb]/35 via-[#131d3d] to-[#0a0e1a] text-encore-mint/80",
+          "flex h-full w-full items-center justify-center bg-gradient-to-br from-[#c8102e]/35 via-[#2a0e12] to-[#110809] text-encore-mint/80",
           className
         )}
       >

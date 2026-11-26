@@ -268,7 +268,7 @@ export function LeftSidebar() {
                     "flex min-h-[44px] items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors duration-150",
                     leftCollapsed && "justify-center px-0",
                     active
-                      ? "bg-encore-elevated-highlight font-medium text-encore-text shadow-[inset_0_1px_0_rgba(147,197,253,0.14)]"
+                      ? "bg-encore-elevated-highlight font-medium text-encore-text shadow-[inset_0_1px_0_rgba(247,210,122,0.14)]"
                       : "text-encore-subdued hover:bg-encore-elevated hover:text-encore-text"
                   )}
                 >
@@ -315,7 +315,7 @@ export function LeftSidebar() {
                     "flex min-h-[48px] items-center gap-2.5 rounded-lg p-1.5 transition-colors duration-150",
                     leftCollapsed && "justify-center",
                     active
-                      ? "bg-encore-elevated-highlight shadow-[inset_0_1px_0_rgba(147,197,253,0.14)]"
+                      ? "bg-encore-elevated-highlight shadow-[inset_0_1px_0_rgba(247,210,122,0.14)]"
                       : "hover:bg-encore-elevated"
                   )}
                   title={pl.name}

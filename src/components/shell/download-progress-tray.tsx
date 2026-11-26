@@ -46,7 +46,7 @@ export function DownloadProgressTray() {
     <aside
       aria-label="Active downloads"
       className={cn(
-        "studio-enter fixed right-3 z-40 w-[min(350px,calc(100vw-24px))] overflow-hidden rounded-2xl bg-encore-elevated/95 shadow-[0_20px_50px_rgba(2,6,18,0.65)] backdrop-blur-2xl md:bottom-24 md:right-4",
+        "studio-enter fixed right-3 z-40 w-[min(350px,calc(100vw-24px))] overflow-hidden rounded-2xl bg-encore-elevated/95 shadow-[0_20px_50px_rgba(12,4,4,0.65)] backdrop-blur-2xl md:bottom-24 md:right-4",
         hasTrack
           ? "bottom-[calc(158px+env(safe-area-inset-bottom))]"
           : "bottom-[calc(88px+env(safe-area-inset-bottom))]"
@@ -102,7 +102,7 @@ export function DownloadProgressTray() {
       {collapsed && activeCount > 0 && (
         <div className="h-1 w-full bg-encore-rail/60">
           <div
-            className="h-full bg-gradient-to-r from-[#1d55ff] via-[#4b86ff] to-[#93c5fd] transition-[width] duration-200"
+            className="h-full bg-gradient-to-r from-[#d4142a] via-[#ec4a4f] to-[#f7d27a] transition-[width] duration-200"
             style={{ width: `${Math.max(6, avgProgress)}%` }}
           />
         </div>
@@ -190,7 +190,7 @@ export function DownloadProgressTray() {
                         "h-full rounded-full transition-[width] duration-200 ease-out",
                         isDone
                           ? "bg-encore-accent"
-                          : "bg-gradient-to-r from-[#1d55ff] via-[#4b86ff] to-[#93c5fd]"
+                          : "bg-gradient-to-r from-[#d4142a] via-[#ec4a4f] to-[#f7d27a]"
                       )}
                       style={{
                         width: `${isDone ? 100 : Math.max(5, dl.progress)}%`

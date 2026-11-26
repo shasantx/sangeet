@@ -63,6 +63,31 @@ export interface SangeetAndroidBridge {
   hasAudioPermission?: () => boolean;
   requestAudioPermission?: () => void;
   scanLocalAudio?: () => string;
+  /** "aac" prefers YouTube's native AAC stream; "original" picks the highest-bitrate stream. */
+  setPreferredAudioFormat?: (format: string) => void;
+}
+
+export interface DesktopSaveResult {
+  ok: boolean;
+  path?: string;
+  sizeBytes?: number;
+  error?: string;
+}
+
+type TauriInvoke = <T = unknown>(
+  cmd: string,
+  args?: Record<string, unknown> | Uint8Array,
+  options?: { headers?: Record<string, string> }
+) => Promise<T>;
+
+function saveAudioBytesVia(invoke: TauriInvoke) {
+  return (meta: { trackId: string; filename: string }, bytes: Uint8Array) =>
+    invoke<DesktopSaveResult>("save_audio_bytes", bytes, {
+      headers: {
+        "x-sangeet-track-id": encodeURIComponent(meta.trackId),
+        "x-sangeet-filename": encodeURIComponent(meta.filename)
+      }
+    });
 }
 
 export interface SangeetDesktopBridge {
@@ -77,6 +102,11 @@ export interface SangeetDesktopBridge {
     artist: string;
     filename: string;
   }) => Promise<{ ok: boolean; path?: string; sizeBytes?: number; error?: string }>;
+  /** Saves already-converted audio bytes (e.g. AAC .m4a) into Music/Sangeet. */
+  saveAudioBytes?: (
+    meta: { trackId: string; filename: string },
+    bytes: Uint8Array
+  ) => Promise<DesktopSaveResult>;
   openDownloadsFolder?: () => Promise<void>;
 }
 
@@ -86,17 +116,11 @@ declare global {
     SangeetDesktop?: SangeetDesktopBridge;
     __TAURI__?: {
       core?: {
-        invoke?: <T = unknown>(
-          cmd: string,
-          args?: Record<string, unknown>
-        ) => Promise<T>;
+        invoke?: TauriInvoke;
       };
     };
     __TAURI_INTERNALS__?: {
-      invoke?: <T = unknown>(
-        cmd: string,
-        args?: Record<string, unknown>
-      ) => Promise<T>;
+      invoke?: TauriInvoke;
     };
   }
 }
@@ -178,6 +202,7 @@ export function getWindowsBridge(): SangeetDesktopBridge | null {
           sizeBytes?: number;
           error?: string;
         }>("download_audio_track", { payload }),
+      saveAudioBytes: saveAudioBytesVia(tauriInvoke),
       openDownloadsFolder: () => tauriInvoke<void>("open_downloads_folder")
     };
   }

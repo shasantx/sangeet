@@ -145,10 +145,10 @@ export async function GET(request: NextRequest) {
   <meta http-equiv="refresh" content="0;url=${escapedHref}" />
   <title>Returning to Sangeet</title>
   <style>
-    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#070a08; color:#f2f7f3; font-family:system-ui,-apple-system,sans-serif; padding:24px; text-align:center; }
-    .card { max-width:340px; width:100%; background:#151c18; border:1px solid rgba(184,245,205,0.12); border-radius:16px; padding:24px; }
-    .btn { display:inline-block; margin-top:16px; padding:12px 24px; border-radius:999px; background:#1ed760; color:#050d08; font-weight:600; font-size:14px; text-decoration:none; }
-    p { margin:8px 0 0; color:#a3b3a8; font-size:13px; }
+    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#0a0606; color:#fdf3ec; font-family:system-ui,-apple-system,sans-serif; padding:24px; text-align:center; }
+    .card { max-width:340px; width:100%; background:#1a0f0f; border:1px solid rgba(245,196,81,0.12); border-radius:16px; padding:24px; }
+    .btn { display:inline-block; margin-top:16px; padding:12px 24px; border-radius:999px; background:#e5303f; color:#ffffff; font-weight:600; font-size:14px; text-decoration:none; }
+    p { margin:8px 0 0; color:#bfaaa4; font-size:13px; }
   </style>
 </head>
 <body>

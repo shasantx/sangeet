@@ -150,8 +150,8 @@ public final class MainActivity extends AppCompatActivity {
 
         WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         requestMaxDisplayRefreshRate();
-        getWindow().setStatusBarColor(0xFF07080C);
-        getWindow().setNavigationBarColor(0xFF07080C);
+        getWindow().setStatusBarColor(0xFF0A0606);
+        getWindow().setNavigationBarColor(0xFF0A0606);
         WindowInsetsControllerCompat insetsController =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         if (insetsController != null) {
@@ -160,9 +160,9 @@ public final class MainActivity extends AppCompatActivity {
         }
 
         rootContainer = new FrameLayout(this);
-        rootContainer.setBackgroundColor(0xFF07080C);
+        rootContainer.setBackgroundColor(0xFF0A0606);
         webView = new WebView(this);
-        webView.setBackgroundColor(0xFF07080C);
+        webView.setBackgroundColor(0xFF0A0606);
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
         wasAudioPermissionGranted = hasAudioPermissionInternal();
@@ -544,7 +544,7 @@ public final class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public void setSystemTheme(String theme) {
             final boolean isLight = "light".equalsIgnoreCase(theme);
-            final int bgColor = isLight ? 0xFFEEF2FA : 0xFF07080C;
+            final int bgColor = isLight ? 0xFFFAF4EC : 0xFF0A0606;
             runOnUiThread(() -> {
                 if (isFinishing() || isDestroyed()) return;
                 getWindow().setStatusBarColor(bgColor);
@@ -562,6 +562,12 @@ public final class MainActivity extends AppCompatActivity {
                     webView.setBackgroundColor(bgColor);
                 }
             });
+        }
+
+        /** "aac" (default) prefers YouTube's native AAC stream; "original" picks the highest-bitrate stream. */
+        @JavascriptInterface
+        public void setPreferredAudioFormat(String format) {
+            YouTubeInnerTubeExtractor.setPreferredAudioFormat(format);
         }
 
         @JavascriptInterface

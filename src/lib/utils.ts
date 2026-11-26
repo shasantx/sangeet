@@ -26,16 +26,16 @@ export function parseDurationToSeconds(text?: string): number {
 }
 
 const ACCENT_PALETTE = [
-  "#1d55ff",
-  "#2563eb",
-  "#1e3a8a",
-  "#312e81",
-  "#1d4ed8",
-  "#3730a3",
-  "#1e40af",
-  "#0f2d6b",
-  "#2b4eff",
-  "#283593"
+  "#d4142a",
+  "#c8102e",
+  "#6e0b17",
+  "#5a0f18",
+  "#a50e22",
+  "#74121e",
+  "#8a0c1c",
+  "#7a4f08",
+  "#d11f2f",
+  "#9a6b10"
 ];
 
 export function pickHeroColor(seed: string): string {

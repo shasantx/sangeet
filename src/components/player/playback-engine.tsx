@@ -13,6 +13,17 @@ import {
   getOfflineObjectUrl,
   revokeAllOfflineObjectUrls
 } from "@/lib/offline-db";
+import {
+  prefetchStreamHead,
+  prepareAacSource,
+  type PreparedAudioSource
+} from "@/lib/aac-transcoder";
+import {
+  getPreferredAudioFormat,
+  useAudioFormat
+} from "@/store/audio-format-store";
+
+let warnedAacUnsupported = false;
 
 interface SkipSegment {
   start: number;
@@ -44,6 +55,9 @@ export function PlaybackEngine() {
   const lastTrackLoadAtRef = useRef<number>(0);
   const lastUserPlayToggleAtRef = useRef<number>(0);
   const androidSyncedTrackIdRef = useRef<string | null>(null);
+  const aacSourceRef = useRef<PreparedAudioSource | null>(null);
+  const [audioFormat] = useAudioFormat();
+  const nextQueuedTrack = usePlayerStore((s) => s.queue[0]);
 
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const trackLoadNonce = usePlayerStore((s) => s.trackLoadNonce);
@@ -603,9 +617,26 @@ export function PlaybackEngine() {
       if (hostRef.current) {
         hostRef.current.innerHTML = "";
       }
+      aacSourceRef.current?.dispose();
+      aacSourceRef.current = null;
       revokeAllOfflineObjectUrls();
     };
   }, []);
+
+  // Tell the Android app which YouTube stream to prefer (native AAC vs original/highest bitrate).
+  useEffect(() => {
+    getAndroidBridge()?.setPreferredAudioFormat?.(audioFormat);
+  }, [audioFormat]);
+
+  // Warm the first chunk of the next queued stream so it starts instantly.
+  useEffect(() => {
+    if (audioFormat !== "aac") return;
+    const next = nextQueuedTrack;
+    if (!next?.streamUrl || next.offlineId || next.localUrl) return;
+    const url = next.streamUrl;
+    const timer = window.setTimeout(() => prefetchStreamHead(url), 4000);
+    return () => window.clearTimeout(timer);
+  }, [audioFormat, nextQueuedTrack]);
 
   // Load new track (Android ExoPlayer, IndexedDB offline, local Blob, Audius stream, or YouTube audio)
   useEffect(() => {
@@ -617,6 +648,10 @@ export function PlaybackEngine() {
     loadGraceUntilRef.current = Date.now() + 3000;
 
     useLibraryStore.getState().recordPlay(currentTrack);
+
+    // Stop any AAC streaming session from the previous track.
+    aacSourceRef.current?.dispose();
+    aacSourceRef.current = null;
 
     const bridge = getAndroidBridge();
 
@@ -658,6 +693,56 @@ export function PlaybackEngine() {
         return;
       }
 
+      // AAC mode: use the source's own AAC when it has one, otherwise stream-transcode MP3 -> AAC in chunks.
+      let prepared: PreparedAudioSource | null = null;
+      const isRemoteStream =
+        !currentTrack.offlineId &&
+        !currentTrack.localUrl &&
+        Boolean(currentTrack.streamUrl);
+      if (isRemoteStream && getPreferredAudioFormat() === "aac") {
+        const originalSrc = resolvedSrc;
+        const session: PreparedAudioSource = await prepareAacSource(originalSrc, {
+          durationHint: currentTrack.duration,
+          onFatal: (atTime) => {
+            // Encoder/stream failure mid-song: continue seamlessly on the original stream.
+            if (aacSourceRef.current !== session) return;
+            aacSourceRef.current = null;
+            const el = audioRef.current;
+            if (!el) return;
+            const wasPlaying = usePlayerStore.getState().isPlaying;
+            el.addEventListener(
+              "loadedmetadata",
+              () => {
+                try {
+                  el.currentTime = atTime;
+                } catch {}
+                if (wasPlaying) void el.play().catch(() => {});
+              },
+              { once: true }
+            );
+            el.src = originalSrc;
+            el.load();
+          }
+        });
+        if (loadRequestIdRef.current !== reqId) {
+          session.dispose();
+          return;
+        }
+        prepared = session;
+        aacSourceRef.current = session;
+        resolvedSrc = session.src;
+        if (
+          session.kind === "original" &&
+          session.reason === "unsupported" &&
+          !warnedAacUnsupported
+        ) {
+          warnedAacUnsupported = true;
+          useToastStore
+            .getState()
+            .showToast("AAC isn't supported on this device — playing the original format");
+        }
+      }
+
       const isCorsSafeSrc =
         resolvedSrc.startsWith("blob:") ||
         resolvedSrc.startsWith("/") ||
@@ -673,6 +758,7 @@ export function PlaybackEngine() {
       audio.src = resolvedSrc;
       audio.volume = muted ? 0 : volume / 100;
       audio.load();
+      prepared?.attach(audio);
 
       // Only attach Web Audio 5-band Equalizer graph for CORS-safe sources (blob, same-origin, relative)
       if (isCorsSafeSrc) {
