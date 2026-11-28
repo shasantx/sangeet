@@ -340,6 +340,11 @@ public final class MainActivity extends AppCompatActivity {
             }
 
             @Override
+            public void onAudioFormat(String json) {
+                dispatchToWeb("audio_format", json);
+            }
+
+            @Override
             public void onTrackChanged(String trackId, int queueIndex) {
                 try {
                     JSONObject obj = new JSONObject();
@@ -533,7 +538,7 @@ public final class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public void setSystemTheme(String theme) {
             final boolean isLight = "light".equalsIgnoreCase(theme);
-            final int bgColor = isLight ? 0xFFFAF4EC : 0xFF0A0606;
+            final int bgColor = isLight ? 0xFFF6F4F1 : 0xFF0D0C0B;
             runOnUiThread(() -> {
                 if (isFinishing() || isDestroyed()) return;
                 getWindow().setStatusBarColor(bgColor);
@@ -551,6 +556,24 @@ public final class MainActivity extends AppCompatActivity {
                     webView.setBackgroundColor(bgColor);
                 }
             });
+        }
+
+        /**
+         * Dhun EQ + spatial sound for the native player.
+         * gainsCsv = five dB values (60 Hz … 14 kHz); spatial = "off" | "natural" | "immersive".
+         */
+        @JavascriptInterface
+        public void setAudioEffects(boolean eqEnabled, String gainsCsv, String spatial) {
+            double[] gains = new double[5];
+            if (gainsCsv != null) {
+                String[] parts = gainsCsv.split(",");
+                for (int i = 0; i < Math.min(5, parts.length); i++) {
+                    try { gains[i] = Double.parseDouble(parts[i].trim()); } catch (NumberFormatException ignored) {}
+                }
+            }
+            DhunAudioEffects.setEqualizer(eqEnabled, gains);
+            DhunAudioEffects.setSpatialMode("immersive".equals(spatial) ? DhunAudioEffects.SPATIAL_IMMERSIVE
+                    : "natural".equals(spatial) ? DhunAudioEffects.SPATIAL_NATURAL : DhunAudioEffects.SPATIAL_OFF);
         }
 
         /** "aac" (default) prefers YouTube's native AAC stream; "original" picks the highest-bitrate stream. */

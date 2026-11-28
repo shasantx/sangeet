@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { SpatialMode } from "@/lib/audio-effects";
 
 export const EQ_FREQUENCIES = [60, 230, 910, 3600, 14000] as const;
 export const EQ_LABELS = ["60Hz", "230Hz", "910Hz", "3.6kHz", "14kHz"] as const;
@@ -22,6 +23,9 @@ interface EQState {
   setEnabled: (enabled: boolean) => void;
   applyPreset: (name: string) => void;
   setBandGain: (index: number, db: number) => void;
+  /** Spatial sound for headphones: off, natural (wider + crossfeed) or immersive (adds room). */
+  spatial: SpatialMode;
+  setSpatial: (mode: SpatialMode) => void;
 }
 
 export const useEQStore = create<EQState>()(
@@ -30,6 +34,8 @@ export const useEQStore = create<EQState>()(
       enabled: true,
       preset: "Flat",
       gains: [0, 0, 0, 0, 0],
+      spatial: "off",
+      setSpatial: (spatial) => set({ spatial }),
 
       setEnabled: (enabled) => set({ enabled }),
 

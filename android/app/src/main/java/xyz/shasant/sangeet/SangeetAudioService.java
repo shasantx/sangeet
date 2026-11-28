@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
@@ -18,6 +19,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.media3.common.AudioAttributes;
+import androidx.media3.common.Format;
+import androidx.media3.common.Tracks;
+import androidx.media3.common.audio.AudioProcessor;
+import androidx.media3.exoplayer.DefaultRenderersFactory;
+import androidx.media3.exoplayer.audio.AudioSink;
+import androidx.media3.exoplayer.audio.DefaultAudioSink;
 import androidx.media3.common.C;
 import androidx.media3.common.ForwardingPlayer;
 import androidx.media3.common.MediaItem;
@@ -126,6 +133,8 @@ public final class SangeetAudioService extends MediaSessionService {
         void onAction(String action);
         void onError(String message);
         void onTrackChanged(String trackId, int queueIndex);
+        /** JSON describing the audio actually being decoded (codec, bitrate, sample rate). */
+        void onAudioFormat(String json);
     }
 
     private static volatile EventListener listener;
@@ -199,8 +208,46 @@ public final class SangeetAudioService extends MediaSessionService {
     @Nullable private byte[] currentArtworkBytes;
     @Nullable private String inFlightArtworkUrl;
 
+    /** Codec / bitrate / sample rate of the selected audio track, for the in-app format badge. */
+    @Nullable
+    private static String describeAudioFormat(Tracks tracks) {
+        for (Tracks.Group group : tracks.getGroups()) {
+            if (group.getType() != C.TRACK_TYPE_AUDIO || !group.isSelected()) continue;
+            for (int i = 0; i < group.length; i++) {
+                if (!group.isTrackSelected(i)) continue;
+                Format f = group.getTrackFormat(i);
+                String mime = f.sampleMimeType != null ? f.sampleMimeType : "";
+                String codec;
+                if (MimeTypes.AUDIO_AAC.equals(mime)) codec = "AAC";
+                else if (MimeTypes.AUDIO_OPUS.equals(mime)) codec = "Opus";
+                else if (MimeTypes.AUDIO_VORBIS.equals(mime)) codec = "Vorbis";
+                else if (MimeTypes.AUDIO_MPEG.equals(mime)) codec = "MP3";
+                else if (MimeTypes.AUDIO_FLAC.equals(mime)) codec = "FLAC";
+                else codec = mime.replace("audio/", "").toUpperCase(java.util.Locale.ROOT);
+                int bitrate = f.averageBitrate != Format.NO_VALUE ? f.averageBitrate
+                        : (f.bitrate != Format.NO_VALUE ? f.bitrate : 0);
+                try {
+                    org.json.JSONObject o = new org.json.JSONObject();
+                    o.put("codec", codec);
+                    o.put("mime", mime);
+                    o.put("bitrate", bitrate);
+                    o.put("sampleRate", f.sampleRate != Format.NO_VALUE ? f.sampleRate : 0);
+                    o.put("channels", f.channelCount != Format.NO_VALUE ? f.channelCount : 0);
+                    return o.toString();
+                } catch (Exception ignored) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Nullable private static volatile String lastAudioFormatJson;
+
     public static void setEventListener(@Nullable EventListener l) {
         listener = l;
+        String fmt = lastAudioFormatJson;
+        if (l != null && fmt != null) l.onAudioFormat(fmt);
     }
 
     public static boolean dispatchToRunningService(@Nullable Intent intent) {
@@ -264,7 +311,20 @@ public final class SangeetAudioService extends MediaSessionService {
                 .setUsage(C.USAGE_MEDIA)
                 .build();
 
-        player = new ExoPlayer.Builder(this)
+        // Dhun EQ + spatial sound run inside the audio pipeline for every song.
+        DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(this) {
+            @Override
+            protected AudioSink buildAudioSink(Context context, boolean enableFloatOutput,
+                                               boolean enableAudioTrackPlaybackParams) {
+                return new DefaultAudioSink.Builder(context)
+                        .setEnableFloatOutput(enableFloatOutput)
+                        .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                        .setAudioProcessors(new AudioProcessor[]{new DhunAudioEffects()})
+                        .build();
+            }
+        };
+
+        player = new ExoPlayer.Builder(this, renderersFactory)
                 .setMediaSourceFactory(new DefaultMediaSourceFactory(dataSourceFactory))
                 .setLoadControl(loadControl)
                 .setAudioAttributes(attrs, true)
@@ -292,6 +352,15 @@ public final class SangeetAudioService extends MediaSessionService {
                     }
                 }
                 refreshNotificationIfForeground();
+            }
+
+            @Override
+            public void onTracksChanged(Tracks tracks) {
+                String json = describeAudioFormat(tracks);
+                if (json == null) return;
+                lastAudioFormatJson = json;
+                EventListener l = listener;
+                if (l != null) l.onAudioFormat(json);
             }
 
             @Override

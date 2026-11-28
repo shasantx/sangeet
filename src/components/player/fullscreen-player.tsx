@@ -34,6 +34,7 @@ import { useClickOutside } from "@/lib/use-click-outside";
 import { getActiveLyricIndex } from "@/lib/lyrics-parser";
 import { TrackArtwork } from "@/components/music/track-artwork";
 import { SangeetLogo } from "@/components/ui/sangeet-logo";
+import { FormatBadge } from "@/components/player/format-badge";
 import { cn, formatTime, pickHeroColor } from "@/lib/utils";
 
 const SLEEP_OPTIONS = [
@@ -606,6 +607,7 @@ export function FullscreenPlayer() {
               <span className="hidden text-sm font-bold tracking-tight text-white/90 sm:inline">
                 Dhun Cinema
               </span>
+              <FormatBadge />
             </div>
 
             {/* Mobile segmented switcher (< lg) */}

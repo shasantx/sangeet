@@ -15,7 +15,8 @@ import {
   Trash2,
   Upload,
   User,
-  Clock3
+  Clock3,
+  Headphones
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { usePlayerStore } from "@/store/player-store";
@@ -25,6 +26,8 @@ import { EQ_LABELS, EQ_PRESETS, useEQStore } from "@/store/eq-store";
 import { useAudioFormat } from "@/store/audio-format-store";
 import { getCurrentMoodProfile, useMoodLearning } from "@/store/listening-store";
 import { SLOT_LABEL, describeProfile } from "@/lib/mood-engine";
+import { describeFormat, usePlaybackInfoStore } from "@/store/playback-info-store";
+import type { SpatialMode } from "@/lib/audio-effects";
 import {
   offlineMetaToTrack,
   useOfflineStore
@@ -58,6 +61,18 @@ export default function SettingsPage() {
   const setTheme = useUIStore((s) => s.setTheme);
   const [audioFormat, setAudioFormat] = useAudioFormat();
   const moodLearning = useMoodLearning();
+  const nowFormat = usePlaybackInfoStore((s) => s.format);
+  const effectsPath = usePlaybackInfoStore((s) => s.effects);
+  const hasTrack = usePlayerStore((s) => Boolean(s.currentTrack));
+  const spatial = useEQStore((s) => s.spatial);
+  const setSpatial = useEQStore((s) => s.setSpatial);
+  const effectsNote = !hasTrack
+    ? "Play a song to hear it."
+    : effectsPath === "unavailable"
+      ? "Not on this song: YouTube on the website plays in YouTube's own player, which can't be processed. Works on every song in the Android app, and on Audius, offline and local songs everywhere."
+      : effectsPath === "native"
+        ? "Active on this song (Android player)."
+        : "Active on this song.";
   const moodNow = moodLearning.enabled ? getCurrentMoodProfile() : null;
   const openDownloadAppModal = useUIStore((s) => s.openDownloadAppModal);
 
@@ -314,6 +329,12 @@ export default function SettingsPage() {
           Streams load in small chunks and only ~30 seconds ahead to save data.
           YouTube on the web plays inside YouTube&apos;s own player, so its format can&apos;t be changed there.
         </p>
+        {hasTrack && (
+          <p className="rounded-xl bg-encore-base px-3.5 py-2.5 text-xs text-encore-text">
+            <span className="text-encore-subdued">Now playing: </span>
+            {nowFormat ? describeFormat(nowFormat) : "detecting…"}
+          </p>
+        )}
       </section>
 
       {/* Mood picks: on-device time-of-day listening model */}
@@ -399,7 +420,7 @@ export default function SettingsPage() {
                 5-Band Equalizer
               </h2>
               <p className="text-xs text-encore-subdued">
-                Real-time Web Audio EQ presets for offline &amp; direct streams
+                Saved for this device · {effectsNote}
               </p>
             </div>
           </div>
@@ -473,6 +494,45 @@ export default function SettingsPage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Spatial sound: widening + crossfeed (+ room) for headphones */}
+      <section className="space-y-4 rounded-2xl bg-encore-elevated p-5 shadow-[var(--shadow-elevated)]">
+        <div className="flex items-center gap-2.5">
+          <Headphones className="h-5 w-5 text-encore-accent" strokeWidth={1.6} />
+          <div>
+            <h2 className="text-base font-semibold text-encore-text">Spatial sound</h2>
+            <p className="text-xs text-encore-subdued">Best with headphones · {effectsNote}</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {(
+            [
+              { value: "off", title: "Off", sub: "The song exactly as mixed" },
+              { value: "natural", title: "Natural", sub: "Wider stage, like listening to speakers" },
+              { value: "immersive", title: "Immersive", sub: "Wider still, with a sense of room around you" }
+            ] as { value: SpatialMode; title: string; sub: string }[]
+          ).map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              aria-pressed={spatial === opt.value}
+              onClick={() => {
+                setSpatial(opt.value);
+                showToast(opt.value === "off" ? "Spatial sound off" : `${opt.title} spatial sound on`, "success");
+              }}
+              className={cn(
+                "flex min-h-[64px] flex-col justify-center rounded-2xl p-3.5 text-left transition-all duration-150",
+                spatial === opt.value
+                  ? "bg-encore-tinted ring-2 ring-[#e2363e]/50"
+                  : "bg-encore-base hover:bg-encore-elevated-highlight"
+              )}
+            >
+              <p className="text-sm font-semibold text-encore-text">{opt.title}</p>
+              <p className="mt-0.5 text-[11px] text-encore-subdued">{opt.sub}</p>
+            </button>
+          ))}
         </div>
       </section>
 

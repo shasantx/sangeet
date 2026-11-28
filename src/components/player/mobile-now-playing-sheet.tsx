@@ -31,6 +31,7 @@ import { getActiveLyricIndex } from "@/lib/lyrics-parser";
 import { TrackArtwork } from "@/components/music/track-artwork";
 import { SangeetLogo } from "@/components/ui/sangeet-logo";
 import { cn, formatTime, pickHeroColor } from "@/lib/utils";
+import { FormatBadge } from "@/components/player/format-badge";
 
 const SLEEP_OPTIONS = [
   { label: "Off", minutes: null as number | null },
@@ -726,6 +727,7 @@ export function MobileNowPlayingSheet() {
                 <p className="mt-0.5 truncate text-sm font-medium text-white/65">
                   {currentTrack.artist}
                 </p>
+                <FormatBadge className="mt-1.5" />
               </div>
               <button
                 type="button"

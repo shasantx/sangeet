@@ -65,6 +65,8 @@ export interface SangeetAndroidBridge {
   scanLocalAudio?: () => string;
   /** "aac" prefers YouTube's native AAC stream; "original" picks the highest-bitrate stream. */
   setPreferredAudioFormat?: (format: string) => void;
+  /** Native EQ + spatial: gainsCsv = 5 dB values, spatial = "off" | "natural" | "immersive". */
+  setAudioEffects?: (eqEnabled: boolean, gainsCsv: string, spatial: string) => void;
 }
 
 export interface DesktopSaveResult {

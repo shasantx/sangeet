@@ -6,7 +6,9 @@ import { useLibraryStore } from "@/store/library-store";
 import { useToastStore } from "@/store/toast-store";
 import { useLyricsStore } from "@/store/lyrics-store";
 import { useUIStore } from "@/store/ui-store";
-import { EQ_FREQUENCIES, useEQStore } from "@/store/eq-store";
+import { useEQStore } from "@/store/eq-store";
+import { createEffectsChain, type EffectsChain } from "@/lib/audio-effects";
+import { formatFromNative, usePlaybackInfoStore } from "@/store/playback-info-store";
 import { useOfflineStore } from "@/store/offline-store";
 import { getAndroidBridge } from "@/lib/platform";
 import {
@@ -72,8 +74,9 @@ export function PlaybackEngine() {
 
   const eqEnabled = useEQStore((s) => s.enabled);
   const eqGains = useEQStore((s) => s.gains);
+  const spatial = useEQStore((s) => s.spatial);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const eqFiltersRef = useRef<BiquadFilterNode[]>([]);
+  const effectsRef = useRef<EffectsChain | null>(null);
 
   const segmentsRef = useRef<SkipSegment[]>([]);
   const skippedIdsRef = useRef<Set<string>>(new Set());
@@ -84,14 +87,20 @@ export function PlaybackEngine() {
       currentTrack?.streamUrl
   );
 
-  // Sync Web Audio 5-band Equalizer for HTML5 audio playback
+  // Apply EQ + spatial live: Web Audio chain for <audio> playback, native processor on Android.
   useEffect(() => {
-    const filters = eqFiltersRef.current;
-    if (filters.length !== EQ_FREQUENCIES.length) return;
-    filters.forEach((filter, idx) => {
-      filter.gain.value = eqEnabled ? (eqGains[idx] ?? 0) : 0;
-    });
-  }, [eqEnabled, eqGains]);
+    effectsRef.current?.update(eqEnabled, eqGains, spatial);
+    try {
+      getAndroidBridge()?.setAudioEffects?.(eqEnabled, eqGains.join(","), spatial);
+    } catch {}
+  }, [eqEnabled, eqGains, spatial]);
+
+  // Browsers start AudioContexts suspended until a user gesture; resume whenever playback starts.
+  useEffect(() => {
+    if (isPlaying && audioCtxRef.current?.state === "suspended") {
+      void audioCtxRef.current.resume().catch(() => {});
+    }
+  }, [isPlaying]);
 
   // Sync shared lyrics store to active track (single consolidated fetch)
   useEffect(() => {
@@ -114,6 +123,13 @@ export function PlaybackEngine() {
         useOfflineStore
           .getState()
           .handleAndroidDownloadEvent(type, payload);
+        return;
+      }
+
+      if (type === "audio_format") {
+        usePlaybackInfoStore
+          .getState()
+          .setFormat(formatFromNative(payload, getPreferredAudioFormat() === "aac"));
         return;
       }
 
@@ -755,6 +771,23 @@ export function PlaybackEngine() {
         audio.removeAttribute("crossorigin");
       }
 
+      {
+        const info = usePlaybackInfoStore.getState();
+        info.setEffects(isCorsSafeSrc ? "web" : "unavailable");
+        const kind = prepared?.kind;
+        info.setFormat(
+          kind === "transcoded-aac"
+            ? { codec: "AAC", detail: "192 kbps", origin: "converted" }
+            : kind === "native-aac"
+              ? { codec: "AAC", detail: "", origin: "source" }
+              : {
+                  codec: currentTrack.source === "audius" ? "MP3" : "Original file",
+                  detail: "",
+                  origin: "original"
+                }
+        );
+      }
+
       audio.src = resolvedSrc;
       audio.volume = muted ? 0 : volume / 100;
       audio.load();
@@ -771,27 +804,11 @@ export function PlaybackEngine() {
             if (AudioCtx) {
               const ctx = new AudioCtx();
               const source = ctx.createMediaElementSource(audio);
-              const eqState = useEQStore.getState();
-              const filters = EQ_FREQUENCIES.map((freq, idx) => {
-                const f = ctx.createBiquadFilter();
-                f.type =
-                  idx === 0
-                    ? "lowshelf"
-                    : idx === EQ_FREQUENCIES.length - 1
-                      ? "highshelf"
-                      : "peaking";
-                f.frequency.value = freq;
-                f.Q.value = 1.1;
-                f.gain.value = eqState.enabled ? (eqState.gains[idx] ?? 0) : 0;
-                return f;
-              });
-              source.connect(filters[0]);
-              for (let i = 0; i < filters.length - 1; i++) {
-                filters[i].connect(filters[i + 1]);
-              }
-              filters[filters.length - 1].connect(ctx.destination);
+              const chain = createEffectsChain(ctx, source);
+              const eq = useEQStore.getState();
+              chain.update(eq.enabled, eq.gains, eq.spatial);
               audioCtxRef.current = ctx;
-              eqFiltersRef.current = filters;
+              effectsRef.current = chain;
             }
           } catch {}
         }
@@ -851,6 +868,8 @@ export function PlaybackEngine() {
       typeof bridge.playOfflineAudio === "function"
     ) {
       loadedVideoIdRef.current = currentTrack.id;
+      usePlaybackInfoStore.getState().setEffects("native");
+      usePlaybackInfoStore.getState().setFormat(null);
       if (usePlayerStore.getState().isPlaying) {
         bridge.playOfflineAudio(
           currentTrack.id,
@@ -868,6 +887,8 @@ export function PlaybackEngine() {
         audioRef.current.load();
       }
       loadedVideoIdRef.current = currentTrack.id;
+      usePlaybackInfoStore.getState().setEffects("native");
+      usePlaybackInfoStore.getState().setFormat(null);
       if (usePlayerStore.getState().isPlaying) {
         bridge.playYouTube(
           currentTrack.id,
@@ -884,6 +905,8 @@ export function PlaybackEngine() {
         audioRef.current.removeAttribute("src");
         audioRef.current.load();
       }
+      usePlaybackInfoStore.getState().setEffects("unavailable");
+      usePlaybackInfoStore.getState().setFormat({ codec: "", detail: "", origin: "youtube-player" });
       if (readyRef.current && playerRef.current) {
         loadedVideoIdRef.current = currentTrack.id;
         try {

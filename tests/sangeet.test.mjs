@@ -637,3 +637,28 @@ test("Jam (listen together) is host-authoritative over Supabase Realtime and off
   assert.match(store, /partialize: \(s\) => \(\{ displayName: s\.displayName \}\)/);
   assert.match(page, /Jam isn&apos;t switched on yet/);
 });
+
+test("EQ + spatial sound reach every playback path and the real format is shown", () => {
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const engine = read("src/components/player/playback-engine.tsx");
+  const fx = read("src/lib/audio-effects.ts");
+  const service = read("android/app/src/main/java/xyz/shasant/sangeet/SangeetAudioService.java");
+  const activity = read("android/app/src/main/java/xyz/shasant/sangeet/MainActivity.java");
+  const dsp = read("android/app/src/main/java/xyz/shasant/sangeet/DhunAudioEffects.java");
+  const settings = read("src/app/settings/page.tsx");
+
+  // Web: one shared chain (headroom -> 5 biquads -> spatial) on the <audio> element
+  assert.match(engine, /createEffectsChain\(ctx, source\)/);
+  assert.match(fx, /channelInterpretation = "speakers"/); // mono files play in both ears
+  assert.match(fx, /export function headroomDb/);
+  // Android: the same EQ/spatial inside ExoPlayer for YouTube + streams, set live from the web UI
+  assert.match(service, /setAudioProcessors\(new AudioProcessor\[\]\{new DhunAudioEffects\(\)\}\)/);
+  assert.match(activity, /public void setAudioEffects\(boolean eqEnabled, String gainsCsv, String spatial\)/);
+  assert.match(engine, /setAudioEffects\?\.\(eqEnabled, eqGains\.join\(","\), spatial\)/);
+  assert.match(dsp, /return AudioProcessor\.AudioFormat\.NOT_SET;/); // unknown formats pass through, never fail playback
+  // The decoded format is reported back and shown, so the AAC/Original switch is visible
+  assert.match(service, /onTracksChanged/);
+  assert.match(engine, /type === "audio_format"/);
+  assert.match(settings, /Now playing: /);
+  assert.match(settings, /Spatial sound/);
+});
