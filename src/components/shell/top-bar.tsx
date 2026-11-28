@@ -23,6 +23,7 @@ import {
 import type { Track } from "@/types/music";
 import { TrackArtwork } from "@/components/music/track-artwork";
 import { SangeetLogo } from "@/components/ui/sangeet-logo";
+import { JamIndicator } from "@/components/jam/jam-indicator";
 import { useAuthStore } from "@/store/auth-store";
 import { useLibraryStore } from "@/store/library-store";
 import { usePlayerStore } from "@/store/player-store";
@@ -369,6 +370,7 @@ export function TopBar() {
 
       {/* Right: Web-only Get App, Mobile Explore, Theme Toggle, Profile Menu */}
       <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+        <JamIndicator />
         {isWeb && (
           <button
             type="button"

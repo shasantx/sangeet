@@ -16,7 +16,8 @@ import {
   Shield,
   Smartphone,
   Sun,
-  User
+  User,
+  Users
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useLibraryStore } from "@/store/library-store";
@@ -137,6 +138,14 @@ export default function MoreHubPage() {
             <span className="flex items-center gap-3">
               <Radio className="h-4 w-4 text-encore-accent" strokeWidth={1.6} />
               <span className="text-sm text-encore-text">Made for you</span>
+            </span>
+            <ChevronRight className="h-4 w-4 text-encore-muted" strokeWidth={1.5} />
+          </Link>
+
+          <Link href="/jam" className={rowBase}>
+            <span className="flex items-center gap-3">
+              <Users className="h-4 w-4 text-encore-accent" strokeWidth={1.6} />
+              <span className="text-sm text-encore-text">Jam · listen together</span>
             </span>
             <ChevronRight className="h-4 w-4 text-encore-muted" strokeWidth={1.5} />
           </Link>

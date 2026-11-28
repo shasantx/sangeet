@@ -1,13 +1,25 @@
 /** @type {import('next').NextConfig} */
 const isProd = process.env.NODE_ENV === "production";
 
+// Jam (listen together) talks to this deployment's Supabase Realtime project, if configured.
+let supabaseOrigins = "";
+try {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (raw) {
+    const { host } = new URL(raw);
+    supabaseOrigins = ` https://${host} wss://${host}`;
+  }
+} catch {
+  supabaseOrigins = "";
+}
+
 const cspDirectives = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"} https://www.youtube.com https://s.ytimg.com`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob: data: https:",
-  `connect-src 'self'${isProd ? "" : " ws: wss: http://localhost:* http://127.0.0.1:*"} https://api.audius.co https://*.audius.co https://lrclib.net https://sponsor.ajay.app https://music.youtube.com https://www.youtube.com https://api.github.com`,
+  `connect-src 'self'${isProd ? "" : " ws: wss: http://localhost:* http://127.0.0.1:*"} https://api.audius.co https://*.audius.co https://lrclib.net https://sponsor.ajay.app https://music.youtube.com https://www.youtube.com https://api.github.com${supabaseOrigins}`,
   "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
   "font-src 'self' data:",
   "worker-src 'self' blob:",

@@ -610,3 +610,30 @@ test("Audio format switcher defaults to AAC, is saved per user, and is wired on 
   assert.match(rustSrc, /save_audio_bytes,/);
   assert.match(rustSrc, /saveAudioBytes: \(meta, bytes\)/);
 });
+
+test("Jam (listen together) is host-authoritative over Supabase Realtime and off until configured", () => {
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const session = read("src/lib/jam-session.ts");
+  const store = read("src/store/jam-store.ts");
+  const page = read("src/app/jam/page.tsx");
+  const nextConfig = read("next.config.mjs");
+  const envExample = read(".env.example");
+
+  // Transport: broadcast + presence only, no tables, lazy-loaded client, codes from crypto
+  assert.match(session, /import\("@supabase\/supabase-js"\)/);
+  assert.match(session, /presence: \{ key: this\.memberId \}/);
+  assert.match(session, /crypto\.getRandomValues/);
+  assert.doesNotMatch(session, /\.from\(["']/);
+  // Guests only forward their own taps, and only the host can change playback unless allowed
+  assert.match(session, /lastGestureAt > 1500/);
+  assert.match(session, /if \(!this\.allowGuestControl\) return;/);
+  // Device-only files are never shared
+  assert.match(session, /delete copy\.localUrl;/);
+  // Off until configured; CSP opened only for the configured project
+  assert.match(session, /NEXT_PUBLIC_SUPABASE_URL && process\.env\.NEXT_PUBLIC_SUPABASE_ANON_KEY/);
+  assert.match(nextConfig, /wss:\/\/\$\{host\}/);
+  assert.match(envExample, /NEXT_PUBLIC_SUPABASE_ANON_KEY=/);
+  // Only the display name is persisted; a Jam never silently reconnects
+  assert.match(store, /partialize: \(s\) => \(\{ displayName: s\.displayName \}\)/);
+  assert.match(page, /Jam isn&apos;t switched on yet/);
+});

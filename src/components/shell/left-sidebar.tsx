@@ -13,7 +13,8 @@ import {
   Plus,
   Search,
   UserRound,
-  X
+  X,
+  Users
 } from "lucide-react";
 import { useLibraryStore } from "@/store/library-store";
 import { useUIStore } from "@/store/ui-store";
@@ -128,6 +129,12 @@ export function LeftSidebar() {
       label: "Recently played",
       icon: History,
       count: recentlyPlayed.length > 0 ? recentlyPlayed.length : null
+    },
+    {
+      href: "/jam",
+      label: "Jam",
+      icon: Users,
+      count: null
     }
   ];
 
